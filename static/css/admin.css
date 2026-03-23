@@ -130,3 +130,76 @@ body {
 
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
+/* =========================================
+           PATIENT PROFILE MODAL (ADDED)
+           ========================================= */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 25, 47, 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .profile-modal-content {
+            background: var(--dark-form);
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            width: 450px;
+            position: relative;
+            animation: fadeInUp 0.4s ease forwards;
+        }
+
+        .close-profile {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gold);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .p-avatar-circle.large {
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+        }
+
+        .info-group {
+            margin-bottom: 15px;
+        }
+
+        .info-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .info-group p {
+            font-size: 15px;
+            color: white;
+        }
+
+        .profile-footer {
+            margin-top: 25px;
+            text-align: center;
+        }
+
