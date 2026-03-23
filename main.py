@@ -107,7 +107,7 @@ def sign_up():
         })
 
         session['name'] = firstname
-        return render_template(url_for("index.html"))
+        return render_template(url_for("index"))
 
     return render_template("index.html")
 
@@ -124,9 +124,13 @@ def logout():
 def p_forms():
     return render_template("patientForms.html")
 
-@app.route("/about_customer_side")
+@app.route("/about")
 def about_customer():
-    return render_template("aboutcustomer_side.html")
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    return render_template("about.html", name=name, email=email)
+
+
 
 
 @app.route("/booked_customer", methods=["POST"])
@@ -158,9 +162,69 @@ def bookedCustomer():
 
 @app.route("/patient-profile")
 def p_profile():
-    # Pass session data to profile too
-    name = session.get('name', 'Guest')
-    return render_template("patient-profile.html", name=name)
+    if 'email' not in session:
+        flash("Please login to view your profile")
+        return redirect(url_for("index"))
+
+    email = session.get('email')
+    user_data = {}
+
+    # 1. Try to find in manual accounts
+    user_query = db.collection(Account_clients).where("username", "==", session.get('username')).get()
+    
+    # 2. If not found/empty, try Google accounts
+    if not user_query:
+        user_query = db.collection("google_create_account").where("email", "==", email).get()
+
+    if user_query:
+        user_data = user_query[0].to_dict()
+        user_data['id'] = user_query[0].id # Store ID for updates
+    
+    return render_template("patient-profile.html", name=session.get('name'), user=user_data)
+
+@app.route("/update-profile", methods=["POST"])
+def update_profile():
+    if 'email' not in session: 
+        return redirect(url_for("index"))
+
+    email = request.form.get("email_id")
+    new_name = bleach.clean(request.form.get("new_name").strip())
+    new_phone = bleach.clean(request.form.get("new_phone").strip())
+    new_password = request.form.get("new_password")
+    
+    # Determine which collection to update based on session provider
+    provider = session.get('provider', 'manual')
+    collection = "google_create_account" if provider == 'google' else Account_clients
+    
+    update_data = {
+        "firstname": new_name,
+        "phone": new_phone
+    }
+
+    # If it's a manual user and they typed a new password
+    if provider != 'google' and new_password and len(new_password.strip()) > 0:
+        update_data["password"] = generate_password_hash(new_password.strip())
+
+    try:
+        # 1. Update Firestore
+        # We find the document by the email field
+        user_docs = db.collection(collection).where("email", "==", email).get()
+        
+        if user_docs:
+            for doc in user_docs:
+                db.collection(collection).document(doc.id).update(update_data)
+            
+            # 2. Update the session so the UI updates immediately
+            session['name'] = new_name
+            flash("Profile updated successfully!", "success")
+        else:
+            flash("User document not found.", "error")
+
+    except Exception as e:
+        print(f"Update Error: {e}")
+        flash("Error updating profile.", "error")
+
+    return redirect(url_for("p_profile"))
 
 
 

@@ -14,13 +14,11 @@
             --sky-blue: #8CD3FF;
             --gold: #FFA2AD;
             --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
-            --grad-navy-glass: linear-gradient(180deg, rgba(21, 102, 153, 0.6) 0%, rgba(140, 211, 255, 0.6) 100%);
+            --grad-navy-glass: linear-gradient(180deg, rgba(21, 102, 153, 0.8) 0%, rgba(140, 211, 255, 0.8) 100%);
+            --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
         }
 
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            font-family: 'Kumbh Sans', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kumbh Sans', sans-serif; }
 
         body {
             min-height: 100vh;
@@ -28,9 +26,9 @@
             flex-direction: column;
             position: relative;
             color: white;
+            overflow-x: hidden;
         }
 
-        /* Blurred Background Overlay */
         body::before {
             content: "";
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -41,7 +39,6 @@
             z-index: -1;
         }
 
-        /* Navigation Header */
         header {
             background: var(--grad-navy);
             padding: 15px 8%;
@@ -53,23 +50,17 @@
 
         .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
         .logo-icon { height: 40px; margin-right: 10px; mix-blend-mode: lighten; }
+        
         .btn-back {
             color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;
             padding: 8px 15px; border: 1px solid rgba(255,255,255,0.4); border-radius: 10px;
         }
 
-        /* Profile Layout */
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 50px 8%;
-        }
+        .container { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 50px 8%; }
 
         .profile-card {
             background: var(--grad-navy-glass);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.2);
             border-radius: 30px;
             padding: 40px;
@@ -77,65 +68,55 @@
             max-width: 900px;
             display: flex;
             gap: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
             margin-bottom: 30px;
         }
 
         .profile-left { text-align: center; }
-        .main-avatar {
-            width: 150px; height: 150px;
-            border-radius: 50%;
-            border: 5px solid var(--gold);
-            margin-bottom: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
+        .main-avatar { width: 150px; height: 150px; border-radius: 50%; border: 5px solid var(--gold); margin-bottom: 15px; object-fit: cover; }
+        .patient-tag { background: var(--gold); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-block; }
 
         .profile-right { flex: 1; }
-        .profile-right h2 { font-size: 2rem; margin-bottom: 5px; }
-        .patient-tag { background: var(--gold); padding: 3px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+        .profile-right h2 { font-size: 2.2rem; margin-bottom: 5px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .info-item label { display: block; font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+        .info-item p { font-size: 1.1rem; font-weight: 400; color: #fff; }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
+        .btn-edit-trigger {
+            margin-top: 20px;
+            background: var(--grad-gold);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
         }
 
-        .info-item label { display: block; font-size: 0.75rem; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
-        .info-item p { font-size: 1.1rem; font-weight: 400; }
-
-        /* The 4 Navigations */
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            width: 100%;
-            max-width: 900px;
-        }
-
+        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; max-width: 900px; }
         .nav-card {
             background: rgba(255,255,255,0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 25px;
-            border-radius: 20px;
-            text-align: center;
-            text-decoration: none;
-            color: white;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 25px; border-radius: 20px;
+            text-align: center; text-decoration: none; color: white; transition: 0.3s;
+        }
+        .nav-card:hover { background: var(--gold); transform: translateY(-5px); }
+        .nav-card img { width: 35px; margin-bottom: 10px; filter: brightness(0) invert(1); }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 9999;
+            align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
 
-        .nav-card:hover {
-            background: var(--gold);
-            transform: translateY(-5px);
-            border-color: var(--gold);
-        }
-
-        .nav-card img { width: 40px; margin-bottom: 10px; filter: brightness(0) invert(1); }
-        .nav-card span { display: block; font-weight: 600; font-size: 0.9rem; }
+        .modal-content { background: var(--navy); padding: 40px; border-radius: 25px; width: 90%; max-width: 450px; border: 1px solid var(--sky-blue); }
+        .modal-form { display: flex; flex-direction: column; gap: 15px; }
+        .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; }
 
         @media (max-width: 768px) {
-            .profile-card { flex-direction: column; align-items: center; }
+            .profile-card { flex-direction: column; align-items: center; text-align: center; }
             .nav-grid { grid-template-columns: 1fr 1fr; }
             .info-grid { grid-template-columns: 1fr; }
         }
@@ -146,7 +127,7 @@
 <header>
     <a href="/" class="logo-container">
         <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo-icon">
-        <span style="font-weight:700">CAPIZONDA</span>
+        <span style="font-weight:700; letter-spacing: 1px;">CAPIZONDA</span>
     </a>
     <a href="/" class="btn-back">← Back to Home</a>
 </header>
@@ -160,27 +141,29 @@
         </div>
         
         <div class="profile-right">
-            <h2>{{ name }}</h2>
-            <p style="opacity:0.9">Regular Checkup Patient</p>
+            <h2>{{ user.get('firstname', name) }}</h2>
+            <p style="opacity:0.8; font-weight: 300;">Clinic Member</p>
             
             <div class="info-grid">
                 <div class="info-item">
-                    <label>Email Address</label>
-                    <p>patient@example.com</p>
+                    <label>First Name</label>
+                    <p>{{ user.get('firstname', 'N/A') }}</p>
                 </div>
                 <div class="info-item">
                     <label>Phone Number</label>
-                    <p>+63 912 345 6789</p>
+                    <p>{{ user.get('phone', 'Not set') }}</p>
                 </div>
                 <div class="info-item">
-                    <label>Date of Birth</label>
-                    <p>January 15, 1998</p>
+                    <label>Email Address</label>
+                    <p>{{ user.get('email', 'N/A') }}</p>
                 </div>
                 <div class="info-item">
-                    <label>Last Visit</label>
-                    <p>Feb 12, 2026</p>
+                    <label>Account Type</label>
+                    <p>{{ user.get('provider', 'Manual').capitalize() }} Account</p>
                 </div>
             </div>
+
+            <button onclick="openUpdateModal()" class="btn-edit-trigger">Update Profile</button>
         </div>
     </div>
 
@@ -203,6 +186,44 @@
         </a>
     </div>
 </div>
+
+<div class="modal-overlay" id="updateModal">
+    <div class="modal-content">
+        <h3 style="margin-bottom: 20px; font-size: 1.5rem;">Edit Profile</h3>
+        <form class="modal-form" action="/update-profile" method="POST">
+            <input type="hidden" name="email_id" value="{{ user.get('email') }}">
+            
+            <div class="info-item">
+                <label>First Name</label>
+                <input type="text" name="new_name" value="{{ user.get('firstname', name) }}" required>
+            </div>
+
+            <div class="info-item">
+                <label>Phone Number</label>
+                <input type="text" name="new_phone" value="{{ user.get('phone', '') }}" placeholder="+63 9XX XXX XXXX">
+            </div>
+
+            {% if user.get('provider') != 'google' %}
+            <div class="info-item">
+                <label>Update Password (Optional)</label>
+                <input type="password" name="new_password" placeholder="Leave blank to keep current">
+            </div>
+            {% endif %}
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="submit" class="btn-edit-trigger" style="flex: 2; margin: 0;">Save Changes</button>
+                <button type="button" onclick="closeUpdateModal()" class="btn-back" style="flex: 1; text-align: center;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('updateModal');
+    function openUpdateModal() { modal.style.display = 'flex'; }
+    function closeUpdateModal() { modal.style.display = 'none'; }
+    window.onclick = function(e) { if (e.target == modal) closeUpdateModal(); }
+</script>
 
 </body>
 </html>

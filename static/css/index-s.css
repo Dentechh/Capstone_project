@@ -1,6 +1,8 @@
 /* =========================
              1. GLOBAL & RESET
         ========================== */
+        @view-transition { navigation: auto; }
+        
         * {
             margin: 0;
             padding: 0;
@@ -27,6 +29,7 @@
             flex-direction: column;
             min-height: 100vh;
             position: relative;
+            transition: opacity 0.5s; 
         }
 
         body::before {

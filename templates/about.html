@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Dr. Capizonda - Capizonda Dental Clinic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+</head>
+<body>
+
+<header>
+    <nav class="navbar">
+        <a href="/" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="/">HOME</a></li>
+            <li><a href="/about" class="active">ABOUT</a></li>
+            <li><a href="#">SERVICES ▾</a></li>
+        </ul>
+
+        {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="/" class="btn-login">LOGIN</a>
+            <a href="/" class="btn-register">REGISTER</a>
+        </div>
+        {% else %}
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">PROFILE</a>
+                    <a href="/logout">LOGOUT</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+</header>
+
+<main>
+    <section class="about-hero">
+        <div class="hero-content">
+            <div class="user-greeting">
+                <h1>Excellence in Every Smile</h1>
+                <p>Get to know the heart behind Capizonda Dental Clinic.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="doctor-spotlight">
+        <div class="spotlight-container">
+            
+            <div class="dr-image-box">
+                <img src="{{ url_for('static', filename='img/dr-capizonda.png') }}" alt="Dr. Capizonda">
+                <div class="dr-badge">
+                    <span>Doctor of Dental Medicine</span>
+                </div>
+            </div>
+
+            <div class="dr-details-box">
+                <h2 class="section-title">Meet Dr. Capizonda</h2>
+                
+                <div class="achievement-list">
+                    <div class="info-item">
+                        <span class="info-label">Dental School</span>
+                        <p>Iloilo Doctor's College, Batch 2020</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Associations</span>
+                        <p>Proud Member of the <strong>PDA Iloilo Chapter</strong>.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Our Technology</span>
+                        <p>We invest in modern technology including <strong>Intraoral Cameras</strong>, <strong>Autoclave</strong>, and <strong>UV Sterilization</strong> for efficient care.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Vision</span>
+                        <p>To reduce early extractions of permanent teeth caused by poor oral hygiene in the Philippines.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Experience</span>
+                        <p>Licensed since passing the board exams in <strong>January 2024</strong>.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Community Work</span>
+                        <p>Participated in <strong>INCGiving</strong> dental missions, providing hygiene education to students in Jaro II Elementary School.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="about-cta">
+        <a href="/" class="btn-appointment">Book an Appointment</a>
+    </section>
+</main>
+
+
+<footer>
+    <div class="footer-content">
+        <div class="logo-text" style="text-align: left;">
+            <span class="brand-name" style="font-size: 1rem;">CAPIZONDA DENTAL</span>
+            <span class="brand-sub" style="font-size: 0.6rem;">Trusted Care Since 2024</span>
+        </div>
+        <div class="footer-text">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>f
+        <div class="nav-links">
+            <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Privacy Policy</a>
+            <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    window.onclick = (e) =>{
+            // Close profile dropdown
+    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+        }
+    };
+    
+    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+    const dropdownMenu = document.getElementById('profileDropdown');
+
+    if(dropdownTrigger) {
+        dropdownTrigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = dropdownMenu.style.display === 'flex';
+            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+        };
+    }
+
+</script>
+
+</body>
+</html>
