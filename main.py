@@ -67,7 +67,6 @@ def login_g_auth():
         session['email'] = google_account["email"]
         session['name'] = google_account.get("name", "User")
 
-        # Save/Update in Firebase
         db.collection("google_create_account").document(session['uid']).set({
             "uid": session['uid'],
             "email": session['email'],
@@ -227,4 +226,4 @@ if __name__ == "__main__":
 #git status
 #git add .
 #git commit -m "Describe your changes here"
-#git push origin mainc
+#git push origin main
