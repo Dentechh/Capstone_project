@@ -222,4 +222,9 @@ if __name__ == "__main__":
 
 #CRUD
 
-#Changed
+
+#Update code in github
+#git status
+#git add .
+#git commit -m "Describe your changes here"
+#git push origin mainc
