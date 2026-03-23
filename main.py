@@ -128,11 +128,69 @@ def p_forms():
 def about_customer():
     return render_template("aboutcustomer_side.html")
 
+
+@app.route("/booked_customer", methods=["POST"])
+def bookedCustomer():
+
+    FullName = bleach.clean(request.form["Full_Name"])
+    EmailAddress = bleach.clean(request.form["Email_Address"])
+    ContactNumber = bleach.clean(request.form["Contact_number"])
+    SelectAppointDate = bleach.clean(request.form["Appointment_date"])
+    Clientconcers = bleach.clean(request.form["Client_Concern"])
+
+    try:
+        # Attempt to add to Firestore
+        db.collection("Appointment_clients").add({
+            "FullName": FullName,
+            "EmailAddress": EmailAddress,
+            "ContactNumber": ContactNumber,
+            "SelectAppointDate": SelectAppointDate,
+            "Client_concers": Clientconcers
+        })
+        flash("Appointment successfully booked!", "success")
+
+    except Exception as e:
+        # Log the error or flash a message
+        print(f"Error adding appointment: {e}")
+        flash("There was an error booking your appointment. Please try again.", "error")
+
+    return redirect(url_for("index"))
+
 @app.route("/patient-profile")
 def p_profile():
     # Pass session data to profile too
     name = session.get('name', 'Guest')
     return render_template("patient-profile.html", name=name)
+
+
+
+#---------------------------------------------------
+#Admin routes
+#---------------------------------------------------
+
+
+
+@app.route("/admin_dashboard")
+def adminDashboard():
+    ref = db.collection("Appointment_clients")
+    docs = ref.get()
+
+    Appointment_clients = []
+
+    for doc in docs:
+        appointment = doc.to_dict()
+        appointment["id"] = doc.id
+        Appointment_clients.append(appointment)
+
+    return render_template(
+        "admin_dashboard.html",
+        Appointment_clients=Appointment_clients
+    )
+
+@app.route("/admin_login")
+def adminLogin():
+    return render_template("admin_login.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
 
@@ -163,3 +221,5 @@ if __name__ == "__main__":
 #Argon2 for security
 
 #CRUD
+
+#Changed

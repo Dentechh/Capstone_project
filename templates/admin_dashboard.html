@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda | Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body class="dashboard-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>CAPIZONDA</h2>
+            <span>ADMIN PANEL</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</a>
+            <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">📅 Appointments</a>
+            <a href="javascript:void(0)" id="nav-records" class="nav-item" onclick="showSection('records')">👥 Patient Records</a>
+            <a href="javascript:void(0)" class="nav-item">⚙️ Settings</a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="/logout" class="nav-item logout">🚪 Logout</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <h2 id="page-title">Dashboard Overview</h2>
+            <div class="admin-profile">
+                <span>Dr. Admin</span>
+                <div class="avatar"></div>
+            </div>
+        </header>
+
+        <div id="section-dashboard" class="content-section active-section">
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">📅</div>
+                    <div class="metric-data"><h3>12</h3><p>Today's Appointments</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">⏳</div>
+                    <div class="metric-data"><h3 style="color: var(--gold)">5</h3><p>Pending Requests</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">👥</div>
+                    <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <section class="content-panel">
+                    <div class="panel-header"><h3>Upcoming Patients (Today)</h3></div>
+                    <ul class="schedule-list">
+                        <li class="schedule-item">
+                            <span class="time">09:00 AM</span>
+                            <span class="p-info"><strong>Althea Reyes</strong><br><small>Cleaning</small></span>
+                            <a href="/patient_forms" class="btn-action accept">Open Chart</a>
+                        </li>
+                    </ul>
+                </section>
+                
+                <section class="content-panel">
+                    <h3>Quick Actions</h3>
+                    <div class="action-grid">
+                        <button class="action-btn">➕ Add Patient</button>
+                        <button class="action-btn">📅 New Appt</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div id="section-appointments" class="content-section">
+            <section class="content-panel">
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th>Date</th>
+                            <th>Concern</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+<tbody>
+    {% for appointment in Appointment_clients %}
+    <tr>
+        <td>{{ appointment.FullName }}</td>
+        <td>{{ appointment.SelectAppointDate}}</td>
+        <td>{{ appointment.Client_concers }}</td>
+        <td>
+            <span class="badge pending">
+                pende
+            </span>
+        </td>
+        <td>
+            <a href="/patient_forms" class="btn-action accept">
+                Accept & Chart
+            </a>
+            <button class="btn-action decline">
+                Decline
+            </button>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="section-records" class="content-section">
+            <div class="search-bar-container">
+                <input type="text" id="patientSearch" placeholder="Search patients by name or ID..." class="search-input" onkeyup="filterPatients()">
+            </div>
+            <section class="content-panel">
+                <table class="appointment-table" id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Last Visit</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#PT-001</td>
+                            <td>Jericho Manalo</td>
+                            <td>Mar 15, 2026</td>
+                            <td>0912-345-6789</td>
+                            <td><button class="btn-action accept">View History</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        function showSection(sectionId) {
+            // 1. Update Sidebar Active State
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            document.getElementById('nav-' + sectionId).classList.add('active');
+
+            // 2. Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active-section');
+            });
+
+            // 3. Show target section
+            const target = document.getElementById('section-' + sectionId);
+            target.classList.add('active-section');
+
+            // 4. Update Header Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'appointments': 'Appointment Requests',
+                'records': 'Patient Database'
+            };
+            document.getElementById('page-title').innerText = titles[sectionId];
+        }
+
+        function filterPatients() {
+            let input = document.getElementById('patientSearch').value.toUpperCase();
+            let table = document.getElementById('recordsTable');
+            let tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName('td')[1]; // Name column
+                if (td) {
+                    let textValue = td.textContent || td.innerText;
+                    tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>

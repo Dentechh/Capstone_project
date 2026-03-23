@@ -1,0 +1,266 @@
+/* =========================
+      1. THEME & RESET
+========================== */
+:root {
+    --navy: #156699;
+    --dark-form: #0f243d; 
+    --gold: #FFA2AD;
+    --white: #ffffff;
+    --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
+    --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
+}
+
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    font-family: 'Kumbh Sans', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: url("../img/bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+}
+
+/* =========================
+      2. HEADER & PALETTE
+========================== */
+.main-header {
+    background: var(--grad-navy);
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    color: white;
+}
+
+.brand-name { font-weight: 700; font-size: 24px; display: block; }
+.brand-sub { font-size: 12px; opacity: 0.8; letter-spacing: 1px; }
+
+.btn-save {
+    background: var(--grad-gold);
+    color: white; border: none;
+    padding: 10px 25px; border-radius: 10px;
+    font-weight: 600; cursor: pointer; transition: 0.3s;
+}
+
+.btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(255,162,173,0.4); }
+
+.chart-container {
+    display: flex; 
+    padding: 30px; 
+    gap: 30px;
+    max-width: 1500px; 
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+.action-palette {
+    width: 120px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 20px 10px;
+    height: fit-content;
+}
+
+.palette-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 15px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.tool {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 5px; margin-bottom: 8px;
+    cursor: pointer; border-radius: 12px; color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tool:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+.tool.active { 
+    background: var(--grad-gold); 
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 162, 173, 0.4);
+}
+
+.tool span { font-size: 10px; margin-top: 5px; font-weight: 600; }
+
+/* =========================
+      3. ODONTOGRAM BOARD
+========================== */
+.dental-chart {
+    flex: 1;
+    background: var(--dark-form); 
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 25px;
+    padding: 40px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.chart-title { margin-bottom: 25px; letter-spacing: 2px; }
+
+.odontogram-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 20px 60px;
+}
+
+.segment {
+    fill: #ffffff; stroke: #156699;
+    stroke-width: 1.2; 
+    transition: fill 0.3s ease;
+}
+
+.segment:hover { filter: brightness(0.9); }
+
+.unified-grid {
+    display: grid;
+    grid-template-rows: repeat(2, 24px);
+    grid-auto-flow: column;
+    gap: 0; 
+    border: 1px solid white;
+    background: white;
+}
+
+.grid-box {
+    width: 32px; height: 24px;
+    border: 0.5px solid #ccc;
+    background: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.teeth-row {
+    display: flex;
+    justify-content: center;
+    gap: 0; 
+}
+
+.tooth-unit {
+    width: 32px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tooth-svg { width: 30px; height: 30px; overflow: visible; }
+
+.tooth-label {
+    font-size: 10px; font-weight: 800; color: white; margin-bottom: 2px;
+}
+
+/* REVERSE LAYOUT */
+.reverse-layout .tooth-unit { flex-direction: column; }
+.reverse-layout .tooth-svg { order: 1; }
+.reverse-layout .tooth-label { order: 2; margin-top: 4px; margin-bottom: 0; }
+
+.label-side.rotated {
+    position: absolute; 
+    left: -25px; 
+    top: 50%;
+    transform: rotate(-90deg) translateX(-50%);
+    transform-origin: left;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.axis-v {
+    position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 2px; background: white; z-index: 10;
+    pointer-events: none;
+}
+
+.axis-h { width: 100%; height: 1px; background: rgba(255,255,255,0.3); margin: 15px 0; }
+.axis-h-mid { width: 100%; height: 2px; background: white; margin: 5px 0; }
+
+/* FIXED SECTION LABEL PLACEMENT */
+.section-label {
+    color: var(--gold);
+    font-weight: 800;
+    font-size: 10px;
+    margin: 4px 0; /* Reduced margin to sit closer to circles */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-row-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; 
+    margin: 10px 0;
+}
+
+.label-inline {
+    font-size: 11px;
+    font-weight: 800;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100px;
+}
+
+.label-inline:first-child { text-align: right; }
+.label-inline:last-child { text-align: left; }
+
+/* =========================
+      4. MODAL POPUP
+========================== */
+.modal {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--dark-form); 
+    padding: 40px; 
+    border-radius: 20px;
+    text-align: center; 
+    border: 2px solid var(--gold); 
+    color: white;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.modal-buttons { display: flex; gap: 15px; margin-top: 25px; justify-content: center; }
+
+.modal-buttons button { 
+    padding: 10px 30px; 
+    border-radius: 10px; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 700; 
+    transition: 0.3s;
+}
+
+.btn-modal-red { background: #ff4d4d; color: white; }
+.btn-modal-blue { background: #156699; color: white; }
+.btn-modal-cancel { background: #555; color: white; }

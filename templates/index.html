@@ -301,6 +301,49 @@
             .user-info-brief, .nav-links { display: none; }
             .footer-content { justify-content: center; flex-direction: column; }
         }
+
+        /* Match select to input style */
+.modal-content select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+}
+
+/* If inside auth-card (dark version) */
+.auth-card select {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+/* Style dropdown options (best effort, depends on browser) */
+.auth-card select option {
+    color: black;
+}
+
+/* Style label like input title */
+.modal-content label {
+    display: block;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 10px;
+    color: #333;
+}
+
+/* Label inside auth-card */
+.auth-card label {
+    color: white;
+    opacity: 0.9;
+}
+        
     </style>
 </head>
 <body>
@@ -324,9 +367,6 @@
             <li><a href="/" class="active">HOME</a></li>
             <li><a href="/about_customer_side">ABOUT</a></li>
             <li><a href="#">SERVICES ▾</a></li>
-            <li><a href="#">Notification </a></li>
-            <li><a href="#">Schedule </a></li>
-            <li><a href="#">Pay Online </a></li>
         </ul>
 
         {% if name == "Guest" or not name %}
@@ -406,15 +446,32 @@
     </div>
 </div>
 
+
+
 <div id="appointmentModal" class="modal">
     <div class="modal-content">
         <span class="close-btn" id="closeModal">&times;</span>
         <h2>Book Appointment</h2>
-        <form id="appointmentForm">
-            <input type="text" placeholder="Full Name" required>
-            <input type="email" placeholder="Email Address" required>
-            <input type="tel" placeholder="Contact Number" required>
-            <input type="text" id="appointmentDate" placeholder="Select Appointment Date" required readonly>
+        <form action="/booked_customer" id="appointmentForm" method="POST">
+            <input type="text" placeholder="Full Name" name="Full_Name" required>
+            <input type="email" placeholder="Email Address" name="Email_Address" required>
+            <input type="tel" placeholder="Contact Number" name="Contact_number" required>
+            <input type="text" id="appointmentDate" placeholder="Select Appointment Date" name="Appointment_date" required readonly>
+            <label >Concerns:</label>
+            <select id="Concers" name="Client_Concern">
+            <option value="Crown & Bridges">Crown & Bridges</option>
+            <option value="Veneers">Veneers</option>
+            <option value="Whitening">Whitening</option>
+            <option value="Fillings">Fillings</option>
+            <option value="Cleaning">Cleaning</option>
+            <option value="Extraction">Extraction</option>
+            <option value="Dental Surgery">Dental Surgery</option>
+            <option value="Dentures">Dentures</option>
+            <option value="Root Canal Treatment">Root Canal Treatment</option>
+            <option value="mplants">Implants</option>
+            <option value="Pediatric Dentistry">Pediatric Dentistry</option>
+            <option value="Dental xRay">Dental xRay</option>
+            </select>
             <button type="submit" class="submit-btn">Submit Appointment</button>
         </form>
     </div>
@@ -456,6 +513,7 @@
             </div>
             <input type="text" name="UserName" placeholder="Username" required>
             <input type="password" name="Password" placeholder="Password" required>
+            <input type="tel" name="MobileNumber" placeholder="Contact Number" required>
             <button type="submit" class="submit-btn">Sign Up</button>
         </form>
         
