@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dental Record Chart - Capizonda</title>
+    <link rel="stylesheet" href="style.css"> <link rel="stylesheet" href="chart-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="chart-page">
+
+    <div class="chart-main-container">
+        <aside class="action-palette">
+            <div class="palette-header">ACTION<br>PALETTE</div>
+            
+            <div class="tool active" onclick="setTool(this, 'healthy')">
+                <div class="tool-icon">🦷</div><span>Healthy</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'caries')">
+                <div class="tool-icon tool-red">🖌️</div><span>Caries</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'filling')">
+                <div class="tool-icon tool-blue">🖌️</div><span>Filling</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'crown')">
+                <div class="tool-icon">👑</div><span>Crown</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'rootcanal')">
+                <div class="tool-icon">💉</div><span>Root Canal</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'extraction')">
+                <div class="tool-icon">✂️</div><span>Extraction</span>
+            </div>
+            <div class="tool" onclick="setTool(this, 'check')">
+                <div class="tool-icon">✔️</div><span>Check</span>
+            </div>
+        </aside>
+
+        <main class="dental-chart">
+            <h2 class="chart-title">DENTAL RECORD CHART</h2>
+            
+            <div class="chart-section">
+                <div class="label-column">
+                    <span class="side-label">STATUS<br>RIGHT</span>
+                </div>
+                <div class="grid-column">
+                    <div class="status-grid" id="status-top-1"></div>
+                    <div class="status-grid" id="status-top-2"></div>
+                    <div class="teeth-row" id="temp-teeth-top"></div>
+                    <div class="label-row">TEMPORARY TEETH</div>
+                </div>
+                <div class="label-column"><span class="side-label">LEFT</span></div>
+            </div>
+
+            <div class="chart-section">
+                <div class="label-column"></div>
+                <div class="grid-column">
+                    <div class="status-grid wide" id="status-mid-1"></div>
+                    <div class="status-grid wide" id="status-mid-2"></div>
+                    <div class="teeth-row wide" id="perm-teeth-top"></div>
+                    <div class="section-divider-text">PERMANENT TEETH</div>
+                    <div class="teeth-row wide" id="perm-teeth-bottom"></div>
+                    <div class="status-grid wide" id="status-mid-3"></div>
+                    <div class="status-grid wide" id="status-mid-4"></div>
+                </div>
+                <div class="label-column"></div>
+            </div>
+
+            <div class="chart-section">
+                <div class="label-column">
+                    <span class="side-label">TEMPORARY<br>TEETH</span>
+                </div>
+                <div class="grid-column">
+                    <div class="teeth-row" id="temp-teeth-bottom"></div>
+                    <div class="status-grid" id="status-bottom-1"></div>
+                    <div class="status-grid" id="status-bottom-2"></div>
+                    <div class="label-row">STATUS RIGHT</div>
+                </div>
+                <div class="label-column"><span class="side-label">LEFT</span></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="chart-logic.js"></script>
+</body>
+</html>
+<style>
+    :root {
+    --dark-bg: #333333;
+    --panel-bg: #444444;
+    --gold: #eeb455;
+    --text: #ffffff;
+}
+
+body.chart-page {
+    background: #5a5a5a;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.chart-main-container {
+    background: var(--dark-bg);
+    display: flex;
+    border-radius: 25px;
+    padding: 20px;
+    border: 2px solid #222;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+/* Action Palette Sidebar */
+.action-palette {
+    width: 100px;
+    background: #555;
+    border-radius: 15px;
+    padding: 15px 5px;
+    margin-right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.palette-header { font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 10px; line-height: 1.2; }
+
+.tool {
+    text-align: center;
+    cursor: pointer;
+    padding: 8px 0;
+    border-radius: 10px;
+    transition: 0.2s;
+}
+
+.tool span { font-size: 10px; display: block; margin-top: 5px; }
+.tool-icon { font-size: 20px; width: 40px; height: 40px; background: #eee; border-radius: 8px; margin: 0 auto; display: flex; align-items: center; justify-content: center; color: #333; }
+
+.tool.active { background: #222; border: 1px solid var(--gold); }
+.tool-red { color: #ff4d4d; }
+.tool-blue { color: #4da6ff; }
+
+/* Chart Area Layout */
+.dental-chart { text-align: center; padding: 0 20px; }
+.chart-title { font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid #666; display: inline-block; padding-bottom: 5px; }
+
+.chart-section { display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.label-column { width: 80px; font-size: 11px; font-weight: bold; }
+.grid-column { display: flex; flex-direction: column; align-items: center; }
+
+/* Status Grids (The Boxes) */
+.status-grid { display: flex; border: 1px solid #888; background: white; margin-bottom: -1px; }
+.stat-box { width: 28px; height: 22px; border: 1px solid #888; cursor: pointer; color: black; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+
+/* Teeth Alignment */
+.teeth-row { display: flex; gap: 8px; padding: 10px 0; border-left: 2px solid #666; border-right: 2px solid #666; position: relative; }
+.teeth-row::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #666; }
+
+.tooth-unit { text-align: center; position: relative; }
+.tooth-num { font-size: 11px; font-weight: bold; margin-bottom: 4px; display: block; }
+
+.tooth-circle {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid #000;
+    overflow: hidden;
+}
+
+/* Interactive Segments */
+.seg { position: absolute; width: 100%; height: 100%; cursor: pointer; }
+.seg.top { clip-path: polygon(0 0, 100% 0, 50% 50%); }
+.seg.bottom { clip-path: polygon(0 100%, 100% 100%, 50% 50%); }
+.seg.left { clip-path: polygon(0 0, 0 100%, 50% 50%); }
+.seg.right { clip-path: polygon(100% 0, 100% 100%, 50% 50%); }
+.seg.center { 
+    width: 40%; height: 40%; top: 30%; left: 30%; 
+    border: 1px solid #000; background: white; z-index: 2; border-radius: 50%;
+}
+
+/* Tool Effects */
+.caries { background: #ff4d4d !important; }
+.filling { background: #4da6ff !important; }
+.xtraction-mark { position: absolute; top: -2px; left: 0; width: 100%; text-align: center; color: red; font-size: 28px; z-index: 10; pointer-events: none; display: none; }
+.crown-line { position: absolute; left: 50%; top: 0; width: 3px; height: 100%; background: #4da6ff; z-index: 5; display: none; pointer-events: none; }
+
+.section-divider-text { font-size: 12px; font-weight: bold; padding: 10px 0; border-top: 2px solid #666; width: 100%; }
+.label-row { font-size: 11px; font-weight: bold; padding-top: 5px; }
+
+/* INDEX */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+:root {
+    --navy: #1a3a5a;
+    --gold: #eeb455;
+    --white: #ffffff;
+}
+
+body {
+    background-color: var(--navy);
+    overflow-x: hidden;
+}
+
+header {
+    background-color: var(--navy);
+    padding: 15px 5%;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    color: var(--white);
+}
+
+.logo-icon {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.brand-name {
+    display: block;
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 1.2rem;
+}
+
+.brand-sub {
+    font-size: 0.7rem;
+    display: block;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+}
+
+.nav-links li {
+    margin: 0 15px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--white);
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.nav-links a.active {
+    color: var(--gold);
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.btn-contact {
+    background-color: var(--gold);
+    color: var(--white);
+    padding: 10px 25px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.hamburger {
+    cursor: pointer;
+}
+
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: var(--white);
+    margin: 4px 0;
+}
+
+
+.hero-section {
+    position: relative;
+    height: 70vh;
+    background-image: url('dental-office-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.4); 
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.hero-image-wrapper {
+    flex: 1;
+}
+
+.patient-img {
+    height: 450px;
+    display: block;
+}
+
+.cta-box {
+    background: rgba(26, 58, 90, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    color: var(--white);
+    width: 350px;
+    margin-bottom: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.cta-box p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.cta-icon img {
+    width: 40px;
+    margin-bottom: 20px;
+}
+
+.btn-appointment {
+    display: inline-block;
+    background-color: var(--gold);
+    color: var(--white);
+    padding: 12px 25px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    width: 100%;
+}
+
+.bottom-bar {
+    background-color: var(--navy);
+    height: 100px;
+}
+
+/* ABOUT */
+/* Container for alignment */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* About Hero Header */
+.about-hero {
+    background-color: var(--navy);
+    color: var(--white);
+    padding: 80px 0;
+    text-align: center;
+}
+
+.about-hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+}
+
+.about-hero p {
+    max-width: 700px;
+    margin: 0 auto;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+/* Team Section Styles */
+.team-section {
+    padding: 80px 0;
+    background-color: #f4f7f9;
+}
+
+.section-title {
+    text-align: center;
+    color: var(--navy);
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 50px;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.doctor-card {
+    background: var(--white);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.doctor-card:hover {
+    transform: translateY(-10px);
+}
+
+.doctor-img img {
+    width: 100%;
+    height: 350px;
+    object-fit: cover;
+}
+
+.doctor-info {
+    padding: 25px;
+    text-align: center;
+}
+
+.doctor-info h3 {
+    color: var(--navy);
+    margin-bottom: 5px;
+}
+
+.specialty {
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.bio {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.doctor-contact {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.doctor-contact a {
+    text-decoration: none;
+    background: #f0f4f8;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.doctor-contact a:hover {
+    background: var(--gold);
+    color: white;
+}
+
+/* Bottom CTA section */
+.about-cta {
+    background-color: var(--navy);
+    padding: 60px 0;
+    text-align: center;
+    color: white;
+}
+
+.about-cta h3 {
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+}
+
+/* Footer Spacer */
+.bottom-bar {
+    background-color: #0d253f; /* Slightly darker navy */
+    height: 60px;
+}
+
+/*PATIENT FORMS*/
+
+.chart-page {
+    background: #555; /* Dark background like your image */
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.chart-container {
+    display: flex;
+    background: #333;
+    border-radius: 20px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+/* Palette Styles */
+.action-palette {
+    width: 120px;
+    border-right: 1px solid #555;
+    padding-right: 15px;
+    text-align: center;
+}
+
+.palette-header { font-size: 10px; margin-bottom: 20px; color: #aaa; }
+
+.tool {
+    padding: 10px 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: 0.2s;
+    font-size: 11px;
+}
+
+.tool:hover { background: #444; }
+.tool.active { background: #1a3a5a; border: 1px solid var(--gold); }
+
+/* Tooth Structure */
+.teeth-row { display: flex; justify-content: center; gap: 5px; margin: 15px 0; }
+
+.tooth-unit { text-align: center; }
+
+.tooth-circle {
+    position: relative;
+    width: 35px;
+    height: 35px;
+    background: white;
+    border-radius: 50%;
+    border: 2px solid #222;
+    overflow: hidden;
+}
+
+/* 5 Clickable Sections */
+.seg { position: absolute; width: 100%; height: 100%; }
+.seg.top { clip-path: polygon(0 0, 100% 0, 50% 50%); }
+.seg.bottom { clip-path: polygon(0 100%, 100% 100%, 50% 50%); }
+.seg.left { clip-path: polygon(0 0, 0 100%, 50% 50%); }
+.seg.right { clip-path: polygon(100% 0, 100% 100%, 50% 50%); }
+.seg.center { 
+    width: 40%; height: 40%; top: 30%; left: 30%; 
+    border: 1px solid #222; background: white; z-index: 2;
+}
+
+/* Painting Colors */
+.caries { background: #ff4d4d !important; }
+.filling { background: #4da6ff !important; }
+
+/* Overlays */
+.xtraction-mark {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    color: red; font-size: 35px; line-height: 35px; z-index: 10;
+    display: none; pointer-events: none;
+}
+
+.crown-mark {
+    position: absolute; top: 0; left: 45%; width: 4px; height: 100%;
+    background: #4da6ff; z-index: 5; display: none; pointer-events: none;
+}
+
+/* Status Boxes */
+.status-row { display: flex; justify-content: center; gap: 5px; }
+.stat-box {
+    width: 35px; height: 25px; border: 1px solid #888;
+    background: white; cursor: pointer; color: black;
+    display: flex; align-items: center; justify-content: center;
+}
+</style>

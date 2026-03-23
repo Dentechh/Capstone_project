@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda Dental Clinic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        /* =========================
+             1. GLOBAL & RESET
+        ========================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Kumbh Sans', sans-serif;
+        }
+
+        :root {
+            --navy: #156699;
+            --gold: #FFA2AD;
+            --gold-light: #FFA2AD;
+            --white: #ffffff;
+            --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
+            --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
+            --grad-navy2: linear-gradient(180deg,#8CD3FF 0%, #156699 100%);
+            --grad-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            --grad-surface: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url("{{ url_for('static', filename='img/bg.jpg') }}") no-repeat center center;
+            background-size: cover;
+            filter: blur(8px);
+            -webkit-filter: blur(8px);
+            z-index: -1;
+            transform: scale(1.1);
+        }
+
+        .hero-section {
+            position: relative;
+            height: 70vh;
+            background: transparent; 
+            display: flex; 
+            align-items: flex-end; 
+            justify-content: center;
+            flex: 1;
+        }
+
+        /* =========================
+             2. NAVIGATION
+        ========================== */
+        header {
+            background: var(--grad-navy); 
+            padding: 25px 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.9);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .logo-icon { 
+            height: 65px; 
+            margin-right: 8px; 
+            mix-blend-mode: lighten;
+        }
+        .brand-name { 
+            font-weight: 600; 
+            letter-spacing: 1px; 
+            font-size: 25px; 
+            display: block; 
+        }
+        .brand-sub { 
+            font-size: 15px; 
+            display: block; 
+            opacity: 0.9; }
+
+        .nav-links { 
+            display: flex; 
+            list-style: none; 
+            align-items: center; 
+        }
+        .nav-links li { 
+            margin: 0 20px; 
+        }
+        .nav-links a { 
+            text-decoration: none; 
+            color: var(--white); 
+            font-size: 20px; 
+            font-weight: 400; 
+            transition: all 0.3s ease; 
+        }
+        .nav-links a:hover, .nav-links a.active { 
+            color: var(--gold-light); 
+        }
+
+        /* PROFILE & DROPDOWN STYLING */
+        .profile-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-left: 20px;
+            border-left: 1px solid rgba(255,255,255,0.3);
+            position: relative; /* Needed for dropdown positioning */
+        }
+
+        .profile-img-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--white);
+            transition: transform 0.2s;
+        }
+
+        .profile-img:hover { transform: scale(1.05); }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: white;
+            min-width: 180px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 2000;
+        }
+
+        .dropdown-menu a {
+            padding: 12px 20px;
+            text-decoration: none;
+            color: var(--navy);
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.3s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-menu a:last-child { border-bottom: none; color: #ff4d4d; }
+        .dropdown-menu a:hover { background: #f8f9fa; }
+
+        .user-info-brief { color: var(--white); text-align: right; }
+        .user-info-brief span { display: block; font-size: 23px; font-weight: 600; }
+        .user-info-brief small { font-size: 12px; opacity: 0.9; }
+
+        /* AUTH BUTTONS STYLING */
+        .auth-buttons { display: flex; gap: 15px; align-items: center; }
+        .btn-login, .btn-register { text-decoration: none; padding: 10px 25px; border-radius: 12px; font-weight: 600; transition: 0.3s; font-size: 16px; }
+        .btn-login { color: white; border: 1px solid rgba(255,255,255,0.4); }
+        .btn-login:hover { background: rgba(255,255,255,0.1); }
+        .btn-register { background: var(--grad-gold); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,162,173,0.4); }
+
+        /* =========================
+             3. HERO SECTION
+        ========================== */
+
+        .hero-content { 
+            position: relative; 
+            z-index: 1; width: 90%; 
+            max-width: 1200px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            flex-wrap: wrap; }
+
+        .user-greeting { 
+            font-size: 25px;
+            color: #ffffff;
+            margin-bottom: 300px; 
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); 
+        }
+        .cta-box { 
+            background: var(--grad-navy); 
+            backdrop-filter: blur(10px); 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.9); 
+            border-radius: 20px; 
+            margin-bottom: 250px; 
+            text-align: center; 
+            margin-top: 20px; 
+            padding: 70px; }
+
+        .cta-box p { 
+            color: #ffffff; 
+            font-weight: 600; 
+            margin-bottom: 50px;
+            font-size: 20px;
+         }
+        .cta-box img { height: 80px; border-radius: 20px; mix-blend-mode: lighten; }
+        .btn-appointment { background: var(--grad-gold); color: white; padding: 15px 30px; font-weight: 600; border-radius: 15px; text-decoration: none; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: none; }
+        .btn-appointment:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 134, 134, 0.4); }
+
+        footer { background: var(--grad-navy2); color: white; padding: 50px 5%; text-align: center; }
+        .footer-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .footer-text { font-size: 0.85rem; opacity: 0.9; }
+
+        .chatbot-launcher { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1001; transition: transform 0.3s ease; }
+        .chatbot-launcher img { width: 30px; filter: brightness(0) invert(1); }
+        .chatbot-window { position: fixed; bottom: 100px; right: 30px; width: 320px; background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
+        .chatbot-header { background: var(--gold); color: white; padding: 15px; font-weight: 600; text-align: center; }
+        .chatbot-messages { height: 300px; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px 14px; border-radius: 18px; font-size: 0.85rem; max-width: 80%; }
+        .message.bot { background: #f1f0f0; align-self: flex-start; }
+        .message.user { background: var(--gold); color: white; align-self: flex-end; }
+        .chatbot-input { display: flex; border-top: 1px solid #eee; }
+        .chatbot-input input { flex: 1; padding: 12px; border: none; outline: none; }
+        .chatbot-input button { background: var(--gold); color: white; border: none; padding: 0 15px; cursor: pointer; }
+        .chatbot-buttons { padding: 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+        .chatbot-buttons button { background: #1a3a5a; color: white; border: none; padding: 6px 12px; border-radius: 10px; font-size: 0.75rem; cursor: pointer; }
+
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
+        .modal-content input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; }
+        .submit-btn { width: 100%; padding: 12px; border: none; border-radius: 20px; background: var(--grad-gold); color: white; font-weight: 600; cursor: pointer; }
+        .close-btn { float: right; font-size: 20px; cursor: pointer; }
+        .flatpickr-day.selected { background: var(--navy) !important; border-color: var(--navy) !important; }
+
+        /* Styling for the Login and Register Modal Cards */
+        .auth-card {
+            background: var(--grad-navy) !important; /* Uses your navy gradient */
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            color: white;
+        }
+
+        .auth-card h2 {
+            margin-bottom: 20px;
+        }
+
+        .auth-card input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .auth-card input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .divider {
+            margin: 20px 0;
+            font-size: 14px;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 10px;
+        }
+
+        .auth-card .footer-text a {
+            color: var(--gold-light);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .hero-content { flex-direction: column; align-items: center; text-align: center; }
+            .user-info-brief, .nav-links { display: none; }
+            .footer-content { justify-content: center; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="g_id_onload"
+     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse">
+</div>
+
+<header>
+    <nav class="navbar">
+        <a href="/" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="/" class="active">HOME</a></li>
+            <li><a href="/about_customer_side">ABOUT</a></li>
+            <li><a href="#">SERVICES ▾</a></li>
+            <li><a href="#">Notification </a></li>
+            <li><a href="#">Schedule </a></li>
+            <li><a href="#">Pay Online </a></li>
+        </ul>
+
+        {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+        </div>
+        {% else %}
+
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">Profile Info</a>
+                    <a href="/logout">Logout</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="hero-section">
+    <div class="hero-content">
+        <div class="user-greeting">
+            <h1>Welcome, {{ name }}!</h1>
+            <p>Ready for a brighter smile today?</p>
+        </div>
+
+        <div class="cta-box">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo">
+            <p>Your smile is our passion!</p>
+            <a href="#" class="btn-appointment" id="openAppointment">Book an Appointment</a>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-content">
+        <div class="logo-text" style="text-align: left;">
+            <span class="brand-name" style="font-size: 1rem;">CAPIZONDA DENTAL</span>
+            <span class="brand-sub" style="font-size: 0.6rem;">Trusted Care Since 2024</span>
+        </div>
+        <div class="footer-text">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>
+        <div class="nav-links">
+            <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Privacy Policy</a>
+            <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+<div class="chatbot-launcher" id="chatLauncher">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/chat--v1.png" alt="Chat Icon">
+</div>
+
+<div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-header">Clinic Assistant</div>
+    <div class="chatbot-messages" id="chat-box">
+        <div class="message bot">Hi there! How can we make your smile brighter today? 😁</div>
+    </div>
+    <div class="chatbot-buttons">
+        <button data-msg="Clinic Info">Clinic Info</button>
+        <button data-msg="Appointments">Appointments</button>
+        <button data-msg="Treatments">Treatments</button>
+    </div>
+    <div class="chatbot-input">
+        <input type="text" id="chat-input" placeholder="Ask a question...">
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<div id="appointmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" id="closeModal">&times;</span>
+        <h2>Book Appointment</h2>
+        <form id="appointmentForm">
+            <input type="text" placeholder="Full Name" required>
+            <input type="email" placeholder="Email Address" required>
+            <input type="tel" placeholder="Contact Number" required>
+            <input type="text" id="appointmentDate" placeholder="Select Appointment Date" required readonly>
+            <button type="submit" class="submit-btn">Submit Appointment</button>
+        </form>
+    </div>
+</div>
+
+<div id="loginModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('loginModal')">&times;</span>
+
+        <h2>Welcome Back</h2>
+        
+        <form action="/login" method="POST">
+            <input type="text" name="UserName" placeholder="Username" required>
+            <input type="password" name="Password" placeholder="Password" required>
+            <button type="submit" class="submit-btn">Login</button>
+        </form>
+
+        <div class="divider">OR</div>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard"></div>
+        </div>
+
+        <p class="footer-text">
+            Don't have an account yet? 
+            <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
+        </p>
+    </div>
+</div>
+
+<div id="registerModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
+        <h2>Create Account</h2>
+        <form action="/sign-up" method="POST">
+            <div style="display:flex; gap:10px;">
+                <input type="text" name="FirstName" placeholder="First Name" required>
+                <input type="text" name="LastName" placeholder="Last Name" required>
+            </div>
+            <input type="text" name="UserName" placeholder="Username" required>
+            <input type="password" name="Password" placeholder="Password" required>
+            <button type="submit" class="submit-btn">Sign Up</button>
+        </form>
+        
+        <div class="divider">OR</div>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard" data-text="signup_with"></div>
+        </div>
+
+        <p class="footer-text">
+            Already have an account? 
+            <a href="javascript:void(0)" onclick="closeAuthModal('registerModal'); openAuthModal('loginModal');">Log In</a>
+        </p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+
+    function handleCredentialResponse(response) {
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/google-auth";
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "token";
+        input.value = response.credential;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function openAuthModal(modalId) {
+    document.getElementById(modalId).style.display = "flex";
+    }
+
+    function closeAuthModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    window.onclick = (e) => { 
+    // Close Appointment Modal
+    if(e.target == modal) modal.style.display = "none";
+    
+    // Close Login Modal if clicking background
+    const loginM = document.getElementById('loginModal');
+    if(e.target == loginM) loginM.style.display = "none";
+
+    // Close Register Modal if clicking background
+    const regM = document.getElementById('registerModal');
+    if(e.target == regM) regM.style.display = "none";
+
+    // Close chat if clicking outside
+    if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+        windowChat.style.display = 'none';
+    }
+
+    // Close profile dropdown
+    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+    }
+};
+    // 1. Dropdown Toggle Logic
+    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+    const dropdownMenu = document.getElementById('profileDropdown');
+
+    if(dropdownTrigger) {
+        dropdownTrigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = dropdownMenu.style.display === 'flex';
+            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+        };
+    }
+
+    // 2. Toggle Chatbot Modal
+    const launcher = document.getElementById('chatLauncher');
+    const windowChat = document.getElementById('chatWindow');
+
+    launcher.onclick = () => {
+        const isOpen = windowChat.style.display === 'flex';
+        windowChat.style.display = isOpen ? 'none' : 'flex';
+    };
+
+    // 3. Chat Logic
+    const chatBox = document.getElementById('chat-box');
+    document.querySelectorAll('.chatbot-buttons button').forEach(btn => {
+        btn.onclick = () => {
+            const msg = btn.getAttribute('data-msg');
+            addMsg('user', msg);
+            setTimeout(() => addMsg('bot', `I'd be happy to help with ${msg}! What specific info do you need?`), 600);
+        }
+    });
+
+    function addMsg(s, t) {
+        const d = document.createElement('div'); d.className = `message ${s}`; d.textContent = t;
+        chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 4. Appointment Modal Logic
+    const modal = document.getElementById("appointmentModal");
+    document.getElementById("openAppointment").onclick = (e) => { e.preventDefault(); modal.style.display = "flex"; };
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    
+    // Global click listener to close modals/dropdowns if clicking outside
+    window.onclick = (e) => { 
+        if(e.target == modal) modal.style.display = "none";
+        
+        // Close chat if clicking outside
+        if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+            windowChat.style.display = 'none';
+        }
+
+        // Close dropdown if clicking outside
+        if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+    };
+
+    // Calendar Initialization
+    flatpickr("#appointmentDate", {
+        minDate: "today",
+        dateFormat: "F j, Y",
+        disable: [
+            "2026-03-25", "2026-03-26",
+            function(date) { return (date.getDay() === 0); }
+        ]
+    });
+</script>
+
+</body>
+</html>

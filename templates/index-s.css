@@ -1,0 +1,392 @@
+/* =========================
+      1. GLOBAL & RESET
+========================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+:root {
+    --navy: #1a3a5a;
+    --gold: #eeb455;
+    --white: #ffffff;
+    --dark-bg: #333;
+}
+
+body {
+    background-color: var(--navy);
+    overflow-x: hidden;
+}
+
+/* =========================
+      2. NAVIGATION
+========================== */
+header {
+    background-color: var(--navy);
+    padding: 15px 5%;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    color: var(--white);
+}
+
+.logo-icon {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.brand-name {
+    font-weight: 600;
+    letter-spacing: 1px;
+    font-size: 1.2rem;
+}
+
+.brand-sub {
+    font-size: 0.7rem;
+    display: block;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    flex-wrap: wrap;
+}
+
+.nav-links li {
+    margin: 0 15px;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--white);
+    font-size: 0.85rem;
+    transition: color 0.3s ease;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+    color: var(--gold);
+}
+
+.btn-contact {
+    background: linear-gradient(135deg, #eeb455, #f7d67a);
+    color: var(--white);
+    padding: 10px 25px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-contact:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(238, 180, 85, 0.4);
+}
+
+/* =========================
+      3. HERO SECTION
+========================== */
+.hero-section {
+    position: relative;
+    height: 70vh;
+    background: url('bg.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    width: 90%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.user-greeting {
+    color: var(--navy);
+    margin-bottom: 20px;
+}
+
+.patient-img {
+    height: 400px;
+    display: block;
+    border-radius: 20px;
+}
+
+.cta-box {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.cta-box p {
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.btn-appointment {
+    background: linear-gradient(135deg, #eeb455, #f7d67a);
+    color: white;
+    padding: 12px 28px;
+    font-weight: 600;
+    border-radius: 25px;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-appointment:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(238, 180, 85, 0.4);
+}
+
+/* =========================
+      4. QUICK ACTION BUTTONS
+========================== */
+.quick-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    z-index: 10;
+}
+
+.btn-action {
+    background: linear-gradient(135deg, #1a3a5a, #2e5b8f);
+    color: var(--white);
+    border: none;
+    padding: 14px 22px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    min-width: 160px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    text-transform: uppercase;
+}
+
+.btn-action img {
+    width: 20px;
+    height: 20px;
+    filter: brightness(0) invert(1);
+}
+
+.btn-action:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #2e5b8f, #3c74b0);
+}
+
+.btn-action.google {
+    background: linear-gradient(135deg, #4285F4, #357ae8);
+}
+
+.btn-action.google:hover {
+    background: linear-gradient(135deg, #357ae8, #2a65c4);
+}
+
+/* =========================
+      5. CHATBOT UI
+========================== */
+.chatbot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+}
+
+.chatbot-header {
+    background: var(--gold);
+    color: white;
+    padding: 15px;
+    font-weight: 600;
+    text-align: center;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 20px 20px 0 0;
+}
+
+.chatbot-messages {
+    height: 260px;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.message {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.85rem;
+    max-width: 80%;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+
+.message.bot {
+    background: #f1f0f0;
+    align-self: flex-start;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message.user {
+    background: var(--gold);
+    color: white;
+    align-self: flex-end;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chatbot-input {
+    display: flex;
+    border-top: 1px solid #eee;
+}
+
+.chatbot-input input {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    outline: none;
+    border-radius: 0 0 0 20px;
+}
+
+.chatbot-input button {
+    background: linear-gradient(135deg, #eeb455, #f7d67a);
+    color: white;
+    border: none;
+    padding: 0 20px;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 0 0 20px 0;
+    transition: all 0.3s ease;
+}
+
+.chatbot-input button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(238, 180, 85, 0.4);
+}
+
+/* CHATBOT QUICK BUTTONS */
+.chatbot-buttons button {
+    background: linear-gradient(135deg, #1a3a5a, #2e5b8f);
+    color: var(--white);
+    border: none;
+    padding: 10px 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin: 4px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.chatbot-buttons button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    background: linear-gradient(135deg, #2e5b8f, #3c74b0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        align-items: center;
+    }
+    .patient-img {
+        height: 300px;
+        margin-top: 20px;
+    }
+}
+
+/* APPOINTMENT MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 350px;
+    text-align: center;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+    color: var(--navy);
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.submit-btn {
+    margin-top: 10px;
+    padding: 12px;
+    width: 100%;
+    border: none;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #eeb455, #f7d67a);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.close-btn {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
+}
