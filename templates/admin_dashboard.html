@@ -6,6 +6,80 @@
     <title>Capizonda | Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <style>
+        /* =========================================
+           PATIENT PROFILE MODAL (ADDED)
+           ========================================= */
+        .profile-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 25, 47, 0.9);
+            backdrop-filter: blur(8px);
+        }
+
+        .profile-modal-content {
+            background: var(--dark-form);
+            margin: 10% auto;
+            padding: 30px;
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            width: 450px;
+            position: relative;
+            animation: fadeInUp 0.4s ease forwards;
+        }
+
+        .close-profile {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gold);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .p-avatar-circle.large {
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+        }
+
+        .info-group {
+            margin-bottom: 15px;
+        }
+
+        .info-group label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .info-group p {
+            font-size: 15px;
+            color: white;
+        }
+
+        .profile-footer {
+            margin-top: 25px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body class="dashboard-body">
 
@@ -18,8 +92,9 @@
         <nav class="sidebar-nav">
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">📅 Appointments</a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">🩺 My Patients</a>
             <a href="javascript:void(0)" id="nav-records" class="nav-item" onclick="showSection('records')">👥 Patient Records</a>
-            <a href="javascript:void(0)" class="nav-item">⚙️ Settings</a>
+
         </nav>
         
         <div class="sidebar-footer">
@@ -74,9 +149,26 @@
             </div>
         </div>
 
+        <div id="section-mypatients" class="content-section">
+            <div class="patient-card-grid">
+                <div class="patient-card">
+                    <div class="p-card-header">
+                        <div class="p-avatar-circle">AR</div>
+                        <div class="p-info">
+                            <strong>Althea Reyes</strong>
+                            <small style="opacity: 0.6;">Patient ID: #PT-001</small>
+                        </div>
+                    </div>
+                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>Oral Prophylaxis</strong></p>
+                    <button class="btn-action accept" style="width: 100%;" onclick="openProfile('Althea Reyes', '#PT-001', '0912-345-6789', 'Oct 24, 2026', 'althea@email.com')">Check Profile</button>
+                </div>
+            </div>
+        </div>
+
         <div id="section-appointments" class="content-section">
             <section class="content-panel">
-                <table class="appointment-table">
+    
+               <table class="appointment-table">
                     <thead>
                         <tr>
                             <th>Patient Name</th>
@@ -133,7 +225,7 @@
                             <td>Jericho Manalo</td>
                             <td>Mar 15, 2026</td>
                             <td>0912-345-6789</td>
-                            <td><button class="btn-action accept">View History</button></td>
+                            <td><button class="btn-action accept" onclick="openProfile('Jericho Manalo', '#PT-001', '0912-345-6789', 'Mar 15, 2026', 'jericho@email.com')">View History</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -141,28 +233,63 @@
         </div>
     </main>
 
+    <div id="profileModal" class="profile-modal">
+        <div class="profile-modal-content">
+            <span class="close-profile" onclick="closeProfile()">&times;</span>
+            
+            <div class="profile-header">
+                <div class="p-avatar-circle large" id="modal-avatar">??</div>
+                <div class="profile-title">
+                    <h2 id="modal-name">Patient Name</h2>
+                    <p id="modal-id" style="opacity: 0.7; font-size: 13px;">Patient ID: #PT-000</p>
+                </div>
+            </div>
+
+            <div class="profile-body">
+                <div class="info-group">
+                    <label>📞 Contact Number</label>
+                    <p id="modal-contact">09XX-XXX-XXXX</p>
+                </div>
+                <div class="info-group">
+                    <label>📧 Email Address</label>
+                    <p id="modal-email">patient@email.com</p>
+                </div>
+                <div class="info-group">
+                    <label>🗓️ Last Visit</label>
+                    <p id="modal-lastvisit">January 01, 2026</p>
+                </div>
+                <div class="info-group">
+                    <label>📝 General Note</label>
+                    <p>Patient prefers morning schedules. No known drug allergies.</p>
+                </div>
+            </div>
+            
+            <div class="profile-footer">
+                <button class="btn-action accept" style="width: 100%;" onclick="closeProfile()">Close Profile</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function showSection(sectionId) {
-            // 1. Update Sidebar Active State
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.getElementById('nav-' + sectionId).classList.add('active');
+            const activeNav = document.getElementById('nav-' + sectionId);
+            if(activeNav) activeNav.classList.add('active');
 
-            // 2. Hide all sections
             document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active-section');
             });
 
-            // 3. Show target section
             const target = document.getElementById('section-' + sectionId);
-            target.classList.add('active-section');
+            if(target) target.classList.add('active-section');
 
-            // 4. Update Header Title
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'appointments': 'Appointment Requests',
+                'mypatients': 'My Assigned Patients',
                 'records': 'Patient Database'
             };
-            document.getElementById('page-title').innerText = titles[sectionId];
+            document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
         }
 
         function filterPatients() {
@@ -171,13 +298,42 @@
             let tr = table.getElementsByTagName('tr');
 
             for (let i = 1; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName('td')[1]; // Name column
+                let td = tr[i].getElementsByTagName('td')[1]; 
                 if (td) {
                     let textValue = td.textContent || td.innerText;
                     tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
                 }
             }
         }
+
+        // PROFILE MODAL FUNCTIONS (ADDED)
+        function openProfile(name, id, contact, lastVisit, email) {
+            document.getElementById('modal-name').innerText = name;
+            document.getElementById('modal-id').innerText = "Patient ID: " + id;
+            document.getElementById('modal-contact').innerText = contact;
+            document.getElementById('modal-lastvisit').innerText = lastVisit;
+            document.getElementById('modal-email').innerText = email || 'N/A';
+            
+            // Generate Avatar
+            const initials = name.split(' ').map(n => n[0]).join('');
+            document.getElementById('modal-avatar').innerText = initials;
+
+            document.getElementById('profileModal').style.display = "block";
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').style.display = "none";
+        }
+
+        // Close when clicking background
+        window.onclick = function(event) {
+            const modal = document.getElementById('profileModal');
+            if (event.target == modal) {
+                closeProfile();
+            }
+        }
     </script>
 </body>
 </html>
+
+
