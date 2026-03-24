@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About Dr. Capizonda - Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
 </head>
@@ -21,8 +22,25 @@
 
         <ul class="nav-links">
             <li><a href="/">HOME</a></li>
-            <li><a href="/about" class="active">ABOUT</a></li>
-            <li><a href="#">SERVICES ▾</a></li>
+            <li><a href="#" class="active">ABOUT</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                <div class="dropdown-content" id="servicesDropdownMenu">
+                    <a href="/services/consultation">Dental Consultation</a>
+                    <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
+                    <a href="/services/pasta">Tooth Restoration (Pasta)</a>
+                    <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                    <a href="/services/dentures">Dentures (Pustiso)</a>
+                    <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                    <a href="/services/whitening">Teeth Whitening</a>
+                    <a href="/services/fluoride">Fluoride Treatment</a>
+                    <a href="/services/sealant">Pit and Fissure Sealant</a>
+                    <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                    <a href="/services/root-canal">Root Canal Treatment</a>
+                    <a href="/services/xray">Periapical Xray</a>
+                </div>
+            </li>
+            <li><a href="/location">LOCATION</a></li>
         </ul>
 
         {% if name == "Guest" or not name %}
@@ -121,7 +139,7 @@
         </div>
         <div class="footer-text">
             &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
-        </div>f
+        </div>
         <div class="nav-links">
             <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Privacy Policy</a>
             <a href="#" style="font-size: 0.7rem; margin-left: 10px;">Terms of Service</a>
@@ -148,6 +166,26 @@
             dropdownMenu.style.display = isVisible ? 'none' : 'flex';
         };
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropBtn = document.getElementById('servicesDropdownBtn');
+        const dropMenu = document.getElementById('servicesDropdownMenu');
+
+        // Toggle dropdown on click
+        dropBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevents the click from reaching the window listener below
+            dropMenu.classList.toggle('show');
+            this.classList.toggle('active-link');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(e) {
+            if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                dropMenu.classList.remove('show');
+                dropBtn.classList.remove('active-link');
+            }
+        });
+    });
 
 </script>
 

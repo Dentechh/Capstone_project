@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ service.title }} | Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/service.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo-container">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo-icon">
+                <div class="logo-text">
+                    <span class="brand-name">CAPIZONDA</span>
+                    <span class="brand-sub">DENTAL CLINIC</span>
+                </div>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="/">HOME</a></li>
+                <li><a href="/about">ABOUT</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                    <div class="dropdown-content" id="servicesDropdownMenu">
+                        <a href="/services/consultation">Dental Consultation</a>
+                        <a href="/services/cleaning">Oral Prophylaxis</a>
+                        <a href="/services/pasta">Tooth Restoration</a>
+                        <a href="/services/extraction">Tooth Extraction</a>
+                        <a href="/services/dentures">Dentures</a>
+                        <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                        <a href="/services/whitening">Teeth Whitening</a>
+                        <a href="/services/fluoride">Fluoride Treatment</a>
+                        <a href="/services/sealant">Pit and Fissure Sealant</a>
+                        <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                        <a href="/services/root-canal">Root Canal Treatment</a>
+                        <a href="/services/xray">Periapical Xray</a>
+                    </div>
+                </li>
+                <li><a href="/location">LOCATION</a></li>
+            </ul>
+
+        {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+        </div>
+        {% else %}
+
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">PROFILE</a>
+                    <a href="/logout">LOGOUT</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+</header>
+
+    <section class="service-hero">
+        <div class="service-hero-content">
+            <h1>{{ service.title }}</h1>
+            <p>{{ service.short_desc }}</p>
+        </div>
+    </section>
+
+    <section class="service-details-container">
+        <div class="service-main">
+            <h2 style="color: var(--navy); margin-bottom: 20px;">Overview</h2>
+            <p>{{ service.full_desc }}</p>
+
+            <h3 style="color: var(--navy); margin-top: 30px;">Benefits of this Treatment:</h3>
+            <ul class="service-benefits">
+                {% for benefit in service.benefits %}
+                    <li>{{ benefit }}</li>
+                {% endfor %}
+            </ul>
+
+            <div class="service-cta-box">
+                <h3>Ready for your {{ service.title }}?</h3>
+                <p>Book your appointment today and take advantage of our opening promo!</p>
+                <button class="btn-appointment" onclick="openModal()">Book Now - 40% Off</button>
+            </div>
+        </div>
+
+        <aside class="service-sidebar">
+            <h3 style="color: var(--navy); margin-bottom: 20px; font-size: 1.2rem;">Our Services</h3>
+            <ul class="sidebar-links">
+                <li><a href="/services/cleaning">Oral Prophylaxis</a></li>
+                <li><a href="/services/pasta">Tooth Restoration</a></li>
+                <li><a href="/services/extraction">Tooth Extraction</a></li>
+                <li><a href="/services/root-canal">Root Canal Treatment</a></li>
+                <li><a href="/services/xray">Periapical Xray</a></li>
+                <li><a href="/services/whitening">Teeth Whitening</a></li>
+            </ul>
+        </aside>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-text">
+                <p>&copy; 2026 Capizonda Dental Clinic. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Services Dropdown (Click-based)
+            const servicesBtn = document.getElementById('servicesDropdownBtn');
+            const servicesMenu = document.getElementById('servicesDropdownMenu');
+
+            servicesBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                servicesMenu.classList.toggle('show');
+                servicesBtn.classList.toggle('active-link');
+            });
+
+            // 2. Profile Dropdown
+            const profileBtn = document.getElementById('profileDropdownBtn');
+            const profileMenu = document.getElementById('profileMenu');
+
+            profileBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                profileMenu.style.display = (profileMenu.style.display === 'flex') ? 'none' : 'flex';
+            });
+
+            // 3. Close All on outside click
+            window.addEventListener('click', function() {
+                servicesMenu.classList.remove('show');
+                servicesBtn.classList.remove('active-link');
+                profileMenu.style.display = 'none';
+            });
+        });
+
+        function openModal() {
+            // This is where you would trigger your booking modal logic
+            console.log("Appointment Modal Opened for: {{ service.title }}");
+        }
+    </script>
+</body>
+</html>

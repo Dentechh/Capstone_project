@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location | Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+    <style>
+        .location-container {
+            padding: 40px 5%;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        .location-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .location-header h2 {
+            color: #156699;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .map-wrapper {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 500px;
+            margin-bottom: 30px;
+            border: 1px solid #eee;
+        }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #156699;
+        }
+
+        .info-card h4 {
+            color: #156699;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-directions {
+            display: inline-block;
+            background: #156699;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .btn-directions:hover {
+            background: #115580;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav class="navbar">
+        <a href="/" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="/">HOME</a></li>
+            <li><a href="/about">ABOUT</a></li>
+            <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                    <div class="dropdown-content" id="servicesDropdownMenu">
+                        <a href="/services/consultation">Dental Consultation</a>
+                        <a href="/services/cleaning">Oral Prophylaxis</a>
+                        <a href="/services/pasta">Tooth Restoration</a>
+                        <a href="/services/extraction">Tooth Extraction</a>
+                        <a href="/services/dentures">Dentures</a>
+                        <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                        <a href="/services/whitening">Teeth Whitening</a>
+                        <a href="/services/fluoride">Fluoride Treatment</a>
+                        <a href="/services/sealant">Pit and Fissure Sealant</a>
+                        <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                        <a href="/services/root-canal">Root Canal Treatment</a>
+                        <a href="/services/xray">Periapical Xray</a>
+                    </div>
+                </li>
+            <li><a href="/location" class="active">LOCATION</a></li>
+        </ul>
+
+                {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+        </div>
+        {% else %}
+
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">PROFILE</a>
+                    <a href="/logout">LOGOUT</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="location-container">
+    <div class="location-header">
+        <h2>Find Our Clinic</h2>
+        <p>Visit us at our Iloilo City branch for professional dental care.</p>
+    </div>
+    <div class="map-wrapper">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1386.1258752551635!2d122.547809540144!3d10.691528390163079!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33aee5004495b601%3A0xc688e2331fc39ebb!2sCapizonda%20Dental%20Clinic!5e0!3m2!1sen!2sph!4v1774356375938!5m2!1sen!2sph" 
+        width="1500" 
+        height="600" 
+        style="border:0;" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+    </div>
+
+    <div class="info-cards">
+        <div class="info-card">
+            <h4>📍 Our Address</h4>
+            <p>241-B Lopez Jaena St, Molo, Iloilo City, 5000 Iloilo</p>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=Capizonda+Dental+Clinic" target="_blank" class="btn-directions">Get Directions</a>
+        </div>
+        
+        <div class="info-card">
+            <h4>⏰ Clinic Hours</h4>
+            <ul style="list-style: none; padding: 0; font-size: 0.9rem;">
+                <li>Mon - Sat: 9:00 AM - 5:00 PM</li>
+                <li>Sunday: Closed</li>
+            </ul>
+        </div>
+    </div>
+</main>
+
+<footer>
+    </footer>
+
+</body>
+</html>

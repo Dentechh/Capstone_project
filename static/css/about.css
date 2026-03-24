@@ -276,3 +276,55 @@ footer {
         margin-bottom: 20px;
     }
 }
+
+/* =========================
+      CLICK DROPDOWN CSS
+========================== */
+
+.nav-links li.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--white);
+    min-width: 240px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    margin-top: 15px;
+    z-index: 3000;
+    overflow: hidden;
+    border-top: 4px solid var(--navy);
+}
+
+/* This class will be toggled by JavaScript */
+.dropdown-content.show {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+.dropdown-content a {
+    color: var(--navy) !important;
+    padding: 12px 20px;
+    text-decoration: none;
+    display: block;
+    font-size: 15px !important;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    transition: all 0.2s ease;
+}
+
+.dropdown-content a:hover {
+    background-color: #f8f9fa;
+    color: var(--gold) !important;
+    padding-left: 25px;
+}
+
+/* Visual feedback for the active button */
+.dropbtn.active-link {
+    color: var(--gold-light) !important;
+}

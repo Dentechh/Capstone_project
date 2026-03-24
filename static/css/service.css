@@ -1,0 +1,130 @@
+/* =========================
+     SERVICE PAGE LAYOUT
+========================== */
+
+/* Hero Styling - Uses your Navy Gradient */
+.service-hero {
+    background: var(--grad-navy);
+    padding: 100px 5% 60px 5%;
+    text-align: center;
+    color: var(--white);
+    border-bottom: 5px solid var(--gold);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.service-hero h1 {
+    font-size: 42px;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.service-hero p {
+    font-size: 1.1rem;
+    opacity: 0.95;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Two-Column Container */
+.service-details-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    padding: 60px 8%;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+/* Main Content Card */
+.service-main {
+    flex: 2.5;
+    min-width: 300px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 50px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    line-height: 1.8;
+}
+
+/* Custom Checkmark List for Benefits */
+.service-benefits {
+    list-style: none;
+    padding: 20px 0;
+}
+
+.service-benefits li {
+    position: relative;
+    padding-left: 40px;
+    margin-bottom: 15px;
+    font-size: 1.05rem;
+    color: #444;
+}
+
+.service-benefits li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--navy);
+    background: #eef7ff;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 14px;
+    border: 1px solid rgba(21, 102, 153, 0.2);
+}
+
+/* Sidebar Styling - Sticky as you scroll */
+.service-sidebar {
+    flex: 1;
+    min-width: 280px;
+    background: var(--white);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    height: fit-content;
+    position: sticky;
+    top: 120px;
+    border-top: 6px solid var(--gold);
+}
+
+.sidebar-links li {
+    margin-bottom: 5px;
+    list-style: none;
+}
+
+.sidebar-links a {
+    text-decoration: none;
+    color: var(--navy);
+    display: block;
+    padding: 12px 15px;
+    border-radius: 10px;
+    transition: 0.3s ease;
+    font-weight: 500;
+}
+
+.sidebar-links a:hover {
+    background: #f8fbff;
+    color: var(--gold);
+    padding-left: 20px;
+}
+
+/* Call to Action Box */
+.service-cta-box {
+    background: #fdf6f7;
+    border: 1px dashed var(--gold);
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.service-cta-box h3 { margin-top: 0; }
+
+@media (max-width: 900px) {
+    .service-details-container { flex-direction: column; }
+    .service-sidebar { position: static; }
+}
