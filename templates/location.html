@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
     <style>
+        
         .location-container {
             padding: 40px 5%;
             max-width: 1500px;
@@ -20,13 +21,13 @@
         }
 
         .location-header h2 {
-            color: #156699;
+            color: #ffffff;
             font-size: 2.5rem;
             margin-bottom: 10px;
         }
 
         .map-wrapper {
-            background: white;
+            background: var(--grad-navy);
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             overflow: hidden;
@@ -42,14 +43,14 @@
         }
 
         .info-card {
-            background: #f8f9fa;
+            background: var(--grad-navy);
             padding: 25px;
             border-radius: 10px;
             border-left: 5px solid #156699;
         }
 
         .info-card h4 {
-            color: #156699;
+            color: #ffffff;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
@@ -71,6 +72,63 @@
         .btn-directions:hover {
             background: #115580;
         }
+
+        .main-footer {
+    background: var(--grad-navy);
+    color: white;
+    padding: 30px 10% 20px;
+    font-family: 'Kumbh Sans', sans-serif;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.footer-brand .brand-name { font-size: 1.4rem; font-weight: 700; display: block; }
+.footer-brand .brand-sub { font-size: 0.8rem; letter-spacing: 2px; }
+.footer-tagline { margin-top: 15px; font-size: 0.9rem; opacity: 0.8; }
+
+.footer-contact h4, .footer-socials h4 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.footer-contact ul { list-style: none; padding: 0; }
+.footer-contact li { margin-bottom: 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+
+.social-links a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    transition: opacity 0.3s;
+}
+
+.social-links a:hover { opacity: 0.7; }
+
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.footer-legal a { 
+    color: white; 
+    margin-left: 20px; 
+    text-decoration: none; 
+}
     </style>
 </head>
 <body>
@@ -108,7 +166,7 @@
             <li><a href="/location" class="active">LOCATION</a></li>
         </ul>
 
-                {% if name == "Guest" or not name %}
+        {% if name == "Guest" or not name %}
         <div class="auth-buttons">
             <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
             <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
@@ -167,8 +225,68 @@
     </div>
 </main>
 
-<footer>
-    </footer>
+<footer class="main-footer">
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA DENTAL</span>
+                <span class="brand-sub">Trusted Care Since 2024</span>
+            </div>
+            <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
+        </div>
+
+        <div class="footer-contact">
+            <h4>CONTACT US</h4>
+            <ul>
+                <li><span>📍</span> 231 Lopez Jaena St, Molo, Iloilo City</li>
+                <li><span>📞</span> 0962 687 6076</li>
+                <li><span>✉️</span> capizondadental@gmail.com</li>
+            </ul>
+        </div>
+
+        <div class="footer-socials">
+            <h4>FOLLOW US</h4>
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    Facebook Page
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="footer-copy">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>
+        <div class="footer-legal">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+    <script>
+            document.addEventListener('DOMContentLoaded', function() {
+        const dropBtn = document.getElementById('servicesDropdownBtn');
+        const dropMenu = document.getElementById('servicesDropdownMenu');
+
+        // Toggle dropdown on click
+        dropBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevents the click from reaching the window listener below
+            dropMenu.classList.toggle('show');
+            this.classList.toggle('active-link');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(e) {
+            if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                dropMenu.classList.remove('show');
+                dropBtn.classList.remove('active-link');
+            }
+        });
+    });
+    </script>
 
 </body>
 </html>

@@ -213,7 +213,7 @@
             border-radius: 20px; 
             margin-bottom: 250px; 
             text-align: center; 
-            margin-top: 20px; 
+            margin-top: 200px; 
             padding: 70px; }
 
         .cta-box p { 
@@ -226,9 +226,63 @@
         .btn-appointment { background: var(--grad-gold); color: white; padding: 15px 30px; font-weight: 600; border-radius: 15px; text-decoration: none; text-transform: uppercase; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); border: none; }
         .btn-appointment:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(241, 134, 134, 0.4); }
 
-        footer { background: var(--grad-navy2); color: white; padding: 50px 5%; text-align: center; }
-        .footer-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .footer-text { font-size: 0.85rem; opacity: 0.9; }
+       /* Footer Styling */
+.main-footer {
+    background: var(--grad-navy);
+    color: white;
+    padding: 30px 10% 20px;
+    font-family: 'Kumbh Sans', sans-serif;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
+.footer-brand .brand-name { font-size: 1.4rem; font-weight: 700; display: block; }
+.footer-brand .brand-sub { font-size: 0.8rem; letter-spacing: 2px; }
+.footer-tagline { margin-top: 15px; font-size: 0.9rem; opacity: 0.8; }
+
+.footer-contact h4, .footer-socials h4 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255,255,255,0.2);
+    padding-bottom: 10px;
+    display: inline-block;
+}
+
+.footer-contact ul { list-style: none; padding: 0; }
+.footer-contact li { margin-bottom: 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
+
+.social-links a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    transition: opacity 0.3s;
+}
+
+.social-links a:hover { opacity: 0.7; }
+
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+.footer-legal a { 
+    color: white; 
+    margin-left: 20px; 
+    text-decoration: none; 
+}
 
         .chatbot-launcher { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); cursor: pointer; z-index: 1001; transition: transform 0.3s ease; }
         .chatbot-launcher img { width: 30px; filter: brightness(0) invert(1); }
@@ -624,3 +678,33 @@ h3 {
         flex-direction: column;
     }
 }
+
+/* Flash Message Styles */
+        .flash-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10001;
+            width: 90%;
+            max-width: 400px;
+        }
+        .flash-box {
+            padding: 15px 25px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.4s ease-out forwards;
+        }
+        .flash-success { background: rgba(46, 204, 113, 0.9); border: 1px solid #2ecc71; }
+        .flash-error { background: rgba(231, 76, 60, 0.9); border: 1px solid #e74c3c; }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+

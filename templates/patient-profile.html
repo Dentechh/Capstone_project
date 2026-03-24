@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Profile | Capizonda Dental</title>
+    <title>Patient Profile | Capizona Dental</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,11 +12,14 @@
     <style>
         :root {
             --navy: #156699;
-            --sky-blue: #8CD3FF;
             --gold: #FFA2AD;
-            --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
-            --grad-navy-glass: linear-gradient(180deg, rgba(21, 102, 153, 0.8) 0%, rgba(140, 211, 255, 0.8) 100%);
+            --gold-light: #FFA2AD;
+            --white: #ffffff;
             --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
+            --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
+            --grad-navy2: linear-gradient(180deg,#8CD3FF 0%, #156699 100%);
+            --grad-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+            --grad-surface: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kumbh Sans', sans-serif; }
@@ -39,15 +42,135 @@
             transform: scale(1.1);
             z-index: -1;
         }
+header {
+            background: var(--grad-navy); 
+            padding: 25px 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.9);
+        }
 
-        header {
-            background: var(--grad-navy);
-            padding: 15px 8%;
+        .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .logo-icon { 
+            height: 65px; 
+            margin-right: 8px; 
+            mix-blend-mode: lighten;
+        }
+        .brand-name { 
+            font-weight: 600; 
+            letter-spacing: 1px; 
+            font-size: 25px; 
+            display: block; 
+        }
+        .brand-sub { 
+            font-size: 15px; 
+            display: block; 
+            opacity: 0.9; }
+
+        .nav-links { 
+            display: flex; 
+            list-style: none; 
+            align-items: center; 
+        }
+        .nav-links li { 
+            margin: 0 20px; 
+        }
+        .nav-links a { 
+            text-decoration: none; 
+            color: var(--white); 
+            font-size: 20px; 
+            font-weight: 400; 
+            transition: all 0.3s ease; 
+        }
+        .nav-links a:hover, .nav-links a.active { 
+            color: var(--gold-light); 
+        }
+
+        /* PROFILE & DROPDOWN STYLING */
+        .profile-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-left: 20px;
+            border-left: 1px solid rgba(255,255,255,0.3);
+            position: relative; /* Needed for dropdown positioning */
+        }
+
+        .profile-img-container {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--white);
+            transition: transform 0.2s;
+        }
+
+        .profile-img:hover { transform: scale(1.05); }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background: white;
+            min-width: 180px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 2000;
+        }
+
+        .dropdown-menu a {
+            padding: 12px 20px;
+            text-decoration: none;
+            color: var(--navy);
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.3s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .dropdown-menu a:last-child { border-bottom: none; color: #ff4d4d; }
+        .dropdown-menu a:hover { background: #f8f9fa; }
+
+        .user-info-brief { color: var(--white); text-align: right; }
+        .user-info-brief span { display: block; font-size: 23px; font-weight: 600; }
+        .user-info-brief small { font-size: 12px; opacity: 0.9; }
+
+        /* AUTH BUTTONS STYLING */
+        .auth-buttons { display: flex; gap: 15px; align-items: center; }
+        .btn-login, .btn-register { 
+            text-decoration: none; 
+            padding: 10px 25px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            transition: 0.3s; 
+            font-size: 16px; }
+        .btn-login { 
+            color: white; 
+            border: 1px solid rgba(255,255,255,0.4); 
+        }
+        .btn-login:hover { 
+            background: rgba(255,255,255,0.1); 
+        }
+        .btn-register { background: var(--grad-gold); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255,162,173,0.4); }
 
         .logo-container { display: flex; align-items: center; text-decoration: none; color: white; }
         .logo-icon { height: 40px; margin-right: 10px; mix-blend-mode: lighten; }
@@ -112,25 +235,138 @@
             align-items: center; justify-content: center; backdrop-filter: blur(5px);
         }
 
-        .modal-content { background: var(--navy); padding: 40px; border-radius: 25px; width: 90%; max-width: 450px; border: 1px solid var(--sky-blue); }
+        .modal-content { 
+            background: var(--navy); 
+            padding: 40px; 
+            border-radius: 25px; 
+            width: 95%; 
+            max-width: 500px; 
+            border: 1px solid var(--sky-blue); 
+            max-height: 90vh;
+            overflow-y: auto;
+        }
         .modal-form { display: flex; flex-direction: column; gap: 15px; }
-        .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; outline: none; }
+        .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255, 255, 255, 0.8); color: white; outline: none; width: 100%; }
 
         @media (max-width: 768px) {
             .profile-card { flex-direction: column; align-items: center; text-align: center; }
             .nav-grid { grid-template-columns: 1fr 1fr; }
             .info-grid { grid-template-columns: 1fr; }
         }
+
+        /* =========================
+      CLICK DROPDOWN CSS
+========================== */
+
+.nav-links li.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--white);
+    min-width: 240px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    border-radius: 12px;
+    margin-top: 15px;
+    z-index: 3000;
+    overflow: hidden;
+    border-top: 4px solid var(--navy);
+}
+
+/* This class will be toggled by JavaScript */
+.dropdown-content.show {
+    display: block;
+    animation: slideUp 0.3s ease-out;
+}
+
+.dropdown-content a {
+    color: var(--navy);
+    padding: 12px 20px;
+    text-decoration: none;
+    display: block;
+    font-size: 15px !important;
+    font-weight: 500;
+    border-bottom: 1px solid #eee;
+    transition: all 0.2s ease;
+}
+
+.dropdown-content a:hover {
+    background-color: #f8f9fa;
+    color: var(--gold) !important;
+    padding-left: 25px;
+}
+
+/* Visual feedback for the active button */
+.dropbtn.active-link {
+    color: var(--gold-light) !important;
+}
+
     </style>
 </head>
 <body>
 
 <header>
-    <a href="/" class="logo-container">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo-icon">
-        <span style="font-weight:700; letter-spacing: 1px;">CAPIZONDA</span>
-    </a>
-    <a href="/" class="btn-back">← Back to Home</a>
+    <nav class="navbar">
+        <a href="#" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#" class="active">HOME</a></li>
+            <li><a href="/about">ABOUT</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                <div class="dropdown-content" id="servicesDropdownMenu">
+                    <a href="/services/consultation">Dental Consultation</a>
+                    <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
+                    <a href="/services/pasta">Tooth Restoration (Pasta)</a>
+                    <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                    <a href="/services/dentures">Dentures (Pustiso)</a>
+                    <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                    <a href="/services/whitening">Teeth Whitening</a>
+                    <a href="/services/fluoride">Fluoride Treatment</a>
+                    <a href="/services/sealant">Pit and Fissure Sealant</a>
+                    <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                    <a href="/services/root-canal">Root Canal Treatment</a>
+                    <a href="/services/xray">Periapical Xray</a>
+                </div>
+            </li>
+            <li><a href="/location">LOCATION</a></li>
+        </ul>
+
+        {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+        </div>
+        {% else %}
+
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">PROFILE</a>
+                    <a href="/logout">LOGOUT</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
 </header>
 
 <div class="container">
@@ -143,12 +379,16 @@
         
         <div class="profile-right">
             <h2>{{ user.get('firstname', name) }}</h2>
-            <p style="opacity:0.8; font-weight: 300;">Clinic Member</p>
+            <p style="opacity:0.8; font-weight: 300;">@{{ user.get('username', 'username') }} | Clinic Member</p>
             
             <div class="info-grid">
                 <div class="info-item">
                     <label>First Name</label>
                     <p>{{ user.get('firstname', 'N/A') }}</p>
+                </div>
+                <div class="info-item">
+                    <label>Username</label>
+                    <p>{{ user.get('username', 'Not set') }}</p>
                 </div>
                 <div class="info-item">
                     <label>Phone Number</label>
@@ -191,7 +431,7 @@
 <div class="modal-overlay" id="updateModal">
     <div class="modal-content">
         <h3 style="margin-bottom: 20px; font-size: 1.5rem;">Edit Profile</h3>
-        <form class="modal-form" action="/update-profile" method="POST">
+        <form class="modal-form" action="/update-profile" method="POST" onsubmit="return validatePasswords()">
             <input type="hidden" name="email_id" value="{{ user.get('email') }}">
             
             <div class="info-item">
@@ -200,14 +440,24 @@
             </div>
 
             <div class="info-item">
+                <label>Username</label>
+                <input type="text" name="new_username" value="{{ user.get('username', '') }}" required>
+            </div>
+
+            <div class="info-item">
                 <label>Phone Number</label>
                 <input type="text" name="new_phone" value="{{ user.get('phone', '') }}" placeholder="+63 9XX XXX XXXX">
             </div>
 
             {% if user.get('provider') != 'google' %}
+            <hr style="opacity: 0.2; margin: 10px 0;">
             <div class="info-item">
-                <label>Update Password (Optional)</label>
-                <input type="password" name="new_password" placeholder="Leave blank to keep current">
+                <label>New Password</label>
+                <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
+            </div>
+            <div class="info-item">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirm_password" placeholder="Confirm your new password">
             </div>
             {% endif %}
 
@@ -224,7 +474,50 @@
     function openUpdateModal() { modal.style.display = 'flex'; }
     function closeUpdateModal() { modal.style.display = 'none'; }
     window.onclick = function(e) { if (e.target == modal) closeUpdateModal(); }
+
+    function validatePasswords() {
+        const pass = document.getElementById('new_password');
+        const confirm = document.getElementById('confirm_password');
+        
+        if (pass && pass.value !== "" && pass.value !== confirm.value) {
+            alert("Passwords do not match!");
+            return false;
+        }
+        return true;
+    }
+
+            document.addEventListener('DOMContentLoaded', function() {
+        const dropBtn = document.getElementById('servicesDropdownBtn');
+        const dropMenu = document.getElementById('servicesDropdownMenu');
+
+        // Toggle dropdown on click
+        dropBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevents the click from reaching the window listener below
+            dropMenu.classList.toggle('show');
+            this.classList.toggle('active-link');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(e) {
+            if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                dropMenu.classList.remove('show');
+                dropBtn.classList.remove('active-link');
+            }
+        });
+    });
 </script>
 
+<script>
+function validatePasswords() {
+    let pass = document.getElementById("new_password").value;
+    let confirm = document.getElementById("confirm_password").value;
+
+    if (pass !== confirm) {
+        alert("Passwords do not match!");
+        return false;
+    }
+    return true;
+}
+</script>
 </body>
 </html>

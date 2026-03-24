@@ -21,6 +21,8 @@ db = firestore.client()
 
 Account_clients = "manual_create_account"
 Appointment_cliets = "Booked"
+Doc_Patients = "Patients"
+
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients
@@ -37,7 +39,7 @@ def index():
 @app.route("/login", methods=["POST"])
 def login_manual():
     username = bleach.clean(request.form.get("UserName"))
-    password = bleach.clean (request.form.get("Password"))
+    password = bleach.clean(request.form.get("Password"))
 
     # Search for user in Firestore
     user_query = db.collection(Account_clients).where("username", "==", username).get()
@@ -48,10 +50,11 @@ def login_manual():
         if check_password_hash(user_data['password'], password):
             session['name'] = user_data['firstname']
             session['email'] = user_data.get('email', '') 
+            flash(f"Welcome back, {user_data['firstname']}!", "success") # Added success category
             return redirect(url_for("index"))
     
-    flash("Invalid username or password!")
-    return redirect(url_for("/"))
+    flash("Invalid username or password!", "error") # Added error category
+    return redirect("/") # Redirect to the root route
 
 
 #  GOOGLE AUTH ROUTE
@@ -106,9 +109,9 @@ def sign_up():
         })
 
         session['name'] = firstname
-        return render_template(url_for("index"))
+        return redirect(url_for("index"))
 
-    return render_template("index.html")
+    return redirect(url_for("index"))
 
 
 #  LOGOUT
@@ -132,33 +135,83 @@ def about_customer():
 
 
 
+import uuid
+
 @app.route("/booked_customer", methods=["POST"])
 def bookedCustomer():
 
-    FullName = bleach.clean(request.form["Full_Name"])
-    EmailAddress = bleach.clean(request.form["Email_Address"])
-    ContactNumber = bleach.clean(request.form["Contact_number"])
-    SelectAppointDate = bleach.clean(request.form["Appointment_date"])
-    Clientconcers = bleach.clean(request.form["Client_Concern"])
+    FullName = bleach.clean(request.form.get("Full_Name", ""))
+    EmailAddress = bleach.clean(request.form.get("Email_Address", ""))
+    ContactNumber = bleach.clean(request.form.get("Contact_number", ""))
+    Nationality_appointment = bleach.clean(request.form.get("Nationality", ""))
+    Age_appointment = bleach.clean(request.form.get("Age", ""))
+    Sex_appointment = bleach.clean(request.form.get("Sex", ""))
+    Birthday_appointment = bleach.clean(request.form.get("Birthday", ""))
+    Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
+    Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
 
+    q1_appointment = bleach.clean(request.form.get("q1", ""))
+    q2_appointment = bleach.clean(request.form.get("q2", ""))
+    q3_appointment = bleach.clean(request.form.get("q3", ""))
+    q4_appointment = bleach.clean(request.form.get("q4", ""))
+    q5_appointment = bleach.clean(request.form.get("q5", ""))
+    q6_appointment = bleach.clean(request.form.get("q6", ""))
+    q7_appointment = bleach.clean(request.form.get("q7", ""))
+    q9_appointment = bleach.clean(request.form.get("q9", ""))
+
+    q2_spec_appointment = bleach.clean(request.form.get("q2_spec", ""))
+    q3_spec_appointment = bleach.clean(request.form.get("q3_spec", ""))
+    q4_spec_appointment = bleach.clean(request.form.get("q4_spec", ""))
+    q5_spec_appointment = bleach.clean(request.form.get("q5_spec", ""))
+    q7_spec_appointment = bleach.clean(request.form.get("q7_spec", ""))
+    q9_spec_appointment = bleach.clean(request.form.get("q9_spec", ""))
+
+    w_nurse_appointment = request.form.get("w_nurse")
+    w_preg_appointment = request.form.get("w_preg")
+    w_pill_appointment = request.form.get("w_pill")
+    uid = str(uuid.uuid4())
     try:
-        # Attempt to add to Firestore
-        db.collection("Appointment_clients").add({
+        db.collection("Appointment_clients").document(uid).set({
+            "uid": uid,
             "FullName": FullName,
             "EmailAddress": EmailAddress,
             "ContactNumber": ContactNumber,
-            "SelectAppointDate": SelectAppointDate,
-            "Client_concers": Clientconcers
+            "Nationality": Nationality_appointment,
+            "Age": Age_appointment,
+            "Sex": Sex_appointment,
+            "Birthday": Birthday_appointment,
+            "Occupation": Occupation_appointment,
+            "Civil_Status": Civil_Status_appointment,
+            "q1": q1_appointment,
+            "q2": q2_appointment,
+            "q3": q3_appointment,
+            "q4": q4_appointment,
+            "q5": q5_appointment,
+            "q6": q6_appointment,
+            "q7": q7_appointment,
+            "q9": q9_appointment,
+            "q2_spec": q2_spec_appointment,
+            "q3_spec": q3_spec_appointment,
+            "q4_spec": q4_spec_appointment,
+            "q5_spec": q5_spec_appointment,
+            "q7_spec": q7_spec_appointment,
+            "q9_spec": q9_spec_appointment,
+
+            "w_nurse": w_nurse_appointment,
+            "w_preg": w_preg_appointment,
+            "w_pill": w_pill_appointment
         })
+
         flash("Appointment successfully booked!", "success")
 
     except Exception as e:
-        # Log the error or flash a message
         print(f"Error adding appointment: {e}")
-        flash("There was an error booking your appointment. Please try again.", "error")
+        flash("There was an error booking your appointment.", "error")
 
     return redirect(url_for("index"))
 
+
+                                                                                   
 @app.route("/patient-profile")
 def p_profile():
     if 'email' not in session:
@@ -197,7 +250,8 @@ def update_profile():
     
     update_data = {
         "firstname": new_name,
-        "phone": new_phone
+        "phone": new_phone,
+        "password":password
     }
 
     # If it's a manual user and they typed a new password
@@ -402,7 +456,9 @@ def service_detail(service_id):
 
 @app.route("/location")
 def dental_location():
-    return render_template("location.html")
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    return render_template("location.html",name=name, email=email)
 
 
 

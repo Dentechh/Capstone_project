@@ -7,7 +7,13 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-   
+    <style>
+        /* Ensuring the active-section is visible */
+        .content-section { display: none; }
+        .active-section { display: block !important; }
+        .nav-item.active { background: #eef2ff; color: #4f46e5; border-right: 4px solid #4f46e5; }
+
+    </style>
 </head>
 <body class="dashboard-body">
 
@@ -16,15 +22,12 @@
             <h2>CAPIZONDA</h2>
             <span>ADMIN PANEL</span>
         </div>
-        
         <nav class="sidebar-nav">
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">📅 Appointments</a>
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">🩺 My Patients</a>
-            <a href="javascript:void(0)" id="nav-records" class="nav-item" onclick="showSection('records')">👥 Patient Records</a>
-
+            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item"  onclick="showSection('patientdashboard')">👤 Patient Dashboard</a>
         </nav>
-        
         <div class="sidebar-footer">
             <a href="/logout" class="nav-item logout">🚪 Logout</a>
         </div>
@@ -47,87 +50,126 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">⏳</div>
-                    <div class="metric-data"><h3 style="color: var(--gold)">5</h3><p>Pending Requests</p></div>
+                    <div class="metric-data"><h3 style="color: #d4af37">5</h3><p>Pending Requests</p></div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">👥</div>
                     <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
                 </div>
             </div>
-
-            <div class="dashboard-grid">
-                <section class="content-panel">
-                    <div class="panel-header"><h3>Upcoming Patients (Today)</h3></div>
-                    <ul class="schedule-list">
-                        <li class="schedule-item">
-                            <span class="time">09:00 AM</span>
-                            <span class="p-info"><strong>Althea Reyes</strong><br><small>Cleaning</small></span>
-                            <a href="/patient_forms" class="btn-action accept">Open Chart</a>
-                        </li>
-                    </ul>
-                </section>
-                
-            </div>
         </div>
 
         <div id="section-mypatients" class="content-section">
             <div class="patient-card-grid">
+                {% for appointment in Appointment_clients %}
                 <div class="patient-card">
                     <div class="p-card-header">
-                        <div class="p-avatar-circle">AR</div>
+                        <div class="p-avatar-circle">{{ appointment.FullName[:2].upper() }}</div>
                         <div class="p-info">
-                            <strong>Althea Reyes</strong>
-                            <small style="opacity: 0.6;">Patient ID: #PT-001</small>
+                            <strong>{{ appointment.FullName }}</strong>
+                            <small style="opacity: 0.6;">{{ appointment.uid }}</small>
                         </div>
                     </div>
-                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>Oral Prophylaxis</strong></p>
-                    <button class="btn-action accept" style="width: 100%;" onclick="openProfile('Althea Reyes', '#PT-001', '0912-345-6789', 'Oct 24, 2026', 'althea@email.com')">Check Profile</button>
+                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Client_concers }}</strong></p>
+                    <button class="btn-action accept" style="width: 100%;" 
+                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', 'Female', '24', 'O+')">
+                        Check Profile
+                    </button>
                 </div>
+                {% endfor %}
             </div>
         </div>
 
         <div id="section-appointments" class="content-section">
             <section class="content-panel">
-    
-               <table class="appointment-table">
+                <table class="appointment-table">
                     <thead>
                         <tr>
                             <th>Patient Name</th>
-                            <th>Date</th>
+                            <th>Date & Time</th>
                             <th>Concern</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-<tbody>
-    {% for appointment in Appointment_clients %}
-    <tr>
-        <td>{{ appointment.FullName }}</td>
-        <td>{{ appointment.SelectAppointDate}}</td>
-        <td>{{ appointment.Client_concers }}</td>
-        <td>
-            <span class="badge pending">
-                pende
-            </span>
-        </td>
-        <td>
-            <a href="/patient_forms" class="btn-action accept">
-                Accept & Chart
-            </a>
-            <button class="btn-action decline">
-                Decline
-            </button>
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
+                    <tbody>
+                        {% for appointment in Appointment_clients %}
+                        <tr>
+                            <td>{{ appointment.FullName }}</td>
+                            <td>{{ appointment.Birthday }}</td>
+                            <td>{{ appointment.Client_concers }}</td>
+                            <td><span class="badge pending">pending</span></td>
+                            <td>
+                                <button class="btn-action accept">Accept</button>
+                                <button class="btn-action decline">Decline</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
             </section>
         </div>
 
+        <div id="section-patientdashboard" class="content-section">
+            
+            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Back to Patients</button>
+            
+            <div class="patient-profile-header" style="background: rgb(46, 49, 88); padding: 25px; border-radius: 12px; display: flex; align-items: center; gap: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <div class="p-avatar-circle large" id="pd-avatar" style="width: 70px; height: 70px; font-size: 24px; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold;">??</div>
+                <div class="p-main-info">
+                    <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
+                    <p id="pd-id" style="margin: 0; color: #888; font-size: 14px;">#ID-0000</p>
+                </div>
+                
+                <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid #eee; padding-left: 40px;">
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="content-panel" style="background: rgb(81, 103, 165); padding: 20px; border-radius: 12px;">
+                    <div class="panel-header"><h3>Visits History</h3></div>
+                    <table class="appointment-table">
+                        <thead>
+                            <tr>
+                                <th>Consulting Doctor</th>
+                                <th>Visit Date</th>
+                                <th>Procedure</th>
+                                <th>Fee Paid</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pd-visit-history">
+                            <tr>
+                                <td>Dr. Capizonda</td>
+                                <td>20/05/2026</td>
+                                <td>Orthodontics</td>
+                                <td>₱1,500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="content-panel" style="background: rgb(85, 120, 172); padding: 20px; border-radius: 12px;">
+                    <div class="panel-header"><h3>Prescription & Notes</h3></div>
+                    <div style="padding: 15px; background: #4b89b3; border: 1px solid #eee; border-radius: 8px;">
+                        <p><strong>Notes:</strong> <span id="pd-notes">No known allergies. Prefers morning appointments.</span></p>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Medicines:</strong></p>
+                        <ul id="pd-meds" style="font-size: 14px; color: #555; padding-left: 20px;">
+                            <li>Amoxicillin (500mg) - 3x a day</li>
+                            <li>Mefenamic Acid - As needed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
         <div id="section-records" class="content-section">
             <div class="search-bar-container">
-                <input type="text" id="patientSearch" placeholder="Search patients by name or ID..." class="search-input" onkeyup="filterPatients()">
+                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input" onkeyup="filterPatients()">
             </div>
             <section class="content-panel">
                 <table class="appointment-table" id="recordsTable">
@@ -146,115 +188,63 @@
                             <td>Jericho Manalo</td>
                             <td>Mar 15, 2026</td>
                             <td>0912-345-6789</td>
-                            <td><button class="btn-action accept" onclick="openProfile('Jericho Manalo', '#PT-001', '0912-345-6789', 'Mar 15, 2026', 'jericho@email.com')">View History</button></td>
+                            <td><button class="btn-action accept" onclick="openPatientDashboard('Jericho Manalo', '#PT-001', 'Male', '26', 'B+')">View History</button></td>
                         </tr>
                     </tbody>
                 </table>
             </section>
         </div>
-    </main>
 
-    <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content medical-dashboard-style">
-            <span class="close-profile" onclick="closeProfile()">&times;</span>
-            
-            <div class="medical-header">
-                <div class="header-main">
-                    <div class="p-avatar-circle large" id="modal-avatar">??</div>
-                    <div class="profile-title">
-                        <h2 id="modal-name">Patient Name</h2>
-                        <p id="modal-id">Patient ID: #PT-000</p>
-                    </div>
-                </div>
-                
-                <div class="quick-stats-grid">
-                    <div class="stat-box">
-                        <label>Gender</label>
-                        <p id="modal-gender">Male</p>
-                    </div>
-                    <div class="stat-box">
-                        <label>Age</label>
-                        <p id="modal-age">26</p>
-                    </div>
-                    <div class="stat-box">
-                        <label>Blood Type</label>
-                        <p id="modal-blood">B+</p>
-                    </div>
-                </div>
-            </div>
 
-            <div class="profile-body-scrollable">
-                <section class="medical-section">
-                    <div class="section-header">
-                        <h3>Recent Visits</h3>
-                    </div>
-                    <table class="medical-table">
-                        <thead>
-                            <tr>
-                                <th>Consulting Dentist</th>
-                                <th>Visit Date</th>
-                                <th>Procedure</th>
-                                <th>Fee Paid</th>
-                            </tr>
-                        </thead>
-                        <tbody id="visit-history-body">
-                            <tr>
-                                <td>Dr. Capizonda</td>
-                                <td>20/03/2026</td>
-                                <td>Oral Prophylaxis</td>
-                                <td>₱1,500</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </section>
-
-                <section class="medical-section">
-                    <h3>Clinical Notes & Prescriptions</h3>
-                    <div class="prescription-card">
-                        <p><strong>Notes:</strong> Patient prefers morning schedules. No known drug allergies.</p>
-                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                        <p><strong>Prescribed Medicines:</strong></p>
-                        <ul class="med-list">
-                            <li>Amoxicillin (500mg) - 3x a day for 7 days</li>
-                            <li>Mefenamic Acid (500mg) - As needed for pain</li>
-                        </ul>
-                    </div>
-                </section>
-            </div>
-            
-            <div class="profile-footer">
-                <button class="btn-action accept" onclick="closeProfile()">Finish Review</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         function showSection(sectionId) {
+            // Update Sidebar Nav
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             const activeNav = document.getElementById('nav-' + sectionId);
             if(activeNav) activeNav.classList.add('active');
 
+            // Toggle Main Content
             document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active-section');
             });
-
             const target = document.getElementById('section-' + sectionId);
             if(target) target.classList.add('active-section');
 
+            // Update Header Title
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'appointments': 'Appointment Requests',
                 'mypatients': 'My Assigned Patients',
-                'records': 'Patient Database'
+                'records': 'Patient Database',
+                'patientdashboard': 'Patient Dashboard'
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
+        }
+
+        function openPatientDashboard(name, id, gender, age, blood) {
+            // 1. Populate data
+            document.getElementById('pd-name').innerText = name;
+            document.getElementById('pd-id').innerText = "Patient ID: " + id;
+            document.getElementById('pd-gender').innerText = gender || 'Female';
+            document.getElementById('pd-age').innerText = age || '24';
+            document.getElementById('pd-blood').innerText = blood || 'O+';
+            
+            // 2. Set initials
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('pd-avatar').innerText = initials;
+
+            // 3. Show hidden nav link and switch
+            const navLink = document.getElementById('nav-patientdashboard');
+            navLink.style.display = "block";
+            
+            showSection('patientdashboard');
         }
 
         function filterPatients() {
             let input = document.getElementById('patientSearch').value.toUpperCase();
             let table = document.getElementById('recordsTable');
             let tr = table.getElementsByTagName('tr');
-
             for (let i = 1; i < tr.length; i++) {
                 let td = tr[i].getElementsByTagName('td')[1]; 
                 if (td) {
@@ -263,35 +253,7 @@
                 }
             }
         }
-
-        // PROFILE MODAL FUNCTIONS (ADDED)
-        function openProfile(name, id, contact, lastVisit, email, gender = 'N/A', age = 'N/A', blood = 'N/A') {
-            document.getElementById('modal-name').innerText = name;
-            document.getElementById('modal-id').innerText = "Patient ID: " + id;
-            document.getElementById('modal-gender').innerText = gender;
-            document.getElementById('modal-age').innerText = age;
-            document.getElementById('modal-blood').innerText = blood;
-            
-            // Initials logic
-            const initials = name.split(' ').map(n => n[0]).join('');
-            document.getElementById('modal-avatar').innerText = initials;
-
-            document.getElementById('profileModal').style.display = "block";
-        }
-
-        function closeProfile() {
-            document.getElementById('profileModal').style.display = "none";
-        }
-
-        // Close when clicking background
-        window.onclick = function(event) {
-            const modal = document.getElementById('profileModal');
-            if (event.target == modal) {
-                closeProfile();
-            }
-        }
     </script>
+    <script src="{{ url_for('static', filename='js/chart-logic.js') }}""></script>
 </body>
 </html>
-
-
