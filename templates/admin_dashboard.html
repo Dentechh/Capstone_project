@@ -66,13 +66,6 @@
                     </ul>
                 </section>
                 
-                <section class="content-panel">
-                    <h3>Quick Actions</h3>
-                    <div class="action-grid">
-                        <button class="action-btn">➕ Add Patient</button>
-                        <button class="action-btn">📅 New Appt</button>
-                    </div>
-                </section>
             </div>
         </div>
 
@@ -161,38 +154,75 @@
     </main>
 
     <div id="profileModal" class="profile-modal">
-        <div class="profile-modal-content">
+        <div class="profile-modal-content medical-dashboard-style">
             <span class="close-profile" onclick="closeProfile()">&times;</span>
             
-            <div class="profile-header">
-                <div class="p-avatar-circle large" id="modal-avatar">??</div>
-                <div class="profile-title">
-                    <h2 id="modal-name">Patient Name</h2>
-                    <p id="modal-id" style="opacity: 0.7; font-size: 13px;">Patient ID: #PT-000</p>
+            <div class="medical-header">
+                <div class="header-main">
+                    <div class="p-avatar-circle large" id="modal-avatar">??</div>
+                    <div class="profile-title">
+                        <h2 id="modal-name">Patient Name</h2>
+                        <p id="modal-id">Patient ID: #PT-000</p>
+                    </div>
+                </div>
+                
+                <div class="quick-stats-grid">
+                    <div class="stat-box">
+                        <label>Gender</label>
+                        <p id="modal-gender">Male</p>
+                    </div>
+                    <div class="stat-box">
+                        <label>Age</label>
+                        <p id="modal-age">26</p>
+                    </div>
+                    <div class="stat-box">
+                        <label>Blood Type</label>
+                        <p id="modal-blood">B+</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="profile-body">
-                <div class="info-group">
-                    <label>📞 Contact Number</label>
-                    <p id="modal-contact">09XX-XXX-XXXX</p>
-                </div>
-                <div class="info-group">
-                    <label>📧 Email Address</label>
-                    <p id="modal-email">patient@email.com</p>
-                </div>
-                <div class="info-group">
-                    <label>🗓️ Last Visit</label>
-                    <p id="modal-lastvisit">January 01, 2026</p>
-                </div>
-                <div class="info-group">
-                    <label>📝 General Note</label>
-                    <p>Patient prefers morning schedules. No known drug allergies.</p>
-                </div>
+            <div class="profile-body-scrollable">
+                <section class="medical-section">
+                    <div class="section-header">
+                        <h3>Recent Visits</h3>
+                    </div>
+                    <table class="medical-table">
+                        <thead>
+                            <tr>
+                                <th>Consulting Dentist</th>
+                                <th>Visit Date</th>
+                                <th>Procedure</th>
+                                <th>Fee Paid</th>
+                            </tr>
+                        </thead>
+                        <tbody id="visit-history-body">
+                            <tr>
+                                <td>Dr. Capizonda</td>
+                                <td>20/03/2026</td>
+                                <td>Oral Prophylaxis</td>
+                                <td>₱1,500</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="medical-section">
+                    <h3>Clinical Notes & Prescriptions</h3>
+                    <div class="prescription-card">
+                        <p><strong>Notes:</strong> Patient prefers morning schedules. No known drug allergies.</p>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Prescribed Medicines:</strong></p>
+                        <ul class="med-list">
+                            <li>Amoxicillin (500mg) - 3x a day for 7 days</li>
+                            <li>Mefenamic Acid (500mg) - As needed for pain</li>
+                        </ul>
+                    </div>
+                </section>
             </div>
             
             <div class="profile-footer">
-                <button class="btn-action accept" style="width: 100%;" onclick="closeProfile()">Close Profile</button>
+                <button class="btn-action accept" onclick="closeProfile()">Finish Review</button>
             </div>
         </div>
     </div>
@@ -234,14 +264,14 @@
         }
 
         // PROFILE MODAL FUNCTIONS (ADDED)
-        function openProfile(name, id, contact, lastVisit, email) {
+        function openProfile(name, id, contact, lastVisit, email, gender = 'N/A', age = 'N/A', blood = 'N/A') {
             document.getElementById('modal-name').innerText = name;
             document.getElementById('modal-id').innerText = "Patient ID: " + id;
-            document.getElementById('modal-contact').innerText = contact;
-            document.getElementById('modal-lastvisit').innerText = lastVisit;
-            document.getElementById('modal-email').innerText = email || 'N/A';
+            document.getElementById('modal-gender').innerText = gender;
+            document.getElementById('modal-age').innerText = age;
+            document.getElementById('modal-blood').innerText = blood;
             
-            // Generate Avatar
+            // Initials logic
             const initials = name.split(' ').map(n => n[0]).join('');
             document.getElementById('modal-avatar').innerText = initials;
 

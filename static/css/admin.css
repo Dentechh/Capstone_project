@@ -22,16 +22,22 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-    width: 260px; height: 100vh; background: rgba(10, 25, 47, 0.95);
+    width: 260px; height: 100vh; background: var(--grad-navy);
     border-right: 1px solid rgba(255,255,255,0.1);
     display: flex; flex-direction: column; padding: 40px 20px;
 }
 .sidebar-brand { text-align: center; margin-bottom: 50px; }
 .sidebar-brand h2 { font-size: 22px; letter-spacing: 2px; }
-.sidebar-brand span { font-size: 10px; color: var(--gold); font-weight: 800; }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.sidebar-brand span { font-size: 10px; color: black; font-weight: 800; }
+.sidebar-nav { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    color: black;
+}
 .nav-item {
-    text-decoration: none; color: white; padding: 14px 18px;
+    text-decoration: none; color: rgb(0, 0, 0); padding: 14px 18px;
     border-radius: 12px; font-size: 14px; font-weight: 600;
     transition: 0.3s; opacity: 0.6; display: flex; align-items: center; gap: 10px;
 }
@@ -72,14 +78,14 @@ body {
 .schedule-list { list-style: none; }
 .schedule-item {
     display: flex;
+   
     align-items: center;
-    background: rgba(255, 255, 255, 0.05);
     padding: 15px 20px;
     border-radius: 12px;
     margin-bottom: 10px;
     gap: 20px;
 }
-.time { font-weight: 700; color: #8CD3FF; min-width: 80px; }
+.time { font-weight: 700; color: #ffffff; min-width: 80px; }
 .p-info { flex: 1; display: flex; flex-direction: column; }
 
 /* MY PATIENTS GRID */
@@ -90,25 +96,59 @@ body {
     margin-top: 20px;
 }
 .patient-card {
-    background: var(--dark-form);
+    background: var(--grad-navy);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 20px;
     padding: 20px;
     transition: 0.3s;
 }
-.patient-card:hover { transform: translateY(-5px); border-color: var(--gold); }
-.p-card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
+.patient-card:hover { 
+    transform: translateY(-5px); 
+    border-color: var(--gold); }
+.p-card-header { 
+    display: flex; 
+    align-items: center; 
+    gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
 .p-avatar-circle { width: 45px; height: 45px; background: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid var(--gold); }
 
 /* DASHBOARD COMPONENTS */
-.metric-cards { display: flex; gap: 20px; margin-bottom: 30px; }
-.metric-card { flex: 1; background: var(--dark-form); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; display: flex; align-items: center; gap: 20px; }
-.metric-icon { font-size: 32px; }
-.metric-data h3 { font-size: 28px; margin-bottom: 2px; }
-.metric-data p { font-size: 11px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+.metric-cards { 
+    display: flex; 
+    gap: 20px; 
+    margin-bottom: 30px; }
+.metric-card { 
+    flex: 1; 
+    background: var(--grad-navy); 
+    backdrop-filter: blur(10px); 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    padding: 25px; 
+    border-radius: 20px; 
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+}
+.metric-icon { 
+    font-size: 32px; }
+.metric-data h3 { 
+    font-size: 28px; 
+    margin-bottom: 2px; 
+}
+.metric-data p { 
+    font-size: 11px; 
+    opacity: 0.6; 
+    text-transform: uppercase; 
+    letter-spacing: 1px; 
+}
 
-.content-panel { background: var(--dark-form); backdrop-filter: blur(10px); border-radius: 20px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
+.content-panel { 
+    background: var(--grad-navy); 
+    backdrop-filter: blur(10px); 
+    border-radius: 20px; 
+    padding: 30px; 
+    margin-bottom: 25px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
 .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
 
 .action-grid { display: flex; gap: 15px; margin-top: 20px; }
@@ -147,11 +187,11 @@ body {
 
         .profile-modal-content {
             background: var(--dark-form);
-            margin: 10% auto;
+            margin: 5% auto;
             padding: 30px;
             border: 1px solid var(--gold);
             border-radius: 20px;
-            width: 450px;
+            width: 1500px;
             position: relative;
             animation: fadeInUp 0.4s ease forwards;
         }
@@ -202,4 +242,97 @@ body {
             margin-top: 25px;
             text-align: center;
         }
+
+        /* Medical Dashboard Styling */
+    .medical-dashboard-style {
+        max-width: 1500px ;
+        background: #f8f9fa ;
+        color: #333 ;
+        padding: 0 ;
+        overflow: hidden;
+    }
+
+    .medical-header {
+        background: white;
+        padding: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .quick-stats-grid {
+        display: flex;
+        gap: 40px;
+    }
+
+    .stat-box label {
+        display: block;
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .stat-box p {
+        font-size: 18px;
+        font-weight: 600;
+        color: #156699;
+    }
+
+    .profile-body-scrollable {
+        padding: 30px;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .medical-section {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .medical-section h3 {
+        font-size: 16px;
+        margin-bottom: 15px;
+        color: #444;
+    }
+
+    .medical-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .medical-table th {
+        text-align: left;
+        padding: 12px;
+        background: #f1f4f9;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .medical-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+    }
+
+    .prescription-card {
+        background: #fff9f0;
+        border-left: 4px solid var(--gold);
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .med-list {
+        list-style: none;
+        margin-top: 10px;
+    }
+
+    .med-list li::before {
+        content: "💊";
+        margin-right: 10px;
+    }
 

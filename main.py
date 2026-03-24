@@ -51,7 +51,7 @@ def login_manual():
             return redirect(url_for("index"))
     
     flash("Invalid username or password!")
-    return redirect(url_for("index"))
+    return redirect(url_for("/"))
 
 
 #  GOOGLE AUTH ROUTE
