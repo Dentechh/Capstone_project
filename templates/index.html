@@ -99,7 +99,7 @@
 <main class="hero-section">
     <div class="hero-content">
         <div class="user-greeting">
-            <h1>Welcome, {{ name }}!</h1>
+            <h1>Welcome,  {{ name}}!</h1>
             <p>Ready for a brighter smile today?</p>
         </div>
 
@@ -197,7 +197,7 @@
 
         <div class="form-container" style="flex: 1.5; padding: 30px; overflow-y: auto; background: white;">
             <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
-            <h2 style="color: #156699; margin-bottom: 20px;">Patient Information Record</h2>
+            <h2 style="color: #156699; margin-bottom: 20px;">Patient Information </h2>
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
                 <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -212,6 +212,25 @@
                     <input type="date" name="Birthday" required>
                     <input type="text" placeholder="Occupation" name="Occupation">
                     <input type="text" placeholder="Civil Status" name="Civil_Status">
+                    <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
+                        Select Service
+                    </h3>
+
+                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                        <option value="" disabled selected>Choose a service</option>
+                        <option value="Dental Consultation">Dental Consultation</option>
+                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                        <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                        <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                        <option value="Crowns and Bridges">Crowns and Bridges</option>
+                        <option value="Teeth Whitening">Teeth Whitening</option>
+                        <option value="Fluoride Treatment">Fluoride Treatment</option>
+                        <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                        <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                        <option value="Root Canal Treatment">Root Canal Treatment</option>
+                        <option value="Periapical Xray">Periapical Xray</option>
+                    </select>
                 </div>
 
                 <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>

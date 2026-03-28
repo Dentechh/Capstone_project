@@ -5,10 +5,11 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from datetime import datetime, UTC
 import bleach
+import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "secret123"  # required for flash messages
+app.secret_key = "secret123"  # required for flash messages and session
 
 # -----------------------------
 # Initialize Firebase safely
@@ -25,7 +26,7 @@ Doc_Patients = "Patients"
 
 
 
-# makita nisa sa diri https://console.cloud.google.com/auth/clients
+# makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
 CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
 
 
@@ -49,8 +50,11 @@ def login_manual():
         # Verify the hashed password
         if check_password_hash(user_data['password'], password):
             session['name'] = user_data['firstname']
-            session['email'] = user_data.get('email', '') 
-            flash(f"Welcome back, {user_data['firstname']}!", "success") # Added success category
+            session['email'] = user_data.get('email', '')
+            session['username'] = user_data['username']   # ✅ ADD THIS
+            session['uid'] = user_query[0].id             # ✅ ADD THIS
+
+            flash(f"Welcome back, {user_data['firstname']}!", "success")
             return redirect(url_for("index"))
     
     flash("Invalid username or password!", "error") # Added error category
@@ -85,12 +89,18 @@ def login_g_auth():
 
 #  MANUAL SIGN UP
 
+
+
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
     if request.method == "POST":
+
         firstname = bleach.clean(request.form["FirstName"].strip())
+        lastname = bleach.clean(request.form["LastName"].strip())
         username = bleach.clean(request.form["UserName"].strip())
         password = bleach.clean(request.form["Password"].strip())
+        contact_number = bleach.clean(request.form["MobileNumber"].strip())
+        
 
         check_account = db.collection(Account_clients).where("username", "==", username).get()
 
@@ -101,18 +111,22 @@ def sign_up():
         hashed_password = generate_password_hash(password)
 
 
-        db.collection(Account_clients).add({
+        doc_ref = db.collection(Account_clients).document()
+        uid = doc_ref.id
+
+        doc_ref.set({
+            "uid": uid,
             "firstname": firstname,
             "username": username,
             "password": hashed_password,
-            "created_at": datetime.now(UTC).isoformat()
+            "created_at": datetime.now(UTC).isoformat(),
+            "contact_number":contact_number,
+            "lastname":lastname
         })
 
-        session['name'] = firstname
         return redirect(url_for("index"))
 
-    return redirect(url_for("index"))
-
+    return render_template("index.html")
 
 #  LOGOUT
 
@@ -135,7 +149,7 @@ def about_customer():
 
 
 
-import uuid
+
 
 @app.route("/booked_customer", methods=["POST"])
 def bookedCustomer():
@@ -149,6 +163,8 @@ def bookedCustomer():
     Birthday_appointment = bleach.clean(request.form.get("Birthday", ""))
     Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
     Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
+    Service_appointment = bleach.clean(request.form.get("Service", ""))
+    
 
     q1_appointment = bleach.clean(request.form.get("q1", ""))
     q2_appointment = bleach.clean(request.form.get("q2", ""))
@@ -199,7 +215,9 @@ def bookedCustomer():
 
             "w_nurse": w_nurse_appointment,
             "w_preg": w_preg_appointment,
-            "w_pill": w_pill_appointment
+            "w_pill": w_pill_appointment,
+            "Service_appointment":Service_appointment
+
         })
 
         flash("Appointment successfully booked!", "success")
@@ -214,10 +232,7 @@ def bookedCustomer():
                                                                                    
 @app.route("/patient-profile")
 def p_profile():
-    if 'email' not in session:
-        flash("Please login to view your profile")
-        return redirect(url_for("index"))
-
+    name = session.get('name')
     email = session.get('email')
     user_data = {}
 
@@ -234,52 +249,49 @@ def p_profile():
     
     return render_template("patient-profile.html", name=session.get('name'), user=user_data)
 
+
 @app.route("/update-profile", methods=["POST"])
 def update_profile():
-    if 'email' not in session: 
-        return redirect(url_for("index"))
 
-    email = request.form.get("email_id")
-    new_name = bleach.clean(request.form.get("new_name").strip())
-    new_phone = bleach.clean(request.form.get("new_phone").strip())
+    user_id = session.get("uid")
+
+    if not user_id:
+        flash("User not logged in", "error")
+        return redirect(url_for("p_profile"))
+
+    new_name = bleach.clean(request.form.get("new_name", "").strip())
+    new_lastname = bleach.clean(request.form.get("new_last", "").strip())
+    new_username = bleach.clean(request.form.get("new_username", "").strip())
+    new_phone = bleach.clean(request.form.get("new_phone", "").strip())
     new_password = request.form.get("new_password")
-    
-    # Determine which collection to update based on session provider
-    provider = session.get('provider', 'manual')
-    collection = "google_create_account" if provider == 'google' else Account_clients
-    
+    confirm_password = request.form.get("confirm_password")
+
+    if new_password and new_password != confirm_password:
+        flash("Passwords do not match!")
+        return redirect(url_for("p_profile"))
+
     update_data = {
         "firstname": new_name,
+        "username": new_username,
         "phone": new_phone,
-        "password":password
+        "updated_at": datetime.utcnow().isoformat(),
+        
     }
 
-    # If it's a manual user and they typed a new password
-    if provider != 'google' and new_password and len(new_password.strip()) > 0:
-        update_data["password"] = generate_password_hash(new_password.strip())
+    if new_password:
+        update_data["password"] = generate_password_hash(new_password)
 
     try:
-        # 1. Update Firestore
-        # We find the document by the email field
-        user_docs = db.collection(collection).where("email", "==", email).get()
+        db.collection(Account_clients).document(user_id).update(update_data)
+        session['username'] = new_username
+        session['name'] = new_name
         
-        if user_docs:
-            for doc in user_docs:
-                db.collection(collection).document(doc.id).update(update_data)
-            
-            # 2. Update the session so the UI updates immediately
-            session['name'] = new_name
-            flash("Profile updated successfully!", "success")
-        else:
-            flash("User document not found.", "error")
-
+        flash("Profile updated successfully!")
     except Exception as e:
-        print(f"Update Error: {e}")
-        flash("Error updating profile.", "error")
+        print("Error:", e)
+        flash("Update failed")
 
     return redirect(url_for("p_profile"))
-
-
 
 #---------------------------------------------------
 #Admin routes

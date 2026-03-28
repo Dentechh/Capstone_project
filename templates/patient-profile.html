@@ -176,7 +176,7 @@ header {
         .logo-icon { height: 40px; margin-right: 10px; mix-blend-mode: lighten; }
         
         .btn-back {
-            color: white; text-decoration: none; font-weight: 600; font-size: 0.9rem;
+            color: rgb(0, 0, 0); text-decoration: none; font-weight: 600; font-size: 0.9rem;
             padding: 8px 15px; border: 1px solid rgba(255,255,255,0.4); border-radius: 10px;
         }
 
@@ -246,7 +246,7 @@ header {
             overflow-y: auto;
         }
         .modal-form { display: flex; flex-direction: column; gap: 15px; }
-        .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255, 255, 255, 0.8); color: white; outline: none; width: 100%; }
+        .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255, 255, 255, 0.8); color: rgb(0, 0, 0); outline: none; width: 100%; }
 
         @media (max-width: 768px) {
             .profile-card { flex-direction: column; align-items: center; text-align: center; }
@@ -312,7 +312,7 @@ header {
 
 <header>
     <nav class="navbar">
-        <a href="#" class="logo-container">
+        <a href="/" class="logo-container">
             <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
             <div class="logo-text">
                 <span class="brand-name">CAPIZONDA</span>
@@ -321,7 +321,7 @@ header {
         </a>
 
         <ul class="nav-links">
-            <li><a href="#" class="active">HOME</a></li>
+            <li><a href="/" class="active">HOME</a></li>
             <li><a href="/about">ABOUT</a></li>
             <li class="dropdown">
                 <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
@@ -383,8 +383,8 @@ header {
             
             <div class="info-grid">
                 <div class="info-item">
-                    <label>First Name</label>
-                    <p>{{ user.get('firstname', 'N/A') }}</p>
+                    <label>Full Name</label>
+                    <p>{{ user.get('firstname', '') + ' ' + user.get('lastname', '') or 'N/A' }}</p>
                 </div>
                 <div class="info-item">
                     <label>Username</label>
@@ -392,7 +392,7 @@ header {
                 </div>
                 <div class="info-item">
                     <label>Phone Number</label>
-                    <p>{{ user.get('phone', 'Not set') }}</p>
+                    <p>{{ user.get('contact_number', 'Not set') }}</p>
                 </div>
                 <div class="info-item">
                     <label>Email Address</label>
@@ -431,41 +431,49 @@ header {
 <div class="modal-overlay" id="updateModal">
     <div class="modal-content">
         <h3 style="margin-bottom: 20px; font-size: 1.5rem;">Edit Profile</h3>
-        <form class="modal-form" action="/update-profile" method="POST" onsubmit="return validatePasswords()">
-            <input type="hidden" name="email_id" value="{{ user.get('email') }}">
-            
-            <div class="info-item">
-                <label>First Name</label>
-                <input type="text" name="new_name" value="{{ user.get('firstname', name) }}" required>
-            </div>
 
-            <div class="info-item">
-                <label>Username</label>
-                <input type="text" name="new_username" value="{{ user.get('username', '') }}" required>
-            </div>
+<form class="modal-form" action="/update-profile" method="POST" onsubmit="return validatePasswords()">
 
-            <div class="info-item">
-                <label>Phone Number</label>
-                <input type="text" name="new_phone" value="{{ user.get('phone', '') }}" placeholder="+63 9XX XXX XXXX">
-            </div>
+    <!-- Hidden current username -->
+    <input type="hidden" name="current_username" value="{{ user.get('username', '') }}">
 
-            {% if user.get('provider') != 'google' %}
-            <hr style="opacity: 0.2; margin: 10px 0;">
-            <div class="info-item">
-                <label>New Password</label>
-                <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
-            </div>
-            <div class="info-item">
-                <label>Confirm New Password</label>
-                <input type="password" id="confirm_password" placeholder="Confirm your new password">
-            </div>
-            {% endif %}
+    <div class="info-item">
+        <label>First Name</label>
+        <input type="text" name="new_name" value="{{ user.get('firstname', '') }}" required>
+    </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button type="submit" class="btn-edit-trigger" style="flex: 2; margin: 0;">Save Changes</button>
-                <button type="button" onclick="closeUpdateModal()" class="btn-back" style="flex: 1; text-align: center;">Cancel</button>
-            </div>
-        </form>
+
+
+    <div class="info-item">
+        <label>Username</label>
+        <input type="text" name="new_username" value="{{ user.get('username', '') }}" required>
+    </div>
+
+    <div class="info-item">
+        <label>Phone Number</label>
+        <input type="text" name="new_phone" value="{{ user.get('mobile_number', '') }}" placeholder="+63 9XX XXX XXXX">
+    </div>
+
+    {% if user.get('provider') != 'google' %}
+    <hr style="opacity: 0.2; margin: 10px 0;">
+    
+    <div class="info-item">
+        <label>New Password</label>
+        <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
+    </div>
+
+    <div class="info-item">
+        <label>Confirm New Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your new password">
+    </div>
+    {% endif %}
+
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button type="submit" class="btn-edit-trigger">Save Changes</button>
+        <button type="button" onclick="closeUpdateModal()" class="btn-back">Cancel</button>
+    </div>
+
+</form>
     </div>
 </div>
 

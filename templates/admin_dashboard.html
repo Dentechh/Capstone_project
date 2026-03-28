@@ -72,7 +72,7 @@
                     </div>
                     <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Client_concers }}</strong></p>
                     <button class="btn-action accept" style="width: 100%;" 
-                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', 'Female', '24', 'O+')">
+                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', '{{ appointment.Sex }}', '24', 'O+')">
                         Check Profile
                     </button>
                 </div>
@@ -87,7 +87,7 @@
                         <tr>
                             <th>Patient Name</th>
                             <th>Date & Time</th>
-                            <th>Concern</th>
+                            <th>Procedure</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
@@ -97,7 +97,7 @@
                         <tr>
                             <td>{{ appointment.FullName }}</td>
                             <td>{{ appointment.Birthday }}</td>
-                            <td>{{ appointment.Client_concers }}</td>
+                            <td>{{ appointment.Service_appointment }}</td>
                             <td><span class="badge pending">pending</span></td>
                             <td>
                                 <button class="btn-action accept">Accept</button>
@@ -131,6 +131,7 @@
             <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div class="content-panel" style="background: rgb(81, 103, 165); padding: 20px; border-radius: 12px;">
                     <div class="panel-header"><h3>Visits History</h3></div>
+                    {% for appointment in Appointment_clients %}
                     <table class="appointment-table">
                         <thead>
                             <tr>
@@ -144,11 +145,12 @@
                             <tr>
                                 <td>Dr. Capizonda</td>
                                 <td>20/05/2026</td>
-                                <td>Orthodontics</td>
+                                <td>{{ appointment.Service_appointment }}</td>
                                 <td>₱1,500</td>
                             </tr>
                         </tbody>
                     </table>
+                     {% endfor %}
                 </div>
 
                 <div class="content-panel" style="background: rgb(85, 120, 172); padding: 20px; border-radius: 12px;">
