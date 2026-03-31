@@ -321,6 +321,8 @@ def adminLogin():
     return render_template("admin_login.html")
 
 
+from flask import abort, render_template
+
 SERVICES_DATA = {
     "cleaning": {
         "title": "Oral Prophylaxis (Cleaning)",
@@ -331,7 +333,8 @@ SERVICES_DATA = {
             "Removes stubborn stains for a whiter smile",
             "Eliminates bad breath",
             "Early detection of dental issues"
-        ]
+        ],
+        "image": "cleaning.jpg"
     },
     "root-canal": {
         "title": "Root Canal Treatment",
@@ -342,7 +345,8 @@ SERVICES_DATA = {
             "Relieves severe toothache",
             "Preserves your natural tooth structure",
             "Highly successful and long-lasting"
-        ]
+        ],
+        "image": "root-canal.jpg"
     },
     "consultation": {
         "title": "Dental Consultation",
@@ -353,7 +357,8 @@ SERVICES_DATA = {
             "Personalized treatment planning",
             "Professional advice on oral hygiene",
             "Early detection of potential dental problems"
-        ]
+        ],
+        "image": "consultation.jpg"
     },
     "pasta": {
         "title": "Tooth Restoration (Pasta)",
@@ -364,7 +369,8 @@ SERVICES_DATA = {
             "Prevents further tooth decay",
             "Restores tooth strength and function",
             "Quick and minimally invasive procedure"
-        ]
+        ],
+        "image": "pasta.jpg"
     },
     "extraction": {
         "title": "Tooth Extraction",
@@ -375,7 +381,8 @@ SERVICES_DATA = {
             "Prevents the spread of infection to other teeth",
             "Prepares for orthodontic or denture treatment",
             "Fast relief from overcrowded teeth"
-        ]
+        ],
+        "image": "extraction.jpg"
     },
     "dentures": {
         "title": "Dentures",
@@ -386,7 +393,8 @@ SERVICES_DATA = {
             "Supports facial muscles for a younger look",
             "Customized for a natural appearance",
             "Cost-effective solution for missing teeth"
-        ]
+        ],
+        "image": "dentures.jpg"
     },
     "crowns-bridges": {
         "title": "Crowns and Bridges",
@@ -397,7 +405,8 @@ SERVICES_DATA = {
             "Restores the natural shape and size of teeth",
             "Prevents remaining teeth from shifting",
             "Enhances overall smile aesthetics"
-        ]
+        ],
+        "image": "crowns-bridges.jpg"
     },
     "whitening": {
         "title": "Teeth Whitening",
@@ -408,7 +417,8 @@ SERVICES_DATA = {
             "Safe and professionally supervised",
             "Boosts self-confidence",
             "Removes tough stains that toothpaste can't"
-        ]
+        ],
+        "image": "whitening.jpg"
     },
     "fluoride": {
         "title": "Fluoride Treatment",
@@ -419,7 +429,8 @@ SERVICES_DATA = {
             "Strengthens tooth enamel",
             "Especially effective for children's developing teeth",
             "Protects teeth from acid and bacteria"
-        ]
+        ],
+        "image": "fluoride.jpg"
     },
     "sealant": {
         "title": "Pit and Fissure Sealant",
@@ -430,7 +441,8 @@ SERVICES_DATA = {
             "Painless and non-invasive application",
             "Long-lasting protection for many years",
             "Ideal for children and teenagers"
-        ]
+        ],
+        "image": "sealant.jpg"
     },
     "wisdom-tooth": {
         "title": "Wisdom Teeth Removal",
@@ -441,7 +453,8 @@ SERVICES_DATA = {
             "Relieves jaw pain and gum swelling",
             "Reduces risk of infection and cysts",
             "Protects adjacent healthy molars"
-        ]
+        ],
+        "image": "wisdom-tooth.jpg"
     },
     "xray": {
         "title": "Periapical X-ray",
@@ -452,7 +465,8 @@ SERVICES_DATA = {
             "Detects infections and cysts early",
             "Shows the exact position of impacted teeth",
             "Critical for successful root canal planning"
-        ]
+        ],
+        "image": "xray.jpg"
     }
 }
 
