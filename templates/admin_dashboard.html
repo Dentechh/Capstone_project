@@ -6,14 +6,10 @@
     <title>Capizonda | Admin Panel</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-    <style>
-        /* Ensuring the active-section is visible */
-        .content-section { display: none; }
-        .active-section { display: block !important; }
-        .nav-item.active { background: #eef2ff; color: #4f46e5; border-right: 4px solid #4f46e5; }
 
-    </style>
+
 </head>
 <body class="dashboard-body">
 
@@ -114,22 +110,22 @@
             
             <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Back to Patients</button>
             
-            <div class="patient-profile-header" style="background: rgb(46, 49, 88); padding: 25px; border-radius: 12px; display: flex; align-items: center; gap: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                <div class="p-avatar-circle large" id="pd-avatar" style="width: 70px; height: 70px; font-size: 24px; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold;">??</div>
+            <div class="patient-profile-header">
+                <div class="p-avatar-circle large" id="pd-avatar">??</div>
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
-                    <p id="pd-id" style="margin: 0; color: #888; font-size: 14px;">#ID-0000</p>
+                    <p id="pd-id" style="margin: 0; color: #000000; font-size: 14px;">#ID-0000</p>
                 </div>
                 
                 <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid #eee; padding-left: 40px;">
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #aaa; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
                 </div>
             </div>
 
             <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                <div class="content-panel" style="background: rgb(81, 103, 165); padding: 20px; border-radius: 12px;">
+                <div class="content-panel">
                     <div class="panel-header"><h3>Visits History</h3></div>
                     {% for appointment in Appointment_clients %}
                     <table class="appointment-table">
@@ -153,9 +149,9 @@
                      {% endfor %}
                 </div>
 
-                <div class="content-panel" style="background: rgb(85, 120, 172); padding: 20px; border-radius: 12px;">
+                <div class="content-panel" >
                     <div class="panel-header"><h3>Prescription & Notes</h3></div>
-                    <div style="padding: 15px; background: #4b89b3; border: 1px solid #eee; border-radius: 8px;">
+                    <div class="panel-content">
                         <p><strong>Notes:</strong> <span id="pd-notes">No known allergies. Prefers morning appointments.</span></p>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medicines:</strong></p>
@@ -197,6 +193,107 @@
             </section>
         </div>
 
+            <!-- Patient Dental Chart -->
+            <div id="section-chart" class="content-section">
+                <div class="chart-container">
+                    <aside class="action-palette">
+                        <div class="palette-title">ACTION PALETTE</div>
+                        
+                        <div class="tool active" data-tool="healthy" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">verified</span>
+                            <span>Healthy</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="caries" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">brush</span>
+                            <span>Caries</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="filling" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">format_color_fill</span>
+                            <span>Filling</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="crown" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">workspace_premium</span>
+                            <span>Crown</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="rootcanal" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">medical_services</span>
+                            <span>Root Canal</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="extraction" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">content_cut</span>
+                            <span>Extraction</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="check" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">task_alt</span>
+                            <span>Check</span>
+                        </div>
+                    </aside>
+
+                    <section class="dental-chart">
+                        <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                        
+                        <div class="odontogram-container">
+                            <div class="axis-v"></div>
+                            
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-upper"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                            
+                            <div class="teeth-row" id="teeth-temp-top"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+
+                            <div class="axis-h"></div>
+
+                            <div style="position: relative; width: 100%;">
+                                <div class="label-side rotated">PERMANENT TEETH</div>
+                                <div class="permanent-block">
+                                    <div class="unified-grid wide" id="grid-perm-upper"></div>
+                                    <div class="teeth-row wide" id="teeth-perm-top"></div>
+                                    <div class="axis-h-mid"></div>
+                                    <div class="teeth-row wide reverse-layout" id="teeth-perm-bottom"></div>
+                                    <div class="unified-grid wide" id="grid-perm-lower"></div>
+                                </div>
+                            </div>
+
+                            <div class="axis-h"></div>
+
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="teeth-row reverse-layout" id="teeth-temp-bottom"></div>
+                            
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-lower"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+    </main>
+
+
+
+        <!-- MODAL (UNCHANGED) -->
+        <div id="tool-modal" class="modal">
+            <div class="modal-content">
+                <h3>Select Action Color</h3>
+                <div class="modal-buttons">
+                    <button class="btn-modal-red" onclick="applyModalChoice('#ff4d4d')">RED</button>
+                    <button class="btn-modal-blue" onclick="applyModalChoice('#156699')">BLUE</button>
+                    <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+
 
 
     <script>
@@ -206,12 +303,23 @@
             const activeNav = document.getElementById('nav-' + sectionId);
             if(activeNav) activeNav.classList.add('active');
 
-            // Toggle Main Content
+            // Hide all sections
             document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active-section');
             });
+
+            // Show selected section
             const target = document.getElementById('section-' + sectionId);
             if(target) target.classList.add('active-section');
+
+            // 🔥 CONTROL CHART VISIBILITY
+            const chart = document.getElementById('section-chart');
+            if (chart) {
+                chart.classList.remove('active-section');
+                if (sectionId === 'patientdashboard') {
+                    chart.classList.add('active-section');
+                }
+            }
 
             // Update Header Title
             const titles = {
@@ -255,7 +363,110 @@
                 }
             }
         }
+        let currentTool = 'healthy';
+        let lastClickedTooth = null;
+
+        function setTool(el) {
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            currentTool = el.getAttribute('data-tool');
+        }
+
+        function createToothSVG(id) {
+            return `
+            <div class="tooth-unit" id="tooth-${id}">
+                <span class="tooth-label">${id}</span>
+                <svg class="tooth-svg" viewBox="0 0 100 100" onclick="handleToothAction('${id}')">
+                    <path class="segment" d="M50,50 L12,12 A54,54 0 0,1 88,12 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L88,12 A54,54 0 0,1 88,88 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L88,88 A54,54 0 0,1 12,88 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L12,88 A54,54 0 0,1 12,12 Z" onclick="paintSegment(event)" /> 
+                    <circle class="segment" cx="50" cy="50" r="23" onclick="paintSegment(event)" />
+                    
+                    <line class="mark-line" x1="50" y1="5" x2="50" y2="95" stroke-width="8" style="display:none; pointer-events:none;" />
+                    
+                    <g class="mark-x" style="display:none; pointer-events:none; stroke:#ff4d4d; stroke-width:8;">
+                        <line x1="20" y1="20" x2="80" y2="80" />
+                        <line x1="80" y1="20" x2="20" y2="80" />
+                    </g>
+                </svg>
+            </div>`;
+        }
+
+        function paintSegment(e) {
+            if (currentTool === 'caries' || currentTool === 'filling') {
+                e.stopPropagation(); // Stops the modal from popping up
+                e.target.style.fill = (currentTool === 'caries') ? '#ff4d4d' : '#156699';
+            }
+        }
+
+        function handleToothAction(id) {
+            const tooth = document.getElementById(`tooth-${id}`);
+            const markX = tooth.querySelector('.mark-x');
+            const markLine = tooth.querySelector('.mark-line');
+
+            if (currentTool === 'healthy') {
+                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = '#ffffff');
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            } 
+            else if (currentTool === 'extraction') {
+                markX.style.display = (markX.style.display === 'block') ? 'none' : 'block';
+            }
+            else if (currentTool === 'crown' || currentTool === 'rootcanal') {
+                lastClickedTooth = id;
+                document.getElementById('tool-modal').style.display = 'flex';
+            }
+        }
+
+        function applyModalChoice(color) {
+            const tooth = document.getElementById(`tooth-${lastClickedTooth}`);
+            if (currentTool === 'crown') {
+                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = color);
+            } else if (currentTool === 'rootcanal') {
+                const line = tooth.querySelector('.mark-line');
+                line.setAttribute('stroke', color);
+                line.style.display = 'block';
+            }
+            closeModal();
+        }
+
+        function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
+
+        function initUnifiedGrid(id, cols) {
+            const grid = document.getElementById(id);
+            if (!grid) return;
+            grid.innerHTML = ''; // Clear existing
+            for (let i = 0; i < cols * 2; i++) {
+                const box = document.createElement('div');
+                box.className = 'grid-box';
+                box.onclick = function() {
+                    if (currentTool === 'check') this.innerHTML = (this.innerHTML === '✔️') ? '' : '✔️';
+                };
+                grid.appendChild(box);
+            }
+        }
+
+        window.onload = () => {
+            initUnifiedGrid('grid-upper', 10);
+            initUnifiedGrid('grid-perm-upper', 16);
+            initUnifiedGrid('grid-perm-lower', 16);
+            initUnifiedGrid('grid-lower', 10);
+
+            const render = (rowId, nums) => {
+                const row = document.getElementById(rowId);
+                if(row) nums.forEach(n => row.innerHTML += createToothSVG(n));
+            };
+
+            render('teeth-temp-top', [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]);
+            render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
+            render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
+            render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
+        };
+        
+
+    
     </script>
-    <script src="{{ url_for('static', filename='js/chart-logic.js') }}""></script>
+    
 </body>
 </html>

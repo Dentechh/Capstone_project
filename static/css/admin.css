@@ -17,18 +17,28 @@ body {
     background: var(--dark-blue);
     color: white;
     display: flex;
-    overflow: hidden; 
+   
 }
 
-/* SIDEBAR */
 .sidebar {
-    width: 260px; height: 100vh; background: var(--grad-navy);
-    border-right: 1px solid rgba(255,255,255,0.1);
-    display: flex; flex-direction: column; padding: 40px 20px;
+    width: 260px;
+    height: 100vh;
+    background: var(--grad-navy);
+    border-right: 1px solid rgba(255,255,255,0.5);
+
+    position: fixed;   /* ✅ KEY FIX */
+    top: 0;
+    left: 0;
+
+    display: flex;
+    flex-direction: column;
+    padding: 40px 20px;
+    z-index: 1000;
 }
+
 .sidebar-brand { text-align: center; margin-bottom: 50px; }
 .sidebar-brand h2 { font-size: 22px; letter-spacing: 2px; }
-.sidebar-brand span { font-size: 10px; color: black; font-weight: 800; }
+.sidebar-brand span { font-size: 10px; color: rgb(255, 255, 255); font-weight: 800; }
 .sidebar-nav { 
     flex: 1; 
     display: flex; 
@@ -37,29 +47,38 @@ body {
     color: black;
 }
 .nav-item {
-    text-decoration: none; color: rgb(0, 0, 0); padding: 14px 18px;
-    border-radius: 12px; font-size: 14px; font-weight: 600;
+    text-decoration: none; 
+    color: rgb(255, 255, 255); 
+    padding: 14px 18px;
+    border-radius: 12px; 
+    font-size: 17px; 
+    font-weight: 600;
     transition: 0.3s; opacity: 0.6; display: flex; align-items: center; gap: 10px;
 }
-.nav-item:hover, .nav-item.active { opacity: 1; background: rgba(255,255,255,0.1); }
-.nav-item.active { border-left: 4px solid var(--gold); background: rgba(255,255,255,0.05); }
+.nav-item:hover, .nav-item.active { 
+    opacity: 1; 
+    background: rgba(255,255,255,0.1); 
+}
+.nav-item.active { 
+    border-left: 4px solid var(--gold); 
+    background: rgba(255, 191, 191, 0.8); }
 
 /* MAIN CONTENT & BLUR FIX */
 .main-content { 
-    flex: 1; 
-    padding: 40px; 
-    overflow-y: auto; 
+    margin-left: 260px; /* ✅ prevent overlap with fixed sidebar */
+    height: 100vh;      /* ✅ full screen */
+    overflow: hidden;   /* ❗ stop global scroll */
+    padding: 40px;
     position: relative;
     background: url("../img/bg.jpg") no-repeat center center fixed;
     background-size: cover;
-    z-index: 1;
 }
 
 .main-content::before {
     content: "";
     position: fixed; 
     top: 0; left: 260px; right: 0; bottom: 0;
-    background: rgba(10, 25, 47, 0.6);
+    background: rgba(10, 25, 47, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: -1;
@@ -112,6 +131,29 @@ body {
     gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px; }
 .p-avatar-circle { width: 45px; height: 45px; background: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid var(--gold); }
 
+.patient-profile-header {
+    background: var(--grad-navy); 
+    padding: 25px; 
+    border-radius: 12px; 
+    display: flex; 
+    align-items: center; 
+    gap: 30px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5); 
+    margin-bottom: 20px;
+}
+
+.p-avatar-circle{
+    width: 70px; 
+    height: 70px; 
+    font-size: 24px; 
+    background:var(--grad-navy);
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 50%; 
+    font-weight: bold;
+}
 /* DASHBOARD COMPONENTS */
 .metric-cards { 
     display: flex; 
@@ -149,6 +191,15 @@ body {
     margin-bottom: 25px; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
+
+.panel-content {
+    padding: 15px;
+    background: #ffffff; 
+    border: 1px solid #000000; 
+    border-radius: 8px; 
+    color:#000000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
 .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
 
 .action-grid { display: flex; gap: 15px; margin-top: 20px; }
@@ -165,8 +216,18 @@ body {
 
 .search-input { width: 100%; padding: 15px 25px; background: var(--dark-form); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; color: white; margin-bottom: 20px; outline: none; }
 
-.content-section { display: none; }
-.active-section { display: block !important; animation: fadeInUp 0.5s ease forwards; }
+/* Default: no scroll */
+.content-section {
+    display: none;
+    height: 100%;
+}
+
+/* Active section */
+.active-section {
+    display: block !important;
+    height: 100%;
+}
+
 
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -335,4 +396,268 @@ body {
         content: "💊";
         margin-right: 10px;
     }
+
+
+/* =========================
+    Dental Chart
+========================== */
+
+
+.chart-container {
+    display: flex; 
+    padding: 40px; 
+    gap: 30px;
+    max-width: 500px; 
+    margin-left: 250px; 
+    margin-top: 50px;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.action-palette {
+    width: 200px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 30px 30px;
+    height: auto;
+    min-height: 700px;
+    margin-right: -25px;
+}
+
+.palette-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 20px;
+    text-align: center;
+    opacity: 0.8;
+    letter-spacing: 1px;
+}
+
+.tool {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    padding: 15px 5px; 
+    margin-bottom: 12px;
+    cursor: pointer; 
+    border-radius: 12px; 
+    color: white;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.material-symbols-rounded {
+    font-size: 27px;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    margin-bottom: 6px;
+    transition: 0.3s;
+}
+
+.tool span:not(.material-symbols-rounded) { 
+    font-size: 15px; 
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.tool:hover { 
+    background: rgba(255, 255, 255, 0.1); 
+    transform: translateY(-2px); 
+}
+
+.tool.active { 
+    background: var(--grad-gold); 
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 162, 173, 0.4);
+}
+
+.tool.active .material-symbols-rounded {
+    font-variation-settings: 'FILL' 1;
+}
+
+/* =========================
+      3. ODONTOGRAM BOARD
+========================== */
+.dental-chart {
+    flex: 1;
+    background: var(--grad-navy); 
+    backdrop-filter: blur(15px);
+    border-radius: 25px;
+    padding: 40px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+
+.chart-title { margin-bottom: 25px; letter-spacing: 2px; }
+
+.odontogram-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 20px 60px;
+}
+
+.segment {
+    fill: #ffffff; stroke: #000000;
+    stroke-width: 1.5; 
+    transition: fill 0.3s ease;
+}
+
+.segment:hover { filter: brightness(0.9); }
+
+.unified-grid {
+    display: grid;
+    grid-template-rows: repeat(2, 24px);
+    grid-auto-flow: column;
+    gap: 0; 
+    border: 1px solid white;
+    background: white;
+}
+
+.grid-box {
+    width: 34.5px; height: 24px;
+    border: 0.8px solid #000000;
+    background: white;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.teeth-row {
+    display: flex;
+    justify-content: center;
+    gap: 0; 
+}
+
+.tooth-unit {
+    width: 36px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tooth-svg { 
+    width: 28px;
+    height: 30px; 
+    overflow: visible; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.8);
+    border-radius: 50px;
+}
+
+.tooth-label {
+    font-size: 15px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 2px;
+}
+
+.reverse-layout .tooth-unit { flex-direction: column; }
+.reverse-layout .tooth-svg { order: 1; }
+.reverse-layout .tooth-label { order: 2; margin-top: 4px; margin-bottom: 0; }
+
+.label-side.rotated {
+    position: absolute; 
+    left: -25px; 
+    top: 50%;
+    transform: rotate(-90deg) translateX(-50%);
+    transform-origin: left;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.axis-v {
+    position: absolute;
+    left: 49.9%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: white;
+    z-index: 10;
+}
+
+.axis-h { 
+    width: 100%; 
+    height: 1px; 
+    background: rgba(255, 255, 255, 0.3); 
+    margin: 15px 0;
+}
+
+.axis-h-mid { 
+    width: 100%; 
+    height: 1px; 
+    background: white; 
+    margin: 10px 0;
+}
+
+.section-label {
+    color: white;
+    font-weight: 800;
+    font-size: 12px;
+    margin: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-row-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; 
+    margin: 10px 0;
+}
+
+.label-inline {
+    font-size: 11px;
+    font-weight: 800;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    width: 100px;
+}
+
+.label-inline:first-child { text-align: right; }
+.label-inline:last-child { text-align: left; }
+
+/* =========================
+      4. MODAL POPUP
+========================== */
+.modal {
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); 
+    align-items: center; 
+    justify-content: center; 
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--dark-form); 
+    padding: 40px; 
+    border-radius: 20px;
+    text-align: center; 
+    border: 2px solid var(--gold); 
+    color: white;
+}
+
+.modal-buttons { display: flex; gap: 15px; margin-top: 25px; justify-content: center; }
+
+.modal-buttons button { 
+    padding: 10px 30px; 
+    border-radius: 10px; 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 700;
+}
+
+.btn-modal-red { background: #ff4d4d; }
+.btn-modal-blue { background: #156699; }
+.btn-modal-cancel { background: #555; }
 
