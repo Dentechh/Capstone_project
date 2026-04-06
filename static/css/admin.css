@@ -3,7 +3,7 @@
    ========================================= */
 :root {
     --navy: #156699;
-    --dark-blue: #0a192f;
+    --dark-blue: #ffffff;
     --dark-form: rgba(15, 36, 61, 0.85);
     --gold: #FFA2AD; 
     --white: #ffffff;
@@ -14,12 +14,11 @@
 
 body {
     min-height: 100vh;
-    background: var(--dark-blue);
+    background: var(--grad-navy);
     color: white;
-    display: flex;
+
    
 }
-
 .sidebar {
     width: 260px;
     height: 100vh;
@@ -68,8 +67,10 @@ body {
     margin-left: 260px; /* ✅ prevent overlap with fixed sidebar */
     height: 100vh;      /* ✅ full screen */
     overflow: hidden;   /* ❗ stop global scroll */
+
     padding: 40px;
     position: relative;
+
     background: url("../img/bg.jpg") no-repeat center center fixed;
     background-size: cover;
 }
@@ -82,6 +83,12 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: -1;
+}
+
+#section-patientdashboard.active-section {
+    overflow-y: auto;
+    height: calc(100vh - 100px); /* adjust for header */
+    padding-right: 10px;
 }
 
 /* TOP HEADER & AVATAR FIX */

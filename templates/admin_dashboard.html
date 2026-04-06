@@ -107,7 +107,7 @@
         </div>
 
         <div id="section-patientdashboard" class="content-section">
-            
+
             <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Back to Patients</button>
             
             <div class="patient-profile-header">
@@ -162,38 +162,7 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-
-        <div id="section-records" class="content-section">
-            <div class="search-bar-container">
-                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input" onkeyup="filterPatients()">
-            </div>
-            <section class="content-panel">
-                <table class="appointment-table" id="recordsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Last Visit</th>
-                            <th>Contact</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#PT-001</td>
-                            <td>Jericho Manalo</td>
-                            <td>Mar 15, 2026</td>
-                            <td>0912-345-6789</td>
-                            <td><button class="btn-action accept" onclick="openPatientDashboard('Jericho Manalo', '#PT-001', 'Male', '26', 'B+')">View History</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-        </div>
-
-            <!-- Patient Dental Chart -->
             <div id="section-chart" class="content-section">
                 <div class="chart-container">
                     <aside class="action-palette">
@@ -277,6 +246,40 @@
                     </section>
                 </div>
             </div>
+
+        </div>
+
+
+        <div id="section-records" class="content-section">
+            <div class="search-bar-container">
+                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input" onkeyup="filterPatients()">
+            </div>
+            <section class="content-panel">
+                <table class="appointment-table" id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Last Visit</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#PT-001</td>
+                            <td>Jericho Manalo</td>
+                            <td>Mar 15, 2026</td>
+                            <td>0912-345-6789</td>
+                            <td><button class="btn-action accept" onclick="openPatientDashboard('Jericho Manalo', '#PT-001', 'Male', '26', 'B+')">View History</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- Patient Dental Chart -->
+
     </main>
 
 
@@ -314,11 +317,11 @@
 
             // 🔥 CONTROL CHART VISIBILITY
             const chart = document.getElementById('section-chart');
-            if (chart) {
-                chart.classList.remove('active-section');
-                if (sectionId === 'patientdashboard') {
-                    chart.classList.add('active-section');
-                }
+
+            if (sectionId === 'patientdashboard') {
+                if (chart) chart.classList.add('active-section');
+            } else {
+                if (chart) chart.classList.remove('active-section');
             }
 
             // Update Header Title
