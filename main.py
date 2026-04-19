@@ -37,7 +37,9 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 
 
 
-#PAYMENTS
+#PAYMENTS 
+#Still working palang payment the butangi lng cho if maka tapos ka sa need  mo  taposon
+# add kalng button for payment
 import requests
 
 url = "https://api.paymongo.com/v1/checkout_sessions"
@@ -80,6 +82,14 @@ response = requests.post(url, json=payload, headers=headers)
 
 print(response.text)
 
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
+#notification for gmail ni client
+
+
+
+#------------------------------------------------------------------------------------------------------------------------------------------------
 
 @app.route("/", methods=["GET"])
 def index():
