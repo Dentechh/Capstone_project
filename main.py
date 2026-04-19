@@ -25,16 +25,76 @@ Appointment_cliets = "Booked"
 Doc_Patients = "Patients"
 
 
+# Paymongo api keys
+
+pay_mongo_secret_key = "sk_test_CYiQMSXw2cHHhtF564gZ3mMx"
+pay_mongo_public_key = "pk_test_m4rG4iv4L9S5MC8d4dxq39ko"
+
+
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
 CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
 
 
+
+#PAYMENTS
+import requests
+
+url = "https://api.paymongo.com/v1/checkout_sessions"
+
+payload = { "data": { "attributes": {
+            "billing": { "email": "Email information" },
+            "send_email_receipt": True,
+            "show_description": True,
+            "show_line_items": True,
+            "payment_method_types": ["gcash", "brankas_metrobank", "paymaya"],
+            "reference_number": "reference_number",
+            "cancel_url": "cancel url",
+            "description": "Description details of the checkout.",
+            "line_items": [
+                {
+                    "currency": "PHP",
+                    "images": ["image ka checkout"],
+                    "amount": 200,
+                    "description": "description ka checkout",
+                    "name": "name ka checkout",
+                    "quantity": 112
+                },
+                {
+                    "currency": "PHP",
+                    "images": ["second image"],
+                    "amount": 1000,
+                    "description": "second  description",
+                    "name": "second name ",
+                    "quantity": 200
+                }
+            ]
+        } } }
+headers = {
+    "accept": "application/json",
+    "Content-Type": "application/json",
+    "authorization": "Basic c2tfdGVzdF9DWWlRTVNYdzJjSEhodEY1NjRnWjNtTXg6cGtfdGVzdF9tNHJHNGl2NEw5UzVNQzhkNGR4cTM5a28="
+}
+
+response = requests.post(url, json=payload, headers=headers)
+
+print(response.text)
+
+
 @app.route("/", methods=["GET"])
 def index():
+    uid = session.get ('uid', '')
     name = session.get('name', 'Guest')
     email = session.get('email', '')
-    return render_template("index.html", name=name, email=email)
+    return render_template("index.html",uid = uid, name=name, email=email)
+
+
+@app.route("/google_index", methods=["GET"])
+def google_index():
+    uid = session.get ('uid', '')
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    return render_template("google_index.html",uid = uid, name=name, email=email)
 
 
 @app.route("/login", methods=["POST"])
@@ -82,7 +142,7 @@ def login_g_auth():
             "last_login": datetime.now(UTC).isoformat()
         }, merge=True)
 
-        return redirect(url_for("index")) 
+        return redirect(url_for("google_index")) 
     except ValueError:
         return render_template("error.html", message="Invalid Google token")
 
@@ -149,10 +209,9 @@ def about_customer():
 
 
 
-
-
-@app.route("/booked_customer", methods=["POST"])
-def bookedCustomer():
+@app.route("/google_booked_customer", methods=["POST"])
+def google_bookedCustomer():
+    uid = session.get('uid')
 
     FullName = bleach.clean(request.form.get("Full_Name", ""))
     EmailAddress = bleach.clean(request.form.get("Email_Address", ""))
@@ -164,7 +223,6 @@ def bookedCustomer():
     Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
     Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
     Service_appointment = bleach.clean(request.form.get("Service", ""))
-    
 
     q1_appointment = bleach.clean(request.form.get("q1", ""))
     q2_appointment = bleach.clean(request.form.get("q2", ""))
@@ -185,10 +243,10 @@ def bookedCustomer():
     w_nurse_appointment = request.form.get("w_nurse")
     w_preg_appointment = request.form.get("w_preg")
     w_pill_appointment = request.form.get("w_pill")
-    uid = str(uuid.uuid4())
+
     try:
-        db.collection("Appointment_clients").document(uid).set({
-            "uid": uid,
+        # <-- Correct Firestore syntax
+        db.collection("google_create_account").document(uid).collection("appointments").add({
             "FullName": FullName,
             "EmailAddress": EmailAddress,
             "ContactNumber": ContactNumber,
@@ -212,12 +270,10 @@ def bookedCustomer():
             "q5_spec": q5_spec_appointment,
             "q7_spec": q7_spec_appointment,
             "q9_spec": q9_spec_appointment,
-
             "w_nurse": w_nurse_appointment,
             "w_preg": w_preg_appointment,
             "w_pill": w_pill_appointment,
-            "Service_appointment":Service_appointment
-
+            "Service_appointment": Service_appointment
         })
 
         flash("Appointment successfully booked!", "success")
@@ -226,7 +282,85 @@ def bookedCustomer():
         print(f"Error adding appointment: {e}")
         flash("There was an error booking your appointment.", "error")
 
-    return redirect(url_for("index"))
+    return redirect(url_for("google_index"))   
+
+
+
+
+@app.route("/booked_customer", methods=["POST"])
+def bookedCustomer():
+    uid = session.get('uid')
+
+    FullName = bleach.clean(request.form.get("Full_Name", ""))
+    EmailAddress = bleach.clean(request.form.get("Email_Address", ""))
+    ContactNumber = bleach.clean(request.form.get("Contact_number", ""))
+    Nationality_appointment = bleach.clean(request.form.get("Nationality", ""))
+    Age_appointment = bleach.clean(request.form.get("Age", ""))
+    Sex_appointment = bleach.clean(request.form.get("Sex", ""))
+    Birthday_appointment = bleach.clean(request.form.get("Birthday", ""))
+    Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
+    Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
+    Service_appointment = bleach.clean(request.form.get("Service", ""))
+
+    q1_appointment = bleach.clean(request.form.get("q1", ""))
+    q2_appointment = bleach.clean(request.form.get("q2", ""))
+    q3_appointment = bleach.clean(request.form.get("q3", ""))
+    q4_appointment = bleach.clean(request.form.get("q4", ""))
+    q5_appointment = bleach.clean(request.form.get("q5", ""))
+    q6_appointment = bleach.clean(request.form.get("q6", ""))
+    q7_appointment = bleach.clean(request.form.get("q7", ""))
+    q9_appointment = bleach.clean(request.form.get("q9", ""))
+
+    q2_spec_appointment = bleach.clean(request.form.get("q2_spec", ""))
+    q3_spec_appointment = bleach.clean(request.form.get("q3_spec", ""))
+    q4_spec_appointment = bleach.clean(request.form.get("q4_spec", ""))
+    q5_spec_appointment = bleach.clean(request.form.get("q5_spec", ""))
+    q7_spec_appointment = bleach.clean(request.form.get("q7_spec", ""))
+    q9_spec_appointment = bleach.clean(request.form.get("q9_spec", ""))
+
+    w_nurse_appointment = request.form.get("w_nurse")
+    w_preg_appointment = request.form.get("w_preg")
+    w_pill_appointment = request.form.get("w_pill")
+
+    try:
+        # <-- Correct Firestore syntax
+        db.collection(Account_clients).document(uid).collection("appointments").add({
+            "FullName": FullName,
+            "EmailAddress": EmailAddress,
+            "ContactNumber": ContactNumber,
+            "Nationality": Nationality_appointment,
+            "Age": Age_appointment,
+            "Sex": Sex_appointment,
+            "Birthday": Birthday_appointment,
+            "Occupation": Occupation_appointment,
+            "Civil_Status": Civil_Status_appointment,
+            "q1": q1_appointment,
+            "q2": q2_appointment,
+            "q3": q3_appointment,
+            "q4": q4_appointment,
+            "q5": q5_appointment,
+            "q6": q6_appointment,
+            "q7": q7_appointment,
+            "q9": q9_appointment,
+            "q2_spec": q2_spec_appointment,
+            "q3_spec": q3_spec_appointment,
+            "q4_spec": q4_spec_appointment,
+            "q5_spec": q5_spec_appointment,
+            "q7_spec": q7_spec_appointment,
+            "q9_spec": q9_spec_appointment,
+            "w_nurse": w_nurse_appointment,
+            "w_preg": w_preg_appointment,
+            "w_pill": w_pill_appointment,
+            "Service_appointment": Service_appointment
+        })
+
+        flash("Appointment successfully booked!", "success")
+
+    except Exception as e:
+        print(f"Error adding appointment: {e}")
+        flash("There was an error booking your appointment.", "error")
+
+    return redirect(url_for("index"))   
 
 
                                                                                    
@@ -301,20 +435,26 @@ def update_profile():
 
 @app.route("/admin_dashboard")
 def adminDashboard():
-    ref = db.collection("Appointment_clients")
-    docs = ref.get()
+    #  collection_group  para mangita ka collection sa sulod ka docudment
+    docs = db.collection_group("appointments").get()
 
-    Appointment_clients = []
+    appointment_list = []  
 
     for doc in docs:
-        appointment = doc.to_dict()
-        appointment["id"] = doc.id
-        Appointment_clients.append(appointment)
+        appointment_data = doc.to_dict()
+        appointment_data["id"] = doc.id  # This is the appointment doc ID
+        
+        # Optional: If you need to know WHICH user this belongs to:
+        # doc.reference.parent.parent.id will give you the UID
+        appointment_data["user_uid"] = doc.reference.parent.parent.id
+        
+        appointment_list.append(appointment_data)
 
     return render_template(
         "admin_dashboard.html",
-        Appointment_clients=Appointment_clients
+        Appointment_clients=appointment_list
     )
+
 
 @app.route("/admin_login")
 def adminLogin():
@@ -492,6 +632,9 @@ if __name__ == "__main__":
     app.run(debug=True)
 
 
+
+
+
 # pip install google-auth firebase-admin
 # pip install flask firebase-admin google-auth
 # pip install firebase-admin
@@ -525,3 +668,7 @@ if __name__ == "__main__":
 #git add .
 #git commit -m "Describe your changes here"
 #git push origin main
+
+
+
+#pip install flask requests

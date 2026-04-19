@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+</head>
+<body>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container" id="flash-container">
+      {% for category, message in messages %}
+        <div class="flash-box flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            const fc = document.getElementById('flash-container');
+            if(fc) {
+                fc.style.transition = "opacity 0.5s ease";
+                fc.style.opacity = "0";
+                setTimeout(() => fc.remove(), 500);
+            }
+        }, 4000);
+    </script>
+  {% endif %}
+{% endwith %}
+
+<div id="g_id_onload"
+     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse">
+</div>
+
+<header>
+    <nav class="navbar">
+        <a href="#" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="#" class="active">HOME</a></li>
+            <li><a href="/about">ABOUT</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                <div class="dropdown-content" id="servicesDropdownMenu">
+                    <a href="/services/consultation">Dental Consultation</a>
+                    <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
+                    <a href="/services/pasta">Tooth Restoration (Pasta)</a>
+                    <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                    <a href="/services/dentures">Dentures (Pustiso)</a>
+                    <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                    <a href="/services/whitening">Teeth Whitening</a>
+                    <a href="/services/fluoride">Fluoride Treatment</a>
+                    <a href="/services/sealant">Pit and Fissure Sealant</a>
+                    <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                    <a href="/services/root-canal">Root Canal Treatment</a>
+                    <a href="/services/xray">Periapical Xray</a>
+                </div>
+            </li>
+            <li><a href="/location">LOCATION</a></li>
+        </ul>
+
+        {% if name == "Guest" or not name %}
+        <div class="auth-buttons">
+            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+        </div>
+        {% else %}
+
+        <div class="profile-nav">
+            <div class="user-info-brief">   
+                <span>{{ name }}</span>
+                <small>Patient Account</small>
+            </div>
+            
+            <div class="profile-img-container" id="profileDropdownTrigger">
+                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+                
+                <div class="dropdown-menu" id="profileDropdown">
+                    <a href="/patient-profile">PROFILE</a>
+                    <a href="/logout">LOGOUT</a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+</header>
+
+<main class="hero-section">
+    <div class="hero-content">
+        <div class="user-greeting">
+            <h1>Welcome,  {{ name}}!</h1>
+            <p>Ready for a brighter smile today?</p>
+        </div>
+
+        <div class="cta-box">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo">
+            <p>Your smile is our passion!</p>
+            <a href="#" class="btn-appointment" id="openAppointment">Book an Appointment</a>
+        </div>
+    </div>
+</main>
+
+<footer class="main-footer">
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA DENTAL</span>
+                <span class="brand-sub">Trusted Care Since 2024</span>
+            </div>
+            <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
+        </div>
+
+        <div class="footer-contact">
+            <h4>CONTACT US</h4>
+            <ul>
+                <li><span>📍</span> 231 Lopez Jaena St, Molo, Iloilo City</li>
+                <li><span>📞</span> 0962 687 6076</li>
+                <li><span>✉️</span> capizondadental@gmail.com</li>
+            </ul>
+        </div>
+
+        <div class="footer-socials">
+            <h4>FOLLOW US</h4>
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    Facebook Page
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="footer-copy">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>
+        <div class="footer-legal">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+<div class="chatbot-launcher" id="chatLauncher">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/chat--v1.png" alt="Chat Icon">
+</div>
+
+<div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-header">Clinic Assistant</div>
+    <div class="chatbot-messages" id="chat-box">
+        <div class="message bot">Hi there! How can we make your smile brighter today? 😁</div>
+    </div>
+    <div class="chatbot-buttons">
+        <button data-msg="Clinic Info">Clinic Info</button>
+        <button data-msg="Appointments">Appointments</button>
+        <button data-msg="Treatments">Treatments</button>
+    </div>
+    <div class="chatbot-input">
+        <input type="text" id="chat-input" placeholder="Ask a question...">
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+
+
+<div id="appointmentModal" class="modal">
+    <div class="modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;">
+        
+        <div class="consent-sidebar" style="flex: 1; background: #f4f7f9; padding: 30px; border-right: 1px solid #dee2e6; overflow-y: auto; max-width: 1500px;">
+            <h3 style="color: #156699; margin-top: 0;">Informed Consent</h3>
+            <div class="consent-body" style="font-size: 0.82rem; line-height: 1.5; color: #333; text-align: justify;">
+                <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
+
+                <p><strong>DRUGS & MEDICATIONS:</strong> I understand that antibiotics, analgesics, & other medications can cause allergic reactions like redness & swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
+                
+                <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be necessary to change/add procedures because of condition found while working on the teeth that was not discovered during examination. For example, root canal therapy may be needed following routine restorative procedures. I give my permission to the dentist to make anyall changes and additions as necessary with my responsibility to pay all the cost agreed.</p>
+                
+                <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or a radiograph maybe necessary as part of diagnostic aid to come up with tentative diagnosis of my dental problem and to make a good treatment plan, but, that will not give me a 100% assurance for the accuracy of the treatment since all dental treatments are subject to unpredictable complications that later on may lead to sudden change or treatment plan and subject to new charges.</p>
+                
+                <p><strong>REMOVAL OF TEETH:</strong> I understand that alternatives to tooth removal (root canal therapy, crowns & periodontal surgery etc.) & I completely understand that these alternatives, including their risk & benefits prior to authorizing the dentist to remove all the infections. if present & it may be necessary to have furthur treatment. I understand that removing teeth remove, such as pain, swelling, spread of infection, dry socket, fractured treatment under specialist if completion arise during the following treatment</p>
+                
+                <p><strong>CROWNS (CAPS) & BRIDGES:</strong> Preparing a tooth may irritate the nerve tissue in the center of the tooth, leaving extra sensitive to heat, cold & pressure. I understand that sometimes it is not possible to match the color of natural teeth exactly with artificial teeth.</p>
+                
+                <p><strong>ENDODONTICS (ROOT CANAL):</strong> I understand there is no guarantee that a root canal treatment will save a tooth & that complications can occur from the treatment.</p>
+                
+                <p><strong>PERIODONTAL DISEASE:</strong> I understand that periodontal disease is a serious condition causing gum & bone inflammation and/or loss and that can lead eventually to the loss of my teeth.</p>
+                
+                <p><strong>FILLINGS:</strong> I understand that care must be exercised in chewing on filling, especially during the first 24 hours to avoid breakage. Sensitivity is common, but usually temporary.</p>
+                
+                <p><strong>DENTURES:</strong> I understand that wearing of dentures can be difficult. Sore spots, altered speech & difficulty in eating are common problems.</p>
+                <hr>
+                <p style="font-size: 0.75rem;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+            </div>
+        </div>
+
+        <div class="form-container" style="flex: 1.5; padding: 30px; overflow-y: auto; background: white;">
+            <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
+            <h2 style="color: #156699; margin-bottom: 20px;">Patient Information </h2>
+
+            <form action="/google_booked_customer" id="appointmentForm" method="POST">
+                <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <input type="text" placeholder="Full Name" name="Full_Name" required style="grid-column: span 2;">
+                    <input type="text" placeholder="Address" name="Email_Address" required style="grid-column: span 2;">
+                    <input type="text" placeholder="Nationality" name="Nationality">
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" placeholder="Age" name="Age" style="width: 50%;">
+                        <input type="text" placeholder="Sex" name="Sex" style="width: 50%;">
+                    </div>
+                    <input type="tel" placeholder="Contact Number" name="Contact_number" required>
+                    <input type="date" name="Birthday" required>
+                    <input type="text" placeholder="Occupation" name="Occupation">
+                    <input type="text" placeholder="Civil Status" name="Civil_Status">
+                    <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
+                        Select Service
+                    </h3>
+
+                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                        <option value="" disabled selected>Choose a service</option>
+                        <option value="Dental Consultation">Dental Consultation</option>
+                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                        <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                        <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                        <option value="Crowns and Bridges">Crowns and Bridges</option>
+                        <option value="Teeth Whitening">Teeth Whitening</option>
+                        <option value="Fluoride Treatment">Fluoride Treatment</option>
+                        <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                        <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                        <option value="Root Canal Treatment">Root Canal Treatment</option>
+                        <option value="Periapical Xray">Periapical Xray</option>
+                    </select>
+                </div>
+
+                <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
+                
+                <div class="medical-history-questions" style="font-size: 0.85rem; margin-top: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>1. Are you in good health?</span>
+                        <div><input type="radio" name="q1" value="Yes"> Yes <input type="radio" name="q1" value="No"> No</div>
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;"><span>2. Are you under medical treatment now?</span>
+                        <div><input type="radio" name="q2" value="Yes"> Yes <input type="radio" name="q2" value="No"> No</div></div>
+                        <input type="text" name="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;"><span>3. Serious illness / surgical operation?</span>
+                        <div><input type="radio" name="q3" value="Yes"> Yes <input type="radio" name="q3" value="No"> No</div></div>
+                        <input type="text" name="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;"><span>4. Have you ever been hospitalized?</span>
+                        <div><input type="radio" name="q4" value="Yes"> Yes <input type="radio" name="q4" value="No"> No</div></div>
+                        <input type="text" name="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;"><span>5. Are you taking any medication?</span>
+                        <div><input type="radio" name="q5" value="Yes"> Yes <input type="radio" name="q5" value="No"> No</div></div>
+                        <input type="text" name="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>6. Do you use tobacco products?</span>
+                        <div><input type="radio" name="q6" value="Yes"> Yes <input type="radio" name="q6" value="No"> No</div>
+                    </div>
+
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between;"><span>7. Do you have any allergy?</span>
+                        <div><input type="radio" name="q7" value="Yes"> Yes <input type="radio" name="q7" value="No"> No</div></div>
+                        <input type="text" name="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                    </div>
+
+                    <div style="background: #fdf6f6; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #feeaea;">
+                        <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.75rem;">8. For Women Only:</p>
+                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                            <label><input type="checkbox" name="w_preg"> Are you pregnant?</label>
+                            <label><input type="checkbox" name="w_nurse"> Are you nursing?</label>
+                            <label><input type="checkbox" name="w_pill"> On birth control pills?</label>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
+                        <div><input type="radio" name="q9" value="Yes"> Yes <input type="radio" name="q9" value="No"> No</div></div>
+                        <input type="text" name="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; font-size: 0.8rem; border-top: 1px solid #eee; padding-top: 15px;">
+                    <label><input type="checkbox" required> I authorize the doctor to proceed with treatment & understand dentistry is not an exact science.</label>
+                </div>
+
+                <button type="submit" class="submit-btn" style="width: 100%; margin-top: 15px; background: #156699; color: white; padding: 12px; border-radius: 6px; font-weight: bold;">Confirm Appointment</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="loginModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('loginModal')">&times;</span>
+
+        <h2>Welcome Back</h2>
+        
+        <form action="/login" method="POST">
+            <input type="text" name="UserName" placeholder="Username" required>
+            <input type="password" name="Password" placeholder="Password" required>
+            <button type="submit" class="sign-up-btn">Login</button>
+        </form>
+
+        <div class="divider">OR</div>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard"></div>
+        </div>
+
+        <p class="footer-text">
+            Don't have an account yet? 
+            <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
+        </p>
+    </div>
+</div>
+
+<div id="registerModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
+        <h2>Create Account</h2>
+        <form action="/sign-up" method="POST">
+            <div style="display:flex; gap:10px;">
+                <input type="text" name="FirstName" placeholder="First Name" required>
+                <input type="text" name="LastName" placeholder="Last Name" required>
+            </div>
+            <input type="text" name="UserName" placeholder="Username" required>
+            <input type="password" name="Password" placeholder="Password" required>
+            <input type="tel" name="MobileNumber" placeholder="Contact Number" required>
+            <button type="submit" class="sign-up-btn">Sign Up</button>
+        </form>
+        
+        <div class="divider">OR</div>
+
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard" data-text="signup_with"></div>
+        </div>
+
+        <p class="footer-text">
+            Already have an account? 
+            <a href="javascript:void(0)" onclick="closeAuthModal('registerModal'); openAuthModal('loginModal');">Log In</a>
+        </p>
+    </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+
+    function handleCredentialResponse(response) {
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = "/google-auth";
+
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "token";
+        input.value = response.credential;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function openAuthModal(modalId) {
+    document.getElementById(modalId).style.display = "flex";
+    }
+
+    function closeAuthModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    window.onclick = (e) => { 
+    // Close Appointment Modal
+    if(e.target == modal) modal.style.display = "none";
+    
+    // Close Login Modal if clicking background
+    const loginM = document.getElementById('loginModal');
+    if(e.target == loginM) loginM.style.display = "none";
+
+    // Close Register Modal if clicking background
+    const regM = document.getElementById('registerModal');
+    if(e.target == regM) regM.style.display = "none";
+
+    // Close chat if clicking outside
+    if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+        windowChat.style.display = 'none';
+    }
+
+    // Close profile dropdown
+    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+    }
+};
+    // 1. Dropdown Toggle Logic
+    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+    const dropdownMenu = document.getElementById('profileDropdown');
+
+    if(dropdownTrigger) {
+        dropdownTrigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = dropdownMenu.style.display === 'flex';
+            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+        };
+    }
+
+    // 2. Toggle Chatbot Modal
+    const launcher = document.getElementById('chatLauncher');
+    const windowChat = document.getElementById('chatWindow');
+
+    launcher.onclick = () => {
+        const isOpen = windowChat.style.display === 'flex';
+        windowChat.style.display = isOpen ? 'none' : 'flex';
+    };
+
+    // 3. Chat Logic
+    const chatBox = document.getElementById('chat-box');
+    document.querySelectorAll('.chatbot-buttons button').forEach(btn => {
+        btn.onclick = () => {
+            const msg = btn.getAttribute('data-msg');
+            addMsg('user', msg);
+            setTimeout(() => addMsg('bot', `I'd be happy to help with ${msg}! What specific info do you need?`), 600);
+        }
+    });
+
+    function addMsg(s, t) {
+        const d = document.createElement('div'); d.className = `message ${s}`; d.textContent = t;
+        chatBox.appendChild(d); chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 4. Appointment Modal Logic
+    const modal = document.getElementById("appointmentModal");
+    document.getElementById("openAppointment").onclick = (e) => { e.preventDefault(); modal.style.display = "flex"; };
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    
+    // Global click listener to close modals/dropdowns if clicking outside
+    window.onclick = (e) => { 
+        if(e.target == modal) modal.style.display = "none";
+        
+        // Close chat if clicking outside
+        if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+            windowChat.style.display = 'none';
+        }
+
+        // Close dropdown if clicking outside
+        if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+    };
+
+    // Calendar Initialization
+    flatpickr("#appointmentDate", {
+        minDate: "today",
+        dateFormat: "F j, Y",
+        disable: [
+            "2026-03-25", "2026-03-26",
+            function(date) { return (date.getDay() === 0); }
+        ]
+    });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        const dropBtn = document.getElementById('servicesDropdownBtn');
+        const dropMenu = document.getElementById('servicesDropdownMenu');
+
+        // Toggle dropdown on click
+        dropBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevents the click from reaching the window listener below
+            dropMenu.classList.toggle('show');
+            this.classList.toggle('active-link');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(e) {
+            if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                dropMenu.classList.remove('show');
+                dropBtn.classList.remove('active-link');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

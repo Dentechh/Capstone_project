@@ -61,14 +61,16 @@
                 <div class="patient-card">
                     <div class="p-card-header">
                         <div class="p-avatar-circle">{{ appointment.FullName[:2].upper() }}</div>
-                        <div class="p-info">
-                            <strong>{{ appointment.FullName }}</strong>
-                            <small style="opacity: 0.6;">{{ appointment.uid }}</small>
-                        </div>
+
+                <div class="p-info">
+                    <strong>{{ appointment.FullName }}</strong>
+                    
+                    <small style="opacity: 0.6;">{{ appointment.uid }}</small>
+                </div>
                     </div>
-                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Client_concers }}</strong></p>
+                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service_appointment  }}</strong></p>
                     <button class="btn-action accept" style="width: 100%;" 
-                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', '{{ appointment.Sex }}', '24', 'O+')">
+                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', '{{ appointment.Sex }}', '{{ appointment.Age }}', 'O+')">
                         Check Profile
                     </button>
                 </div>
@@ -96,8 +98,8 @@
                             <td>{{ appointment.Service_appointment }}</td>
                             <td><span class="badge pending">pending</span></td>
                             <td>
-                                <button class="btn-action accept">Accept</button>
-                                <button class="btn-action decline">Decline</button>
+                                <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'accept')">Accept</button>
+                                <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'decline')">Decline</button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -335,11 +337,11 @@
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
         }
 
-        function openPatientDashboard(name, id, gender, age, blood) {
+        function openPatientDashboard(name, uid, Sex, age, blood) {
             // 1. Populate data
             document.getElementById('pd-name').innerText = name;
-            document.getElementById('pd-id').innerText = "Patient ID: " + id;
-            document.getElementById('pd-gender').innerText = gender || 'Female';
+            document.getElementById('pd-id').innerText = "Patient ID: " + uid;
+            document.getElementById('pd-gender').innerText = Sex || 'Female';
             document.getElementById('pd-age').innerText = age || '24';
             document.getElementById('pd-blood').innerText = blood || 'O+';
             
