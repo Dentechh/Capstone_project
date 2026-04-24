@@ -26,6 +26,7 @@ body {
     background-size: cover;
     display: flex;
     flex-direction: row;
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
 /* ✅ FIXED BLUR */
@@ -39,6 +40,7 @@ body::before {
     backdrop-filter: blur(8px);
     background: rgba(0, 0, 0, 0.4);
     z-index: -1;
+    transition: background 0.4s ease;
 }
 
 /* =========================
@@ -395,3 +397,195 @@ body::before {
 .btn-save {
     width: 100%;
 }
+
+/* =========================
+   DARK MODE OVERRIDES
+========================= */
+body.dark-mode {
+    background: url("../img/bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+body.dark-mode::before {
+    background: rgba(5, 10, 20, 0.7);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .sidebar {
+    background: rgba(15, 20, 30, 0.95);
+    border-right-color: rgba(255,255,255,0.1);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .sidebar-brand h2 {
+    color: #e0e0e0;
+    transition: color 0.4s ease;
+}
+
+body.dark-mode .sidebar-nav .nav-item {
+    color: #e0e0e0;
+    background: rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .sidebar-nav .nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--gold);
+}
+
+body.dark-mode .dental-chart {
+    background: rgba(30, 35, 45, 0.8);
+    color: #e0e0e0;
+    transition: background 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode .tooth-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .section-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .label-inline {
+    color: #e0e0e0;
+}
+
+body.dark-mode .action-palette {
+    background: rgba(30, 35, 45, 0.6);
+    border-color: rgba(255,255,255,0.1);
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+body.dark-mode .palette-title {
+    color: #e0e0e0;
+}
+
+body.dark-mode .tool {
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .tool:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .modal-content {
+    background: rgba(20, 25, 35, 0.95);
+    border-color: var(--gold);
+    color: #e0e0e0;
+    transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode .axis-v,
+body.dark-mode .axis-h,
+body.dark-mode .axis-h-mid {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-mode .segment {
+    fill: #ffffff;
+    stroke: #000000;
+}
+
+body.dark-mode .grid-box {
+    background: #ffffff;
+    border-color: #000000;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease, transform 0.3s ease;
+    width: 40px;
+    height: 40px;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.1);
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sun-icon {
+    color: #ff9800;
+}
+
+.moon-icon {
+    color: #bb86fc;
+}
+
+body.dark-mode .sun-icon {
+    display: block;
+}
+
+body.dark-mode .moon-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .sun-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .moon-icon {
+    display: block;
+}
+
+/* Dark mode base text color */
+body.dark-mode {
+    color: #e0e0e0;
+}
+
+/* Smooth transitions */
+
+body:not(.dark-mode) .sun-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .moon-icon {
+    display: block;
+}
+
+/* Smooth transitions for themeable elements */
+body,
+header,
+.main-header,
+.brand-name,
+.brand-sub,
+.btn-save,
+.chart-container,
+.action-palette,
+.palette-title,
+.tool,
+.dental-chart,
+.chart-title,
+.tooth-label,
+.section-label,
+.label-inline,
+.axis-v,
+.axis-h,
+.axis-h-mid,
+.segment,
+.grid-box,
+.modal-content,
+.btn-modal-red,
+.btn-modal-blue,
+.btn-modal-cancel {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+

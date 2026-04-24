@@ -1,6 +1,6 @@
 /* =========================
-      1. GLOBAL & RESET
-========================== */
+       1. GLOBAL & RESET
+ ========================== */
 @view-transition { navigation: auto; } /* Key for smooth page switching */
 
 * {
@@ -9,13 +9,20 @@
 }
 
 :root {
-    --navy: #156699;
-    --gold: #FFA2AD;
-    --gold-light: #FFA2AD;
+    --navy: #0d47a1;
+    --navy-dark: #0a3b7d;
+    --gold: #0d47a1;
+    --gold-light: #1565c0;
     --white: #ffffff;
-    --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
-    --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
-    --grad-navy2: linear-gradient(180deg,#8CD3FF 0%, #156699 100%);
+    --black: #000000;
+    --dark-black: #1a1a1a;
+    --text-primary: #1a1a1a;
+    --text-secondary: #444444;
+    --grad-gold: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    --grad-navy: linear-gradient(180deg, #ffffff 0%, #def0ff 100%);
+    --grad-navy2: linear-gradient(180deg,#42a5f5 0%, #0d47a1 100%);
+    --grad-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
+    --grad-surface: linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5));
 }
 
 body {
@@ -25,6 +32,8 @@ body {
     min-height: 100vh;
     position: relative;
     color: white;
+    overflow-x: hidden;
+    transition: background 0.4s ease, color 0.4s ease;
 }
 
 body::before {
@@ -49,12 +58,14 @@ header {
 
 .navbar { display: flex; justify-content: space-between; align-items: center; }
 
-.logo-container { display: flex; align-items: center; color: var(--white); text-decoration: none; }
+.logo-container { display: flex; align-items: center; color: var(--black); text-decoration: none; }
 
 .logo-icon { 
     height: 65px; 
     margin-right: 8px; 
-    mix-blend-mode: lighten; /* Identical to index */
+    mix-blend-mode: luminosity;
+    border-radius: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.9);
 }
 
 .brand-name { font-weight: 600; font-size: 25px; letter-spacing: 1px; }
@@ -62,7 +73,7 @@ header {
 
 .nav-links { display: flex; list-style: none; }
 .nav-links li { margin: 0 20px; }
-.nav-links a { text-decoration: none; color: white; font-size: 20px; transition: 0.3s; }
+.nav-links a { text-decoration: none; color: var(--black); font-size: 20px; transition: 0.3s; }
 .nav-links a.active, .nav-links a:hover { color: var(--gold-light); }
 
 /* PROFILE & DROPDOWN STYLING */
@@ -132,9 +143,9 @@ header {
             font-weight: 600; 
             transition: 0.3s; 
             font-size: 16px; }
-        .btn-login { 
-            color: white; 
-            border: 1px solid rgba(255,255,255,0.4); 
+        .btn-login {
+            color: black;
+            border: 1px solid rgba(0, 0, 0, 0.4);
         }
         .btn-login:hover { 
             background: rgba(255,255,255,0.1); 
@@ -238,6 +249,7 @@ footer {
 /* Info Styling */
 .dr-details-box {
     flex: 2.5;
+    color:black;
 }
 
 .achievement-list {
@@ -332,7 +344,7 @@ footer {
 
 .main-footer {
     background: var(--grad-navy);
-    color: white;
+    color: rgb(0, 0, 0);
     padding: 30px 10% 20px;
     font-family: 'Kumbh Sans', sans-serif;
 }
@@ -360,7 +372,7 @@ footer {
 .footer-contact li { margin-bottom: 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
 
 .social-links a {
-    color: white;
+    color: rgb(0, 0, 0);
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -381,8 +393,638 @@ footer {
     opacity: 0.7;
 }
 
-.footer-legal a { 
-    color: white; 
-    margin-left: 20px; 
-    text-decoration: none; 
+.footer-legal a {
+    color: rgb(0, 0, 0);
+    margin-left: 20px;
+    text-decoration: none;
+}
+
+/* Flash Message Styles */
+.flash-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    width: 90%;
+    max-width: 400px;
+}
+.flash-box {
+    padding: 15px 25px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    animation: slideDown 0.4s ease-out forwards;
+}
+.flash-success { background: rgba(46, 204, 113, 0.9); border: 1px solid #2ecc71; }
+.flash-error { background: rgba(231, 76, 60, 0.9); border: 1px solid #e74c3c; }
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal Styles */
+.modal-content {
+    background-color: #ff0000;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    color: #333;
+    border-top: 8px solid var(--navy);
+}
+
+.close-btn {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
+}
+.close-btn:hover {
+    color: var(--navy);
+}
+
+/* Signature Pad */
+#signaturePad {
+    display: block;
+    border: 1px solid #ccc !important;
+    border-radius: 6px;
+    background: #fff !important;
+    cursor: crosshair !important;
+    touch-action: none;
+}
+
+#signaturePad:hover {
+    border-color: var(--navy) !important;
+}
+
+/* Signature Upload */
+#signatureUpload {
+    font-size: 0.75rem;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f9f9f9;
+    cursor: pointer;
+}
+
+#signatureUpload:hover {
+    border-color: var(--navy);
+    background: #fff;
+}
+
+/* Form Inputs */
+#appointmentForm input[type="text"],
+#appointmentForm input[type="email"],
+#appointmentForm input[type="tel"],
+#appointmentForm input[type="number"],
+#appointmentForm input[type="date"],
+#appointmentForm select {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Kumbh Sans', sans-serif;
+    transition: border-color 0.3s;
+}
+
+#appointmentForm input:focus,
+#appointmentForm select:focus {
+    border-color: var(--navy);
+    outline: none;
+    background-color: #f1f8ff;
+}
+
+/* Medical History Section Styling */
+.medical-questions span {
+    color: #444;
+    font-weight: 500;
+}
+
+.medical-questions label {
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 15px;
+}
+
+/* Radio & Checkbox Styling */
+#appointmentForm input[type="radio"],
+#appointmentForm input[type="checkbox"] {
+    accent-color: var(--navy);
+    transform: scale(1.1);
+    vertical-align: middle;
+}
+
+/* Submit Button */
+.submit-btn {
+    background: linear-gradient(135deg, var(--navy) 0%, #8CD3FF 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(21, 102, 153, 0.3);
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(21, 102, 153, 0.4);
+}
+
+/* =========================
+   DARK MODE OVERRIDS
+   ========================= */
+body.dark-mode::before {
+    filter: blur(8px) brightness(0.3);
+}
+
+body.dark-mode header {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .logo-container,
+body.dark-mode .brand-name,
+body.dark-mode .brand-sub {
+    color: #ffffff;
+}
+
+body.dark-mode .nav-links a {
+    color: #e0e0e0;
+    transition: color 0.3s ease;
+}
+
+body.dark-mode .nav-links a:hover,
+body.dark-mode .nav-links a.active {
+    color: #64b5f6;
+}
+
+body.dark-mode .user-info-brief {
+    color: #e0e0e0;
+}
+
+body.dark-mode .profile-nav {
+    border-left-color: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .btn-login {
+    color: #e0e0e0;
+    border-color: rgba(255,255,255,0.2);
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .btn-register {
+    background: var(--grad-gold);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .spotlight-container {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    border-color: rgba(255,255,255,0.1);
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+body.dark-mode .dr-details-box {
+    color: white;
+}
+
+body.dark-mode .info-label {
+    color: var(--gold-light);
+}
+
+body.dark-mode .dropdown-menu {
+    background: #1e1e1e;
+    transition: background 0.3s ease;
+}
+
+body.dark-mode .dropdown-menu a {
+    color: #e0e0e0;
+    border-bottom-color: #333;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .dropdown-menu a:hover {
+    background: #2d2d2d;
+    color: #64b5f6;
+}
+
+body.dark-mode .dropdown-menu a:last-child {
+    color: #ef5350;
+}
+
+body.dark-mode .dropdown-content {
+    background-color: var(--dark-black);
+}
+
+body.dark-mode .dropdown-content a {
+    color: #e0e0e0 !important;
+    border-bottom-color: #333;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .dropdown-content a:hover {
+    background: #2d2d2d;
+    color: #64b5f6 !important;
+}
+
+body.dark-mode {
+    color: #e0e0e0;
+}
+
+body.dark-mode {
+    --navy: #64b5f6;
+}
+
+body.dark-mode footer {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: white;
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .footer-contact h4,
+body.dark-mode .footer-socials h4 {
+    border-bottom-color: rgba(255,255,255,0.1);
+    color: #e0e0e0;
+}
+
+body.dark-mode .footer-contact li,
+body.dark-mode .social-links a,
+body.dark-mode .social-links img {
+    color: #e0e0e0;
+}
+
+body.dark-mode .footer-legal a {
+    color: #64b5f6;
+}
+
+body.dark-mode .flash-box {
+    color: #fff;
+}
+
+body.dark-mode .btn-appointment {
+    background: var(--grad-gold);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .btn-appointment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 162, 173, 0.4);
+}
+
+/* Smooth transitions for themeable elements */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease, transform 0.3s ease;
+    width: 40px;
+    height: 40px;
+}
+
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.1);
+}
+
+body.dark-mode .theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sun-icon {
+    color: #ff9800;
+}
+
+.moon-icon {
+    color: #bb86fc;
+}
+
+body.dark-mode .sun-icon {
+    display: block;
+}
+
+body.dark-mode .moon-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .sun-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .moon-icon {
+    display: block;
+}
+
+/* Dark mode for about.css specific elements */
+body.dark-mode {
+    background: #121212;
+}
+
+body.dark-mode .about-hero h1,
+body.dark-mode .about-hero p,
+body.dark-mode .doctor-spotlight h2 {
+    color: #ffffff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .specialty {
+    color: var(--gold-light);
+}
+
+body.dark-mode .bio {
+    color: #b0b0b0;
+    opacity: 1;
+}
+
+body.dark-mode .about-cta .btn-appointment {
+    background: var(--grad-gold);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .about-cta .btn-appointment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 162, 173, 0.4);
+}
+
+body.dark-mode .dr-image-box img {
+    filter: drop-shadow(0 5px 20px rgba(0, 0, 0, 0.8));
+}
+
+body.dark-mode .info-item {
+    border-bottom-color: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .info-label {
+    color: var(--gold-light);
+}
+
+body.dark-mode .info-item p {
+    color: #e0e0e0;
+    opacity: 1;
+}
+
+body.dark-mode .btn-appointment {
+    background: var(--grad-gold);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+body.dark-mode .btn-appointment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 162, 173, 0.4);
+}
+
+body.dark-mode #appointmentForm input[type="text"],
+body.dark-mode #appointmentForm input[type="email"],
+body.dark-mode #appointmentForm input[type="tel"],
+body.dark-mode #appointmentForm input[type="number"],
+body.dark-mode #appointmentForm input[type="date"],
+body.dark-mode #appointmentForm select {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #444;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode #appointmentForm input:focus,
+body.dark-mode #appointmentForm select:focus {
+    border-color: #64b5f6;
+    background: #3d3d3d;
+}
+
+body.dark-mode #signaturePad {
+    background: #1e1e1e !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode #signatureUpload {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-card {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #e0e0e0;
+}
+
+body.dark-mode .auth-card h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .auth-card input {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .auth-card input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+body.dark-mode .sign-up-btn {
+    background: var(--grad-gold);
+    color: white;
+}
+
+body.dark-mode .divider::before,
+body.dark-mode .divider::after {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+body.dark-mode .divider {
+    color: #e0e0e0;
+}
+
+/* Smooth transitions for themeable elements */
+body,
+header,
+.navbar,
+.logo-container,
+.brand-name,
+.brand-sub,
+.nav-links a,
+.user-info-brief,
+.btn-login,
+.btn-register,
+.spotlight-container,
+.info-item,
+.info-label,
+.about-hero,
+.about-hero h1,
+.about-hero p,
+.specialty,
+.bio,
+.about-cta,
+.btn-appointment,
+.dr-image-box,
+.dr-details-box,
+.info-label,
+.info-item p,
+footer,
+.footer-contact h4,
+.footer-socials h4,
+.footer-contact li,
+.social-links a,
+.footer-legal a,
+.dropdown-menu,
+.dropdown-menu a,
+.dropdown-content,
+.dropdown-content a,
+.flash-container,
+.flash-box,
+.submit-btn,
+#appointmentForm input,
+#appointmentForm select,
+#signaturePad,
+#signatureUpload,
+.modal,
+.modal-content,
+.auth-card,
+.auth-card input,
+.sign-up-btn,
+.divider,
+.close-btn {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+/* =========================
+   AUTH MODAL STYLES (from index-s.css)
+   ========================= */
+
+/* Modal Background Overlay */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content Box */
+.modal-content {
+    background-color: #ff0000;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    color: #333;
+    border-top: 8px solid var(--navy);
+}
+
+/* Close Button */
+.close-btn {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.close-btn:hover {
+    color: var(--navy);
+}
+
+/* Styling for the Login and Register Modal Cards */
+.auth-card {
+    background: var(--grad-navy) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: var(--text-primary);
+    max-width: 450px;
+    width: 90%;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+.auth-card h2 {
+    margin-bottom: 20px;
+    color: var(--navy);
+}
+
+.auth-card input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    border: 1px solid rgba(21, 102, 153, 0.3);
+    background: rgba(255, 255, 255, 0.8);
+    color: var(--text-primary);
+}
+
+.auth-card input::placeholder {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.divider {
+    margin: 20px 0;
+    font-size: 14px;
+    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.2);
+    margin: 0 10px;
+}
+
+.auth-card .footer-text a {
+    color: var(--gold-light);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* Submit Button for Auth Modals */
+.sign-up-btn {
+    background: var(--grad-gold);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(255, 162, 173, 0.4);
+    width: 100%;
+    margin: 0;
+}
+
+.sign-up-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 162, 173, 0.6);
 }

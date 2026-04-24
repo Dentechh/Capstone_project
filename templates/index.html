@@ -72,19 +72,53 @@
 
         {% if name == "Guest" or not name %}
         <div class="auth-buttons">
+            <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                </svg>
+                <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
             <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
             <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
         </div>
         {% else %}
 
         <div class="profile-nav">
-            <div class="user-info-brief">   
+            <div class="user-info-brief">
                 <span>{{ name }}</span>
                 <small>Patient Account</small>
             </div>
-            
-            <div class="profile-img-container" id="profileDropdownTrigger">
-                <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
+
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                    </svg>
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+
+                <div class="profile-img-container" id="profileDropdownTrigger">
+                    <img src="https://ui-avatars.com/api/?name={{ name }}&background=ffffff&color=156699" alt="Profile" class="profile-img">
                 
                 <div class="dropdown-menu" id="profileDropdown">
                     <a href="/patient-profile">PROFILE</a>
@@ -134,7 +168,7 @@
             <h4>FOLLOW US</h4>
             <div class="social-links">
                 <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
-                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    <img src="https://img.icons8.com/ios-filled/50/blue/facebook--v1.png" alt="Facebook" style="width: 24px;">
                     Facebook Page
                 </a>
             </div>
@@ -201,6 +235,22 @@
                 <p><strong>DENTURES:</strong> I understand that wearing of dentures can be difficult. Sore spots, altered speech & difficulty in eating are common problems.</p>
                 <hr>
                 <p style="font-size: 0.75rem;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+                
+                <div style="margin-top: 20px;">
+                    <p style="font-weight: bold; margin-bottom: 5px;">Patient Signature:</p>
+                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                        <div>
+                            <canvas id="signaturePad" width="300" height="80" style="border: 1px solid #ccc; border-radius: 4px; background: white; cursor: crosshair;"></canvas>
+                            <button type="button" onclick="clearSignature()" style="margin-top: 5px; padding: 4px 10px; font-size: 0.7rem; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Clear</button>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-left: 1px solid #ccc;">
+                            <span style="font-size: 0.7rem; color: #666; margin-bottom: 5px;">OR</span>
+                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)" style="font-size: 0.7rem;">
+                            <span style="font-size: 0.65rem; color: #999;">Upload PNG image</span>
+                        </div>
+                    </div>
+                    <input type="hidden" name="signature" id="signatureData">
+                </div>
             </div>
         </div>
 
@@ -210,17 +260,73 @@
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
                 <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <input type="text" placeholder="Full Name" name="Full_Name" required style="grid-column: span 2;">
-                    <input type="text" placeholder="Address" name="Email_Address" required style="grid-column: span 2;">
+                    <div style="display: flex; gap: 5px; grid-column: span 2;">
+                        <input type="text" placeholder="First Name" name="First_Name" required style="flex: 1;">
+                        <input type="text" placeholder="Middle Name" name="Middle_Name" style="flex: 1;">
+                        <input type="text" placeholder="Last Name" name="Last_Name" required style="flex: 1;">
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="text" placeholder="House No." name="House_No" required style="width: 80px;">
+                        <input type="text" placeholder="Street" name="Street" style="flex: 1;">
+                    </div>
+                    
+                    <input type="text" placeholder="Barangay" name="Brgy" required>
+                    <input type="text" placeholder="Municipality" name="Municipality" required>
+                    <input type="text" placeholder="City" name="City" required>
                     <input type="text" placeholder="Nationality" name="Nationality">
+                    
+                    <select name="Religion">
+                        <option value="" disabled selected>Religion</option>
+                        <option value="Roman Catholic">Roman Catholic</option>
+                        <option value="Christian">Christian</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                        <option value="Baptist">Baptist</option>
+                        <option value="Methodist">Methodist</option>
+                        <option value="Presbyterian">Presbyterian</option>
+                        <option value="Anglican">Anglican</option>
+                        <option value="Lutheran">Lutheran</option>
+                        <option value="Mormon">Mormon</option>
+                        <option value="Jehovah's Witness">Jehovah's Witness</option>
+                        <option value="Buddhist">Buddhist</option>
+                        <option value="Hindu">Hindu</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    
                     <div style="display: flex; gap: 5px;">
                         <input type="number" placeholder="Age" name="Age" style="width: 50%;">
-                        <input type="text" placeholder="Sex" name="Sex" style="width: 50%;">
+                        <select name="Sex" id="sexSelect" style="width: 50%;">
+                            <option value="" disabled selected>Sex</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
                     </div>
                     <input type="tel" placeholder="Contact Number" name="Contact_number" required>
                     <input type="date" name="Birthday" required>
-                    <input type="text" placeholder="Occupation" name="Occupation">
-                    <input type="text" placeholder="Civil Status" name="Civil_Status">
+                    
+                    <select name="Occupation">
+                        <option value="" disabled selected>Occupation</option>
+                        <option value="Student">Student</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Nurse">Nurse</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Engineer">Engineer</option>
+                        <option value="Lawyer">Lawyer</option>
+                        <option value="Business Owner">Business Owner</option>
+                        <option value="Housewife">Housewife</option>
+                        <option value="Retired">Retired</option>
+                    </select>
+                    
+                    <select name="Civil_Status">
+                        <option value="" disabled selected>Civil Status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Separated">Separated</option>
+                        <option value="Divorced">Divorced</option>
+                    </select>
                     <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
                         Select Service
                     </h3>
@@ -232,13 +338,7 @@
                         <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
                         <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
                         <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                        <option value="Crowns and Bridges">Crowns and Bridges</option>
-                        <option value="Teeth Whitening">Teeth Whitening</option>
-                        <option value="Fluoride Treatment">Fluoride Treatment</option>
-                        <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                        <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                        <option value="Root Canal Treatment">Root Canal Treatment</option>
-                        <option value="Periapical Xray">Periapical Xray</option>
+                        <option value="Others">Others</option>
                     </select>
                 </div>
 
@@ -252,26 +352,26 @@
 
                     <div style="margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;"><span>2. Are you under medical treatment now?</span>
-                        <div><input type="radio" name="q2" value="Yes"> Yes <input type="radio" name="q2" value="No"> No</div></div>
-                        <input type="text" name="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes <input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</div></div>
+                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;"><span>3. Serious illness / surgical operation?</span>
-                        <div><input type="radio" name="q3" value="Yes"> Yes <input type="radio" name="q3" value="No"> No</div></div>
-                        <input type="text" name="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes <input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</div></div>
+                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;"><span>4. Have you ever been hospitalized?</span>
-                        <div><input type="radio" name="q4" value="Yes"> Yes <input type="radio" name="q4" value="No"> No</div></div>
-                        <input type="text" name="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes <input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</div></div>
+                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;"><span>5. Are you taking any medication?</span>
-                        <div><input type="radio" name="q5" value="Yes"> Yes <input type="radio" name="q5" value="No"> No</div></div>
-                        <input type="text" name="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes <input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</div></div>
+                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -281,11 +381,11 @@
 
                     <div style="margin-bottom: 8px;">
                         <div style="display: flex; justify-content: space-between;"><span>7. Do you have any allergy?</span>
-                        <div><input type="radio" name="q7" value="Yes"> Yes <input type="radio" name="q7" value="No"> No</div></div>
-                        <input type="text" name="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes <input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</div></div>
+                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
 
-                    <div style="background: #fdf6f6; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #feeaea;">
+                    <div id="womenSection" style="background: #fdf6f6; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #feeaea; opacity: 0.5; pointer-events: none;">
                         <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.75rem;">8. For Women Only:</p>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
                             <label><input type="checkbox" name="w_preg"> Are you pregnant?</label>
@@ -296,8 +396,8 @@
 
                     <div style="margin-top: 12px;">
                         <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
-                        <div><input type="radio" name="q9" value="Yes"> Yes <input type="radio" name="q9" value="No"> No</div></div>
-                        <input type="text" name="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;">
+                        <div><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes <input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</div></div>
+                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
                     </div>
                 </div>
 
@@ -500,6 +600,120 @@
                 dropBtn.classList.remove('active-link');
             }
         });
+
+        // Sex dropdown - enable/disable women section
+        const sexSelect = document.getElementById('sexSelect');
+        const womenSection = document.getElementById('womenSection');
+        if(sexSelect && womenSection) {
+            sexSelect.addEventListener('change', function() {
+                if(this.value === 'Female') {
+                    womenSection.style.opacity = '1';
+                    womenSection.style.pointerEvents = 'auto';
+                    womenSection.querySelectorAll('input').forEach(cb => cb.disabled = false);
+                } else {
+                    womenSection.style.opacity = '0.5';
+                    womenSection.style.pointerEvents = 'none';
+                    womenSection.querySelectorAll('input').forEach(cb => cb.disabled = true);
+                }
+            });
+        }
+    });
+
+    // Toggle specification input based on Yes/No answer
+    function toggleSpecInput(questionNum, disable) {
+        const specInput = document.getElementById(questionNum + '_spec');
+        if(specInput) {
+            specInput.disabled = disable;
+        }
+    }
+
+    // Signature Pad
+    const canvas = document.getElementById('signaturePad');
+    if(canvas) {
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+        
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('touchstart', startDraw);
+        
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('touchmove', draw);
+        
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('touchend', stopDraw);
+        
+        function startDraw(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        }
+        
+        function draw(e) {
+            e.preventDefault();
+            if(!isDrawing) return;
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+        }
+        
+        function stopDraw(e) {
+            e.preventDefault();
+            isDrawing = false;
+            document.getElementById('signatureData').value = canvas.toDataURL();
+        }
+    }
+
+    function clearSignature() {
+        const canvas = document.getElementById('signaturePad');
+        if(canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.getElementById('signatureData').value = '';
+        }
+        document.getElementById('signatureUpload').value = '';
+    }
+
+    function handleSignatureUpload(input) {
+        if(input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('signatureData').value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Theme Toggle Functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // Check saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+    }
+
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 </script>
 

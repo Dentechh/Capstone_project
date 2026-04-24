@@ -3,11 +3,13 @@
    ========================================= */
 :root {
     --navy: #156699;
-    --dark-blue: #ffffff;
-    --dark-form: rgba(15, 36, 61, 0.85);
-    --gold: #FFA2AD; 
+    --gold: #FFA2AD;
+    --gold-light: #FFA2AD;
     --white: #ffffff;
+    --grad-gold: linear-gradient(135deg, #FFA2AD 0%, #ff7a8a 100%);
     --grad-navy: linear-gradient(180deg, #156699 0%, #8CD3FF 100%);
+    --grad-navy2: linear-gradient(180deg,#8CD3FF 0%, #156699 100%);
+    --dark-form: rgba(15, 36, 61, 0.85);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kumbh Sans', sans-serif; }
@@ -16,8 +18,7 @@ body {
     min-height: 100vh;
     background: var(--grad-navy);
     color: white;
-
-   
+    transition: background 0.4s ease, color 0.4s ease;
 }
 .sidebar {
     width: 260px;
@@ -83,6 +84,7 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     z-index: -1;
+    transition: background 0.4s ease;
 }
 
 #section-patientdashboard.active-section {
@@ -345,7 +347,7 @@ body {
     .stat-box p {
         font-size: 18px;
         font-weight: 600;
-        color: #156699;
+        color: var(--navy);
     }
 
     .profile-body-scrollable {
@@ -665,6 +667,317 @@ body {
 }
 
 .btn-modal-red { background: #ff4d4d; }
-.btn-modal-blue { background: #156699; }
-.btn-modal-cancel { background: #555; }
+.btn-modal-blue { background: var(--navy); }
+    .btn-modal-cancel { background: #555; }
+
+
+/* =========================
+     DARK MODE OVERRIDES
+========================= */
+body.dark-mode {
+    background: linear-gradient(180deg, #0d1117 0%, #1a1f2e 100%);
+    color: #e0e0e0;
+    transition: background 0.4s ease, color 0.4s ease;
+    --navy: #64b5f6;
+}
+
+body.dark-mode .sidebar {
+    background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+    border-right-color: rgba(255,255,255,0.1);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .nav-item {
+    color: #e0e0e0;
+    transition: color 0.3s ease, background 0.3s ease;
+}
+
+body.dark-mode .nav-item:hover,
+body.dark-mode .nav-item.active {
+    background: rgba(255,255,255,0.05);
+}
+
+body.dark-mode .nav-item.active {
+    background: rgba(255, 191, 191, 0.3);
+    border-left-color: var(--gold);
+}
+
+body.dark-mode .main-content {
+    background: url("../img/bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+body.dark-mode .main-content::before {
+    background: rgba(10, 15, 25, 0.7);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .top-header {
+    color: #e0e0e0;
+}
+
+body.dark-mode .metric-card,
+body.dark-mode .patient-card,
+body.dark-mode .content-panel {
+    background: rgba(30, 35, 45, 0.8);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+body.dark-mode .panel-content {
+    background: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #333;
+    transition: background 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode .time {
+    color: #e0e0e0;
+}
+
+body.dark-mode .action-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--gold);
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .action-btn:hover {
+    background: var(--gold);
+    color: #000;
+}
+
+body.dark-mode .search-input {
+    background: rgba(20, 25, 35, 0.8);
+    border-color: rgba(255,255,255,0.2);
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .appointment-table th {
+    color: #8CD3FF;
+    border-bottom-color: rgba(255,255,255,0.1);
+}
+
+body.dark-mode .appointment-table td {
+    border-bottom-color: rgba(255,255,255,0.05);
+    color: #e0e0e0;
+}
+
+body.dark-mode .btn-action.accept {
+    background: var(--navy);
+    border-color: #8CD3FF;
+    color: white;
+}
+
+body.dark-mode .btn-action.decline {
+    color: #ef5350;
+}
+
+body.dark-mode .modal-content {
+    background: rgba(20, 25, 35, 0.95);
+    border-color: var(--gold);
+    color: #e0e0e0;
+    transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+body.dark-mode .close-profile,
+body.dark-mode .sidebar-footer .nav-item.logout:hover {
+    color: var(--gold);
+}
+
+body.dark-mode .profile-modal-content {
+    background: rgba(20, 25, 35, 0.95);
+    border-color: var(--gold);
+    color: #e0e0e0;
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .info-group label {
+    color: var(--gold);
+}
+
+body.dark-mode .info-group p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .medical-dashboard-style {
+    background: #1a1f2e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .medical-header {
+    background: #1e232e;
+    border-bottom-color: #333;
+}
+
+body.dark-mode .stat-box p {
+    color: #64b5f6;
+}
+
+body.dark-mode .prescription-card {
+    background: #2d2a1e;
+    border-left-color: var(--gold);
+}
+
+body.dark-mode .med-list li::before {
+    filter: invert(1);
+}
+
+body.dark-mode .tool {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .tool:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .dental-chart {
+    background: rgba(30, 35, 45, 0.8);
+    color: #e0e0e0;
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .tooth-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .section-label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .label-inline {
+    color: #e0e0e0;
+}
+
+body.dark-mode .axis-v,
+body.dark-mode .axis-h,
+body.dark-mode .axis-h-mid {
+    background: rgba(255, 255, 255, 0.3);
+    transition: background 0.4s ease;
+}
+
+body.dark-mode .segment {
+    fill: #ffffff;
+    stroke: #000000;
+}
+
+body.dark-mode .grid-box {
+    background: #ffffff;
+    border-color: #000000;
+}
+
+/* Inline color overrides for dark mode */
+body.dark-mode #pd-id {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode #pd-meds {
+    color: #aaa !important;
+}
+
+body.dark-mode #section-patientdashboard .p-main-info h2 {
+    color: #e0e0e0 !important;
+}
+
+body.dark-mode #section-patientdashboard .pd-stat label {
+    color: #aaa !important;
+}
+
+body.dark-mode .metric-data h3 {
+    color: #ffd700 !important;
+}
+
+
+body.dark-mode .segment {
+    fill: #ffffff;
+    stroke: #000000;
+}
+
+body.dark-mode .grid-box {
+    background: #ffffff;
+    border-color: #000000;
+}
+
+/* Smooth transitions for themeable elements */
+body,
+header,
+.top-header,
+.metric-card,
+.patient-card,
+.content-panel,
+.panel-content,
+.appointment-table th,
+.appointment-table td,
+.btn-action,
+.search-input,
+.modal-content,
+.dental-chart,
+.tooth-label,
+.section-label,
+.label-inline,
+.axis-v,
+.axis-h,
+.axis-h-mid,
+.segment,
+.grid-box,
+.sidebar,
+.nav-item,
+.theme-toggle {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.3s ease, transform 0.3s ease;
+    width: 40px;
+    height: 40px;
+}
+
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.1);
+    transform: scale(1.1);
+}
+
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.sun-icon {
+    color: #ff9800;
+}
+
+.moon-icon {
+    color: #bb86fc;
+}
+
+body.dark-mode .sun-icon {
+    display: block;
+}
+
+body.dark-mode .moon-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .sun-icon {
+    display: none;
+}
+
+body:not(.dark-mode) .moon-icon {
+    display: block;
+}
+
+
 

@@ -2,7 +2,7 @@ from flask import Flask, abort, render_template, request, redirect, url_for, fla
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 from datetime import datetime, UTC
 import bleach
 import uuid
@@ -137,7 +137,7 @@ def login_manual():
 def login_g_auth():
     token = request.form["token"]
     try:
-        google_account = id_token.verify_oauth2_token(token, requests.Request(), CLIENT_ID)
+        google_account = id_token.verify_oauth2_token(token, google_requests.Request(), CLIENT_ID)
         
         # Store user info in session
         session['uid'] = google_account["sub"]
