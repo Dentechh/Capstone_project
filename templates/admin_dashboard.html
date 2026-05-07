@@ -73,20 +73,20 @@
 
         <div id="section-mypatients" class="content-section">
             <div class="patient-card-grid">
-                {% for appointment in Appointment_clients %}
+                {% for appointment in Approve %}
                 <div class="patient-card">
                     <div class="p-card-header">
-                        <div class="p-avatar-circle">{{ appointment.FullName[:2].upper() }}</div>
+                        
 
                 <div class="p-info">
-                    <strong>{{ appointment.FullName }}</strong>
+                    <strong>{{ appointment.FirstName }}</strong>
                     
                     <small style="opacity: 0.6;">{{ appointment.uid }}</small>
                 </div>
                     </div>
-                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service_appointment  }}</strong></p>
+                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service }}</strong></p>
                     <button class="btn-action accept" style="width: 100%;" 
-                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', '{{ appointment.Sex }}', '{{ appointment.Age }}', 'O+')">
+                        onclick="openPatientDashboard('{{ appointment.FirstName }}', '{{ appointment.Service }}', '{{ appointment.Sex }}', '{{ appointment.Age }}', 'O+')">
                         Check Profile
                     </button>
                 </div>
@@ -94,35 +94,97 @@
             </div>
         </div>
 
-        <div id="section-appointments" class="content-section">
-            <section class="content-panel">
-                <table class="appointment-table">
-                    <thead>
-                        <tr>
-                            <th>Patient Name</th>
-                            <th>Date & Time</th>
-                            <th>Procedure</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for appointment in Appointment_clients %}
-                        <tr>
-                            <td>{{ appointment.FullName }}</td>
-                            <td>{{ appointment.Birthday }}</td>
-                            <td>{{ appointment.Service_appointment }}</td>
-                            <td><span class="badge pending">pending</span></td>
-                            <td>
-                                <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'accept')">Accept</button>
-                                <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'decline')">Decline</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </section>
-        </div>
+            <div id="section-appointments" class="content-section">
+                <section class="content-panel">
+
+                    <table class="appointment-table">
+    <thead>
+        <tr>
+            <th>Patient Name</th>
+            <th style="display:none;">UID</th>
+            <th>Date & Time</th>
+            <th>Procedure</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for appointment in Appointment_clients %}
+        <tr>
+
+            <td>{{ appointment.FirstName }}</td>
+            <td style="display:none;">{{ appointment.uid }}</td>
+            <td>{{ appointment.Birthday }}</td>
+            <td>{{ appointment.Service }}</td>
+
+            <td>
+                <span class="badge pending">pending</span>
+            </td>
+
+            <td>
+
+                <!-- ACCEPT -->
+                <button class="btn-action"
+                    onclick="updateStatus(
+                        '{{ appointment.uid }}',
+                        '{{ appointment.id }}',
+                        '{{ appointment.FirstName }}',
+                        '{{ appointment.Birthday }}',
+                        '{{ appointment.Service }}',
+                        'accept',
+                        '{{ appointment.collection }}'
+                    )">
+                    Accept
+                </button>
+
+                <!-- DECLINE -->
+                <button class="btn-action"
+                    onclick="updateStatus(
+                        '{{ appointment.uid }}',
+                        '{{ appointment.id }}',
+                        '{{ appointment.FirstName }}',
+                        '{{ appointment.Birthday }}',
+                        '{{ appointment.Service }}',
+                        'decline',
+                        '{{ appointment.collection }}'
+                    )">
+                    Decline
+                </button>
+
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+function updateStatus(user_id, appointment_id, firstname, birthday, service, action, collection) {
+
+    // safety fallback (VERY IMPORTANT)
+    if (!collection) {
+        collection = "Account_clients";
+    }
+
+    fetch("/approve", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            user_id: user_id,
+            appointment_id: appointment_id,
+            firstname: firstname,
+            birthday: birthday,
+            service: service,
+            action: action,
+            collection: collection
+        })
+    })
+    .then(() => location.reload());
+}
+</script>
 
         <div id="section-patientdashboard" class="content-section">
 
@@ -159,7 +221,7 @@
                             <tr>
                                 <td>Dr. Capizonda</td>
                                 <td>20/05/2026</td>
-                                <td>{{ appointment.Service_appointment }}</td>
+                                <td>{{ appointment.Service }}</td>
                                 <td>₱1,500</td>
                             </tr>
                         </tbody>

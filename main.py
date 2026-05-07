@@ -21,8 +21,9 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 Account_clients = "manual_create_account"
-Appointment_cliets = "Booked"
+Appointment_cliets = "appointments"
 Doc_Patients = "Patients"
+
 
 
 # Paymongo api keys
@@ -223,67 +224,84 @@ def about_customer():
 def google_bookedCustomer():
     uid = session.get('uid')
 
-    FullName = bleach.clean(request.form.get("Full_Name", ""))
-    EmailAddress = bleach.clean(request.form.get("Email_Address", ""))
+        # Personal Info
+    FirstName = bleach.clean(request.form.get("First_Name", ""))
+    MiddleName = bleach.clean(request.form.get("Middle_Name", ""))
+    LastName = bleach.clean(request.form.get("Last_Name", ""))
+    HouseNo = bleach.clean(request.form.get("House_No", ""))
+    Street = bleach.clean(request.form.get("Street", ""))
+    Brgy = bleach.clean(request.form.get("Brgy", ""))
+    Municipality = bleach.clean(request.form.get("Municipality", ""))
+    City = bleach.clean(request.form.get("City", ""))
+    Nationality = bleach.clean(request.form.get("Nationality", ""))
+    Religion = bleach.clean(request.form.get("Religion", ""))
+    Age = bleach.clean(request.form.get("Age", ""))
+    Sex = bleach.clean(request.form.get("Sex", ""))
     ContactNumber = bleach.clean(request.form.get("Contact_number", ""))
-    Nationality_appointment = bleach.clean(request.form.get("Nationality", ""))
-    Age_appointment = bleach.clean(request.form.get("Age", ""))
-    Sex_appointment = bleach.clean(request.form.get("Sex", ""))
-    Birthday_appointment = bleach.clean(request.form.get("Birthday", ""))
-    Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
-    Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
-    Service_appointment = bleach.clean(request.form.get("Service", ""))
-
-    q1_appointment = bleach.clean(request.form.get("q1", ""))
-    q2_appointment = bleach.clean(request.form.get("q2", ""))
-    q3_appointment = bleach.clean(request.form.get("q3", ""))
-    q4_appointment = bleach.clean(request.form.get("q4", ""))
-    q5_appointment = bleach.clean(request.form.get("q5", ""))
-    q6_appointment = bleach.clean(request.form.get("q6", ""))
-    q7_appointment = bleach.clean(request.form.get("q7", ""))
-    q9_appointment = bleach.clean(request.form.get("q9", ""))
-
-    q2_spec_appointment = bleach.clean(request.form.get("q2_spec", ""))
-    q3_spec_appointment = bleach.clean(request.form.get("q3_spec", ""))
-    q4_spec_appointment = bleach.clean(request.form.get("q4_spec", ""))
-    q5_spec_appointment = bleach.clean(request.form.get("q5_spec", ""))
-    q7_spec_appointment = bleach.clean(request.form.get("q7_spec", ""))
-    q9_spec_appointment = bleach.clean(request.form.get("q9_spec", ""))
-
-    w_nurse_appointment = request.form.get("w_nurse")
-    w_preg_appointment = request.form.get("w_preg")
-    w_pill_appointment = request.form.get("w_pill")
-
+    Birthday = bleach.clean(request.form.get("Birthday", ""))
+    Occupation = bleach.clean(request.form.get("Occupation", ""))
+    CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
+    Service = bleach.clean(request.form.get("Service", ""))
+    q1 = bleach.clean(request.form.get("q1", ""))
+    q2 = bleach.clean(request.form.get("q2", ""))
+    q3 = bleach.clean(request.form.get("q3", ""))
+    q4 = bleach.clean(request.form.get("q4", ""))
+    q5 = bleach.clean(request.form.get("q5", ""))
+    q6 = bleach.clean(request.form.get("q6", ""))
+    q7 = bleach.clean(request.form.get("q7", ""))
+    q9 = bleach.clean(request.form.get("q9", ""))
+    q2_spec = bleach.clean(request.form.get("q2_spec", ""))
+    q3_spec = bleach.clean(request.form.get("q3_spec", ""))
+    q4_spec = bleach.clean(request.form.get("q4_spec", ""))
+    q5_spec = bleach.clean(request.form.get("q5_spec", ""))
+    q7_spec = bleach.clean(request.form.get("q7_spec", ""))
+    q9_spec = bleach.clean(request.form.get("q9_spec", ""))
+    w_preg = request.form.get("w_preg")
+    w_nurse = request.form.get("w_nurse")
+    w_pill = request.form.get("w_pill")
     try:
-        # <-- Correct Firestore syntax
-        db.collection("google_create_account").document(uid).collection("appointments").add({
-            "FullName": FullName,
-            "EmailAddress": EmailAddress,
+        db.collection("google_create_account").document(uid).collection(Appointment_cliets).add({
+            "uid": uid,
+            "FirstName": FirstName,
+            "MiddleName": MiddleName,
+            "LastName": LastName,
+
+            "HouseNo": HouseNo,
+            "Street": Street,
+            "Brgy": Brgy,
+            "Municipality": Municipality,
+            "City": City,
+
             "ContactNumber": ContactNumber,
-            "Nationality": Nationality_appointment,
-            "Age": Age_appointment,
-            "Sex": Sex_appointment,
-            "Birthday": Birthday_appointment,
-            "Occupation": Occupation_appointment,
-            "Civil_Status": Civil_Status_appointment,
-            "q1": q1_appointment,
-            "q2": q2_appointment,
-            "q3": q3_appointment,
-            "q4": q4_appointment,
-            "q5": q5_appointment,
-            "q6": q6_appointment,
-            "q7": q7_appointment,
-            "q9": q9_appointment,
-            "q2_spec": q2_spec_appointment,
-            "q3_spec": q3_spec_appointment,
-            "q4_spec": q4_spec_appointment,
-            "q5_spec": q5_spec_appointment,
-            "q7_spec": q7_spec_appointment,
-            "q9_spec": q9_spec_appointment,
-            "w_nurse": w_nurse_appointment,
-            "w_preg": w_preg_appointment,
-            "w_pill": w_pill_appointment,
-            "Service_appointment": Service_appointment
+            "Nationality": Nationality,
+            "Religion": Religion,
+            "Age": Age,
+            "Sex": Sex,
+            "Birthday": Birthday,
+            "Occupation": Occupation,
+            "CivilStatus": CivilStatus,
+
+            "Service": Service,
+
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "q4": q4,
+            "q5": q5,
+            "q6": q6,
+            "q7": q7,
+            "q9": q9,
+
+            "q2_spec": q2_spec,
+            "q3_spec": q3_spec,
+            "q4_spec": q4_spec,
+            "q5_spec": q5_spec,
+            "q7_spec": q7_spec,
+            "q9_spec": q9_spec,
+
+            "w_preg": w_preg,
+            "w_nurse": w_nurse,
+            "w_pill": w_pill
         })
 
         flash("Appointment successfully booked!", "success")
@@ -292,76 +310,90 @@ def google_bookedCustomer():
         print(f"Error adding appointment: {e}")
         flash("There was an error booking your appointment.", "error")
 
-    return redirect(url_for("google_index"))   
-
+    return redirect(url_for("index"))
 
 
 
 @app.route("/booked_customer", methods=["POST"])
 def bookedCustomer():
     uid = session.get('uid')
-
-    FullName = bleach.clean(request.form.get("Full_Name", ""))
-    EmailAddress = bleach.clean(request.form.get("Email_Address", ""))
+    FirstName = bleach.clean(request.form.get("First_Name", ""))
+    MiddleName = bleach.clean(request.form.get("Middle_Name", ""))
+    LastName = bleach.clean(request.form.get("Last_Name", ""))
+    HouseNo = bleach.clean(request.form.get("House_No", ""))
+    Street = bleach.clean(request.form.get("Street", ""))
+    Brgy = bleach.clean(request.form.get("Brgy", ""))
+    Municipality = bleach.clean(request.form.get("Municipality", ""))
+    City = bleach.clean(request.form.get("City", ""))
+    Nationality = bleach.clean(request.form.get("Nationality", ""))
+    Religion = bleach.clean(request.form.get("Religion", ""))
+    Age = bleach.clean(request.form.get("Age", ""))
+    Sex = bleach.clean(request.form.get("Sex", ""))
     ContactNumber = bleach.clean(request.form.get("Contact_number", ""))
-    Nationality_appointment = bleach.clean(request.form.get("Nationality", ""))
-    Age_appointment = bleach.clean(request.form.get("Age", ""))
-    Sex_appointment = bleach.clean(request.form.get("Sex", ""))
-    Birthday_appointment = bleach.clean(request.form.get("Birthday", ""))
-    Occupation_appointment = bleach.clean(request.form.get("Occupation", ""))
-    Civil_Status_appointment = bleach.clean(request.form.get("Civil_Status", ""))
-    Service_appointment = bleach.clean(request.form.get("Service", ""))
-
-    q1_appointment = bleach.clean(request.form.get("q1", ""))
-    q2_appointment = bleach.clean(request.form.get("q2", ""))
-    q3_appointment = bleach.clean(request.form.get("q3", ""))
-    q4_appointment = bleach.clean(request.form.get("q4", ""))
-    q5_appointment = bleach.clean(request.form.get("q5", ""))
-    q6_appointment = bleach.clean(request.form.get("q6", ""))
-    q7_appointment = bleach.clean(request.form.get("q7", ""))
-    q9_appointment = bleach.clean(request.form.get("q9", ""))
-
-    q2_spec_appointment = bleach.clean(request.form.get("q2_spec", ""))
-    q3_spec_appointment = bleach.clean(request.form.get("q3_spec", ""))
-    q4_spec_appointment = bleach.clean(request.form.get("q4_spec", ""))
-    q5_spec_appointment = bleach.clean(request.form.get("q5_spec", ""))
-    q7_spec_appointment = bleach.clean(request.form.get("q7_spec", ""))
-    q9_spec_appointment = bleach.clean(request.form.get("q9_spec", ""))
-
-    w_nurse_appointment = request.form.get("w_nurse")
-    w_preg_appointment = request.form.get("w_preg")
-    w_pill_appointment = request.form.get("w_pill")
-
+    Birthday = bleach.clean(request.form.get("Birthday", ""))
+    Occupation = bleach.clean(request.form.get("Occupation", ""))
+    CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
+    Service = bleach.clean(request.form.get("Service", ""))
+    q1 = bleach.clean(request.form.get("q1", ""))
+    q2 = bleach.clean(request.form.get("q2", ""))
+    q3 = bleach.clean(request.form.get("q3", ""))
+    q4 = bleach.clean(request.form.get("q4", ""))
+    q5 = bleach.clean(request.form.get("q5", ""))
+    q6 = bleach.clean(request.form.get("q6", ""))
+    q7 = bleach.clean(request.form.get("q7", ""))
+    q9 = bleach.clean(request.form.get("q9", ""))
+    q2_spec = bleach.clean(request.form.get("q2_spec", ""))
+    q3_spec = bleach.clean(request.form.get("q3_spec", ""))
+    q4_spec = bleach.clean(request.form.get("q4_spec", ""))
+    q5_spec = bleach.clean(request.form.get("q5_spec", ""))
+    q7_spec = bleach.clean(request.form.get("q7_spec", ""))
+    q9_spec = bleach.clean(request.form.get("q9_spec", ""))
+    w_preg = request.form.get("w_preg")
+    w_nurse = request.form.get("w_nurse")
+    w_pill = request.form.get("w_pill")
     try:
-        # <-- Correct Firestore syntax
-        db.collection(Account_clients).document(uid).collection("appointments").add({
-            "FullName": FullName,
-            "EmailAddress": EmailAddress,
+        db.collection(Account_clients).document(uid).collection(Appointment_cliets).add({
+            "uid": uid,
+            "FirstName": FirstName,
+            "MiddleName": MiddleName,
+            "LastName": LastName,
+
+            "HouseNo": HouseNo,
+            "Street": Street,
+            "Brgy": Brgy,
+            "Municipality": Municipality,
+            "City": City,
+
             "ContactNumber": ContactNumber,
-            "Nationality": Nationality_appointment,
-            "Age": Age_appointment,
-            "Sex": Sex_appointment,
-            "Birthday": Birthday_appointment,
-            "Occupation": Occupation_appointment,
-            "Civil_Status": Civil_Status_appointment,
-            "q1": q1_appointment,
-            "q2": q2_appointment,
-            "q3": q3_appointment,
-            "q4": q4_appointment,
-            "q5": q5_appointment,
-            "q6": q6_appointment,
-            "q7": q7_appointment,
-            "q9": q9_appointment,
-            "q2_spec": q2_spec_appointment,
-            "q3_spec": q3_spec_appointment,
-            "q4_spec": q4_spec_appointment,
-            "q5_spec": q5_spec_appointment,
-            "q7_spec": q7_spec_appointment,
-            "q9_spec": q9_spec_appointment,
-            "w_nurse": w_nurse_appointment,
-            "w_preg": w_preg_appointment,
-            "w_pill": w_pill_appointment,
-            "Service_appointment": Service_appointment
+            "Nationality": Nationality,
+            "Religion": Religion,
+            "Age": Age,
+            "Sex": Sex,
+            "Birthday": Birthday,
+            "Occupation": Occupation,
+            "CivilStatus": CivilStatus,
+
+            "Service": Service,
+
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "q4": q4,
+            "q5": q5,
+            "q6": q6,
+            "q7": q7,
+            "q9": q9,
+
+            "q2_spec": q2_spec,
+            "q3_spec": q3_spec,
+            "q4_spec": q4_spec,
+            "q5_spec": q5_spec,
+            "q7_spec": q7_spec,
+            "q9_spec": q9_spec,
+
+            "w_preg": w_preg,
+            "w_nurse": w_nurse,
+            "w_pill": w_pill
         })
 
         flash("Appointment successfully booked!", "success")
@@ -370,7 +402,46 @@ def bookedCustomer():
         print(f"Error adding appointment: {e}")
         flash("There was an error booking your appointment.", "error")
 
-    return redirect(url_for("index"))   
+    return redirect(url_for("index"))
+
+
+
+@app.route("/approve", methods=["POST"])
+def approve():
+    user_id = request.form["user_id"]
+    appointment_id = request.form["appointment_id"]
+    action = request.form["action"]
+
+    firstname = request.form["firstname"]
+    birthday = request.form["birthday"]
+    service = request.form["service"]
+
+    data = {
+        "status": action,
+        "FirstName": firstname,
+        "Birthday": birthday,
+        "Service": service
+    }
+
+    # 🔥 Account_clients structure (same as google_create_account)
+    db.collection(Account_clients) \
+        .document(user_id) \
+        .collection("appointments") \
+        .document(appointment_id) \
+        .collection("Approve") \
+        .document("approval") \
+        .set(data)
+
+    # optional: delete from original system 
+    db.collection("google_create_account") \
+        .document(user_id) \
+        .collection("appointments") \
+        .document(appointment_id) \
+        .delete()
+
+    return redirect(url_for("index"))
+
+
 
 
                                                                                    
@@ -445,24 +516,43 @@ def update_profile():
 
 @app.route("/admin_dashboard")
 def adminDashboard():
-    #  collection_group  para mangita ka collection sa sulod ka docudment
+
+    # =========================
+    # APPOINTMENTS COLLECTION
+    # =========================
     docs = db.collection_group("appointments").get()
 
-    appointment_list = []  
+    appointment_list = []
 
     for doc in docs:
         appointment_data = doc.to_dict()
-        appointment_data["id"] = doc.id  # This is the appointment doc ID
-        
-        # Optional: If you need to know WHICH user this belongs to:
-        # doc.reference.parent.parent.id will give you the UID
+        appointment_data["id"] = doc.id
         appointment_data["user_uid"] = doc.reference.parent.parent.id
-        
         appointment_list.append(appointment_data)
 
+    # =========================
+    # APPROVE SUBCOLLECTION
+    # =========================
+    approve_docs = db.collection_group("Approve").get()
+
+    approve_list = []
+
+    for doc in approve_docs:
+        data = doc.to_dict()
+
+        data["id"] = doc.id
+        data["appointment_id"] = doc.reference.parent.parent.id
+        data["user_uid"] = doc.reference.parent.parent.parent.id
+
+        approve_list.append(data)
+
+    # =========================
+    # SEND BOTH TO TEMPLATE
+    # =========================
     return render_template(
         "admin_dashboard.html",
-        Appointment_clients=appointment_list
+        Appointment_clients=appointment_list,
+        Approve=approve_list
     )
 
 
