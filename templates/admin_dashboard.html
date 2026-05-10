@@ -97,7 +97,7 @@
             <div id="section-appointments" class="content-section">
                 <section class="content-panel">
 
-                    <table class="appointment-table">
+                   <table class="appointment-table">
     <thead>
         <tr>
             <th>Patient Name</th>
@@ -114,7 +114,29 @@
         <tr>
 
             <td>{{ appointment.FirstName }}</td>
+
+            <!-- HIDDEN DATA -->
             <td style="display:none;">{{ appointment.uid }}</td>
+            <td style="display:none;">{{ appointment.id }}</td>
+
+            <td style="display:none;">{{ appointment.MiddleName }}</td>
+            <td style="display:none;">{{ appointment.LastName }}</td>
+
+            <td style="display:none;">{{ appointment.HouseNo }}</td>
+            <td style="display:none;">{{ appointment.Street }}</td>
+            <td style="display:none;">{{ appointment.Brgy }}</td>
+            <td style="display:none;">{{ appointment.Municipality }}</td>
+            <td style="display:none;">{{ appointment.City }}</td>
+
+            <td style="display:none;">{{ appointment.ContactNumber }}</td>
+            <td style="display:none;">{{ appointment.Nationality }}</td>
+            <td style="display:none;">{{ appointment.Religion }}</td>
+            <td style="display:none;">{{ appointment.Age }}</td>
+            <td style="display:none;">{{ appointment.Sex }}</td>
+            <td style="display:none;">{{ appointment.Occupation }}</td>
+            <td style="display:none;">{{ appointment.CivilStatus }}</td>
+            
+
             <td>{{ appointment.Birthday }}</td>
             <td>{{ appointment.Service }}</td>
 
@@ -158,11 +180,55 @@
         {% endfor %}
     </tbody>
 </table>
-
 <script>
-function updateStatus(user_id, appointment_id, firstname, birthday, service, action, collection) {
+function updateStatus(
+    user_id,
+    appointment_id,
+    firstname,
+    birthday,
+    service,
 
-    // safety fallback (VERY IMPORTANT)
+    middlename,
+    lastname,
+
+    houseno,
+    street,
+    brgy,
+    municipality,
+    city,
+
+    contactnumber,
+    nationality,
+    religion,
+    age,
+    sex,
+    occupation,
+    civilstatus,
+
+    q1,
+    q2,
+    q3,
+    q4,
+    q5,
+    q6,
+    q7,
+    q9,
+
+    q2_spec,
+    q3_spec,
+    q4_spec,
+    q5_spec,
+    q7_spec,
+    q9_spec,
+
+    w_preg,
+    w_nurse,
+    w_pill,
+
+    action,
+    collection
+) {
+
     if (!collection) {
         collection = "Account_clients";
     }
@@ -173,11 +239,50 @@ function updateStatus(user_id, appointment_id, firstname, birthday, service, act
             "Content-Type": "application/x-www-form-urlencoded"
         },
         body: new URLSearchParams({
+
             user_id: user_id,
             appointment_id: appointment_id,
             firstname: firstname,
             birthday: birthday,
             service: service,
+
+            middlename: middlename,
+            lastname: lastname,
+
+            houseno: houseno,
+            street: street,
+            brgy: brgy,
+            municipality: municipality,
+            city: city,
+
+            contactnumber: contactnumber,
+            nationality: nationality,
+            religion: religion,
+            age: age,
+            sex: sex,
+            occupation: occupation,
+            civilstatus: civilstatus,
+
+            q1: q1,
+            q2: q2,
+            q3: q3,
+            q4: q4,
+            q5: q5,
+            q6: q6,
+            q7: q7,
+            q9: q9,
+
+            q2_spec: q2_spec,
+            q3_spec: q3_spec,
+            q4_spec: q4_spec,
+            q5_spec: q5_spec,
+            q7_spec: q7_spec,
+            q9_spec: q9_spec,
+
+            w_preg: w_preg,
+            w_nurse: w_nurse,
+            w_pill: w_pill,
+
             action: action,
             collection: collection
         })

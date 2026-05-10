@@ -405,43 +405,85 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
-
 @app.route("/approve", methods=["POST"])
 def approve():
-    user_id = request.form["user_id"]
-    appointment_id = request.form["appointment_id"]
-    action = request.form["action"]
 
-    firstname = request.form["firstname"]
-    birthday = request.form["birthday"]
-    service = request.form["service"]
+    uid = request.form.get("user_id")
+    appointment_id = request.form.get("appointment_id")
+    action = request.form.get("action")
 
     data = {
         "status": action,
-        "FirstName": firstname,
-        "Birthday": birthday,
-        "Service": service
+        "uid": uid,
+
+        "FirstName": request.form.get("firstname"),
+        "MiddleName": request.form.get("middlename"),
+        "LastName": request.form.get("lastname"),
+
+        "HouseNo": request.form.get("houseno"),
+        "Street": request.form.get("street"),
+        "Brgy": request.form.get("brgy"),
+        "Municipality": request.form.get("municipality"),
+        "City": request.form.get("city"),
+
+        "ContactNumber": request.form.get("contactnumber"),
+        "Nationality": request.form.get("nationality"),
+        "Religion": request.form.get("religion"),
+
+        "Age": request.form.get("age"),
+        "Sex": request.form.get("sex"),
+        "Birthday": request.form.get("birthday"),
+
+        "Occupation": request.form.get("occupation"),
+        "CivilStatus": request.form.get("civilstatus"),
+        "Service": request.form.get("service"),
+
+        "q1": request.form.get("q1"),
+        "q2": request.form.get("q2"),
+        "q3": request.form.get("q3"),
+        "q4": request.form.get("q4"),
+        "q5": request.form.get("q5"),
+        "q6": request.form.get("q6"),
+        "q7": request.form.get("q7"),
+        "q9": request.form.get("q9"),
+
+        "q2_spec": request.form.get("q2_spec"),
+        "q3_spec": request.form.get("q3_spec"),
+        "q4_spec": request.form.get("q4_spec"),
+        "q5_spec": request.form.get("q5_spec"),
+        "q7_spec": request.form.get("q7_spec"),
+        "q9_spec": request.form.get("q9_spec"),
+
+        "w_preg": request.form.get("w_preg"),
+        "w_nurse": request.form.get("w_nurse"),
+        "w_pill": request.form.get("w_pill"),
     }
 
-    # 🔥 Account_clients structure (same as google_create_account)
-    db.collection(Account_clients) \
-        .document(user_id) \
-        .collection("appointments") \
-        .document(appointment_id) \
+    # check where uid exists
+    if db.collection("google_create_account").document(uid).get().exists:
+        main_collection = "google_create_account"
+    
+    elif db.collection(Account_clients).document(uid).get().exists:
+        main_collection = Account_clients
+
+    else:
+        return "User not found", 404
+
+    # save approved data
+    db.collection(main_collection) \
+        .document(uid) \
         .collection("Approve") \
-        .document("approval") \
+        .document(appointment_id) \
         .set(data)
 
-    # optional: delete from original system 
-    db.collection("google_create_account") \
-        .document(user_id) \
+    # delete pending appointment
+    db.collection(main_collection) \
+        .document(uid) \
         .collection("appointments") \
         .document(appointment_id) \
         .delete()
 
-    return redirect(url_for("index"))
-
-
+    return "Approved successfully"
 
 
                                                                                    
