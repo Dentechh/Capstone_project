@@ -5,7 +5,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from datetime import datetime, UTC
 import bleach
-import uuid
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -110,20 +110,19 @@ def google_index():
 
 @app.route("/login", methods=["POST"])
 def login_manual():
-    username = bleach.clean(request.form.get("UserName"))
+    email = bleach.clean(request.form.get("email",''))
     password = bleach.clean(request.form.get("Password"))
 
     # Search for user in Firestore
-    user_query = db.collection(Account_clients).where("username", "==", username).get()
+    user_query = db.collection(Account_clients).where("email", "==", email).get()
 
     if user_query:
         user_data = user_query[0].to_dict()
         # Verify the hashed password
         if check_password_hash(user_data['password'], password):
-            session['name'] = user_data['firstname']
+            session['name'] = user_data.get('firstname', '')
             session['email'] = user_data.get('email', '')
-            session['username'] = user_data['username']   # ✅ ADD THIS
-            session['uid'] = user_query[0].id             # ✅ ADD THIS
+            session['uid'] = user_query[0].id           # ✅ ADD THIS
 
             flash(f"Welcome back, {user_data['firstname']}!", "success")
             return redirect(url_for("index"))
@@ -168,12 +167,12 @@ def sign_up():
 
         firstname = bleach.clean(request.form["FirstName"].strip())
         lastname = bleach.clean(request.form["LastName"].strip())
-        username = bleach.clean(request.form["UserName"].strip())
+        email = bleach.clean(request.form["UserName"].strip())
         password = bleach.clean(request.form["Password"].strip())
         contact_number = bleach.clean(request.form["MobileNumber"].strip())
         
 
-        check_account = db.collection(Account_clients).where("username", "==", username).get()
+        check_account = db.collection(Account_clients).where("email", "==", email).get()
 
         if check_account:
             flash("Username already taken!")
@@ -188,7 +187,7 @@ def sign_up():
         doc_ref.set({
             "uid": uid,
             "firstname": firstname,
-            "username": username,
+            "email": email,
             "password": hashed_password,
             "created_at": datetime.now(UTC).isoformat(),
             "contact_number":contact_number,
@@ -219,6 +218,42 @@ def about_customer():
 
 
 
+app.config.update(
+    MAIL_SERVER='smtp.gmail.com',
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USERNAME='yourgmail@gmail.com',
+    MAIL_PASSWORD='slrm eyqa pciv flky'
+)
+
+mail = Mail(app)
+
+
+def send_appointment_email(to_email, first_name, appointment_date, service):
+    msg = Message(
+        subject="Dental Appointment Reminder",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[to_email]
+    )
+
+    msg.body = f"""
+Hello {first_name},
+
+This is a reminder for your dental appointment:
+
+📅 Date: {appointment_date}
+🦷 Service: {service}
+
+Please arrive 10–15 minutes early.
+
+Thank you!
+"""
+
+    mail.send(msg)
+
+
+
+
 
 @app.route("/google_booked_customer", methods=["POST"])
 def google_bookedCustomer():
@@ -242,6 +277,7 @@ def google_bookedCustomer():
     Occupation = bleach.clean(request.form.get("Occupation", ""))
     CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
     Service = bleach.clean(request.form.get("Service", ""))
+    appointment_date = bleach.clean(request.form.get("appointment_date", ""))
     q1 = bleach.clean(request.form.get("q1", ""))
     q2 = bleach.clean(request.form.get("q2", ""))
     q3 = bleach.clean(request.form.get("q3", ""))
@@ -282,6 +318,7 @@ def google_bookedCustomer():
             "CivilStatus": CivilStatus,
 
             "Service": Service,
+            "appointment_date": appointment_date,
 
             "q1": q1,
             "q2": q2,
@@ -317,6 +354,7 @@ def google_bookedCustomer():
 @app.route("/booked_customer", methods=["POST"])
 def bookedCustomer():
     uid = session.get('uid')
+    email = session.get('email')
     FirstName = bleach.clean(request.form.get("First_Name", ""))
     MiddleName = bleach.clean(request.form.get("Middle_Name", ""))
     LastName = bleach.clean(request.form.get("Last_Name", ""))
@@ -334,6 +372,7 @@ def bookedCustomer():
     Occupation = bleach.clean(request.form.get("Occupation", ""))
     CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
     Service = bleach.clean(request.form.get("Service", ""))
+    appointment_date = bleach.clean(request.form.get("appointment_date", ""))
     q1 = bleach.clean(request.form.get("q1", ""))
     q2 = bleach.clean(request.form.get("q2", ""))
     q3 = bleach.clean(request.form.get("q3", ""))
@@ -354,6 +393,7 @@ def bookedCustomer():
     try:
         db.collection(Account_clients).document(uid).collection(Appointment_cliets).add({
             "uid": uid,
+            "email": email,
             "FirstName": FirstName,
             "MiddleName": MiddleName,
             "LastName": LastName,
@@ -374,6 +414,7 @@ def bookedCustomer():
             "CivilStatus": CivilStatus,
 
             "Service": Service,
+            "appointment_date": appointment_date,
 
             "q1": q1,
             "q2": q2,
@@ -411,11 +452,14 @@ def approve():
     uid = request.form.get("user_id")
     appointment_id = request.form.get("appointment_id")
     action = request.form.get("action")
+    email = session.get('email')
+    
+
 
     data = {
         "status": action,
         "uid": uid,
-
+        "email": email,
         "FirstName": request.form.get("firstname"),
         "MiddleName": request.form.get("middlename"),
         "LastName": request.form.get("lastname"),

@@ -123,7 +123,7 @@
             <td style="display:none;">{{ appointment.LastName }}</td>
 
             <td style="display:none;">{{ appointment.HouseNo }}</td>
-            <td style="display:none;">{{ appointment.Street }}</td>
+            <td c">{{ appointment.Street }}</td>
             <td style="display:none;">{{ appointment.Brgy }}</td>
             <td style="display:none;">{{ appointment.Municipality }}</td>
             <td style="display:none;">{{ appointment.City }}</td>
@@ -137,7 +137,7 @@
             <td style="display:none;">{{ appointment.CivilStatus }}</td>
             
 
-            <td>{{ appointment.Birthday }}</td>
+            <td>{{ appointment.appointment_date}}</td>
             <td>{{ appointment.Service }}</td>
 
             <td>
@@ -147,32 +147,72 @@
             <td>
 
                 <!-- ACCEPT -->
-                <button class="btn-action"
-                    onclick="updateStatus(
-                        '{{ appointment.uid }}',
-                        '{{ appointment.id }}',
-                        '{{ appointment.FirstName }}',
-                        '{{ appointment.Birthday }}',
-                        '{{ appointment.Service }}',
-                        'accept',
-                        '{{ appointment.collection }}'
-                    )">
-                    Accept
-                </button>
+                 <button class="btn-action"
+    onclick="updateStatus(
+        '{{ appointment.uid }}',
+        '{{ appointment.id }}',
+
+        '{{ appointment.FirstName }}',
+        '{{ appointment.MiddleName }}',
+        '{{ appointment.LastName }}',
+
+        '{{ appointment.Birthday }}',
+
+        '{{ appointment.HouseNo }}',
+        '{{ appointment.Street }}',
+        '{{ appointment.Brgy }}',
+        '{{ appointment.Municipality }}',
+        '{{ appointment.City }}',
+
+        '{{ appointment.ContactNumber }}',
+        '{{ appointment.Nationality }}',
+        '{{ appointment.Religion }}',
+
+        '{{ appointment.Age }}',
+        '{{ appointment.Sex }}',
+        '{{ appointment.Occupation }}',
+        '{{ appointment.CivilStatus }}',
+
+        '{{ appointment.Service }}',
+        'accept',
+        '{{ appointment.collection }}'
+    )">
+    Accept
+</button>
 
                 <!-- DECLINE -->
-                <button class="btn-action"
-                    onclick="updateStatus(
-                        '{{ appointment.uid }}',
-                        '{{ appointment.id }}',
-                        '{{ appointment.FirstName }}',
-                        '{{ appointment.Birthday }}',
-                        '{{ appointment.Service }}',
-                        'decline',
-                        '{{ appointment.collection }}'
-                    )">
-                    Decline
-                </button>
+<button class="btn-action"
+    onclick="updateStatus(
+        '{{ appointment.uid }}',
+        '{{ appointment.id }}',
+
+        '{{ appointment.FirstName }}',
+        '{{ appointment.MiddleName }}',
+        '{{ appointment.LastName }}',
+
+        '{{ appointment.Birthday }}',
+
+        '{{ appointment.HouseNo }}',
+        '{{ appointment.Street }}',
+        '{{ appointment.Brgy }}',
+        '{{ appointment.Municipality }}',
+        '{{ appointment.City }}',
+
+        '{{ appointment.ContactNumber }}',
+        '{{ appointment.Nationality }}',
+        '{{ appointment.Religion }}',
+
+        '{{ appointment.Age }}',
+        '{{ appointment.Sex }}',
+        '{{ appointment.Occupation }}',
+        '{{ appointment.CivilStatus }}',
+
+        '{{ appointment.Service }}',
+        'decline',
+        '{{ appointment.collection }}'
+    )">
+    Decline
+</button>
 
             </td>
 
@@ -347,6 +387,7 @@ function updateStatus(
                     </div>
                 </div>
             </div>
+            
 
             <div id="section-chart" class="content-section">
                 <div class="chart-container">
