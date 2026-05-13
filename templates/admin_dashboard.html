@@ -19,13 +19,13 @@
             <span>ADMIN PANEL</span>
         </div>
         <nav class="sidebar-nav">
-            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</a>
-            <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">📅 Appointments</a>
-            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">🩺 My Patients</a>
-            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item"  onclick="showSection('patientdashboard')">👤 Patient Dashboard</a>
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
+            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')">Patient Dashboard</a>
         </nav>
         <div class="sidebar-footer">
-            <a href="/logout" class="nav-item logout">🚪 Logout</a>
+            <a href="/logout" class="nav-item logout">Logout</a>
         </div>
     </aside>
 
@@ -57,15 +57,15 @@
         <div id="section-dashboard" class="content-section active-section">
             <div class="metric-cards">
                 <div class="metric-card">
-                    <div class="metric-icon">📅</div>
+                    <div class="metric-icon">&#128197;</div>
                     <div class="metric-data"><h3>12</h3><p>Today's Appointments</p></div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-icon">⏳</div>
+                    <div class="metric-icon">&#9203;</div>
                     <div class="metric-data"><h3 style="color: #d4af37">5</h3><p>Pending Requests</p></div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-icon">👥</div>
+                    <div class="metric-icon">&#128101;</div>
                     <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
                 </div>
             </div>
@@ -76,17 +76,37 @@
                 {% for appointment in Approve %}
                 <div class="patient-card">
                     <div class="p-card-header">
-                        
-
-                <div class="p-info">
-                    <strong>{{ appointment.FirstName }}</strong>
-                    
-                    <small style="opacity: 0.6;">{{ appointment.uid }}</small>
-                </div>
+                        <div class="p-info">
+                            <strong>{{ appointment.FirstName }}</strong>
+                            <small style="opacity: 0.6;">{{ appointment.uid }}</small>
+                        </div>
                     </div>
                     <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service }}</strong></p>
-                    <button class="btn-action accept" style="width: 100%;" 
-                        onclick="openPatientDashboard('{{ appointment.FirstName }}', '{{ appointment.Service }}', '{{ appointment.Sex }}', '{{ appointment.Age }}', 'O+')">
+                    <button class="btn-action accept check-profile-btn" style="width: 100%;"
+                        data-name="{{ appointment.FirstName }}"
+                        data-uid="{{ appointment.user_uid }}"
+                        data-sex="{{ appointment.Sex|default('Female') }}"
+                        data-age="{{ appointment.Age|default('N/A') }}"
+                        data-lastname="{{ appointment.get('LastName', '') }}"
+                        data-middlename="{{ appointment.get('MiddleName', '') }}"
+                        data-birthday="{{ appointment.get('Birthday', '') }}"
+                        data-nationality="{{ appointment.get('Nationality', '') }}"
+                        data-religion="{{ appointment.get('Religion', '') }}"
+                        data-occupation="{{ appointment.get('Occupation', '') }}"
+                        data-civilstatus="{{ appointment.get('CivilStatus', '') }}"
+                        data-contact="{{ appointment.get('ContactNumber', '') }}"
+                        data-service="{{ appointment.get('Service', '') }}"
+                        data-q1="{{ appointment.get('q1', 'N') }}"
+                        data-q2="{{ appointment.get('q2', 'N') }}"
+                        data-q3="{{ appointment.get('q3', 'N') }}"
+                        data-q4="{{ appointment.get('q4', 'N') }}"
+                        data-q5="{{ appointment.get('q5', 'N') }}"
+                        data-q6="{{ appointment.get('q6', 'N') }}"
+                        data-q7="{{ appointment.get('q7', 'N') }}"
+                        data-q9="{{ appointment.get('q9', 'N') }}"
+                        data-w-preg="{{ appointment.get('w_preg', 'N') }}"
+                        data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
+                        data-w-pill="{{ appointment.get('w_pill', 'N') }}">
                         Check Profile
                     </button>
                 </div>
@@ -94,254 +114,117 @@
             </div>
         </div>
 
-            <div id="section-appointments" class="content-section">
-                <section class="content-panel">
-
-                   <table class="appointment-table">
-    <thead>
-        <tr>
-            <th>Patient Name</th>
-            <th style="display:none;">UID</th>
-            <th>Date & Time</th>
-            <th>Procedure</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for appointment in Appointment_clients %}
-        <tr>
-
-            <td>{{ appointment.FirstName }}</td>
-
-            <!-- HIDDEN DATA -->
-            <td style="display:none;">{{ appointment.uid }}</td>
-            <td style="display:none;">{{ appointment.id }}</td>
-
-            <td style="display:none;">{{ appointment.MiddleName }}</td>
-            <td style="display:none;">{{ appointment.LastName }}</td>
-
-            <td style="display:none;">{{ appointment.HouseNo }}</td>
-            <td c">{{ appointment.Street }}</td>
-            <td style="display:none;">{{ appointment.Brgy }}</td>
-            <td style="display:none;">{{ appointment.Municipality }}</td>
-            <td style="display:none;">{{ appointment.City }}</td>
-
-            <td style="display:none;">{{ appointment.ContactNumber }}</td>
-            <td style="display:none;">{{ appointment.Nationality }}</td>
-            <td style="display:none;">{{ appointment.Religion }}</td>
-            <td style="display:none;">{{ appointment.Age }}</td>
-            <td style="display:none;">{{ appointment.Sex }}</td>
-            <td style="display:none;">{{ appointment.Occupation }}</td>
-            <td style="display:none;">{{ appointment.CivilStatus }}</td>
-            
-
-            <td>{{ appointment.appointment_date}}</td>
-            <td>{{ appointment.Service }}</td>
-
-            <td>
-                <span class="badge pending">pending</span>
-            </td>
-
-            <td>
-
-                <!-- ACCEPT -->
-                 <button class="btn-action"
-    onclick="updateStatus(
-        '{{ appointment.uid }}',
-        '{{ appointment.id }}',
-
-        '{{ appointment.FirstName }}',
-        '{{ appointment.MiddleName }}',
-        '{{ appointment.LastName }}',
-
-        '{{ appointment.Birthday }}',
-
-        '{{ appointment.HouseNo }}',
-        '{{ appointment.Street }}',
-        '{{ appointment.Brgy }}',
-        '{{ appointment.Municipality }}',
-        '{{ appointment.City }}',
-
-        '{{ appointment.ContactNumber }}',
-        '{{ appointment.Nationality }}',
-        '{{ appointment.Religion }}',
-
-        '{{ appointment.Age }}',
-        '{{ appointment.Sex }}',
-        '{{ appointment.Occupation }}',
-        '{{ appointment.CivilStatus }}',
-
-        '{{ appointment.Service }}',
-        'accept',
-        '{{ appointment.collection }}'
-    )">
-    Accept
-</button>
-
-                <!-- DECLINE -->
-<button class="btn-action"
-    onclick="updateStatus(
-        '{{ appointment.uid }}',
-        '{{ appointment.id }}',
-
-        '{{ appointment.FirstName }}',
-        '{{ appointment.MiddleName }}',
-        '{{ appointment.LastName }}',
-
-        '{{ appointment.Birthday }}',
-
-        '{{ appointment.HouseNo }}',
-        '{{ appointment.Street }}',
-        '{{ appointment.Brgy }}',
-        '{{ appointment.Municipality }}',
-        '{{ appointment.City }}',
-
-        '{{ appointment.ContactNumber }}',
-        '{{ appointment.Nationality }}',
-        '{{ appointment.Religion }}',
-
-        '{{ appointment.Age }}',
-        '{{ appointment.Sex }}',
-        '{{ appointment.Occupation }}',
-        '{{ appointment.CivilStatus }}',
-
-        '{{ appointment.Service }}',
-        'decline',
-        '{{ appointment.collection }}'
-    )">
-    Decline
-</button>
-
-            </td>
-
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<script>
-function updateStatus(
-    user_id,
-    appointment_id,
-    firstname,
-    birthday,
-    service,
-
-    middlename,
-    lastname,
-
-    houseno,
-    street,
-    brgy,
-    municipality,
-    city,
-
-    contactnumber,
-    nationality,
-    religion,
-    age,
-    sex,
-    occupation,
-    civilstatus,
-
-    q1,
-    q2,
-    q3,
-    q4,
-    q5,
-    q6,
-    q7,
-    q9,
-
-    q2_spec,
-    q3_spec,
-    q4_spec,
-    q5_spec,
-    q7_spec,
-    q9_spec,
-
-    w_preg,
-    w_nurse,
-    w_pill,
-
-    action,
-    collection
-) {
-
-    if (!collection) {
-        collection = "Account_clients";
-    }
-
-    fetch("/approve", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-
-            user_id: user_id,
-            appointment_id: appointment_id,
-            firstname: firstname,
-            birthday: birthday,
-            service: service,
-
-            middlename: middlename,
-            lastname: lastname,
-
-            houseno: houseno,
-            street: street,
-            brgy: brgy,
-            municipality: municipality,
-            city: city,
-
-            contactnumber: contactnumber,
-            nationality: nationality,
-            religion: religion,
-            age: age,
-            sex: sex,
-            occupation: occupation,
-            civilstatus: civilstatus,
-
-            q1: q1,
-            q2: q2,
-            q3: q3,
-            q4: q4,
-            q5: q5,
-            q6: q6,
-            q7: q7,
-            q9: q9,
-
-            q2_spec: q2_spec,
-            q3_spec: q3_spec,
-            q4_spec: q4_spec,
-            q5_spec: q5_spec,
-            q7_spec: q7_spec,
-            q9_spec: q9_spec,
-
-            w_preg: w_preg,
-            w_nurse: w_nurse,
-            w_pill: w_pill,
-
-            action: action,
-            collection: collection
-        })
-    })
-    .then(() => location.reload());
-}
-</script>
+        <div id="section-appointments" class="content-section">
+            <section class="content-panel">
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th style="display:none;">UID</th>
+                            <th>Date and Time</th>
+                            <th>Procedure</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in Appointment_clients %}
+                        <tr>
+                            <td>{{ appointment.FirstName }}</td>
+                            <td style="display:none;">{{ appointment.uid }}</td>
+                            <td style="display:none;">{{ appointment.id }}</td>
+                            <td style="display:none;">{{ appointment.MiddleName }}</td>
+                            <td style="display:none;">{{ appointment.LastName }}</td>
+                            <td style="display:none;">{{ appointment.HouseNo }}</td>
+                            <td style="display:none;">{{ appointment.Street }}</td>
+                            <td style="display:none;">{{ appointment.Brgy }}</td>
+                            <td style="display:none;">{{ appointment.Municipality }}</td>
+                            <td style="display:none;">{{ appointment.City }}</td>
+                            <td style="display:none;">{{ appointment.ContactNumber }}</td>
+                            <td style="display:none;">{{ appointment.Nationality }}</td>
+                            <td style="display:none;">{{ appointment.Religion }}</td>
+                            <td style="display:none;">{{ appointment.Age }}</td>
+                            <td style="display:none;">{{ appointment.Sex }}</td>
+                            <td style="display:none;">{{ appointment.Occupation }}</td>
+                            <td style="display:none;">{{ appointment.CivilStatus }}</td>
+                            <td>{{ appointment.appointment_date }}</td>
+                            <td>{{ appointment.Service }}</td>
+                            <td>
+                                <span class="badge pending">pending</span>
+                            </td>
+                            <td>
+                                <button class="btn-action"
+                                    onclick="updateStatus(
+                                        '{{ appointment.uid }}',
+                                        '{{ appointment.id }}',
+                                        '{{ appointment.FirstName }}',
+                                        '{{ appointment.MiddleName }}',
+                                        '{{ appointment.LastName }}',
+                                        '{{ appointment.Birthday }}',
+                                        '{{ appointment.HouseNo }}',
+                                        '{{ appointment.Street }}',
+                                        '{{ appointment.Brgy }}',
+                                        '{{ appointment.Municipality }}',
+                                        '{{ appointment.City }}',
+                                        '{{ appointment.ContactNumber }}',
+                                        '{{ appointment.Nationality }}',
+                                        '{{ appointment.Religion }}',
+                                        '{{ appointment.Age }}',
+                                        '{{ appointment.Sex }}',
+                                        '{{ appointment.Occupation }}',
+                                        '{{ appointment.CivilStatus }}',
+                                        '{{ appointment.Service }}',
+                                        'accept',
+                                        'Account_clients'
+                                    )">
+                                    Accept
+                                </button>
+                                <button class="btn-action"
+                                    onclick="updateStatus(
+                                        '{{ appointment.uid }}',
+                                        '{{ appointment.id }}',
+                                        '{{ appointment.FirstName }}',
+                                        '{{ appointment.MiddleName }}',
+                                        '{{ appointment.LastName }}',
+                                        '{{ appointment.Birthday }}',
+                                        '{{ appointment.HouseNo }}',
+                                        '{{ appointment.Street }}',
+                                        '{{ appointment.Brgy }}',
+                                        '{{ appointment.Municipality }}',
+                                        '{{ appointment.City }}',
+                                        '{{ appointment.ContactNumber }}',
+                                        '{{ appointment.Nationality }}',
+                                        '{{ appointment.Religion }}',
+                                        '{{ appointment.Age }}',
+                                        '{{ appointment.Sex }}',
+                                        '{{ appointment.Occupation }}',
+                                        '{{ appointment.CivilStatus }}',
+                                        '{{ appointment.Service }}',
+                                        'decline',
+                                        'Account_clients'
+                                    )">
+                                    Decline
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
 
         <div id="section-patientdashboard" class="content-section">
+            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
 
-            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Back to Patients</button>
-            
+            <!-- Hidden Approve data for JS access -->
+            <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
+
             <div class="patient-profile-header">
                 <div class="p-avatar-circle large" id="pd-avatar">??</div>
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
                     <p id="pd-id" style="margin: 0; color: #000000; font-size: 14px;">#ID-0000</p>
                 </div>
-                
                 <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid #eee; padding-left: 40px;">
                     <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
                     <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
@@ -349,10 +232,32 @@ function updateStatus(
                 </div>
             </div>
 
+            <div id="pd-details" style="display:none;">
+                <span id="pd-fullname"></span>
+                <span id="pd-middlename"></span>
+                <span id="pd-birthday"></span>
+                <span id="pd-nationality"></span>
+                <span id="pd-religion"></span>
+                <span id="pd-occupation"></span>
+                <span id="pd-civilstatus"></span>
+                <span id="pd-contact"></span>
+                <span id="pd-service"></span>
+                <span id="pd-q1"></span>
+                <span id="pd-q2"></span>
+                <span id="pd-q3"></span>
+                <span id="pd-q4"></span>
+                <span id="pd-q5"></span>
+                <span id="pd-q6"></span>
+                <span id="pd-q7"></span>
+                <span id="pd-q9"></span>
+                <span id="pd-w-preg"></span>
+                <span id="pd-w-nurse"></span>
+                <span id="pd-w-pill"></span>
+            </div>
+
             <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div class="content-panel">
                     <div class="panel-header"><h3>Visits History</h3></div>
-                    {% for appointment in Appointment_clients %}
                     <table class="appointment-table">
                         <thead>
                             <tr>
@@ -363,67 +268,100 @@ function updateStatus(
                             </tr>
                         </thead>
                         <tbody id="pd-visit-history">
-                            <tr>
-                                <td>Dr. Capizonda</td>
-                                <td>20/05/2026</td>
-                                <td>{{ appointment.Service }}</td>
-                                <td>₱1,500</td>
-                            </tr>
                         </tbody>
                     </table>
-                     {% endfor %}
                 </div>
 
-                <div class="content-panel" >
-                    <div class="panel-header"><h3>Prescription & Notes</h3></div>
+                <div class="content-panel">
+                    <div class="panel-header"><h3>Prescription and Notes</h3></div>
                     <div class="panel-content">
-                        <p><strong>Notes:</strong> <span id="pd-notes">No known allergies. Prefers morning appointments.</span></p>
+                        <div class="info-group">
+                            <label>Full Name</label>
+                            <p id="pd-disp-fullname">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Middle Name</label>
+                            <p id="pd-disp-middlename">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Birthday</label>
+                            <p id="pd-disp-birthday">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Nationality</label>
+                            <p id="pd-disp-nationality">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Religion</label>
+                            <p id="pd-disp-religion">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Occupation</label>
+                            <p id="pd-disp-occupation">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Civil Status</label>
+                            <p id="pd-disp-civilstatus">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Contact Number</label>
+                            <p id="pd-disp-contact">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Service</label>
+                            <p id="pd-disp-service">-</p>
+                        </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                        <p><strong>Medicines:</strong></p>
-                        <ul id="pd-meds" style="font-size: 14px; color: #555; padding-left: 20px;">
-                            <li>Amoxicillin (500mg) - 3x a day</li>
-                            <li>Mefenamic Acid - As needed</li>
+                        <p><strong>Medical History:</strong></p>
+                        <ul id="pd-meds" style="font-size: 14px; color: #555; padding-left: 20px; list-style: none; margin-top: 5px;">
+                            <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
+                            <li id="q2-check">Q2 (HBP): <span>-</span></li>
+                            <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
+                            <li id="q4-check">Q4 (Jaundice/Hepatitis): <span>-</span></li>
+                            <li id="q5-check">Q5 (Bleeding problem): <span>-</span></li>
+                            <li id="q6-check">Q6 (Asthma): <span>-</span></li>
+                            <li id="q7-check">Q7 (Allergy): <span>-</span></li>
+                            <li id="q9-check">Q9 (Others): <span>-</span></li>
+                        </ul>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Women's Health:</strong></p>
+                        <ul id="pd-womens" style="font-size: 14px; color: #555; padding-left: 20px; list-style: none; margin-top: 5px;">
+                            <li id="w-preg-check">Currently Pregnant: <span>-</span></li>
+                            <li id="w-nurse-check">Nursing Mother: <span>-</span></li>
+                            <li id="w-pill-check">Taking Birth Control Pills: <span>-</span></li>
                         </ul>
                     </div>
                 </div>
             </div>
-            
 
-            <div id="section-chart" class="content-section">
+            <div id="section-chart" class="chart-section">
                 <div class="chart-container">
                     <aside class="action-palette">
                         <div class="palette-title">ACTION PALETTE</div>
-                        
                         <div class="tool active" data-tool="healthy" onclick="setTool(this)">
                             <span class="material-symbols-rounded">verified</span>
                             <span>Healthy</span>
                         </div>
-                        
                         <div class="tool" data-tool="caries" onclick="setTool(this)">
                             <span class="material-symbols-rounded">brush</span>
                             <span>Caries</span>
                         </div>
-                        
                         <div class="tool" data-tool="filling" onclick="setTool(this)">
                             <span class="material-symbols-rounded">format_color_fill</span>
                             <span>Filling</span>
                         </div>
-                        
                         <div class="tool" data-tool="crown" onclick="setTool(this)">
                             <span class="material-symbols-rounded">workspace_premium</span>
                             <span>Crown</span>
                         </div>
-                        
                         <div class="tool" data-tool="rootcanal" onclick="setTool(this)">
                             <span class="material-symbols-rounded">medical_services</span>
                             <span>Root Canal</span>
                         </div>
-                        
                         <div class="tool" data-tool="extraction" onclick="setTool(this)">
                             <span class="material-symbols-rounded">content_cut</span>
                             <span>Extraction</span>
                         </div>
-                        
                         <div class="tool" data-tool="check" onclick="setTool(this)">
                             <span class="material-symbols-rounded">task_alt</span>
                             <span>Check</span>
@@ -432,21 +370,16 @@ function updateStatus(
 
                     <section class="dental-chart">
                         <h2 class="chart-title">DENTAL RECORD CHART</h2>
-                        
                         <div class="odontogram-container">
                             <div class="axis-v"></div>
-                            
                             <div class="status-row-wrapper">
                                 <div class="label-inline">STATUS RIGHT</div>
                                 <div class="unified-grid" id="grid-upper"></div>
                                 <div class="label-inline">LEFT</div>
                             </div>
-                            
                             <div class="teeth-row" id="teeth-temp-top"></div>
                             <div class="section-label">TEMPORARY TEETH</div>
-
                             <div class="axis-h"></div>
-
                             <div style="position: relative; width: 100%;">
                                 <div class="label-side rotated">PERMANENT TEETH</div>
                                 <div class="permanent-block">
@@ -457,12 +390,9 @@ function updateStatus(
                                     <div class="unified-grid wide" id="grid-perm-lower"></div>
                                 </div>
                             </div>
-
                             <div class="axis-h"></div>
-
                             <div class="section-label">TEMPORARY TEETH</div>
                             <div class="teeth-row reverse-layout" id="teeth-temp-bottom"></div>
-                            
                             <div class="status-row-wrapper">
                                 <div class="label-inline">STATUS RIGHT</div>
                                 <div class="unified-grid" id="grid-lower"></div>
@@ -472,9 +402,7 @@ function updateStatus(
                     </section>
                 </div>
             </div>
-
         </div>
-
 
         <div id="section-records" class="content-section">
             <div class="search-bar-container">
@@ -497,7 +425,7 @@ function updateStatus(
                             <td>Jericho Manalo</td>
                             <td>Mar 15, 2026</td>
                             <td>0912-345-6789</td>
-                            <td><button class="btn-action accept" onclick="openPatientDashboard('Jericho Manalo', '#PT-001', 'Male', '26', 'B+')">View History</button></td>
+                            <td><button class="btn-action accept" data-name="Jericho Manalo" data-uid="#PT-001" data-sex="Male" data-age="26" data-blood="B+" data-lastname="" data-middlename="" data-birthday="" data-nationality="" data-religion="" data-occupation="" data-civilstatus="" data-contact="" data-service="" data-q1="N" data-q2="N" data-q3="N" data-q4="N" data-q5="N" data-q6="N" data-q7="N" data-q9="N" data-w-preg="N" data-w-nurse="N" data-w-pill="N">View History</button></td>
                         </tr>
                     </tbody>
                 </table>
@@ -505,52 +433,40 @@ function updateStatus(
         </div>
 
         <!-- Patient Dental Chart -->
-
     </main>
 
-
-
-        <!-- MODAL (UNCHANGED) -->
-        <div id="tool-modal" class="modal">
-            <div class="modal-content">
-                <h3>Select Action Color</h3>
-                <div class="modal-buttons">
-                    <button class="btn-modal-red" onclick="applyModalChoice('#ff4d4d')">RED</button>
-                    <button class="btn-modal-blue" onclick="applyModalChoice('#156699')">BLUE</button>
-                    <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
-                </div>
+    <!-- MODAL (UNCHANGED) -->
+    <div id="tool-modal" class="modal">
+        <div class="modal-content">
+            <h3>Select Action Color</h3>
+            <div class="modal-buttons">
+                <button class="btn-modal-red" onclick="applyModalChoice('#ff4d4d')">RED</button>
+                <button class="btn-modal-blue" onclick="applyModalChoice('#156699')">BLUE</button>
+                <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
             </div>
         </div>
-
-
-
+    </div>
 
     <script>
         function showSection(sectionId) {
-            // Update Sidebar Nav
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             const activeNav = document.getElementById('nav-' + sectionId);
-            if(activeNav) activeNav.classList.add('active');
+            if (activeNav) activeNav.classList.add('active');
 
-            // Hide all sections
             document.querySelectorAll('.content-section').forEach(section => {
                 section.classList.remove('active-section');
             });
 
-            // Show selected section
             const target = document.getElementById('section-' + sectionId);
-            if(target) target.classList.add('active-section');
+            if (target) target.classList.add('active-section');
 
-            // 🔥 CONTROL CHART VISIBILITY
             const chart = document.getElementById('section-chart');
-
             if (sectionId === 'patientdashboard') {
                 if (chart) chart.classList.add('active-section');
             } else {
                 if (chart) chart.classList.remove('active-section');
             }
 
-            // Update Header Title
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'appointments': 'Appointment Requests',
@@ -561,99 +477,212 @@ function updateStatus(
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
         }
 
-        function openPatientDashboard(name, uid, Sex, age, blood) {
-            // 1. Populate data
-            document.getElementById('pd-name').innerText = name;
-            document.getElementById('pd-id').innerText = "Patient ID: " + uid;
+        function openPatientDashboard(name, uid, Sex, age, blood, lastName, middleName, birthday, nationality, religion, occupation, civilStatus, contactNumber, service, q1, q2, q3, q4, q5, q6, q7, q9, w_preg, w_nurse, w_pill) {
+            document.getElementById('pd-name').innerText = name || 'Unknown';
+            document.getElementById('pd-id').innerText = 'Patient ID: ' + (uid || 'N/A');
             document.getElementById('pd-gender').innerText = Sex || 'Female';
-            document.getElementById('pd-age').innerText = age || '24';
+            document.getElementById('pd-age').innerText = age || 'N/A';
             document.getElementById('pd-blood').innerText = blood || 'O+';
-            
-            // 2. Set initials
-            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+            const initials = (name || '').split(' ').map(function(n) { return n[0]; }).join('').toUpperCase();
             document.getElementById('pd-avatar').innerText = initials;
 
-            // 3. Show hidden nav link and switch
-            const navLink = document.getElementById('nav-patientdashboard');
-            navLink.style.display = "block";
-            
+            if (lastName) document.getElementById('pd-fullname').innerText = name + ' ' + lastName;
+            document.getElementById('pd-middlename').innerText = middleName || '';
+            document.getElementById('pd-birthday').innerText = birthday || '';
+            document.getElementById('pd-nationality').innerText = nationality || '';
+            document.getElementById('pd-religion').innerText = religion || '';
+            document.getElementById('pd-occupation').innerText = occupation || '';
+            document.getElementById('pd-civilstatus').innerText = civilStatus || '';
+            document.getElementById('pd-contact').innerText = contactNumber || '';
+            document.getElementById('pd-service').innerText = service || '';
+            document.getElementById('pd-q1').innerText = q1 || '';
+            document.getElementById('pd-q2').innerText = q2 || '';
+            document.getElementById('pd-q3').innerText = q3 || '';
+            document.getElementById('pd-q4').innerText = q4 || '';
+            document.getElementById('pd-q5').innerText = q5 || '';
+            document.getElementById('pd-q6').innerText = q6 || '';
+            document.getElementById('pd-q7').innerText = q7 || '';
+            document.getElementById('pd-q9').innerText = q9 || '';
+            document.getElementById('pd-w-preg').innerText = w_preg || '';
+            document.getElementById('pd-w-nurse').innerText = w_nurse || '';
+            document.getElementById('pd-w-pill').innerText = w_pill || '';
+
+            document.getElementById('pd-disp-fullname').innerText = (name && lastName) ? name + ' ' + lastName : (name || '-');
+            document.getElementById('pd-disp-middlename').innerText = middleName || '-';
+            document.getElementById('pd-disp-birthday').innerText = birthday || '-';
+            document.getElementById('pd-disp-nationality').innerText = nationality || '-';
+            document.getElementById('pd-disp-religion').innerText = religion || '-';
+            document.getElementById('pd-disp-occupation').innerText = occupation || '-';
+            document.getElementById('pd-disp-civilstatus').innerText = civilStatus || '-';
+            document.getElementById('pd-disp-contact').innerText = contactNumber || '-';
+            document.getElementById('pd-disp-service').innerText = service || '-';
+
+            setCheckbox('q1-check', q1);
+            setCheckbox('q2-check', q2);
+            setCheckbox('q3-check', q3);
+            setCheckbox('q4-check', q4);
+            setCheckbox('q5-check', q5);
+            setCheckbox('q6-check', q6);
+            setCheckbox('q7-check', q7);
+            setCheckbox('q9-check', q9);
+
+            setCheckbox('w-preg-check', w_preg);
+            setCheckbox('w-nurse-check', w_nurse);
+            setCheckbox('w-pill-check', w_pill);
+
+            var visitHistory = document.getElementById('pd-visit-history');
+            var allApproveData = JSON.parse(document.getElementById('all-approve-data').getAttribute('data-approve') || '[]');
+            var visitsHTML = '';
+            allApproveData.forEach(function(appt) {
+                if (appt.user_uid === uid || appt.uid === uid) {
+                    visitsHTML += '<tr><td>Dr. Capizonda</td><td>' + (appt.Birthday || appt.appointment_date || 'N/A') + '</td><td>' + (appt.Service || appt.Service_appointment || 'N/A') + '</td><td>1,500</td></tr>';
+                }
+            });
+            if (!visitsHTML) {
+                visitsHTML = '<tr><td colspan="4" style="text-align:center; color:#888;">No visits recorded</td></tr>';
+            }
+            visitHistory.innerHTML = visitsHTML;
+
+            var navLink = document.getElementById('nav-patientdashboard');
+            navLink.style.display = 'block';
+
             showSection('patientdashboard');
         }
 
-        function filterPatients() {
-            let input = document.getElementById('patientSearch').value.toUpperCase();
-            let table = document.getElementById('recordsTable');
-            let tr = table.getElementsByTagName('tr');
-            for (let i = 1; i < tr.length; i++) {
-                let td = tr[i].getElementsByTagName('td')[1]; 
-                if (td) {
-                    let textValue = td.textContent || td.innerText;
-                    tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+        function setCheckbox(id, value) {
+            var el = document.getElementById(id);
+            if (el) {
+                var span = el.querySelector('span');
+                if (span) {
+                    var yes = (value === 'Y' || value === 'Yes' || value === 'yes');
+                    span.innerText = yes ? 'Yes' : 'No';
+                    span.style.color = yes ? '#4CAF50' : '#ff4d4d';
                 }
             }
         }
-        let currentTool = 'healthy';
-        let lastClickedTooth = null;
+
+        function filterPatients() {
+            var input = document.getElementById('patientSearch').value.toUpperCase();
+            var table = document.getElementById('recordsTable');
+            var tr = table.getElementsByTagName('tr');
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName('td')[1];
+                if (td) {
+                    var textValue = td.textContent || td.innerText;
+                    tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+                }
+            }
+        }
+
+        // Attach click handlers to all check-profile buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            var buttons = document.querySelectorAll('.check-profile-btn');
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openPatientDashboard(
+                        this.getAttribute('data-name'),
+                        this.getAttribute('data-uid'),
+                        this.getAttribute('data-sex'),
+                        this.getAttribute('data-age'),
+                        'O+',
+                        this.getAttribute('data-lastname'),
+                        this.getAttribute('data-middlename'),
+                        this.getAttribute('data-birthday'),
+                        this.getAttribute('data-nationality'),
+                        this.getAttribute('data-religion'),
+                        this.getAttribute('data-occupation'),
+                        this.getAttribute('data-civilstatus'),
+                        this.getAttribute('data-contact'),
+                        this.getAttribute('data-service'),
+                        this.getAttribute('data-q1'),
+                        this.getAttribute('data-q2'),
+                        this.getAttribute('data-q3'),
+                        this.getAttribute('data-q4'),
+                        this.getAttribute('data-q5'),
+                        this.getAttribute('data-q6'),
+                        this.getAttribute('data-q7'),
+                        this.getAttribute('data-q9'),
+                        this.getAttribute('data-w-preg'),
+                        this.getAttribute('data-w-nurse'),
+                        this.getAttribute('data-w-pill')
+                    );
+                });
+            });
+
+            initUnifiedGrid('grid-upper', 10);
+            initUnifiedGrid('grid-perm-upper', 16);
+            initUnifiedGrid('grid-perm-lower', 16);
+            initUnifiedGrid('grid-lower', 10);
+
+            var render = function(rowId, nums) {
+                var row = document.getElementById(rowId);
+                if (row) nums.forEach(function(n) { row.innerHTML += createToothSVG(n); });
+            };
+
+            render('teeth-temp-top', [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]);
+            render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
+            render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
+            render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
+        });
+
+        var currentTool = 'healthy';
+        var lastClickedTooth = null;
 
         function setTool(el) {
-            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tool').forEach(function(t) { t.classList.remove('active'); });
             el.classList.add('active');
             currentTool = el.getAttribute('data-tool');
         }
 
         function createToothSVG(id) {
-            return `
-            <div class="tooth-unit" id="tooth-${id}">
-                <span class="tooth-label">${id}</span>
-                <svg class="tooth-svg" viewBox="0 0 100 100" onclick="handleToothAction('${id}')">
-                    <path class="segment" d="M50,50 L12,12 A54,54 0 0,1 88,12 Z" onclick="paintSegment(event)" /> 
-                    <path class="segment" d="M50,50 L88,12 A54,54 0 0,1 88,88 Z" onclick="paintSegment(event)" /> 
-                    <path class="segment" d="M50,50 L88,88 A54,54 0 0,1 12,88 Z" onclick="paintSegment(event)" /> 
-                    <path class="segment" d="M50,50 L12,88 A54,54 0 0,1 12,12 Z" onclick="paintSegment(event)" /> 
-                    <circle class="segment" cx="50" cy="50" r="23" onclick="paintSegment(event)" />
-                    
-                    <line class="mark-line" x1="50" y1="5" x2="50" y2="95" stroke-width="8" style="display:none; pointer-events:none;" />
-                    
-                    <g class="mark-x" style="display:none; pointer-events:none; stroke:#ff4d4d; stroke-width:8;">
-                        <line x1="20" y1="20" x2="80" y2="80" />
-                        <line x1="80" y1="20" x2="20" y2="80" />
-                    </g>
-                </svg>
-            </div>`;
+            return '<div class="tooth-unit" id="tooth-' + id + '">' +
+                '<span class="tooth-label">' + id + '</span>' +
+                '<svg class="tooth-svg" viewBox="0 0 100 100" onclick="handleToothAction(\'' + id + '\')">' +
+                    '<path class="segment" d="M50,50 L12,12 A54,54 0 0,1 88,12 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L88,12 A54,54 0 0,1 88,88 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L88,88 A54,54 0 0,1 12,88 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L12,88 A54,54 0 0,1 12,12 Z" onclick="paintSegment(event)" />' +
+                    '<circle class="segment" cx="50" cy="50" r="23" onclick="paintSegment(event)" />' +
+                    '<line class="mark-line" x1="50" y1="5" x2="50" y2="95" stroke-width="8" style="display:none; pointer-events:none;" />' +
+                    '<g class="mark-x" style="display:none; pointer-events:none; stroke:#ff4d4d; stroke-width:8;">' +
+                        '<line x1="20" y1="20" x2="80" y2="80" />' +
+                        '<line x1="80" y1="20" x2="20" y2="80" />' +
+                    '</g>' +
+                '</svg>' +
+            '</div>';
         }
 
         function paintSegment(e) {
             if (currentTool === 'caries' || currentTool === 'filling') {
-                e.stopPropagation(); // Stops the modal from popping up
+                e.stopPropagation();
                 e.target.style.fill = (currentTool === 'caries') ? '#ff4d4d' : '#156699';
             }
         }
 
         function handleToothAction(id) {
-            const tooth = document.getElementById(`tooth-${id}`);
-            const markX = tooth.querySelector('.mark-x');
-            const markLine = tooth.querySelector('.mark-line');
+            var tooth = document.getElementById('tooth-' + id);
+            var markX = tooth.querySelector('.mark-x');
+            var markLine = tooth.querySelector('.mark-line');
 
             if (currentTool === 'healthy') {
-                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = '#ffffff');
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = '#ffffff'; });
                 markX.style.display = 'none';
                 markLine.style.display = 'none';
-            } 
-            else if (currentTool === 'extraction') {
+            } else if (currentTool === 'extraction') {
                 markX.style.display = (markX.style.display === 'block') ? 'none' : 'block';
-            }
-            else if (currentTool === 'crown' || currentTool === 'rootcanal') {
+            } else if (currentTool === 'crown' || currentTool === 'rootcanal') {
                 lastClickedTooth = id;
                 document.getElementById('tool-modal').style.display = 'flex';
             }
         }
 
         function applyModalChoice(color) {
-            const tooth = document.getElementById(`tooth-${lastClickedTooth}`);
+            var tooth = document.getElementById('tooth-' + lastClickedTooth);
             if (currentTool === 'crown') {
-                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = color);
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = color; });
             } else if (currentTool === 'rootcanal') {
-                const line = tooth.querySelector('.mark-line');
+                var line = tooth.querySelector('.mark-line');
                 line.setAttribute('stroke', color);
                 line.style.display = 'block';
             }
@@ -663,54 +692,32 @@ function updateStatus(
         function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
 
         function initUnifiedGrid(id, cols) {
-            const grid = document.getElementById(id);
+            var grid = document.getElementById(id);
             if (!grid) return;
-            grid.innerHTML = ''; // Clear existing
-            for (let i = 0; i < cols * 2; i++) {
-                const box = document.createElement('div');
+            grid.innerHTML = '';
+            for (var i = 0; i < cols * 2; i++) {
+                var box = document.createElement('div');
                 box.className = 'grid-box';
                 box.onclick = function() {
-                    if (currentTool === 'check') this.innerHTML = (this.innerHTML === '✔️') ? '' : '✔️';
+                    if (currentTool === 'check') this.innerHTML = (this.innerHTML === 'Y') ? '' : 'Y';
                 };
                 grid.appendChild(box);
             }
         }
 
-        window.onload = () => {
-            initUnifiedGrid('grid-upper', 10);
-            initUnifiedGrid('grid-perm-upper', 16);
-            initUnifiedGrid('grid-perm-lower', 16);
-            initUnifiedGrid('grid-lower', 10);
-
-            const render = (rowId, nums) => {
-                const row = document.getElementById(rowId);
-                if(row) nums.forEach(n => row.innerHTML += createToothSVG(n));
-            };
-
-            render('teeth-temp-top', [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]);
-            render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
-            render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
-            render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
-        };
-
-        // Theme Toggle Functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-
-        const savedTheme = localStorage.getItem('theme');
+        // Theme Toggle
+        var themeToggle = document.getElementById('themeToggle');
+        var body = document.body;
+        var savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
             body.classList.add('dark-mode');
         }
-
-        themeToggle.addEventListener('click', () => {
+        themeToggle.addEventListener('click', function() {
             body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
+            var isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         });
-        
-
-    
     </script>
-    
+
 </body>
 </html>

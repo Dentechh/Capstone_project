@@ -219,6 +219,11 @@ body {
 .appointment-table th { padding: 15px; color: #8CD3FF; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .appointment-table td { padding: 18px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
 
+.badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+.badge.pending { background: rgba(255, 204, 0, 0.2); color: #FFCC00; }
+.badge.accepted { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.badge.declined { background: rgba(231, 76, 60, 0.2); color: #ff4d4d; }
+
 .btn-action { text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-block; border: none; }
 .btn-action.accept { background: var(--navy); color: white; border: 1px solid #8CD3FF; }
 .btn-action.decline { background: transparent; color: #ff4d4d; border: 1px solid #ff4d4d; margin-left: 5px; }
@@ -235,15 +240,6 @@ body {
 .active-section {
     display: block !important;
     height: 100%;
-}
-
-/* Chart section - hidden by default, shown with parent */
-.chart-section {
-    display: none;
-}
-
-#section-patientdashboard.active-section .chart-section {
-    display: block;
 }
 
 
