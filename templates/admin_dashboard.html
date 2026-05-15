@@ -62,7 +62,7 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">&#9203;</div>
-                    <div class="metric-data"><h3 style="color: #d4af37">5</h3><p>Pending Requests</p></div>
+                    <div class="metric-data"><h3>5</h3><p>Pending Requests</p></div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">&#128101;</div>
@@ -82,7 +82,7 @@
                         </div>
                     </div>
                     <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service }}</strong></p>
-                    <button class="btn-action accept check-profile-btn" style="width: 100%;"
+                    <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
                         data-name="{{ appointment.FirstName }}"
                         data-uid="{{ appointment.user_uid }}"
                         data-sex="{{ appointment.Sex|default('Female') }}"
@@ -214,7 +214,7 @@
         </div>
 
         <div id="section-patientdashboard" class="content-section">
-            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
+            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
 
             <!-- Hidden Approve data for JS access -->
             <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
@@ -223,12 +223,12 @@
                 <div class="p-avatar-circle large" id="pd-avatar">??</div>
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
-                    <p id="pd-id" style="margin: 0; color: #000000; font-size: 14px;">#ID-0000</p>
+                    <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
                 </div>
-                <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid #eee; padding-left: 40px;">
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
+                <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
                 </div>
             </div>
 
@@ -313,19 +313,19 @@
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
-                        <ul id="pd-meds" style="font-size: 14px; color: #555; padding-left: 20px; list-style: none; margin-top: 5px;">
-                            <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
-                            <li id="q2-check">Q2 (HBP): <span>-</span></li>
-                            <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
-                            <li id="q4-check">Q4 (Jaundice/Hepatitis): <span>-</span></li>
-                            <li id="q5-check">Q5 (Bleeding problem): <span>-</span></li>
-                            <li id="q6-check">Q6 (Asthma): <span>-</span></li>
-                            <li id="q7-check">Q7 (Allergy): <span>-</span></li>
-                            <li id="q9-check">Q9 (Others): <span>-</span></li>
-                        </ul>
+<ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                             <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
+                             <li id="q2-check">Q2 (HBP): <span>-</span></li>
+                             <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
+                             <li id="q4-check">Q4 (Jaundice/Hepatitis): <span>-</span></li>
+                             <li id="q5-check">Q5 (Bleeding problem): <span>-</span></li>
+                             <li id="q6-check">Q6 (Asthma): <span>-</span></li>
+                             <li id="q7-check">Q7 (Allergy): <span>-</span></li>
+                             <li id="q9-check">Q9 (Others): <span>-</span></li>
+                         </ul>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Women's Health:</strong></p>
-                        <ul id="pd-womens" style="font-size: 14px; color: #555; padding-left: 20px; list-style: none; margin-top: 5px;">
+                        <ul id="pd-womens" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
                             <li id="w-preg-check">Currently Pregnant: <span>-</span></li>
                             <li id="w-nurse-check">Nursing Mother: <span>-</span></li>
                             <li id="w-pill-check">Taking Birth Control Pills: <span>-</span></li>

@@ -132,15 +132,31 @@
 
 <main class="hero-section">
     <div class="hero-content">
-        <div class="user-greeting">
-            <h1>Welcome,  {{ name}}!</h1>
-            <p>Ready for a brighter smile today?</p>
-        </div>
+<div class="user-greeting">
+            <div class="crop-container">
+                <img src="{{ url_for('static', filename='img/tooth-wave.gif') }}" alt="Waving Tooth" class="tooth-gif">
+            </div>
+
+             <h1>Welcome,  {{ name}}!</h1>
+             <p>Ready for a brighter smile today?</p>
+         </div>
 
         <div class="cta-box">
             <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo">
-            <p>Your smile is our passion!</p>
+            <p>
+                Your smile is our passion! We provide gentle, quality dental care for a healthier and more confident smile.
+            </p>
             <a href="#" class="btn-appointment" id="openAppointment">Book an Appointment</a>
+        </div>
+    </div>
+    
+    <!-- Login Prompt Modal for non-logged in users -->
+    <div id="loginPromptModal" class="modal" style="display: none;">
+        <div class="modal-content auth-card" style="max-width: 400px;">
+            <span class="close-btn" onclick="closeAuthModal('loginPromptModal')">&times;</span>
+            <h2>Login Required</h2>
+            <p style="margin: 20px 0; text-align: center;">You need to login first to book an appointment.</p>
+            <button onclick="closeAuthModal('loginPromptModal'); openAuthModal('loginModal');" class="sign-up-btn" style="width: 100%;">Go to Login</button>
         </div>
     </div>
 </main>
@@ -209,11 +225,10 @@
 
 
 <div id="appointmentModal" class="modal">
-    <div class="modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;">
-        
-        <div class="consent-sidebar" style="flex: 1; background: #f4f7f9; padding: 30px; border-right: 1px solid #dee2e6; overflow-y: auto; max-width: 1500px;">
-            <h3 style="color: #156699; margin-top: 0;">Informed Consent</h3>
-            <div class="consent-body" style="font-size: 0.82rem; line-height: 1.5; color: #333; text-align: justify;">
+    <div class="modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden; background: #1e1e1e;">
+        <div class="consent-sidebar" style="flex: 1; background: #252525; padding: 30px; border-right: 1px solid #333; overflow-y: auto; max-width: 1500px;">
+            <h3 style="color: #64b5f6; margin-top: 0;">Informed Consent</h3>
+            <div class="consent-body" style="font-size: 0.92rem; line-height: 1.5; color: #e0e0e0; text-align: justify;">
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
 
                 <p><strong>DRUGS & MEDICATIONS:</strong> I understand that antibiotics, analgesics, & other medications can cause allergic reactions like redness & swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
@@ -254,28 +269,28 @@
             </div>
         </div>
 
-        <div class="form-container" style="flex: 1.5; padding: 30px; overflow-y: auto; background: white;">
-            <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
-            <h2 style="color: #156699; margin-bottom: 20px;">Patient Information </h2>
+<div class="form-container" style="flex: 1.5; padding: 30px; overflow-y: auto; background: #1e1e1e;">
+            <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px; color: #e0e0e0;">&times;</span>
+            <h2 style="color: #64b5f6; margin-bottom: 20px;">Patient Information </h2>
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
                 <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div style="display: flex; gap: 5px; grid-column: span 2;">
-                        <input type="text" placeholder="First Name" name="First_Name" required style="flex: 1;">
-                        <input type="text" placeholder="Middle Name" name="Middle_Name" style="flex: 1;">
-                        <input type="text" placeholder="Last Name" name="Last_Name" required style="flex: 1;">
+                        <input type="text" placeholder="First Name" name="First_Name" required style="flex: 1; background: #2d2d2d; color: #fff; border-color: #555;">
+                        <input type="text" placeholder="Middle Name" name="Middle_Name" style="flex: 1; background: #2d2d2d; color: #fff; border-color: #555;">
+                        <input type="text" placeholder="Last Name" name="Last_Name" required style="flex: 1; background: #2d2d2d; color: #fff; border-color: #555;">
                     </div>
                     <div style="display: flex; gap: 5px;">
-                        <input type="text" placeholder="House No." name="House_No" required style="width: 80px;">
-                        <input type="text" placeholder="Street" name="Street" style="flex: 1;">
+                        <input type="text" placeholder="House No." name="House_No" required style="width: 80px; background: #2d2d2d; color: #fff; border-color: #555;">
+                        <input type="text" placeholder="Street" name="Street" style="flex: 1; background: #2d2d2d; color: #fff; border-color: #555;">
                     </div>
                     
-                    <input type="text" placeholder="Barangay" name="Brgy" required>
-                    <input type="text" placeholder="Municipality" name="Municipality" required>
-                    <input type="text" placeholder="City" name="City" required>
-                    <input type="text" placeholder="Nationality" name="Nationality">
+                    <input type="text" placeholder="Barangay" name="Brgy" required style="background: #2d2d2d; color: #fff; border-color: #555;">
+                    <input type="text" placeholder="Municipality" name="Municipality" required style="background: #2d2d2d; color: #fff; border-color: #555;">
+                    <input type="text" placeholder="City" name="City" required style="background: #2d2d2d; color: #fff; border-color: #555;">
+                    <input type="text" placeholder="Nationality" name="Nationality" style="background: #2d2d2d; color: #fff; border-color: #555;">
                     
-                    <select name="Religion">
+                    <select name="Religion" style="background: #2d2d2d; color: #fff; border-color: #555;">
                         <option value="" disabled selected>Religion</option>
                         <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Christian">Christian</option>
@@ -294,18 +309,18 @@
                     </select>
                     
                     <div style="display: flex; gap: 5px;">
-                        <input type="number" placeholder="Age" name="Age" style="width: 50%;">
-                        <select name="Sex" id="sexSelect" style="width: 50%;">
+                        <input type="number" placeholder="Age" name="Age" style="width: 50%; background: #2d2d2d; color: #fff; border-color: #555;">
+                        <select name="Sex" id="sexSelect" style="width: 50%; background: #2d2d2d; color: #fff; border-color: #555;">
                             <option value="" disabled selected>Sex</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                     </div>
-                    <input type="tel" placeholder="Contact Number" name="Contact_number" required>
-                    <input type="date" name="Birthday" required>
+                    <input type="tel" placeholder="Contact Number" name="Contact_number" required style="background: #2d2d2d; color: #fff; border-color: #555;">
+                    <input type="date" name="Birthday" required style="background: #2d2d2d; color: #fff; border-color: #555;">
                           
                     
-                    <select name="Occupation">
+                    <select name="Occupation" style="background: #2d2d2d; color: #fff; border-color: #555;">
                         <option value="" disabled selected>Occupation</option>
                         <option value="Student">Student</option>
                         <option value="Employee">Employee</option>
@@ -320,7 +335,7 @@
                         <option value="Retired">Retired</option>
                     </select>
                     
-                    <select name="Civil_Status">
+                    <select name="Civil_Status" style="background: #2d2d2d; color: #fff; border-color: #555;">
                         <option value="" disabled selected>Civil Status</option>
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>
@@ -328,11 +343,11 @@
                         <option value="Separated">Separated</option>
                         <option value="Divorced">Divorced</option>
                     </select>
-                    <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
+                    <h3 style="color: #64b5f6; border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
                         Select Service
                     </h3>
 
-                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px; background: #2d2d2d; color: #fff; border-color: #555;">
                         <option value="" disabled selected>Choose a service</option>
                         <option value="Dental Consultation">Dental Consultation</option>
                         <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
@@ -342,74 +357,74 @@
                         <option value="Others">Others</option>
                     </select>
 
-                    <label for="schedule">Select Schedule:</label>
-<input type="datetime-local" id="schedule" name="appointment_date" required>
+                    <label for="schedule" style="color: #e0e0e0;">Select Schedule:</label>
+                    <input type="datetime-local" id="schedule" name="appointment_date" required style="background: #2d2d2d; color: #fff; border-color: #555;">
                 </div>
 
-                <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
+                <h3 style="color: #64b5f6; border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
                 
-                <div class="medical-history-questions" style="font-size: 0.85rem; margin-top: 10px;">
+                <div class="medical-history-questions" style="font-size: 0.92rem; margin-top: 10px; color: #e0e0e0;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>1. Are you in good health?</span>
+                        <span style="color: #e0e0e0;">1. Are you in good health?</span>
                         <div><input type="radio" name="q1" value="Yes"> Yes <input type="radio" name="q1" value="No"> No</div>
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>2. Are you under medical treatment now?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">2. Are you under medical treatment now?</span>
                         <div><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes <input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</div></div>
-                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>3. Serious illness / surgical operation?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">3. Serious illness / surgical operation?</span>
                         <div><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes <input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</div></div>
-                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>4. Have you ever been hospitalized?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">4. Have you ever been hospitalized?</span>
                         <div><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes <input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</div></div>
-                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>5. Are you taking any medication?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">5. Are you taking any medication?</span>
                         <div><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes <input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</div></div>
-                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>6. Do you use tobacco products?</span>
+                        <span style="color: #e0e0e0;">6. Do you use tobacco products?</span>
                         <div><input type="radio" name="q6" value="Yes"> Yes <input type="radio" name="q6" value="No"> No</div>
                     </div>
 
                     <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>7. Do you have any allergy?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">7. Do you have any allergy?</span>
                         <div><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes <input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</div></div>
-                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
 
-                    <div id="womenSection" style="background: #fdf6f6; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #feeaea; opacity: 0.5; pointer-events: none;">
-                        <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.75rem;">8. For Women Only:</p>
+                    <div id="womenSection" style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; opacity: 0.5; pointer-events: none;">
+                        <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.92rem; color: #e0e0e0;">8. For Women Only:</p>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label><input type="checkbox" name="w_preg"> Are you pregnant?</label>
-                            <label><input type="checkbox" name="w_nurse"> Are you nursing?</label>
-                            <label><input type="checkbox" name="w_pill"> On birth control pills?</label>
+                            <label style="color: #e0e0e0;"><input type="checkbox" name="w_preg"> Are you pregnant?</label>
+                            <label style="color: #e0e0e0;"><input type="checkbox" name="w_nurse"> Are you nursing?</label>
+                            <label style="color: #e0e0e0;"><input type="checkbox" name="w_pill"> On birth control pills?</label>
                         </div>
                     </div>
 
                     <div style="margin-top: 12px;">
-                        <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
+                        <div style="display: flex; justify-content: space-between;"><span style="color: #e0e0e0;">9. Do you have any medical condition/s?</span>
                         <div><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes <input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</div></div>
-                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; background: #2d2d2d; color: #fff; border-color: #555;" disabled>
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; font-size: 0.8rem; border-top: 1px solid #eee; padding-top: 15px;">
+                <div style="margin-top: 20px; font-size: 0.92rem; border-top: 1px solid #333; padding-top: 15px; color: #e0e0e0;">
                     <label><input type="checkbox" required> I authorize the doctor to proceed with treatment & understand dentistry is not an exact science.</label>
                 </div>
 
-                <button type="submit" class="submit-btn" style="width: 100%; margin-top: 15px; background: #156699; color: white; padding: 12px; border-radius: 6px; font-weight: bold;">Confirm Appointment</button>
+                <button type="button" id="confirmAppointmentBtn" class="submit-btn" style="width: 100%; margin-top: 15px; background: #64b5f6; color: white; padding: 12px; border-radius: 6px; font-weight: bold;">Confirm Appointment</button>
             </form>
         </div>
     </div>
@@ -468,6 +483,15 @@
     </div>
 </div>
 
+<div id="paymentModal" class="modal">
+    <div class="modal-content auth-card" style="max-width: 450px; text-align: center;">
+        <span class="close-btn" id="closePaymentModal" style="cursor: pointer; font-size: 24px;">&times;</span>
+        <h2 style="color: #156699; margin-bottom: 20px;">Complete Your Payment</h2>
+        <p style="margin-bottom: 20px; color: #333; font-size: 16px;">You will be redirected to PayMongo to complete your payment.</p>
+        <button id="proceedToPayment" class="sign-up-btn" style="width: 100%; margin-bottom: 10px;">Proceed to Payment</button>
+        <button onclick="document.getElementById('paymentModal').style.display = 'none'" class="btn-login" style="width: 100%;">Cancel</button>
+    </div>
+</div>
 
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -498,28 +522,7 @@
         document.getElementById(modalId).style.display = "none";
     }
 
-    window.onclick = (e) => { 
-    // Close Appointment Modal
-    if(e.target == modal) modal.style.display = "none";
-    
-    // Close Login Modal if clicking background
-    const loginM = document.getElementById('loginModal');
-    if(e.target == loginM) loginM.style.display = "none";
-
-    // Close Register Modal if clicking background
-    const regM = document.getElementById('registerModal');
-    if(e.target == regM) regM.style.display = "none";
-
-    // Close chat if clicking outside
-    if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
-        windowChat.style.display = 'none';
-    }
-
-    // Close profile dropdown
-    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-        dropdownMenu.style.display = 'none';
-    }
-};
+// Global click listener to close modals/dropdowns if clicking outside
     // 1. Dropdown Toggle Logic
     const dropdownTrigger = document.getElementById('profileDropdownTrigger');
     const dropdownMenu = document.getElementById('profileDropdown');
@@ -558,12 +561,69 @@
 
     // 4. Appointment Modal Logic
     const modal = document.getElementById("appointmentModal");
-    document.getElementById("openAppointment").onclick = (e) => { e.preventDefault(); modal.style.display = "flex"; };
+    const paymentModal = document.getElementById("paymentModal");
+    const loginPromptModal = document.getElementById("loginPromptModal");
+    
+    document.getElementById("openAppointment").onclick = (e) => { 
+        e.preventDefault(); 
+        // Check if user is logged in (name is not "Guest")
+        const userName = "{{ name }}";
+        if (userName === "Guest" || !userName) {
+            loginPromptModal.style.display = "flex";
+        } else {
+            modal.style.display = "flex"; 
+        }
+    };
     document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    
+// Confirm Appointment Button - show payment modal
+     const confirmBtn = document.getElementById("confirmAppointmentBtn");
+     if (confirmBtn) {
+         confirmBtn.onclick = function() {
+             const form = document.getElementById("appointmentForm");
+             if (form.checkValidity()) {
+                 // Store form data in sessionStorage for later use
+                 const formData = new FormData(form);
+                 const data = {};
+                 for (let [key, value] of formData.entries()) {
+                     data[key] = value;
+                 }
+                 sessionStorage.setItem('appointmentData', JSON.stringify(data));
+
+                 // Close appointment modal and show payment modal
+                 modal.style.display = "none";
+                 paymentModal.style.display = "flex";
+             } else {
+                 form.reportValidity();
+             }
+         };
+     }
+    
+    // Close payment modal
+    const closePaymentModal = document.getElementById("closePaymentModal");
+    if (closePaymentModal) {
+        closePaymentModal.onclick = () => paymentModal.style.display = "none";
+    }
+    
+    // Proceed to PayMongo button
+    const proceedToPayment = document.getElementById("proceedToPayment");
+    if (proceedToPayment) {
+        proceedToPayment.onclick = () => {
+            window.location.href = "https://checkout.paymongo.com/72179b83b576048139cf8dd8";
+        };
+    }
     
     // Global click listener to close modals/dropdowns if clicking outside
     window.onclick = (e) => { 
         if(e.target == modal) modal.style.display = "none";
+        if(e.target == paymentModal) paymentModal.style.display = "none";
+        if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
+        
+        const loginM = document.getElementById('loginModal');
+        if(e.target == loginM) loginM.style.display = "none";
+        
+        const regM = document.getElementById('registerModal');
+        if(e.target == regM) regM.style.display = "none";
         
         // Close chat if clicking outside
         if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
