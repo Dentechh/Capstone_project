@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda | Admin Panel</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
+</head>
+<body class="dashboard-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>CAPIZONDA</h2>
+            <span>ADMIN PANEL</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
+            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout" class="nav-item logout">Logout</a>
+        </div>
+    </aside>
+
+<main class="main-content">
+    <header class="top-header">
+        <div class="header-title-group">
+            <h2 id="page-title">Dashboard Overview</h2>
+            <p id="datetime-display" class="datetime-text">Loading date & time...</p>
+        </div>
+        
+        <div class="admin-profile" style="display: flex; align-items: center; gap: 12px;">
+            <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                </svg>
+                <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+            <span>Dr. Admin</span>
+            <div class="avatar"></div>
+        </div>
+    </header>
+
+        <div id="section-dashboard" class="content-section active-section">
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">&#128197;</div>
+                    <div class="metric-data"><h3>12</h3><p>Today's Appointments</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">&#9203;</div>
+                    <div class="metric-data"><h3>5</h3><p>Pending Requests</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">&#128101;</div>
+                    <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-mypatients" class="content-section">
+            <div class="patient-card-grid">
+                {% for appointment in Approve %}
+                <div class="patient-card">
+                    <div class="p-card-header">
+                        <div class="p-info">
+                            <strong>NAME: {{ appointment.FirstName }}</strong>
+                            <small style="opacity: 0.6;">UID: {{ appointment.uid }}</small>
+                        </div>
+                    </div>
+                    <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>{{ appointment.DentistName|default('Not Assigned') }}</strong></p>
+                     <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+                        data-name="{{ appointment.FirstName }}"
+                        data-uid="{{ appointment.uid }}"
+                        data-sex="{{ appointment.Sex|default('Female') }}"
+                        data-age="{{ appointment.Age|default('N/A') }}"
+                        data-lastname="{{ appointment.get('LastName', '') }}"
+                        data-middlename="{{ appointment.get('MiddleName', '') }}"
+                        data-birthday="{{ appointment.get('Birthday', '') }}"
+                        data-nationality="{{ appointment.get('Nationality', '') }}"
+                        data-religion="{{ appointment.get('Religion', '') }}"
+                        data-occupation="{{ appointment.get('Occupation', '') }}"
+                        data-civilstatus="{{ appointment.get('CivilStatus', '') }}"
+                        data-contact="{{ appointment.get('ContactNumber', '') }}"
+                        data-service="{{ appointment.get('Service', '') }}"
+                        data-dentist="{{ appointment.get('dentist_name', '') }}"
+                        data-q1="{{ appointment.get('q1', 'N') }}"
+                        data-q2="{{ appointment.get('q2', 'N') }}"
+                        data-q3="{{ appointment.get('q3', 'N') }}"
+                        data-q4="{{ appointment.get('q4', 'N') }}"
+                        data-q5="{{ appointment.get('q5', 'N') }}"
+                        data-q6="{{ appointment.get('q6', 'N') }}"
+                        data-q7="{{ appointment.get('q7', 'N') }}"
+                        data-q9="{{ appointment.get('q9', 'N') }}"
+                        data-w-preg="{{ appointment.get('w_preg', 'N') }}"
+                        data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
+                        data-w-pill="{{ appointment.get('w_pill', 'N') }}">
+                        CHECK INFO
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="section-appointments" class="content-section">
+            <section class="content-panel">
+                <table class="appointment-table">
+                      <thead>
+                          <tr>
+                              <th>Patient Name</th>
+                              <th style="display:none;">UID</th>
+                              <th style="display:none;">Appointment ID</th>
+                              <th style="display:none;">Middle Name</th>
+                              <th style="display:none;">Last Name</th>
+                              <th style="display:none;">House No.</th>
+                              <th style="display:none;">Street</th>
+                              <th style="display:none;">Barangay</th>
+                              <th style="display:none;">Municipality</th>
+                              <th style="display:none;">Province</th>
+                              <th style="display:none;">Contact Number</th>
+                              <th style="display:none;">Nationality</th>
+                              <th style="display:none;">Religion</th>
+                              <th style="display:none;">Age</th>
+                              <th style="display:none;">Sex</th>
+                              <th style="display:none;">Birthday</th>
+                              <th style="display:none;">Occupation</th>
+                              <th style="display:none;">Civil Status</th>
+                              <th>Date and Time</th>
+                              <th>Procedure</th>
+                              <th>Consulting Dentist</th>
+                              <th>Status</th>
+                              <th>Action</th>
+                          </tr>
+                      </thead>
+                          <tbody>
+                          {% for appointment in Appointment_clients %}
+                          <tr data-appointment='{{ appointment|tojson|safe }}'>
+                              <td>{{ appointment.FirstName }}</td>
+                              <td style="display:none;">{{ appointment.uid }}</td>
+                              <td style="display:none;">{{ appointment.id }}</td>
+                              <td style="display:none;">{{ appointment.MiddleName }}</td>
+                              <td style="display:none;">{{ appointment.LastName }}</td>
+                              <td style="display:none;">{{ appointment.HouseNo }}</td>
+                              <td style="display:none;">{{ appointment.Street }}</td>
+                              <td style="display:none;">{{ appointment.Brgy }}</td>
+                              <td style="display:none;">{{ appointment.Municipality }}</td>
+                              <td style="display:none;">{{ appointment.Province }}</td>
+                              <td style="display:none;">{{ appointment.ContactNumber }}</td>
+                              <td style="display:none;">{{ appointment.Nationality }}</td>
+                              <td style="display:none;">{{ appointment.Religion }}</td>
+                              <td style="display:none;">{{ appointment.Age }}</td>
+                              <td style="display:none;">{{ appointment.Sex }}</td>
+                              <td style="display:none;">{{ appointment.Birthday }}</td>
+                              <td style="display:none;">{{ appointment.Occupation }}</td>
+                              <td style="display:none;">{{ appointment.CivilStatus }}</td>
+                              <td>{{ appointment.appointment_date }}</td>
+                              <td>{{ appointment.Service }}</td>
+                              <td>
+                                  <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                              </td>
+                              <td>
+                                  <span class="badge pending">pending</span>
+                              </td>
+                              <td>
+                                  <button class="btn-action"
+                                       onclick="updateStatus(this.closest('tr'), 'accept')">
+                                      Accept
+                                  </button>
+                                  <button class="btn-action"
+                                       onclick="updateStatus(this.closest('tr'), 'decline')">
+                                      Decline
+                                  </button>
+                              </td>
+                          </tr>
+                          {% endfor %}
+                      </tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="section-patientdashboard" class="content-section">
+            <button onclick="showSection('mypatients'); document.getElementById('nav-patientdashboard').style.display='none';" class="btn-back" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
+
+            <!-- Hidden Approve data for JS access -->
+            <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
+
+            <div class="patient-profile-header">
+                <div class="p-avatar-circle large" id="pd-avatar">??</div>
+                <div class="p-main-info">
+                    <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
+                    <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
+                </div>
+                <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
+                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 1500;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 1500;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 1500;">-</span></div>
+                </div>
+            </div>
+
+            <div id="pd-details" style="display:none;">
+                <span id="pd-fullname"></span>
+                <span id="pd-middlename"></span>
+                <span id="pd-birthday"></span>
+                <span id="pd-nationality"></span>
+                <span id="pd-religion"></span>
+                <span id="pd-occupation"></span>
+                <span id="pd-civilstatus"></span>
+                <span id="pd-contact"></span>
+                <span id="pd-service"></span>
+                <span id="pd-q1"></span>
+                <span id="pd-q2"></span>
+                <span id="pd-q3"></span>
+                <span id="pd-q4"></span>
+                <span id="pd-q5"></span>
+                <span id="pd-q6"></span>
+                <span id="pd-q7"></span>
+                <span id="pd-q9"></span>
+                <span id="pd-w-preg"></span>
+                <span id="pd-w-nurse"></span>
+                <span id="pd-w-pill"></span>
+            </div>
+
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="content-panel">
+                     <div class="panel-header"><h3>Visits History</h3></div>
+                     <table class="appointment-table">
+                         <thead>
+                             <tr>
+                                 <th>Assigned Dentist</th>
+                                 <th>Visit Date</th>
+                                 <th>Procedure</th>
+                                 <th>Fee Paid</th>
+                             </tr>
+                         </thead>
+                        <tbody id="pd-visit-history">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="content-panel">
+                    <div class="panel-header"><h3>Patient Information</h3></div>
+                    <div class="panel-content">
+                        <div class="info-group">
+                            <label>Full Name</label>
+                            <p id="pd-disp-fullname"></p>
+                        </div>
+                        <div class="info-group">
+                            <label>Middle Name</label>
+                            <p id="pd-disp-middlename">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Birthday</label>
+                            <p id="pd-disp-birthday">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Nationality</label>
+                            <p id="pd-disp-nationality">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Religion</label>
+                            <p id="pd-disp-religion">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Occupation</label>
+                            <p id="pd-disp-occupation">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Civil Status</label>
+                            <p id="pd-disp-civilstatus">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Contact Number</label>
+                            <p id="pd-disp-contact">-</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Service</label>
+                            <p id="pd-disp-service">-</p>
+                        </div>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Medical History:</strong></p>
+<ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                             <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
+                             <li id="q2-check">Q2 (HBP): <span>-</span></li>
+                             <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
+                             <li id="q4-check">Q4 (Jaundice/Hepatitis): <span>-</span></li>
+                             <li id="q5-check">Q5 (Bleeding problem): <span>-</span></li>
+                             <li id="q6-check">Q6 (Asthma): <span>-</span></li>
+                             <li id="q7-check">Q7 (Allergy): <span>-</span></li>
+                             <li id="q9-check">Q9 (Others): <span>-</span></li>
+                         </ul>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Women's Health:</strong></p>
+                        <ul id="pd-womens" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                            <li id="w-preg-check">Currently Pregnant: <span>-</span></li>
+                            <li id="w-nurse-check">Nursing Mother: <span>-</span></li>
+                            <li id="w-pill-check">Taking Birth Control Pills: <span>-</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-chart" class="chart-section">
+                <div class="chart-container">
+                    <aside class="action-palette">
+                        <div class="palette-title">ACTION PALETTE</div>
+                        <div class="tool active" data-tool="healthy" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">verified</span>
+                            <span>Healthy</span>
+                        </div>
+                        <div class="tool" data-tool="caries" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">brush</span>
+                            <span>Caries</span>
+                        </div>
+                        <div class="tool" data-tool="filling" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">format_color_fill</span>
+                            <span>Filling</span>
+                        </div>
+                        <div class="tool" data-tool="crown" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">workspace_premium</span>
+                            <span>Crown</span>
+                        </div>
+                        <div class="tool" data-tool="rootcanal" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">medical_services</span>
+                            <span>Root Canal</span>
+                        </div>
+                        <div class="tool" data-tool="missing" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">cancel</span>
+                            <span>Missing Tooth</span>
+                        </div>
+                        <div class="tool" data-tool="extraction" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">content_cut</span>
+                            <span>Extraction</span>
+                        </div>
+                        <div class="tool" data-tool="check" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">task_alt</span>
+                            <span>Check</span>
+                        </div>
+                    </aside>
+
+
+                    <div style="text-align: center; margin: 12px 0;">
+                        <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
+                            ⬇ Download Dental Chart as PDF
+                        </button>
+                    </div>
+
+                
+                    <section class="dental-chart">
+                        <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                        <div class="odontogram-container">
+                            <div class="axis-v"></div>
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-upper"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                            <div class="teeth-row" id="teeth-temp-top"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="axis-h"></div>
+                            <div style="position: relative; width: 100%;">
+                                <div class="label-side rotated">PERMANENT TEETH</div>
+                                <div class="permanent-block">
+                                    <div class="unified-grid wide" id="grid-perm-upper"></div>
+                                    <div class="teeth-row wide" id="teeth-perm-top"></div>
+                                    <div class="axis-h-mid"></div>
+                                    <div class="teeth-row wide reverse-layout" id="teeth-perm-bottom"></div>
+                                    <div class="unified-grid wide" id="grid-perm-lower"></div>
+                                </div>
+                            </div>
+                            <div class="axis-h"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="teeth-row reverse-layout" id="teeth-temp-bottom"></div>
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-lower"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Treatment Notes -->
+            <div id="td-treatment-section" class="treatment-section" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 style="margin:0;">Treatment Notes</h3>
+                        <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size:14px; padding:6px 18px;">Save</button>
+                    </div>
+                    <table class="treatment-table" id="td-treatment-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tooth#</th>
+                                <th>Procedure</th>
+                                <th>Dentist/s</th>
+                                <th>Value of Work</th>
+                                <th>Amount Paid</th>
+                                <th>Balance</th>
+                                <th>Next Appointment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            </tr>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button type="button" id="td-add-row-btn" style="margin-top:10px; padding:5px 12px; border:1px dashed gold; background:transparent; color:gold; border-radius:5px; cursor:pointer; font-size:13px;">+ Add Row</button>
+                    <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
+                </div>
+            </div>
+
+
+        <div id="section-records" class="content-section">
+            <div class="search-bar-container">
+                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input" onkeyup="filterPatients()">
+            </div>
+            <section class="content-panel">
+                <table class="appointment-table" id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Last Visit</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#PT-001</td>
+                            <td>Jericho Manalo</td>
+                            <td>Mar 15, 2026</td>
+                            <td>0912-345-6789</td>
+                            <td><button class="btn-action accept" data-name="Jericho Manalo" data-uid="#PT-001" data-sex="Male" data-age="26" data-blood="B+" data-lastname="" data-middlename="" data-birthday="" data-nationality="" data-religion="" data-occupation="" data-civilstatus="" data-contact="" data-service="" data-q1="N" data-q2="N" data-q3="N" data-q4="N" data-q5="N" data-q6="N" data-q7="N" data-q9="N" data-w-preg="N" data-w-nurse="N" data-w-pill="N">View History</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- Patient Dental Chart -->
+    </main>
+
+<script>
+async function downloadDentalChartPDF() {
+    const { jsPDF } = window.jspdf;
+    const btn = document.getElementById('download-pdf-btn');
+    const chartSection = document.querySelector('.dental-chart');
+
+    // Hide button so it won't appear in PDF
+    btn.style.display = 'none';
+
+    // Show loading state
+    const loadingMsg = document.createElement('div');
+    loadingMsg.id = 'pdf-loading';
+    loadingMsg.style.cssText = 'text-align:center; padding:8px; color:#555; font-size:14px;';
+    loadingMsg.textContent = 'Generating PDF, please wait...';
+    chartSection.parentElement.insertBefore(loadingMsg, chartSection);
+
+    try {
+        const canvas = await html2canvas(chartSection, {
+            scale: 2,                    // Crisp/sharp output
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            scrollX: 0,
+            scrollY: 0,
+            // KEY: capture full element height, not just viewport
+            windowWidth: chartSection.scrollWidth,
+            windowHeight: chartSection.scrollHeight,
+            width: chartSection.scrollWidth,
+            height: chartSection.scrollHeight,
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+
+        // Use landscape A4 for wide dental charts
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'mm',
+            format: 'a4'
+        });
+
+        const pageW = pdf.internal.pageSize.getWidth();   // 297mm
+        const pageH = pdf.internal.pageSize.getHeight();  // 210mm
+        const margin = 8; // mm margin on all sides
+
+        const usableW = pageW - margin * 2;
+        const usableH = pageH - margin * 2;
+
+        // Scale image proportionally to fit within usable area
+        const imgRatio = canvas.width / canvas.height;
+        const pageRatio = usableW / usableH;
+
+        let finalW, finalH;
+        if (imgRatio > pageRatio) {
+            // Chart is wider than page ratio — fit by width
+            finalW = usableW;
+            finalH = usableW / imgRatio;
+        } else {
+            // Chart is taller — fit by height
+            finalH = usableH;
+            finalW = usableH * imgRatio;
+        }
+
+        // Center the image on the page
+        const xOffset = margin + (usableW - finalW) / 2;
+        const yOffset = margin + (usableH - finalH) / 2;
+
+        pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalW, finalH);
+
+        // Optional: add page number or date footer
+        const today = new Date().toLocaleDateString();
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text(`Generated: ${today}`, margin, pageH - 3);
+
+        pdf.save('dental-record-chart.pdf');
+
+    } catch (err) {
+        console.error('PDF generation failed:', err);
+        alert('Could not generate PDF. Please try again.');
+    } finally {
+        btn.style.display = '';
+        const msg = document.getElementById('pdf-loading');
+        if (msg) msg.remove();
+    }
+}
+</script>
+
+
+
+    <script>
+        function showSection(sectionId) {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            const activeNav = document.getElementById('nav-' + sectionId);
+            if (activeNav) activeNav.classList.add('active');
+
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active-section');
+            });
+
+            const target = document.getElementById('section-' + sectionId);
+            if (target) target.classList.add('active-section');
+
+            const chart = document.getElementById('section-chart');
+            if (sectionId === 'patientdashboard') {
+                if (chart) chart.classList.add('active-section');
+            } else {
+                if (chart) chart.classList.remove('active-section');
+            }
+
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'appointments': 'Appointment Requests',
+                'mypatients': 'My Assigned Patients',
+                'records': 'Patient Database',
+                'patientdashboard': 'Patient Dashboard'
+            };
+            document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
+        }
+
+function openPatientDashboard(
+    name,
+    uid,
+    birthday,
+    sex,
+    age,
+    middlename,
+    nationality,
+    religion,
+    occupation,
+    civilstatus,
+    contact,
+    service
+) {
+    document.getElementById('pd-name').innerText = name || 'Unknown';
+    document.getElementById('pd-id').innerText = 'Patient ID: ' + (uid || 'N/A');
+
+    document.getElementById('pd-gender').innerText = sex || 'Female';
+    document.getElementById('pd-age').innerText = age || 'N/A';
+
+    document.getElementById('pd-disp-fullname').innerText = name || 'Unknown';
+    document.getElementById('pd-disp-middlename').innerText = middlename || 'Unknown';
+    document.getElementById('pd-disp-birthday').innerText = birthday || 'Unknown';
+
+    document.getElementById('pd-disp-nationality').innerText = nationality || 'Unknown';
+    document.getElementById('pd-disp-religion').innerText = religion || 'Unknown';
+    document.getElementById('pd-disp-occupation').innerText = occupation || 'Unknown';
+    document.getElementById('pd-disp-civilstatus').innerText = civilstatus || 'Unknown';
+
+    document.getElementById('pd-disp-contact').innerText = contact || 'Unknown';
+    document.getElementById('pd-disp-service').innerText = service || 'Unknown';
+
+            // Blood type - hardcoded since Approve doc does not store it
+            document.getElementById('pd-blood').innerText = 'O+';
+
+            // Set initials
+            document.getElementById('pd-avatar').innerText = name ? name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase() : '??';
+
+            // Show hidden nav link and switch section
+            var navLink = document.getElementById('nav-patientdashboard');
+            if (navLink) navLink.style.display = 'block';
+            showSection('patientdashboard');
+
+            // Show treatment section
+            var tdSection = document.getElementById('td-treatment-section');
+            if (tdSection) tdSection.style.display = 'block';
+
+            // Load saved treatment notes for this patient
+            loadTreatmentNotes(uid);
+        }
+
+        function setCheckbox(id, value) {
+            var el = document.getElementById(id);
+            if (el) {
+                var span = el.querySelector('span');
+                if (span) {
+                    var yes = (value === 'Y' || value === 'Yes' || value === 'yes');
+                    span.innerText = yes ? 'Yes' : 'No';
+                    span.style.color = yes ? '#4CAF50' : '#ff4d4d';
+                }
+            }
+        }
+
+        function filterPatients() {
+            var input = document.getElementById('patientSearch').value.toUpperCase();
+            var table = document.getElementById('recordsTable');
+            var tr = table.getElementsByTagName('tr');
+            for (var i = 1; i < tr.length; i++) {
+                var td = tr[i].getElementsByTagName('td')[1];
+                if (td) {
+                    var textValue = td.textContent || td.innerText;
+                    tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var buttons = document.querySelectorAll('.check-profile-btn');
+            buttons.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openPatientDashboard(
+                this.getAttribute('data-name'),
+                this.getAttribute('data-uid'),
+                this.getAttribute('data-birthday'),
+                this.getAttribute('data-sex'),
+                this.getAttribute('data-age'),
+                this.getAttribute('data-middlename'),
+                this.getAttribute('data-nationality'),
+                this.getAttribute('data-religion'),
+                this.getAttribute('data-occupation'),
+                this.getAttribute('data-civilstatus'),
+                this.getAttribute('data-contact'),
+                this.getAttribute('data-service')
+
+                        
+                        
+                    );
+                });
+            });
+
+            var saveBtn = document.getElementById('td-save-btn');
+            var addBtn  = document.getElementById('td-add-row-btn');
+            if (saveBtn) saveBtn.addEventListener('click', saveTreatmentNotes);
+            if (addBtn)  addBtn.addEventListener('click', addTreatmentRow);
+
+            initUnifiedGrid('grid-upper', 10, 'checkbox', 'input');
+            initUnifiedGrid('grid-perm-upper', 16, 'checkbox', 'input');
+            initUnifiedGrid('grid-perm-lower', 16, 'input', 'checkbox');
+            initUnifiedGrid('grid-lower', 10, 'input', 'checkbox');
+
+            var render = function(rowId, nums) {
+                var row = document.getElementById(rowId);
+                if (row) nums.forEach(function(n) { row.innerHTML += createToothSVG(n); });
+            };
+
+            render('teeth-temp-top', [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]);
+            render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
+            render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
+            render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
+        });
+
+        var currentTool = 'healthy';
+        var lastClickedTooth = null;
+
+        function setTool(el) {
+            document.querySelectorAll('.tool').forEach(function(t) { t.classList.remove('active'); });
+            el.classList.add('active');
+            currentTool = el.getAttribute('data-tool');
+        }
+
+        function createToothSVG(id) {
+            return '<div class="tooth-unit" id="tooth-' + id + '">' +
+                '<span class="tooth-label">' + id + '</span>' +
+                '<svg class="tooth-svg" viewBox="0 0 100 100" onclick="handleToothAction(\'' + id + '\')">' +
+                    '<path class="segment" d="M50,50 L12,12 A54,54 0 0,1 88,12 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L88,12 A54,54 0 0,1 88,88 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L88,88 A54,54 0 0,1 12,88 Z" onclick="paintSegment(event)" />' +
+                    '<path class="segment" d="M50,50 L12,88 A54,54 0 0,1 12,12 Z" onclick="paintSegment(event)" />' +
+                    '<circle class="segment" cx="50" cy="50" r="23" onclick="paintSegment(event)" />' +
+                    '<line class="mark-line" x1="50" y1="5" x2="50" y2="95" stroke-width="8" style="display:none; pointer-events:none;" />' +
+                    '<g class="mark-x" style="display:none; pointer-events:none; stroke:#ff4d4d; stroke-width:8;">' +
+                        '<line x1="20" y1="20" x2="80" y2="80" />' +
+                        '<line x1="80" y1="20" x2="20" y2="80" />' +
+                    '</g>' +
+                '</svg>' +
+            '</div>';
+        }
+
+        function paintSegment(e) {
+            if (currentTool === 'caries' || currentTool === 'filling') {
+                e.stopPropagation();
+                e.target.style.fill = (currentTool === 'caries') ? '#ff4d4d' : '#156699';
+            }
+        }
+
+        function handleToothAction(id) {
+            var tooth = document.getElementById('tooth-' + id);
+            var markX = tooth.querySelector('.mark-x');
+            var markLine = tooth.querySelector('.mark-line');
+
+            if (currentTool === 'healthy') {
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = '#ffffff'; });
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            } else if (currentTool === 'extraction') {
+                markX.style.display = (markX.style.display === 'block') ? 'none' : 'block';
+            } else if (currentTool === 'crown') {
+                // Crown: full shade red
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = '#ff4d4d'; });
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            } else if (currentTool === 'rootcanal') {
+                // Root Canal: full shade blue
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = '#156699'; });
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            } else if (currentTool === 'missing') {
+                // Missing Tooth: full shade black
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = '#000000'; });
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            }
+        }
+
+        function applyModalChoice(color) {
+            var tooth = document.getElementById('tooth-' + lastClickedTooth);
+            if (currentTool === 'crown') {
+                tooth.querySelectorAll('.segment').forEach(function(s) { s.style.fill = color; });
+            } else if (currentTool === 'rootcanal') {
+                var line = tooth.querySelector('.mark-line');
+                line.setAttribute('stroke', color);
+                line.style.display = 'block';
+            }
+            closeModal();
+        }
+
+         function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
+
+            function saveTreatmentNotes() {
+                var uidEl = document.getElementById('pd-id');
+                var uid = uidEl ? uidEl.innerText.replace('Patient ID: ', '').trim() : 'unknown';
+                var rows = [];
+                var rowEls = document.querySelectorAll('#td-treatment-table tbody tr');
+                rowEls.forEach(function(tr) {
+                    rows.push({
+                        date:         tr.querySelector('.td-date') ? tr.querySelector('.td-date').value.trim() : '',
+                        tooth:        tr.querySelector('.td-tooth') ? tr.querySelector('.td-tooth').value.trim() : '',
+                        procedure:    tr.querySelector('.td-procedure') ? tr.querySelector('.td-procedure').value.trim() : '',
+                        dentist:      tr.querySelector('.td-dentist') ? tr.querySelector('.td-dentist').value.trim() : '',
+                        valueOfWork:  tr.querySelector('.td-value') ? tr.querySelector('.td-value').value.trim() : '',
+                        amountPaid:   tr.querySelector('.td-paid') ? tr.querySelector('.td-paid').value.trim() : '',
+                        balance:      tr.querySelector('.td-balance') ? tr.querySelector('.td-balance').value.trim() : '',
+                        nextAppt:     tr.querySelector('.td-next-appt') ? tr.querySelector('.td-next-appt').value.trim() : ''
+                    });
+                });
+                var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
+                storage[uid] = rows;
+                localStorage.setItem('td_notes', JSON.stringify(storage));
+                var msg = document.getElementById('td-save-msg');
+                if (msg) { msg.style.display = 'block'; msg.innerText = 'Treatment notes saved!'; setTimeout(function() { msg.style.display = 'none'; }, 2000); }
+            }
+
+            function loadTreatmentNotes(uid) {
+                var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
+                var rows = storage[uid] || [];
+                var tableBody = document.querySelector('#td-treatment-table tbody');
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
+                if (rows.length === 0) {
+                    appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
+                } else {
+                    rows.forEach(function(r) { appendRow(r); });
+                }
+            }
+
+            function appendRow(data) {
+                var tableBody = document.querySelector('#td-treatment-table tbody');
+                if (!tableBody) return;
+                var tr = document.createElement('tr');
+                tr.innerHTML =
+                    '<td><input type="date" class="td-date" value="' + escHtml(data.date) + '" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>' +
+                    '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth) + '" placeholder="e.g. 18" /></td>' +
+                    '<td><input type="text" class="td-procedure" value="' + escHtml(data.procedure) + '" placeholder="Procedure..." /></td>' +
+                    '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist) + '" placeholder="Dentist name..." /></td>' +
+                    '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork) + '" placeholder="0.00" step="0.01" /></td>' +
+                    '<td><input type="number" class="td-paid" value="' + escHtml(data.amountPaid) + '" placeholder="0.00" step="0.01" /></td>' +
+                    '<td><input type="text" class="td-balance" value="' + escHtml(data.balance) + '" placeholder="Balance" /></td>' +
+                    '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt) + '" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>';
+                tableBody.appendChild(tr);
+            }
+
+            function addTreatmentRow() {
+                appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
+            }
+
+            function escHtml(s) {
+                var d = document.createElement('div');
+                d.appendChild(document.createTextNode(s));
+                return d.innerHTML;
+            }
+
+            // Update status function for accepting/declining appointments
+            function updateStatus(rowElement, action) {
+                // Get appointment data from the data-appointment attribute
+                const appointmentData = JSON.parse(rowElement.getAttribute('data-appointment'));
+                if (!appointmentData) {
+                    console.error('No appointment data found');
+                    return;
+                }
+                
+                // Get the dentist name from the input field in the Consulting Dentist column
+                const dentistInput = rowElement.querySelector('.dentist-input');
+                const dentist_name = dentistInput ? dentistInput.value.trim() : '';
+                
+                // Prepare data object
+                const data = {
+                    user_id: appointmentData.uid,
+                    appointment_id: appointmentData.id,
+                    firstname: appointmentData.FirstName,
+                    middlename: appointmentData.MiddleName,
+                    lastname: appointmentData.LastName,
+                    houseno: appointmentData.HouseNo,
+                    street: appointmentData.Street,
+                    brgy: appointmentData.Brgy,
+                    municipality: appointmentData.Municipality,
+                    province: appointmentData.Province,
+                    contactnumber: appointmentData.ContactNumber,
+                    nationality: appointmentData.Nationality,
+                    religion: appointmentData.Religion,
+                    age: appointmentData.Age,
+                    sex: appointmentData.Sex,
+                    birthday: appointmentData.Birthday,
+                    occupation: appointmentData.Occupation,
+                    civilstatus: appointmentData.CivilStatus,
+                    service: appointmentData.Service,
+                    dentist_name: dentist_name,
+                    q1: appointmentData.q1 || '',
+                    q2: appointmentData.q2 || '',
+                    q3: appointmentData.q3 || '',
+                    q4: appointmentData.q4 || '',
+                    q5: appointmentData.q5 || '',
+                    q6: appointmentData.q6 || '',
+                    q7: appointmentData.q7 || '',
+                    q9: appointmentData.q9 || '',
+                    q2_spec: appointmentData.q2_spec || '',
+                    q3_spec: appointmentData.q3_spec || '',
+                    q4_spec: appointmentData.q4_spec || '',
+                    q5_spec: appointmentData.q5_spec || '',
+                    q7_spec: appointmentData.q7_spec || '',
+                    q9_spec: appointmentData.q9_spec || '',
+                    w_preg: appointmentData.w_preg || '',
+                    w_nurse: appointmentData.w_nurse || '',
+                    w_pill: appointmentData.w_pill || ''
+                };
+                
+                // Create a FormData object to send all the required data
+                const formData = new FormData();
+                for (const [key, value] of Object.entries(data)) {
+                    formData.append(key, value);
+                }
+                formData.append('action', action);
+                
+                // Send the data to the /approve endpoint using fetch
+                fetch('/approve', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Show success message and redirect after accepting
+                        if (action === 'accept') {
+                            alert('Appointment accepted successfully!');
+                            // Remove the row from the table immediately
+                            if (rowElement) {
+                                rowElement.remove();
+                            }
+                            // Set hash to mypatients and reload after accepting
+                            setTimeout(() => {
+                                window.location.hash = 'mypatients';
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            alert('Appointment declined successfully!');
+                            // Remove the row from the table immediately for decline too
+                            if (rowElement) {
+                                rowElement.remove();
+                            }
+                            // Set hash to appointments and reload after declining
+                            setTimeout(() => {
+                                window.location.hash = 'appointments';
+                                location.reload();
+                            }, 1000);
+                        }
+                    } else {
+                        throw new Error('Failed to ' + action + ' appointment');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to ' + action + ' appointment. Please try again.');
+                });
+            }
+
+           // Show section based on hash on page load
+           window.onload = function() {
+               var hash = window.location.hash.substring(1); // removes '#'
+               if (hash) {
+                   showSection(hash);
+               }
+           };
+
+         function initUnifiedGrid(id, cols, topType, bottomType) {
+            var grid = document.getElementById(id);
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (var i = 0; i < cols; i++) {
+                var topBox = document.createElement('div');
+                topBox.className = 'grid-box';
+                if (topType === 'input') {
+                    topBox.innerHTML = '<input type="text" class="grid-input" placeholder="text">';
+                } else {
+                    topBox.innerHTML = '<input type="checkbox" class="grid-checkbox">';
+                }
+                
+                var bottomBox = document.createElement('div');
+                bottomBox.className = 'grid-box';
+                if (bottomType === 'input') {
+                    bottomBox.innerHTML = '<input type="text" class="grid-input" placeholder="text">';
+                } else {
+                    bottomBox.innerHTML = '<input type="checkbox" class="grid-checkbox">';
+                }
+                
+                grid.appendChild(topBox);
+                grid.appendChild(bottomBox);
+            }
+        }
+
+        // Theme Toggle
+        var themeToggle = document.getElementById('themeToggle');
+        var body = document.body;
+        var savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+        }
+        themeToggle.addEventListener('click', function() {
+            body.classList.toggle('dark-mode');
+            var isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+    </script>
+
+    <script>
+    function updateDateTime() {
+        const now = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit', 
+            hour12: true 
+        };
+        // Formats to: Monday, May 24, 2026 • 10:30:45 AM
+        document.getElementById('datetime-display').textContent = 
+            now.toLocaleDateString('en-US', options).replace(',', ' •');
+    }
+
+    // Update immediately, then every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+</script>
+</main>
+</body>
+</html>

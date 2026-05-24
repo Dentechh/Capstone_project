@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda Dental - Auth</title>
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #7a8ba1;
+            --card-bg: #1e3a5a;
+            --accent-yellow: #f4c26d;
+            --text-light: #ffffff;
+            --input-bg: #e0e4e8;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* MAIN CARD */
+        .signup-container {
+            background-color: var(--card-bg);
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        h2 { margin-bottom: 10px; }
+        .logo-placeholder { font-size: 30px; margin-bottom: 25px; }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .row input {
+            flex: 1;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: none;
+            background-color: var(--input-bg);
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: var(--accent-yellow);
+            color: #333;
+            border: none;
+            padding: 12px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .divider {
+            margin: 20px 0;
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .footer-text {
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .footer-text a {
+            color: var(--text-light);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 35px 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            color: var(--text-light);
+            position: relative;
+            animation: pop 0.25s ease;
+        }
+
+        @keyframes pop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .close {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Google Config -->
+<div id="g_id_onload"
+     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse">
+</div>
+
+<!-- SIGN UP -->
+<div class="signup-container">
+    <h2>Create Your Account</h2>
+    <div class="logo-placeholder">🦷</div>
+
+    <form method="post">
+        <div class="input-group row">
+            <input type="text" name="FirstName" placeholder="First Name" required>
+            <input type="text" name="LastName" placeholder="Last Name" required>
+        </div>
+
+        <div class="input-group">
+            <input type="text" name="UserName" placeholder="Username" required>
+        </div>
+
+
+        <div class="input-group">
+            <input type="password" name="Password" placeholder="Password" required>
+        </div>
+
+        <div class="input-group">
+            <input type="number" name="MobileNumber" placeholder="Contact Number" required>
+        </div>
+
+        <button class="btn">Sign Up</button>
+
+        <div class="divider">— OR —</div>
+        <div class="g_id_signin" data-size="large"></div>
+    </form>
+
+    <p class="footer-text">
+        Already have an account?
+        <a onclick="openModal()">Log In</a>
+    </p>
+</div>
+
+
+
+<!-- LOGIN MODAL -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">✖</span>
+
+        <h2>Welcome Back</h2>
+        <div class="logo-placeholder">🦷</div>
+
+        <form>
+            <div class="input-group">
+                <input type="text" placeholder="Email or Username" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" placeholder="Password" required>
+            </div>
+
+            <button class="btn">Log In</button>
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      <p style="color:red;">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+            
+
+            <div class="divider">— OR —</div>
+            <div class="g_id_signin" data-size="large"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+function handleCredentialResponse(response) {
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/google-auth";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "token";
+    input.value = response.credential;
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit(); // this will navigate to Flask's rendered template
+}
+</script>
+
+
+
+</body>
+</html>

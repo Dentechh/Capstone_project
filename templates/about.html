@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Dr. Capizonda - Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+</head>
+<body>
+
+
+
+    <div id="g_id_onload"
+     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse">
+</div>
+
+<header>
+    <nav class="navbar">
+        <a href="/" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="/">HOME</a></li>
+            <li><a href="#" class="active">ABOUT</a></li>
+            <li class="dropdown">
+                <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                <div class="dropdown-content" id="servicesDropdownMenu">
+                    <a href="/services/consultation">Dental Consultation</a>
+                    <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
+                    <a href="/services/pasta">Tooth Restoration (Pasta)</a>
+                    <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                    <a href="/services/dentures">Dentures (Pustiso)</a>
+                    <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                    <a href="/services/whitening">Teeth Whitening</a>
+                    <a href="/services/fluoride">Fluoride Treatment</a>
+                    <a href="/services/sealant">Pit and Fissure Sealant</a>
+                    <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                    <a href="/services/root-canal">Root Canal Treatment</a>
+                    <a href="/services/xray">Periapical Xray</a>
+                </div>
+            </li>
+            <li><a href="/location">LOCATION</a></li>
+        </ul>
+
+         {% if name == "Guest" or not name %}
+         <div class="auth-buttons">
+             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                 </svg>
+                 <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                     <circle cx="12" cy="12" r="5"></circle>
+                     <line x1="12" y1="1" x2="12" y2="3"></line>
+                     <line x1="12" y1="21" x2="12" y2="23"></line>
+                     <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                     <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                     <line x1="1" y1="12" x2="3" y2="12"></line>
+                     <line x1="21" y1="12" x2="23" y2="12"></line>
+                     <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                 </svg>
+             </button>
+              <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+              <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+         </div>
+         {% else %}
+         <div class="profile-nav">
+             <div class="user-info-brief">
+                 <span>{{ name }}</span>
+                 <small>Patient Account</small>
+             </div>
+             <div style="display: flex; align-items: center; gap: 12px;">
+                 <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                     <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                         <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                     </svg>
+                     <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                         <circle cx="12" cy="12" r="5"></circle>
+                         <line x1="12" y1="1" x2="12" y2="3"></line>
+                         <line x1="12" y1="21" x2="12" y2="23"></line>
+                         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                         <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                         <line x1="1" y1="12" x2="3" y2="12"></line>
+                         <line x1="21" y1="12" x2="23" y2="12"></line>
+                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                     </svg>
+                 </button>
+                 <div class="profile-img-container" id="profileDropdownTrigger">
+                     <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
+                     <div class="dropdown-menu" id="profileDropdown">
+                         <a href="/patient-profile">PROFILE</a>
+                         <a href="/logout">LOGOUT</a>
+                     </div>
+                 </div>
+             </div>
+         </div>
+         {% endif %}
+    </nav>
+</header>
+
+<main>
+    <section class="about-hero">
+        <div class="hero-content">
+            <div class="user-greeting">
+                <h1>Excellence in Every Smile</h1>
+                <p>Get to know the heart behind Capizonda Dental Clinic.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="doctor-spotlight">
+        <div class="spotlight-container">
+            
+            <div class="dr-image-box">
+                <img src="{{ url_for('static', filename='img/dr-capizonda.png') }}" alt="Dr. Capizonda">
+                <div class="dr-badge">
+                    <span>Doctor of Dental Medicine</span>
+                </div>
+            </div>
+
+            <div class="dr-details-box">
+                <h2 class="section-title">Meet Dr. Capizonda</h2>
+                
+                <div class="achievement-list">
+                    <div class="info-item">
+                        <span class="info-label">Dental School</span>
+                        <p>Iloilo Doctor's College, Batch 2020</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Associations</span>
+                        <p>Proud Member of the <strong>PDA Iloilo Chapter</strong>.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Our Technology</span>
+                        <p>We invest in modern technology including <strong>Intraoral Cameras</strong>, <strong>Autoclave</strong>, and <strong>UV Sterilization</strong> for efficient care.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Vision</span>
+                        <p>To reduce early extractions of permanent teeth caused by poor oral hygiene in the Philippines.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Experience</span>
+                        <p>Licensed since passing the board exams in <strong>January 2024</strong>.</p>
+                    </div>
+
+                    <div class="info-item">
+                        <span class="info-label">Community Work</span>
+                        <p>Participated in <strong>INCGiving</strong> dental missions, providing hygiene education to students in Jaro II Elementary School.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="about-cta">
+        <a href="/" class="btn-appointment">Book an Appointment</a>
+    </section>
+</main>
+
+
+<footer class="main-footer">
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA DENTAL</span>
+                <span class="brand-sub">Trusted Care Since 2024</span>
+            </div>
+            <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
+        </div>
+
+        <div class="footer-contact">
+            <h4>CONTACT US</h4>
+            <ul>
+                <li><span>📍</span> 231 Lopez Jaena St, Molo, Iloilo City</li>
+                <li><span>📞</span> 0962 687 6076</li>
+                <li><span>✉️</span> capizondadental@gmail.com</li>
+            </ul>
+        </div>
+
+        <div class="footer-socials">
+            <h4>FOLLOW US</h4>
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
+                    <img src="https://img.icons8.com/ios-filled/50/blue/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    Facebook Page
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="footer-copy">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>
+        <div class="footer-legal">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    window.onclick = (e) =>{
+            // Close profile dropdown
+    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+        dropdownMenu.style.display = 'none';
+        }
+    };
+    
+    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+    const dropdownMenu = document.getElementById('profileDropdown');
+
+    if(dropdownTrigger) {
+        dropdownTrigger.onclick = (e) => {
+            e.stopPropagation();
+            const isVisible = dropdownMenu.style.display === 'flex';
+            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropBtn = document.getElementById('servicesDropdownBtn');
+        const dropMenu = document.getElementById('servicesDropdownMenu');
+
+        // Toggle dropdown on click
+        dropBtn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevents the click from reaching the window listener below
+            dropMenu.classList.toggle('show');
+            this.classList.toggle('active-link');
+        });
+
+        // Close the dropdown if the user clicks outside of it
+        window.addEventListener('click', function(e) {
+            if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                dropMenu.classList.remove('show');
+                dropBtn.classList.remove('active-link');
+            }
+        });
+    });
+
+    // Theme Toggle Functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+    }
+
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    }
+
+    // Auth Modal Functions
+    function openAuthModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+    }
+
+    function closeAuthModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    window.onclick = (e) =>{
+        // Close profile dropdown
+        if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+            dropdownMenu.style.display = 'none';
+        }
+        
+        // Close auth modals if clicking background
+        const loginModal = document.getElementById('loginModal');
+        const registerModal = document.getElementById('registerModal');
+        if(e.target == loginModal) loginModal.style.display = "none";
+        if(e.target == registerModal) registerModal.style.display = "none";
+    };
+    </script>
+
+
+
+
+    <!-- Login/Register Modals -->
+<div id="loginModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('loginModal')">&times;</span>
+
+        <h2>Welcome Back</h2>
+        
+        <form action="/login" method="POST">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="Password" placeholder="Password" required>
+            <button type="submit" id="loginBtn"  class="sign-up-btn">Login</button>
+        </form>
+
+        <div class="divider">OR</div>
+        
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard"></div>
+        </div>
+
+        <p class="footer-text">
+            Don't have an account yet? 
+            <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
+        </p>
+    </div>
+</div>
+
+<div id="registerModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
+        <h2>Create Account</h2>
+              <form id="signupForm" action="/sign-up" method="POST">
+
+    <div style="display:flex; gap:10px;">
+        <input type="text" name="FirstName" placeholder="First Name" required>
+        <input type="text" name="LastName" placeholder="Last Name" required>
+    </div>
+
+    <input type="email" id="email" name="UserName" placeholder="Email" required>
+
+    <input type="password" id="password" name="Password" placeholder="Password" required>
+
+    <input type="tel" name="MobileNumber" placeholder="Contact Number" required>
+
+    <button type="submit" id="signupBtn" class="sign-up-btn">
+        Sign Up
+    </button>
+
+</form>
+
+
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import {
+  getAuth,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
+  authDomain: "dentech-c2ee0.firebaseapp.com",
+  projectId: "dentech-c2ee0",
+  storageBucket: "dentech-c2ee0.firebasestorage.app",
+  messagingSenderId: "921529543911",
+  appId: "1:921529543911:web:08e91a5f6982eb541b0642"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+document.getElementById("signupBtn").addEventListener("click", () => {
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+
+          alert("Account created!");
+          console.log(userCredential.user);
+
+      })
+      .catch((error) => {
+
+          console.log(error.code);
+          console.log(error.message);
+
+          alert(error.message);
+      });
+
+});
+</script>
+
+
+
+
+
+      <script>
+        function handleCredentialResponse(response) {
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/google-auth";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "token";
+    input.value = response.credential;
+
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+    </script>
+</body>
+</html>
