@@ -614,10 +614,6 @@ def update_profile():
 
 
 
-
-
-
-
 #---------------------------------------------------
 #Admin routes
 #---------------------------------------------------
@@ -839,6 +835,10 @@ def dental_location():
 @app.route("/prac")
 def prac():
     return render_template("prac.html")
+
+@app.route("/medical_records")
+def medical_records():
+    return render_template("medical_records.html")
 
 
 if __name__ == "__main__":
