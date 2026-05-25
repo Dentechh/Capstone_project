@@ -229,7 +229,7 @@
 
 <div id="appointmentModal" class="modal">
     <div class="appointment-modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;">
-        <div class="consent-sidebar" style="flex: 1; padding: 30px; border-right: 1px solid #333; overflow-y: auto; max-width: 1500px;">
+        <div class="consent-sidebar" style="flex: 1; padding: 40px; border-right: 1px solid #dee2e6; overflow-y: auto;">
             <h3 style="color: #64b5f6; margin-top: 0;">Informed Consent</h3>
             <div class="consent-body" >
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
@@ -272,7 +272,7 @@
             </div>
         </div>
 
-<div class="form-container" style="flex: 1.5; padding: 30px; overflow-y: auto;">
+<div class="form-container" style="flex: 1.5; padding: 40px; overflow-y: auto; background: white;">
             <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
             <h2 style="color: #64b5f6; margin-bottom: 20px;">Patient Information </h2>
 
@@ -413,14 +413,39 @@
                         <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; " disabled>
                     </div>
 
-                    <div id="womenSection" style="background: #1a1a1a; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #333; opacity: 0.5; pointer-events: none;">
-                        <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.92rem; ;">8. For Women Only:</p>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label><input type="checkbox" name="w_preg"> Are you pregnant?</label>
-                            <label><input type="checkbox" name="w_nurse"> Are you nursing?</label>
-                            <label><input type="checkbox" name="w_pill"> On birth control pills?</label>
-                        </div>
-                    </div>
+                    <div <!-- 8. For Women Only -->
+<div id="womenSection" style="background: #fdf6f6; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #feeaea; transition: opacity 0.3s ease;">
+    <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #333;">8. For Women Only:</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Question 1 -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Are you pregnant?</span>
+            <div>
+                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_pregnant" value="Yes" style="margin-right: 5px;"> Yes</label>
+                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_pregnant" value="No" style="margin-right: 5px;"> No</label>
+            </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Are you nursing?</span>
+            <div>
+                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_nursing" value="Yes" style="margin-right: 5px;"> Yes</label>
+                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_nursing" value="No" style="margin-right: 5px;"> No</label>
+            </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>On birth control pills?</span>
+            <div>
+                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_pill" value="Yes" style="margin-right: 5px;"> Yes</label>
+                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_pill" value="No" style="margin-right: 5px;"> No</label>
+            </div>
+        </div>
+    </div>
+</div>
 
                     <div style="margin-top: 12px;">
                         <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
@@ -810,6 +835,42 @@ document.getElementById("signupBtn").addEventListener("click", () => {
         body.classList.toggle('dark-mode');
         const isDark = body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+// ... inside your DOMContentLoaded block ...
+
+const sexSelect = document.getElementById('sexSelect');
+const womenSection = document.getElementById('womenSection');
+
+if (sexSelect && womenSection) {
+    
+    // Function to check and lock/unlock
+    function toggleWomenSection() {
+        // If "Female" is selected
+        if (sexSelect.value === 'Female') {
+            // Unlock: Make fully opaque and enable inputs
+            womenSection.style.opacity = '1';
+            womenSection.querySelectorAll('input').forEach(input => {
+                input.disabled = false;
+                input.style.cursor = 'pointer';
+            });
+        } 
+        // If "Male" or Empty/Other is selected
+        else {
+            // Lock: Dim slightly but keep visible, disable inputs
+            womenSection.style.opacity = '0.6'; 
+            womenSection.querySelectorAll('input').forEach(input => {
+                input.disabled = true;
+                input.style.cursor = 'not-allowed';
+            });
+        }
+    }
+
+    // Listen for changes in the Sex dropdown
+    sexSelect.addEventListener('change', toggleWomenSection);
+
+    // Run once on page load to set the initial state
+    toggleWomenSection();
+}
     });
 </script>
 
