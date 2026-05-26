@@ -2261,3 +2261,89 @@ h3 {
         text-shadow: none !important;
     }
 }
+
+/* =========================================
+    MOBILE MODAL FIX - STRONG OVERRIDE
+   ========================================= */
+@media (max-width: 900px) {
+    
+    /* Target by ID for maximum specificity */
+    #appointmentModalContent,
+    .appointment-modal-content {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 95vh !important;
+        max-height: 95vh !important;
+        overflow: hidden !important;
+    }
+
+    /* Consent Sidebar - Top Section */
+    .consent-sidebar {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        max-height: 45vh !important;
+        overflow-y: auto !important;
+        border-right: none !important;
+        border-bottom: 2px solid #dee2e6 !important;
+        background: #ffffff !important;
+        color: #333333 !important;
+        padding: 20px !important;
+    }
+
+    /* Form Container - Bottom Section */
+    .form-container {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        background: #ffffff !important;
+        color: #333333 !important;
+        padding: 20px !important;
+    }
+
+    /* Ensure all text is readable */
+    .form-container h2,
+    .form-container h3,
+    .form-container label,
+    .form-container input,
+    .form-container select {
+        color: #333333 !important;
+    }
+
+    /* Stack form fields vertically */
+    .personal-info-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .personal-info-grid > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    .personal-info-grid input,
+    .personal-info-grid select {
+        width: 100% !important;
+    }
+}
+
+/* Force full-width for Service and Schedule sections */
+.full-width-field {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    display: block !important;
+    margin-top: 10px;
+}
+
+.full-width-field label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-weight: 600 !important;
+}
+
+.full-width-field select,
+.full-width-field input {
+    width: 100% !important;
+    display: block !important;
+}

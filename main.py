@@ -9,15 +9,41 @@ from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "secret123"  # required for flash messages and session
+import os
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
 
 # -----------------------------
-# Initialize Firebase safely
+# Initialize Firebase safely (prevents duplicate init on debug reload)
 # -----------------------------
-cred = credentials.Certificate("dentech_key.json")
-firebase_admin.initialize_app(cred)
+import os
 
-db = firestore.client()
+# Get absolute path to key file (works in any directory)
+basedir = os.path.abspath(os.path.dirname(__file__))
+key_path = os.path.join(basedir, "dentech_key.json")
+
+# Verify key file exists
+if not os.path.exists(key_path):
+    raise FileNotFoundError(
+        f"Firebase key not found at: {key_path}\n"
+        f"Download from: https://console.firebase.google.com/project/dentech-c2ee0/settings/serviceaccounts/adminsdk"
+    )
+
+# Initialize Firebase ONLY if not already initialized (fixes debug reload issues)
+if not firebase_admin._apps:
+    try:
+        cred = credentials.Certificate(key_path)
+        firebase_admin.initialize_app(cred)
+        db = firestore.client()
+        print("✅ Firebase Admin SDK initialized successfully!")
+        print(f"📁 Key file: {key_path}")
+    except Exception as e:
+        print(f"❌ Firebase initialization error: {e}")
+        print(f"🔑 Key file exists: {os.path.exists(key_path)}")
+        raise
+else:
+    # Debug mode reload - just get the client, don't re-initialize
+    db = firestore.client()
+    print("♻️ Firebase already initialized (debug reload)")
 
 Account_clients = "manual_create_account"
 Appointment_cliets = "appointments"
@@ -41,46 +67,6 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 #Still working palang payment the butangi lng cho if maka tapos ka sa need  mo  taposon
 # add kalng button for payment
 import requests
-
-url = "https://api.paymongo.com/v1/checkout_sessions"
-
-payload = { "data": { "attributes": {
-            "billing": { "email": "Email information" },
-            "send_email_receipt": True,
-            "show_description": True,
-            "show_line_items": True,
-            "payment_method_types": ["gcash", "brankas_metrobank", "paymaya"],
-            "reference_number": "reference_number",
-            "cancel_url": "cancel url",
-            "description": "Description details of the checkout.",
-            "line_items": [
-                {
-                    "currency": "PHP",
-                    "images": ["image ka checkout"],
-                    "amount": 200,
-                    "description": "description ka checkout",
-                    "name": "name ka checkout",
-                    "quantity": 112
-                },
-                {
-                    "currency": "PHP",
-                    "images": ["second image"],
-                    "amount": 1000,
-                    "description": "second  description",
-                    "name": "second name ",
-                    "quantity": 200
-                }
-            ]
-        } } }
-headers = {
-    "accept": "application/json",
-    "Content-Type": "application/json",
-    "authorization": "Basic c2tfdGVzdF9DWWlRTVNYdzJjSEhodEY1NjRnWjNtTXg6cGtfdGVzdF9tNHJHNGl2NEw5UzVNQzhkNGR4cTM5a28="
-}
-
-response = requests.post(url, json=payload, headers=headers)
-
-print(response.text)
 
 
 
@@ -662,9 +648,33 @@ def adminDashboard():
     )
 
 
-@app.route("/admin_login")
+@app.route("/admin_login", methods=["GET", "POST"])  # ← Add methods=["GET", "POST"]
 def adminLogin():
-    return render_template("admin_login.html")
+    if request.method == "POST":
+        email = bleach.clean(request.form.get("email", "").strip().lower())
+        password = request.form.get("password", "")
+        
+        # Query your admins collection
+        admin_query = db.collection("admins").where("email", "==", email).get()
+        
+        if admin_query and admin_query[0].exists:
+            admin_data = admin_query[0].to_dict()
+            if admin_data.get("is_active", True) and check_password_hash(admin_data["password_hash"], password):
+                # Set admin session
+                session['admin_logged_in'] = True
+                session['admin_email'] = email
+                session['admin_name'] = admin_data.get("name", "Admin")
+                flash(f"Welcome back, Dr. {admin_data.get('name')}!", "success")
+                return redirect(url_for("adminDashboard"))
+        
+        flash("Invalid credentials. Please try again.", "error")
+        return redirect(url_for("adminLogin"))
+    
+    # GET request - show login page
+    if session.get('admin_logged_in'):
+        return redirect(url_for("adminDashboard"))
+    
+    return render_template("admin_login.html")  # ✅ This now works!
 
 
 from flask import abort, render_template
@@ -842,8 +852,41 @@ def medical_records():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    # 🔧 Optional: Test PayMongo connection (uncomment to test)
+    """
+    import requests
+    url = "https://api.paymongo.com/v1/checkout_sessions"
+    payload = { "data": { "attributes": {
+                "billing": { "email": "test@capizonda.com" },
+                "send_email_receipt": True,
+                "show_description": True,
+                "payment_method_types": ["gcash", "paymaya"],
+                "reference_number": "TEST-001",
+                "cancel_url": "http://localhost:5000/cancel",
+                "description": "Test payment",
+                "line_items": [{
+                    "currency": "PHP",
+                    "amount": 50000,
+                    "description": "Dental Consultation",
+                    "name": "Consultation Fee",
+                    "quantity": 1
+                }]
+            } } }
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+        "authorization": "Basic c2tfdGVzdF9DWWlRTVNYdzJjSEhodEY1NjRnWjNtTXg6cGtfdGVzdF9tNHJHNGl2NEw5UzVNQzhkNGR4cTM5a28="
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        print(f"✅ PayMongo: {response.status_code}")
+    except Exception as e:
+        print(f"❌ PayMongo Error: {e}")
+    """
+    
+    print("🦷 Capizonda Dental Clinic Server Starting...")
+    print("🔐 Admin Login: http://localhost:5000/admin_login")
+    app.run(debug=True, port=5000)
 
 
 

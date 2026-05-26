@@ -32,9 +32,10 @@
   {% endif %}
 {% endwith %}
 
+
 <div id="g_id_onload"
-     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
-     data-callback="handleCredentialResponse">
+    data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+    data-callback="handleCredentialResponse">
 </div>
 
 <header>
@@ -228,8 +229,8 @@
 
 
 <div id="appointmentModal" class="modal">
-    <div class="appointment-modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;">
-        <div class="consent-sidebar" style="flex: 1; padding: 40px; border-right: 1px solid #dee2e6; overflow-y: auto;">
+    <div class="appointment-modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;" id="appointmentModalContent">
+        <div class="consent-sidebar" style="flex: 1; padding: 40px; border-right: 1px solid #dee2e6; overflow-y: auto; background: #ffffff; color: #333333;">
             <h3 style="color: #64b5f6; margin-top: 0;">Informed Consent</h3>
             <div class="consent-body" >
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
@@ -339,7 +340,7 @@
                     </select>
 
 
-                                        <select name="Occupation" style="">
+                    <select name="Occupation" style="">
                         <option value="" disabled selected>emergency</option>
                         <option value="Student">emergency</option>
                         
@@ -355,20 +356,64 @@
                         <option value="Divorced">Divorced</option>
                     </select>
 
+                    <div style="grid-column: 1 / -1; width: 100%;">
 
-                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px; ">
-                        <option value="" disabled selected>Choose a service</option>
-                        <option value="Dental Consultation">Dental Consultation</option>
-                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                        <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
-                        <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                        <option value="Others">Others</option>
-                    </select>
+                        <!-- SELECT SERVICE -->
+                        <div style="margin-top: 15px;">
+                            <label style="
+                                display: block;
+                                color: #0d47a1;
+                                font-size: 16px;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                            ">
+                                SELECT SERVICE
+                            </label>
 
-                    <label for="schedule">Select Schedule:</label>
-                    <input type="datetime-local" id="schedule" name="appointment_date" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px; ">
-                </div>
+                            <select name="Service" required style="
+                                width: 100%;
+                                padding: 12px;
+                                border-radius: 8px;
+                                border: 1px solid #ddd;
+                                background: #f8f9fa;
+                            ">
+                                <option value="" disabled selected>Choose a service</option>
+                                <option value="Dental Consultation">Dental Consultation</option>
+                                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                                <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+
+                        <!-- SELECT SCHEDULE -->
+                        <div style="margin-top: 20px;">
+                            <label for="schedule" style="
+                                display: block;
+                                color: #333;
+                                font-size: 14px;
+                                font-weight: 600;
+                                margin-bottom: 8px;
+                            ">
+                                Select Schedule:
+                            </label>
+
+                            <input type="datetime-local"
+                                id="schedule"
+                                name="appointment_date"
+                                required
+                                style="
+                                        width: 100%;
+                                        padding: 12px;
+                                        border-radius: 8px;
+                                        border: 1px solid #ddd;
+                                        background: #f8f9fa;
+                                ">
+                        </div>
+
+                    </div>
+                </div> <!-- This closes the personal-info-grid div -->
 
                 <h3 style="color: #64b5f6; border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
                 
@@ -413,7 +458,7 @@
                         <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; " disabled>
                     </div>
 
-                    <div <!-- 8. For Women Only -->
+                    <!-- 8. For Women Only -->
 <div id="womenSection" style="background: #fdf6f6; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #feeaea; transition: opacity 0.3s ease;">
     <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #333;">8. For Women Only:</p>
     
@@ -477,13 +522,13 @@
         </form>
 
         <div class="divider">OR</div>
-        
+
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div class="g_id_signin" data-type="standard"></div>
         </div>
 
         <p class="footer-text">
-            Don't have an account yet? 
+            Don't have an account yet?
             <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
         </p>
     </div>
@@ -559,9 +604,11 @@ document.getElementById("signupBtn").addEventListener("click", () => {
         
         <div class="divider">OR</div>
 
+        <!--
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div class="g_id_signin" data-type="standard" data-text="signup_with"></div>
         </div>
+        -->
 
         <p class="footer-text">
             Already have an account? 
