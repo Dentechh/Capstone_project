@@ -7,7 +7,8 @@ from datetime import datetime, UTC
 import bleach
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 import os
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
@@ -66,7 +67,6 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 #PAYMENTS 
 #Still working palang payment the butangi lng cho if maka tapos ka sa need  mo  taposon
 # add kalng button for payment
-import requests
 
 
 
@@ -929,4 +929,4 @@ if __name__ == "__main__":
 #pip install flask requests
 
 #new~
-#newnewnenwnewnnew
+#added
