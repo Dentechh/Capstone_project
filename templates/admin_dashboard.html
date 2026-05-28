@@ -26,6 +26,7 @@
             <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>
             <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
+            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Weekly Patient</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
         </nav>
         <div class="sidebar-footer">
@@ -79,7 +80,59 @@
             </div>
         </div>
 
-        <div id="section-mypatients" class="content-section">
+<div id="section-mypatients" class="content-section">
+    <div class="patient-card-grid">
+
+        {% for appointment in Approve %}
+        <div class="patient-card">
+
+            <div class="p-card-header">
+                <div class="p-info">
+                    <strong>NAME: {{ appointment.full_name or appointment.FirstName or '' }}</strong>
+                    <small style="opacity: 0.6;">
+                        UID: {{ appointment.uid }}
+                    </small>
+                </div>
+            </div>
+
+            <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+
+                data-name="{{ appointment.full_name or appointment.FirstName }}"
+                data-uid="{{ appointment.user_uid }}"
+                data-sex="{{ appointment.get('Sex', 'Female') }}"
+                data-age="{{ appointment.get('Age', 'N/A') }}"
+                data-lastname="{{ appointment.get('LastName', '') }}"
+                data-middlename="{{ appointment.get('MiddleName', '') }}"
+                data-birthday="{{ appointment.get('Birthday', '') }}"
+                data-nationality="{{ appointment.get('Nationality', '') }}"
+                data-religion="{{ appointment.get('Religion', '') }}"
+                data-occupation="{{ appointment.get('Occupation', '') }}"
+                data-civilstatus="{{ appointment.get('CivilStatus', '') }}"
+                data-contact="{{ appointment.get('ContactNumber', '') }}"
+                data-service="{{ appointment.get('Service', '') }}"
+                data-dentist="{{ appointment.get('dentist_name', '') }}"
+                data-q1="{{ appointment.get('q1', 'N') }}"
+                data-q2="{{ appointment.get('q2', 'N') }}"
+                data-q3="{{ appointment.get('q3', 'N') }}"
+                data-q4="{{ appointment.get('q4', 'N') }}"
+                data-q5="{{ appointment.get('q5', 'N') }}"
+                data-q6="{{ appointment.get('q6', 'N') }}"
+                data-q7="{{ appointment.get('q7', 'N') }}"
+                data-q9="{{ appointment.get('q9', 'N') }}"
+                data-w-preg="{{ appointment.get('w_preg', 'N') }}"
+                data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
+                data-w-pill="{{ appointment.get('w_pill', 'N') }}">
+
+                CHECK INFO
+            </button>
+
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+                <div id="section-WeeklyClients" class="content-section">
             <div class="patient-card-grid">
                 {% for appointment in Approve %}
                 <div class="patient-card">
@@ -622,7 +675,8 @@ async function downloadDentalChartPDF() {
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'appointments': 'Appointment Requests',
-                'mypatients': 'My Assigned Patients',
+                'mypatients': 'My Patients',
+                'WeeklyClients': 'My Weekly Clients',
                 'records': 'Patient Database',
                 'patientdashboard': 'Patient Dashboard'
             };
@@ -1062,6 +1116,90 @@ function openPatientDashboard(
     // Update immediately, then every second
     updateDateTime();
     setInterval(updateDateTime, 1000);
+
+    //teetch backend 
+async function saveDentalRecord(uid) {
+  try {
+    const formData = new FormData();
+
+    // =========================
+    // UID (IMPORTANT)
+    // =========================
+    formData.append("uid", uid);
+
+    // =========================
+    // DENTAL CHART (FIXED)
+    // =========================
+    document.querySelectorAll(".tooth-unit").forEach(tooth => {
+      const id = tooth.id.replace("tooth-", "");
+
+      let value = "healthy";
+
+      if (tooth.classList.contains("caries")) value = "caries";
+      else if (tooth.classList.contains("filling")) value = "filling";
+      else if (tooth.classList.contains("crown")) value = "crown";
+      else if (tooth.classList.contains("rootcanal")) value = "rootcanal";
+      else if (tooth.classList.contains("missing")) value = "missing";
+      else if (tooth.classList.contains("extraction")) value = "extraction";
+      else if (tooth.classList.contains("check")) value = "check";
+
+      formData.append(`tooth_${id}`, value);
+    });
+
+    // =========================
+    // TREATMENT NOTES (FIXED)
+    // =========================
+    document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
+      formData.append("date[]", row.querySelector(".td-date")?.value || "");
+      formData.append("tooth[]", row.querySelector(".td-tooth")?.value || "");
+      formData.append("procedure[]", row.querySelector(".td-procedure")?.value || "");
+      formData.append("dentist[]", row.querySelector(".td-dentist")?.value || "");
+      formData.append("value[]", row.querySelector(".td-value")?.value || "");
+      formData.append("paid[]", row.querySelector(".td-paid")?.value || "");
+      formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
+      formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
+    });
+
+    // =========================
+    // SEND TO FLASK
+    // =========================
+    const response = await fetch("/save_dental_record", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+
+    console.log("STATUS:", response.status);
+    console.log("RESPONSE:", result);
+
+    if (result.success) {
+      alert("Dental record saved successfully!");
+    } else {
+      alert("Error: " + result.message);
+    }
+
+  } catch (error) {
+    console.error("SAVE ERROR:", error);
+    alert("Failed to save dental record (check console).");
+  }
+}
+
+// =========================
+// BUTTON CLICK (FIXED UID)
+// =========================
+document.getElementById("td-save-btn").addEventListener("click", () => {
+  const uid = document.getElementById("pd-id")?.innerText
+    .replace("Patient ID: ", "")
+    .trim();
+
+  if (!uid) {
+    alert("No patient selected!");
+    return;
+  }
+
+  saveDentalRecord(uid);
+});
 </script>
 </main>
 </body>

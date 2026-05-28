@@ -230,35 +230,62 @@
             font-weight: 600;
             cursor: pointer;
         }
+        /* =========================
+   NAVIGATION GRID
+========================= */
 
-        .nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; max-width: 1000px; }
-        .nav-card {
-            background: var(--grad-surface);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 30px; border-radius: 20px;
-            text-align: center; 
-            text-decoration: none; 
-            color: white; 
-            transition: 0.3s;
-            align-items: center;
-        }
-        .nav-card:hover { background: var(--sky-blue); transform: translateY(-5px); }
-        .nav-card img { 
-            width: 30px; 
-            margin-left: 70px;
-            filter:  invert(100%);  }
-        .nav-card span{
-            color: rgb(0, 0, 0);
-            font-size: 20px;
-            position: relative;
-            top: 20px;
-            
-        }
-        body.dark-mode .nav-card{
-            background: var(--grad-glass);
-        }
+.nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 30px auto;
+}
 
+.nav-card {
+    background: var(--grad-surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.9);
+}
+
+.nav-card img {
+    width: 45px;
+    margin: 0;
+    filter: invert(100%);
+}
+
+.nav-card span {
+    color: rgb(0, 0, 0);
+    font-size: 18px;
+    font-weight: 600;
+    position: static;
+}
+
+body.dark-mode .nav-card {
+    background: var(--grad-glass);
+}
+
+body.dark-mode .nav-card span {
+    color: white;
+}
         .modal-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); z-index: 9999;
@@ -530,53 +557,72 @@
 <div class="container">
     <!-- Back to Home Button -->
     <a href="/" class="btn-back">← Back to Home</a>
+
     <div class="profile-card">
         <div class="profile-left">
             <img src="https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200" class="main-avatar" alt="User">
             <br>
             <span class="patient-tag">PATIENT ID: #1024</span>
         </div>
-        
+
         <div class="profile-right">
             <h2>{{ user.get('firstname', name) }}</h2>
-            <p style="opacity:0.8; font-weight: 300;">@{{ user.get('username', 'username') }} | Clinic Member</p>
-            
+            <p style="opacity:0.8; font-weight: 300;">
+                @{{ user.get('username', 'username') }} | Clinic Member
+            </p>
+
             <div class="info-grid">
                 <div class="info-item">
                     <label>Full Name</label>
                     <p>{{ user.get('firstname', '') + ' ' + user.get('lastname', '') or 'N/A' }}</p>
                 </div>
+
                 <div class="info-item">
                     <label>Username</label>
                     <p>{{ user.get('username', 'Not set') }}</p>
                 </div>
+
                 <div class="info-item">
                     <label>Phone Number</label>
                     <p>{{ user.get('contact_number', 'Not set') }}</p>
                 </div>
+
                 <div class="info-item">
                     <label>Email Address</label>
                     <p>{{ user.get('email', 'N/A') }}</p>
                 </div>
+
                 <div class="info-item">
                     <label>Account Type</label>
                     <p>{{ user.get('provider', 'Manual').capitalize() }} Account</p>
                 </div>
             </div>
 
-            <button onclick="openUpdateModal()" class="btn-edit-trigger">Update Profile</button>
+            <button onclick="openUpdateModal()" class="btn-edit-trigger">
+                Update Profile
+            </button>
         </div>
     </div>
 
+    <!-- =========================
+         NAVIGATION BUTTONS
+    ========================== -->
+
     <div class="nav-grid">
-        <a href="#" class="nav-card">
-            <img src="https://img.icons8.com/ios-filled/50/ffffff/appointment-reminders.png" alt="Notifications">
-            <span>Notifications</span>
-        </a>
+
+        <!-- Notifications -->
+            <a href="https://mail.google.com/mail/u/0/#inbox" class="nav-card">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/appointment-reminders.png" alt="Notifications">
+                <span>Notifications</span>
+            </a>
+
+        <!-- My Schedule -->
         <a href="#" class="nav-card">
             <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
             <span>My Schedule</span>
         </a>
+
+        <!-- Medical Records -->
         <a href="/medical_recordss" class="nav-card">
             <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
             <span>Medical Records</span>

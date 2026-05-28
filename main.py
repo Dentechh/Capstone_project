@@ -16,35 +16,42 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure sessio
 # -----------------------------
 # Initialize Firebase safely (prevents duplicate init on debug reload)
 # -----------------------------
+# -----------------------------
+# Initialize Firebase safely
+# -----------------------------
 import os
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-# Get absolute path to key file (works in any directory)
 basedir = os.path.abspath(os.path.dirname(__file__))
 key_path = os.path.join(basedir, "dentech_key.json")
 
-# Verify key file exists
+# Check service account file
 if not os.path.exists(key_path):
     raise FileNotFoundError(
-        f"Firebase key not found at: {key_path}\n"
-        f"Download from: https://console.firebase.google.com/project/dentech-c2ee0/settings/serviceaccounts/adminsdk"
+        f"Firebase key not found at: {key_path}"
     )
 
-# Initialize Firebase ONLY if not already initialized (fixes debug reload issues)
+# Prevent re-initialization during Flask debug reload
 if not firebase_admin._apps:
     try:
         cred = credentials.Certificate(key_path)
-        firebase_admin.initialize_app(cred)
+
+        firebase_admin.initialize_app(cred, {
+            "projectId": "dentech-c2ee0"
+        })
+
         db = firestore.client()
-        print("✅ Firebase Admin SDK initialized successfully!")
-        print(f"📁 Key file: {key_path}")
+
+        print("✅ Firebase initialized successfully")
+
     except Exception as e:
-        print(f"❌ Firebase initialization error: {e}")
-        print(f"🔑 Key file exists: {os.path.exists(key_path)}")
+        print("❌ Firebase initialization failed:", e)
         raise
+
 else:
-    # Debug mode reload - just get the client, don't re-initialize
     db = firestore.client()
-    print("♻️ Firebase already initialized (debug reload)")
+    print("♻️ Firebase already initialized")
 
 Account_clients = "manual_create_account"
 Appointment_cliets = "appointments"
@@ -617,10 +624,11 @@ def adminDashboard():
     appointment_list = []
 
     for doc in docs:
-        appointment_data = doc.to_dict()
-        appointment_data["id"] = doc.id
-        appointment_data["user_uid"] = doc.reference.parent.parent.id
-        appointment_list.append(appointment_data)
+        data = doc.to_dict()
+        data["id"] = doc.id
+        data["user_uid"] = doc.reference.parent.parent.id
+        data["source"] = "appointment"
+        appointment_list.append(data)
 
     # =========================
     # APPROVE SUBCOLLECTION
@@ -631,21 +639,63 @@ def adminDashboard():
 
     for doc in approve_docs:
         data = doc.to_dict()
-
         data["id"] = doc.id
         data["appointment_id"] = doc.reference.parent.parent.id
         data["user_uid"] = doc.reference.parent.parent.parent.id
-
+        data["source"] = "approve"
         approve_list.append(data)
 
     # =========================
-    # SEND BOTH TO TEMPLATE
+    # ACCOUNTS (NEW ADDITION)
+    # =========================
+
+    google_docs = db.collection("google_create_account").stream()
+    manual_docs = db.collection(Account_clients).stream()
+
+    accounts = []
+
+    # GOOGLE ACCOUNTS
+    for doc in google_docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        data["account_type"] = "Google"
+        data["source"] = "account"
+
+        first = data.get("firstname") or data.get("first_name") or ""
+        last = data.get("lastname") or data.get("last_name") or ""
+
+        data["first_name"] = first
+        data["last_name"] = last
+        data["full_name"] = data.get("name") or f"{first} {last}".strip()
+
+        accounts.append(data)
+
+    # MANUAL ACCOUNTS
+    for doc in manual_docs:
+        data = doc.to_dict()
+        data["id"] = doc.id
+        data["account_type"] = "Manual"
+        data["source"] = "account"
+
+        first = data.get("firstname") or ""
+        last = data.get("lastname") or ""
+
+        data["first_name"] = first
+        data["last_name"] = last
+        data["full_name"] = f"{first} {last}".strip()
+
+        accounts.append(data)
+
+    # =========================
+    # SEND ALL TO TEMPLATE
     # =========================
     return render_template(
         "admin_dashboard.html",
         Appointment_clients=appointment_list,
-        Approve=approve_list
+        Approve=approve_list,
+        accounts=accounts
     )
+
 
 
 @app.route("/admin_login", methods=["GET", "POST"])  # ← Add methods=["GET", "POST"]
@@ -851,6 +901,97 @@ def medical_records():
     return render_template("medical_records.html")
 
 
+
+
+def safe_float(value):
+    try:
+        return float(value)
+    except:
+        return 0
+
+
+@app.route("/save_dental_record", methods=["POST"])
+def save_dental_record():
+
+    try:
+        uid = request.form.get("uid")
+
+        if not uid:
+            return jsonify({
+                "success": False,
+                "message": "UID is required"
+            }), 400
+
+        # =========================
+        # DENTAL CHART
+        # =========================
+        dental_chart = {}
+
+        for key in request.form:
+            if key.startswith("tooth_"):
+                dental_chart[key] = request.form.get(key)
+
+        db.collection("users") \
+            .document(uid) \
+            .collection("dental_records") \
+            .document("latest") \
+            .set({
+                "chart": dental_chart,
+                "updated_at": firestore.SERVER_TIMESTAMP
+            })
+
+        # =========================
+        # TREATMENT NOTES
+        # =========================
+        dates = request.form.getlist("date[]")
+        teeth = request.form.getlist("tooth[]")
+        procedures = request.form.getlist("procedure[]")
+        dentists = request.form.getlist("dentist[]")
+        values = request.form.getlist("value[]")
+        paids = request.form.getlist("paid[]")
+        balances = request.form.getlist("balance[]")
+        next_appts = request.form.getlist("next_appointment[]")
+
+        length = min(
+            len(dates), len(teeth), len(procedures),
+            len(dentists), len(values), len(paids),
+            len(balances), len(next_appts)
+        )
+
+        # DELETE OLD NOTES
+        notes_ref = db.collection("users").document(uid).collection("treatment_notes")
+        for doc in notes_ref.stream():
+            doc.reference.delete()
+
+        # SAVE NEW NOTES
+        for i in range(length):
+
+            if not procedures[i] and not teeth[i]:
+                continue
+
+            notes_ref.add({
+                "date": dates[i],
+                "tooth": teeth[i],
+                "procedure": procedures[i],
+                "dentist": dentists[i],
+                "value": safe_float(values[i]),
+                "paid": safe_float(paids[i]),
+                "balance": balances[i],
+                "next_appointment": next_appts[i],
+                "created_at": firestore.SERVER_TIMESTAMP
+            })
+
+        return jsonify({
+            "success": True,
+            "message": "Dental record saved successfully"
+        })
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
 if __name__ == "__main__":
     # 🔧 Optional: Test PayMongo connection (uncomment to test)
     """
