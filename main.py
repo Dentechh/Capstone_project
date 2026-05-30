@@ -81,7 +81,7 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 #------------------------------------------------------------------------------------------------------------------------------------------------
 #notification for gmail ni client
 # -----------------------------------------------------------------------------------------------------------------------------------------
-app.permanent_session_lifetime = timedelta(minutes=1)
+app.permanent_session_lifetime = timedelta(minutes=2)
 
 @app.before_request
 def refresh_session():
@@ -447,8 +447,9 @@ def bookedCustomer():
 @app.route("/approve", methods=["POST"])
 def approve():
 
-    DentistName = bleach.clean(request.form.get("dentist_name", ""))
     uid = request.form.get("user_id")
+    DentistName = bleach.clean(request.form.get("dentist_name", ""))
+    appointment_id = request.form.get("appointment_id")
     action = request.form.get("action")
     email = session.get('email')
     
@@ -516,11 +517,10 @@ def approve():
     user_ref = db.collection(main_collection).document(uid)
 
     # ⚠️ still not fully atomic but safer structure
-    user_ref.collection("Approve").document(uid).set(data)
-    user_ref.collection(Appointment_cliets).document(uid).delete()
+    user_ref.collection("Approve").document(appointment_id).set(data)
+    user_ref.collection(Appointment_cliets).document(appointment_id).delete()
 
     return "Approved successfully"
-
 
 
 @app.route("/patient-profile")
@@ -668,7 +668,7 @@ def adminDashboard():
 
         data = doc.to_dict()
 
-        data["id"] = doc.id
+        data["uid"] = doc.id
         data["account_type"] = "Google"
         data["source"] = "account"
 
@@ -703,7 +703,7 @@ def adminDashboard():
 
         data = doc.to_dict()
 
-        data["id"] = doc.id
+        data["uid"] = doc.id
         data["account_type"] = "Manual"
         data["source"] = "account"
 
@@ -741,6 +741,29 @@ def adminDashboard():
         accounts=accounts,
         
     )
+
+
+@app.route("/get_patient/<uid>")
+def get_patient(uid):
+
+    doc = db.collection("google_create_account").document(uid).get()
+
+    if not doc.exists:
+        doc = db.collection(Account_clients).document(uid).get()
+
+    data = doc.to_dict()
+    data["uid"] = uid
+
+    done_docs = db.collection("google_create_account") \
+        .document(uid) \
+        .collection("Done_procedure") \
+        .stream()
+
+    data["Done_procedure"] = {
+        "procedures": [d.to_dict() for d in done_docs]
+    }
+
+    return jsonify(data)
 
 
 @app.route("/admin_login", methods=["GET", "POST"])  # ← Add methods=["GET", "POST"]

@@ -263,8 +263,10 @@
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
                     <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
+                    
                 </div>
                 <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
+                    
                     <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 1500;">-</span></div>
                     <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 1500;">-</span></div>
                     <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 1500;">-</span></div>
@@ -297,10 +299,13 @@
             <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div class="content-panel">
                      <div class="panel-header"><h3>Visits History</h3></div>
+                     
                      <table class="appointment-table">
     <thead>
         <tr>
             <th>Assigned Dentist</th>
+            <th>Assigned uid</th>
+            
             <th>Visit Date</th>
             <th>Procedure</th>
             <th>Fee Paid</th>
@@ -313,6 +318,7 @@
             {% for visit in account.Done_procedure.procedures %}
             <tr>
                 <td>{{ visit.dentist }}</td>
+                <td>{{ visit.uid }}</td>
                 <td>{{ visit.date }}</td>
                 <td>{{ visit.procedure }}</td>
                 <td>₱{{ visit.paid }}</td>
@@ -323,7 +329,9 @@
     {% endfor %}
 </tbody>
 </table>
-                </div>
+</div>
+
+
 
                 <div class="content-panel">
                     <div class="panel-header"><h3>Patient Information</h3></div>
@@ -1031,24 +1039,24 @@ function openPatientDashboard(
                             alert('Appointment accepted successfully!');
                             // Remove the row from the table immediately
                             if (rowElement) {
-                                rowElement.delete();
+                                rowElement.remove();
                             }
                             // Set hash to mypatients and reload after accepting
                             setTimeout(() => {
                                 window.location.hash = 'mypatients';
                                 location.reload();
-                            }, 1000);
+                            }, );
                         } else {
                             alert('Appointment declined successfully!');
                             // Remove the row from the table immediately for decline too
                             if (rowElement) {
-                                rowElement.delete();
+                                rowElement.remove();
                             }
                             // Set hash to appointments and reload after declining
                             setTimeout(() => {
                                 window.location.hash = 'appointments';
                                 location.reload();
-                            }, 1000);
+                            }, );
                         }
                     } else {
                         throw new Error('Failed to ' + action + ' appointment');
