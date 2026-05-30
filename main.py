@@ -447,9 +447,8 @@ def bookedCustomer():
 @app.route("/approve", methods=["POST"])
 def approve():
 
-    uid = session.get('uid')
     DentistName = bleach.clean(request.form.get("dentist_name", ""))
-    appointment_id = request.form.get("appointment_id")
+    uid = request.form.get("user_id")
     action = request.form.get("action")
     email = session.get('email')
     

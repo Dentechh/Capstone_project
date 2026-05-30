@@ -1031,7 +1031,7 @@ function openPatientDashboard(
                             alert('Appointment accepted successfully!');
                             // Remove the row from the table immediately
                             if (rowElement) {
-                                rowElement.remove();
+                                rowElement.delete();
                             }
                             // Set hash to mypatients and reload after accepting
                             setTimeout(() => {
@@ -1042,7 +1042,7 @@ function openPatientDashboard(
                             alert('Appointment declined successfully!');
                             // Remove the row from the table immediately for decline too
                             if (rowElement) {
-                                rowElement.remove();
+                                rowElement.delete();
                             }
                             // Set hash to appointments and reload after declining
                             setTimeout(() => {
