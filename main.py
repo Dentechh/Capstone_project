@@ -12,6 +12,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 import os
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
+from datetime import timedelta
 
 # -----------------------------
 # Initialize Firebase safely (prevents duplicate init on debug reload)
@@ -80,13 +81,21 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 #------------------------------------------------------------------------------------------------------------------------------------------------
 #notification for gmail ni client
 # -----------------------------------------------------------------------------------------------------------------------------------------
+app.permanent_session_lifetime = timedelta(minutes=1)
+
+@app.before_request
+def refresh_session():
+    session.permanent = True
+    session.modified = True
 
 @app.route("/", methods=["GET"])
 def index():
-    uid = session.get ('uid', '')
+    uid = session.get('uid', '')
     name = session.get('name', 'Guest')
     email = session.get('email', '')
-    return render_template("index.html",uid = uid, name=name, email=email)
+
+    return render_template("index.html",uid=uid,name=name,email=email)
+
 
 
 @app.route("/google_index", methods=["GET"])
@@ -508,8 +517,8 @@ def approve():
     user_ref = db.collection(main_collection).document(uid)
 
     # ⚠️ still not fully atomic but safer structure
-    user_ref.collection("Approve").document(appointment_id).set(data)
-    user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+    user_ref.collection("Approve").document(uid).set(data)
+    user_ref.collection(Appointment_cliets).document(uid).delete()
 
     return "Approved successfully"
 
@@ -646,17 +655,20 @@ def adminDashboard():
         approve_list.append(data)
 
     # =========================
-    # ACCOUNTS (NEW ADDITION)
+    # ACCOUNTS
     # =========================
-
     google_docs = db.collection("google_create_account").stream()
     manual_docs = db.collection(Account_clients).stream()
 
     accounts = []
 
+    # =========================
     # GOOGLE ACCOUNTS
+    # =========================
     for doc in google_docs:
+
         data = doc.to_dict()
+
         data["id"] = doc.id
         data["account_type"] = "Google"
         data["source"] = "account"
@@ -668,11 +680,30 @@ def adminDashboard():
         data["last_name"] = last
         data["full_name"] = data.get("name") or f"{first} {last}".strip()
 
+        # =========================
+        # DONE PROCEDURE
+        # =========================
+        done_doc = (
+            db.collection("google_create_account")
+            .document(doc.id)
+            .collection("Done_procedure")
+            .document(doc.id)
+            .get()
+        )
+
+        data["Done_procedure"] = (
+            done_doc.to_dict() if done_doc.exists else {}
+        )
+
         accounts.append(data)
 
+    # =========================
     # MANUAL ACCOUNTS
+    # =========================
     for doc in manual_docs:
+
         data = doc.to_dict()
+
         data["id"] = doc.id
         data["account_type"] = "Manual"
         data["source"] = "account"
@@ -684,6 +715,21 @@ def adminDashboard():
         data["last_name"] = last
         data["full_name"] = f"{first} {last}".strip()
 
+        # =========================
+        # DONE PROCEDURE
+        # =========================
+        done_doc = (
+            db.collection(Account_clients)
+            .document(doc.id)
+            .collection("Done_procedure")
+            .document(doc.id)
+            .get()
+        )
+
+        data["Done_procedure"] = (
+            done_doc.to_dict() if done_doc.exists else {}
+        )
+
         accounts.append(data)
 
     # =========================
@@ -693,9 +739,9 @@ def adminDashboard():
         "admin_dashboard.html",
         Appointment_clients=appointment_list,
         Approve=approve_list,
-        accounts=accounts
+        accounts=accounts,
+        
     )
-
 
 
 @app.route("/admin_login", methods=["GET", "POST"])  # ← Add methods=["GET", "POST"]
@@ -910,10 +956,18 @@ def safe_float(value):
         return 0
 
 
+
+import os
+import base64
+from datetime import datetime
+from flask import request, jsonify
+from firebase_admin import firestore
+
 @app.route("/save_dental_record", methods=["POST"])
 def save_dental_record():
 
     try:
+
         uid = request.form.get("uid")
 
         if not uid:
@@ -923,7 +977,24 @@ def save_dental_record():
             }), 400
 
         # =========================
-        # DENTAL CHART
+        # DETECT MAIN COLLECTION
+        # =========================
+        if db.collection("google_create_account").document(uid).get().exists:
+            main_collection = "google_create_account"
+
+        elif db.collection(Account_clients).document(uid).get().exists:
+            main_collection = Account_clients
+
+        else:
+            return jsonify({
+                "success": False,
+                "message": "User not found"
+            }), 404
+
+        user_ref = db.collection(main_collection).document(uid)
+
+        # =========================
+        # DENTAL CHART JSON
         # =========================
         dental_chart = {}
 
@@ -931,14 +1002,39 @@ def save_dental_record():
             if key.startswith("tooth_"):
                 dental_chart[key] = request.form.get(key)
 
-        db.collection("users") \
-            .document(uid) \
-            .collection("dental_records") \
-            .document("latest") \
-            .set({
-                "chart": dental_chart,
-                "updated_at": firestore.SERVER_TIMESTAMP
-            })
+        # =========================
+        # DENTAL CHART IMAGE
+        # =========================
+        image_url = ""
+
+        image_data = request.form.get("dental_chart_image")
+
+        if image_data:
+
+            try:
+
+                if "," in image_data:
+                    image_data = image_data.split(",")[1]
+
+                image_bytes = base64.b64decode(image_data)
+
+                save_folder = os.path.join("static", "dental_charts")
+                os.makedirs(save_folder, exist_ok=True)
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+                filename = f"{uid}_{timestamp}.png"
+
+                filepath = os.path.join(save_folder, filename)
+
+                with open(filepath, "wb") as f:
+                    f.write(image_bytes)
+
+                image_url = f"/static/dental_charts/{filename}"
+
+            except Exception as img_error:
+
+                print("IMAGE SAVE ERROR:", img_error)
 
         # =========================
         # TREATMENT NOTES
@@ -953,45 +1049,66 @@ def save_dental_record():
         next_appts = request.form.getlist("next_appointment[]")
 
         length = min(
-            len(dates), len(teeth), len(procedures),
-            len(dentists), len(values), len(paids),
-            len(balances), len(next_appts)
+            len(dates),
+            len(teeth),
+            len(procedures),
+            len(dentists),
+            len(values),
+            len(paids),
+            len(balances),
+            len(next_appts)
         )
 
-        # DELETE OLD NOTES
-        notes_ref = db.collection("users").document(uid).collection("treatment_notes")
-        for doc in notes_ref.stream():
-            doc.reference.delete()
+        # =========================
+        # BUILD PROCEDURE LIST
+        # =========================
+        done_procedures = []
 
-        # SAVE NEW NOTES
         for i in range(length):
 
             if not procedures[i] and not teeth[i]:
                 continue
 
-            notes_ref.add({
+            done_procedures.append({
                 "date": dates[i],
                 "tooth": teeth[i],
                 "procedure": procedures[i],
                 "dentist": dentists[i],
                 "value": safe_float(values[i]),
                 "paid": safe_float(paids[i]),
-                "balance": balances[i],
-                "next_appointment": next_appts[i],
-                "created_at": firestore.SERVER_TIMESTAMP
+                "balance": safe_float(balances[i]),
+                "next_appointment": next_appts[i]
             })
+
+        # =========================
+        # SAVE EVERYTHING
+        # =========================
+        user_ref.collection("Done_procedure") \
+            .document(uid).set({
+                "chart": dental_chart,
+                "chart_image": image_url,
+                "procedures": done_procedures,
+                "updated_at": firestore.SERVER_TIMESTAMP
+            }, merge=True)
 
         return jsonify({
             "success": True,
-            "message": "Dental record saved successfully"
+            "message": "Dental record saved successfully",
+            "chart_image": image_url
         })
 
     except Exception as e:
+
         print("ERROR:", e)
+
         return jsonify({
             "success": False,
             "message": str(e)
         }), 500
+
+
+
+    
 if __name__ == "__main__":
     # 🔧 Optional: Test PayMongo connection (uncomment to test)
     """

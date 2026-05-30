@@ -23,8 +23,8 @@
         <nav class="sidebar-nav">
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
-            <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>
-            <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>
+           <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
+            <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
             <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Weekly Patient</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
@@ -83,14 +83,14 @@
 <div id="section-mypatients" class="content-section">
     <div class="patient-card-grid">
 
-        {% for appointment in Approve %}
+        {% for appointment in accounts %}
         <div class="patient-card">
 
             <div class="p-card-header">
                 <div class="p-info">
                     <strong>NAME: {{ appointment.full_name or appointment.FirstName or '' }}</strong>
                     <small style="opacity: 0.6;">
-                        UID: {{ appointment.uid }}
+                        UID: {{ appointment.provider }}
                     </small>
                 </div>
             </div>
@@ -298,17 +298,31 @@
                 <div class="content-panel">
                      <div class="panel-header"><h3>Visits History</h3></div>
                      <table class="appointment-table">
-                         <thead>
-                             <tr>
-                                 <th>Assigned Dentist</th>
-                                 <th>Visit Date</th>
-                                 <th>Procedure</th>
-                                 <th>Fee Paid</th>
-                             </tr>
-                         </thead>
-                        <tbody id="pd-visit-history">
-                        </tbody>
-                    </table>
+    <thead>
+        <tr>
+            <th>Assigned Dentist</th>
+            <th>Visit Date</th>
+            <th>Procedure</th>
+            <th>Fee Paid</th>
+            <th>Next Appointmnet</th>
+        </tr>
+    </thead>
+   <tbody id="pd-visit-history">
+    {% for account in accounts %}
+        {% if account.Done_procedure and account.Done_procedure.procedures %}
+            {% for visit in account.Done_procedure.procedures %}
+            <tr>
+                <td>{{ visit.dentist }}</td>
+                <td>{{ visit.date }}</td>
+                <td>{{ visit.procedure }}</td>
+                <td>₱{{ visit.paid }}</td>
+                <td>₱{{ visit.next_appointment }}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+</tbody>
+</table>
                 </div>
 
                 <div class="content-panel">
@@ -1117,20 +1131,44 @@ function openPatientDashboard(
     updateDateTime();
     setInterval(updateDateTime, 1000);
 
-    //teetch backend 
+    //teetch backend '
+
+    
+
+// =========================
+// SAVE DENTAL RECORD
+// =========================
 async function saveDentalRecord(uid) {
+
   try {
+
     const formData = new FormData();
 
     // =========================
-    // UID (IMPORTANT)
+    // UID
     // =========================
     formData.append("uid", uid);
 
     // =========================
-    // DENTAL CHART (FIXED)
+    // CAPTURE DENTAL CHART IMAGE
+    // =========================
+    const chartSection = document.querySelector('.dental-chart');
+
+    const canvas = await html2canvas(chartSection, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    });
+
+    const imageData = canvas.toDataURL('image/png');
+
+    formData.append("dental_chart_image", imageData);
+
+    // =========================
+    // SAVE TOOTH STATUS
     // =========================
     document.querySelectorAll(".tooth-unit").forEach(tooth => {
+
       const id = tooth.id.replace("tooth-", "");
 
       let value = "healthy";
@@ -1147,17 +1185,49 @@ async function saveDentalRecord(uid) {
     });
 
     // =========================
-    // TREATMENT NOTES (FIXED)
+    // TREATMENT NOTES
     // =========================
     document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
-      formData.append("date[]", row.querySelector(".td-date")?.value || "");
-      formData.append("tooth[]", row.querySelector(".td-tooth")?.value || "");
-      formData.append("procedure[]", row.querySelector(".td-procedure")?.value || "");
-      formData.append("dentist[]", row.querySelector(".td-dentist")?.value || "");
-      formData.append("value[]", row.querySelector(".td-value")?.value || "");
-      formData.append("paid[]", row.querySelector(".td-paid")?.value || "");
-      formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
-      formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
+
+      formData.append(
+        "date[]",
+        row.querySelector(".td-date")?.value || ""
+      );
+
+      formData.append(
+        "tooth[]",
+        row.querySelector(".td-tooth")?.value || ""
+      );
+
+      formData.append(
+        "procedure[]",
+        row.querySelector(".td-procedure")?.value || ""
+      );
+
+      formData.append(
+        "dentist[]",
+        row.querySelector(".td-dentist")?.value || ""
+      );
+
+      formData.append(
+        "value[]",
+        row.querySelector(".td-value")?.value || ""
+      );
+
+      formData.append(
+        "paid[]",
+        row.querySelector(".td-paid")?.value || ""
+      );
+
+      formData.append(
+        "balance[]",
+        row.querySelector(".td-balance")?.value || ""
+      );
+
+      formData.append(
+        "next_appointment[]",
+        row.querySelector(".td-next-appt")?.value || ""
+      );
     });
 
     // =========================
@@ -1174,15 +1244,113 @@ async function saveDentalRecord(uid) {
     console.log("RESPONSE:", result);
 
     if (result.success) {
+
+      console.log("IMAGE URL:", result.chart_image);
+
       alert("Dental record saved successfully!");
+
     } else {
+
       alert("Error: " + result.message);
     }
 
   } catch (error) {
+
     console.error("SAVE ERROR:", error);
-    alert("Failed to save dental record (check console).");
+
+    alert("Failed to save dental record.");
   }
+}
+
+
+// =========================
+// SAVE BUTTON
+// =========================
+document.getElementById("td-save-btn").addEventListener("click", () => {
+
+  const uid = document.getElementById("pd-id")
+    ?.innerText
+    .replace("Patient ID: ", "")
+    .trim();
+
+  if (!uid) {
+
+    alert("No patient selected!");
+    return;
+  }
+
+  saveDentalRecord(uid);
+});
+
+
+// =========================
+// HANDLE TOOTH ACTION
+// =========================
+function handleToothAction(id) {
+
+    var tooth = document.getElementById('tooth-' + id);
+
+    // REMOVE OLD STATUS CLASSES
+    tooth.classList.remove(
+        'healthy',
+        'caries',
+        'filling',
+        'crown',
+        'rootcanal',
+        'missing',
+        'extraction',
+        'check'
+    );
+
+    // ADD CURRENT TOOL CLASS
+    tooth.classList.add(currentTool);
+
+    var markX = tooth.querySelector('.mark-x');
+    var markLine = tooth.querySelector('.mark-line');
+
+    if (currentTool === 'healthy') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#ffffff');
+
+        markX.style.display = 'none';
+        markLine.style.display = 'none';
+
+    }
+    else if (currentTool === 'caries') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#ff4d4d');
+
+    }
+    else if (currentTool === 'filling') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#156699');
+
+    }
+    else if (currentTool === 'extraction') {
+
+        markX.style.display = 'block';
+
+    }
+    else if (currentTool === 'crown') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#ff4d4d');
+
+    }
+    else if (currentTool === 'rootcanal') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#156699');
+
+    }
+    else if (currentTool === 'missing') {
+
+        tooth.querySelectorAll('.segment')
+            .forEach(s => s.style.fill = '#000000');
+    }
 }
 
 // =========================

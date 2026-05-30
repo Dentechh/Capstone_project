@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>View Dental Record</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#f5f5f5;
+    padding:20px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+.teeth-grid{
+    display:grid;
+    grid-template-columns: repeat(8, 80px);
+    gap:10px;
+    margin-bottom:30px;
+}
+
+.tooth{
+    width:80px;
+    height:80px;
+    border-radius:10px;
+    border:2px solid #ccc;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:bold;
+    background:white;
+    transition:0.3s;
+}
+
+/* COLORS */
+
+.healthy{
+    background:white;
+}
+
+.caries{
+    background:#ff4d4d;
+    color:white;
+}
+
+.filling{
+    background:#156699;
+    color:white;
+}
+
+.crown{
+    background:orange;
+    color:white;
+}
+
+.rootcanal{
+    background:purple;
+    color:white;
+}
+
+.missing{
+    background:black;
+    color:white;
+}
+
+.extraction{
+    background:gray;
+    color:white;
+}
+
+.check{
+    background:green;
+    color:white;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:left;
+}
+
+th{
+    background:#156699;
+    color:white;
+}
+
+</style>
+</head>
+<body>
+
+<h1>Dental Record Viewer</h1>
+
+<div style="margin-bottom:20px;">
+
+    <input 
+        type="text" 
+        id="uid"
+        placeholder="Enter UID"
+        style="padding:10px; width:300px;"
+    >
+
+    <button onclick="loadDentalRecord()">
+        Load Record
+    </button>
+
+</div>
+
+<h2>Dental Chart</h2>
+
+<div class="teeth-grid" id="teethGrid"></div>
+
+<h2>Treatment Notes</h2>
+
+<table>
+
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Tooth</th>
+            <th>Procedure</th>
+            <th>Dentist</th>
+            <th>Value</th>
+            <th>Paid</th>
+            <th>Balance</th>
+            <th>Next Appointment</th>
+        </tr>
+    </thead>
+
+    <tbody id="notesBody">
+
+    </tbody>
+
+</table>
+
+<script>
+
+// =========================
+// CREATE TEETH
+// =========================
+
+const teethGrid = document.getElementById("teethGrid");
+
+const teethNumbers = [
+
+    18,17,16,15,14,13,12,11,
+    21,22,23,24,25,26,27,28,
+
+    48,47,46,45,44,43,42,41,
+    31,32,33,34,35,36,37,38
+
+];
+
+teethNumbers.forEach(id=>{
+
+    const div = document.createElement("div");
+
+    div.className = "tooth healthy";
+
+    div.id = "tooth-" + id;
+
+    div.innerText = id;
+
+    teethGrid.appendChild(div);
+
+});
+
+// =========================
+// LOAD RECORD
+// =========================
+
+async function loadDentalRecord(){
+
+    try{
+
+        const uid = document.getElementById("uid").value.trim();
+
+        if(!uid){
+
+            alert("Please enter UID");
+            return;
+
+        }
+
+        const response = await fetch(`/get_dental_record/${uid}`);
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if(!data.success){
+
+            alert(data.message);
+            return;
+
+        }
+
+        // =========================
+        // RESET ALL TEETH
+        // =========================
+
+        document.querySelectorAll(".tooth").forEach(tooth=>{
+
+            tooth.className = "tooth healthy";
+
+        });
+
+        // =========================
+        // DISPLAY TEETH STATUS
+        // =========================
+
+        Object.entries(data.chart).forEach(([key, value])=>{
+
+            const toothId = key.replace("tooth_", "");
+
+            const tooth = document.getElementById(`tooth-${toothId}`);
+
+            if(!tooth) return;
+
+            tooth.className = "tooth";
+
+            tooth.classList.add(value);
+
+        });
+
+        // =========================
+        // DISPLAY NOTES
+        // =========================
+
+        const notesBody = document.getElementById("notesBody");
+
+        notesBody.innerHTML = "";
+
+        data.notes.forEach(note=>{
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+
+                <td>${note.date || ''}</td>
+                <td>${note.tooth || ''}</td>
+                <td>${note.procedure || ''}</td>
+                <td>${note.dentist || ''}</td>
+                <td>${note.value || ''}</td>
+                <td>${note.paid || ''}</td>
+                <td>${note.balance || ''}</td>
+                <td>${note.next_appointment || ''}</td>
+
+            `;
+
+            notesBody.appendChild(tr);
+
+        });
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Failed to load record");
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
