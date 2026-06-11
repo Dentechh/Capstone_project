@@ -202,6 +202,7 @@
                               <th>Date and Time</th>
                               <th>Procedure</th>
                               <th>Consulting Dentist</th>
+                              <th>Email</th>
                               <th>Status</th>
                               <th>Action</th>
                           </tr>
@@ -227,11 +228,12 @@
                               <td style="display:none;">{{ appointment.Birthday }}</td>
                               <td style="display:none;">{{ appointment.Occupation }}</td>
                               <td style="display:none;">{{ appointment.CivilStatus }}</td>
-                              <td>{{ appointment.appointment_date }}</td>
+                              <td>{{ appointment.appointment_date }}</td>   
                               <td>{{ appointment.Service }}</td>
                               <td>
                                   <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                               </td>
+                              <td>{{ appointment.email }}</td>
                               <td>
                                   <span class="badge pending">pending</span>
                               </td>
@@ -253,7 +255,7 @@
         </div>
 
         <div id="section-patientdashboard" class="content-section">
-            <button onclick="showSection('mypatients'); document.getElementById('nav-patientdashboard').style.display='none';" class="btn-back" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
+            <button onclick="showSection('WeeklyClients'); document.getElementById('nav-patientdashboard').style.display='none';" class="btn-back" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
 
             <!-- Hidden Approve data for JS access -->
             <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
@@ -313,20 +315,16 @@
         </tr>
     </thead>
    <tbody id="pd-visit-history">
-    {% for account in accounts %}
-        {% if account.Done_procedure and account.Done_procedure.procedures %}
-            {% for visit in account.Done_procedure.procedures %}
+
             <tr>
-                <td>{{ visit.dentist }}</td>
-                <td>{{ visit.uid }}</td>
-                <td>{{ visit.date }}</td>
-                <td>{{ visit.procedure }}</td>
-                <td>₱{{ visit.paid }}</td>
-                <td>₱{{ visit.next_appointment }}</td>
+                <td><p id="pd-id"></p></td>
+                <td>s</td>
+                <td>s</td>
+                <td>s</td>
+                <td>s</td>
+                <td>s</td>
             </tr>
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
+
 </tbody>
 </table>
 </div>
@@ -394,6 +392,12 @@
                     </div>
                 </div>
             </div>
+                                <div style="text-align: center; margin: 12px 0;">
+                        <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
+                            ⬇ Download Dental Chart as PDF
+                        </button>
+                    </div>
+
 
             <div id="section-chart" class="chart-section">
                 <div class="chart-container">
@@ -433,12 +437,6 @@
                         </div>
                     </aside>
 
-
-                    <div style="text-align: center; margin: 12px 0;">
-                        <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
-                            ⬇ Download Dental Chart as PDF
-                        </button>
-                    </div>
 
                 
                     <section class="dental-chart">
@@ -616,7 +614,7 @@ async function downloadDentalChartPDF() {
             height: chartSection.scrollHeight,
         });
 
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL('image/jpeg', 0.7);
 
         // Use landscape A4 for wide dental charts
         const pdf = new jsPDF({

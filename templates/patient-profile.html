@@ -230,6 +230,40 @@
             font-weight: 600;
             cursor: pointer;
         }
+
+
+
+
+
+    .modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background: #fff;
+    width: 90%;
+    max-width: 450px;
+    margin: 10% auto;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 28px;
+    cursor: pointer;
+}
         /* =========================
    NAVIGATION GRID
 ========================= */
@@ -628,8 +662,45 @@ body.dark-mode .nav-card span {
             <span>Medical Records</span>
         </a>
 
+<!-- Payments Card -->
+<a href="#" class="nav-card" onclick="openPaymentModal()">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/cash.png" alt="Payments">
+    <span>Payments</span>
+</a>
+
+<!-- Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closePaymentModal()">&times;</span>
+
+<h1>PAYMENTS</h1>
+
+        <button onclick="closePaymentModal()">Close</button>
     </div>
 </div>
+
+    </div>
+</div>
+
+
+<script>
+function openPaymentModal() {
+    document.getElementById('paymentModal').style.display = 'block';
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+}
+
+// Close when clicking outside the modal
+window.onclick = function(event) {
+    const modal = document.getElementById('paymentModal');
+
+    if (event.target === modal) {
+        closePaymentModal();
+    }
+}
+</script>
 
 <div class="modal-overlay" id="updateModal">
     <div class="modal-content">

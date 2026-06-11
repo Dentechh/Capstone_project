@@ -216,38 +216,7 @@ def about_customer():
 
 
 
-app.config.update(
-    MAIL_SERVER='smtp.gmail.com',
-    MAIL_PORT=587,
-    MAIL_USE_TLS=True,
-    MAIL_USERNAME='yourgmail@gmail.com',
-    MAIL_PASSWORD='slrm eyqa pciv flky'
-)
 
-mail = Mail(app)
-
-
-def send_appointment_email(to_email, first_name, appointment_date, service):
-    msg = Message(
-        subject="Dental Appointment Reminder",
-        sender=app.config['MAIL_USERNAME'],
-        recipients=[to_email]
-    )
-
-    msg.body = f"""
-Hello {first_name},
-
-This is a reminder for your dental appointment:
-
-📅 Date: {appointment_date}
-🦷 Service: {service}
-
-Please arrive 10–15 minutes early.
-
-Thank you!
-"""
-
-    mail.send(msg)
 
 
 
@@ -256,6 +225,7 @@ Thank you!
 @app.route("/google_booked_customer", methods=["POST"])
 def google_bookedCustomer():
     uid = session.get('uid')
+    email = session.get('email')
 
         # Personal Info
     FirstName = bleach.clean(request.form.get("First_Name", ""))
@@ -296,6 +266,7 @@ def google_bookedCustomer():
     try:
         db.collection("google_create_account").document(uid).collection(Appointment_cliets).add({
             "uid": uid,
+            "email":email,
             "FirstName": FirstName,
             "MiddleName": MiddleName,
             "LastName": LastName,
@@ -444,6 +415,34 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'jayr.bonitillo.ui@phinmaed.com'
+app.config['MAIL_PASSWORD'] = 'htal wzrv wyai rgsi'
+app.config['MAIL_DEFAULT_SENDER'] = 'jayr.bonitillo.ui@phinmaed.com'
+
+mail = Mail(app)
+
+
+def send_email(recipient, fullname, status):
+    msg = Message(
+        subject=f"Appointment {status}",
+        recipients=[recipient]
+    )
+
+    msg.body = f"""
+Hello {fullname},
+
+Your appointment has been {status}.
+
+Thank you,
+Dental Clinic
+"""
+
+    mail.send(msg)
+
+
 @app.route("/approve", methods=["POST"])
 def approve():
 
@@ -452,8 +451,6 @@ def approve():
     appointment_id = request.form.get("appointment_id")
     action = request.form.get("action")
     email = session.get('email')
-    
-
 
     data = {
         "status": action,
@@ -503,24 +500,57 @@ def approve():
         "w_pill": request.form.get("w_pill"),
     }
 
-    # check where uid exists
+    # Check where uid exists
     if db.collection("google_create_account").document(uid).get().exists:
         main_collection = "google_create_account"
 
-    elif db.collection(Account_clients ).document(uid).get().exists:
-        main_collection = Account_clients 
+    elif db.collection(Account_clients).document(uid).get().exists:
+        main_collection = Account_clients
 
     else:
         return "User not found", 404
 
-
     user_ref = db.collection(main_collection).document(uid)
 
-    # ⚠️ still not fully atomic but safer structure
+    # Save approved appointment
     user_ref.collection("Approve").document(appointment_id).set(data)
     user_ref.collection(Appointment_cliets).document(appointment_id).delete()
 
+    # Get patient's email and send notification
+    user_doc = user_ref.get()
+
+    if user_doc.exists:
+        patient_email = user_doc.to_dict().get("email")
+
+        if patient_email:
+            fullname = f"{data['FirstName']} {data['LastName']}"
+
+            send_email(
+                patient_email,
+                fullname,
+                action
+            )
+
     return "Approved successfully"
+
+
+@app.route("/test-email")
+def test_email():
+
+    msg = Message(
+        subject="SMTP Test",
+        recipients=["jayr.bonitillo.ui@phinmaed.com"]
+    )
+
+    msg.body = "SMTP is working!"
+
+    mail.send(msg)
+
+    return "Email sent!"
+
+
+
+
 
 
 @app.route("/patient-profile")
@@ -984,6 +1014,10 @@ import base64
 from datetime import datetime
 from flask import request, jsonify
 from firebase_admin import firestore
+
+
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
+
 
 @app.route("/save_dental_record", methods=["POST"])
 def save_dental_record():
