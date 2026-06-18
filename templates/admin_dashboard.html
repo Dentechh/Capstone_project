@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +15,32 @@
 
 
 </head>
+
+
+<style>
+.modal-overlay {
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-box {
+    background:#fff;
+    width:90%;
+    max-width:800px;
+    padding:20px;
+    border-radius:10px;
+}
+</style>
+
+
 <body class="dashboard-body">
 
     <aside class="sidebar">
@@ -79,72 +107,169 @@
                 </div>
             </div>
         </div>
-
 <div id="section-mypatients" class="content-section">
-    <div class="patient-card-grid">
+                <section class="content-panel">
+                <table class="appointment-table">
+
+                       
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>UID</th>
+                <th>Sex</th>
+                <th>Age</th>
+                <th>Contact</th>
+                <th>Service</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
 
         {% for appointment in accounts %}
-        <div class="patient-card">
+        <tr>
 
-            <div class="p-card-header">
-                <div class="p-info">
-                    <strong>NAME: {{ appointment.full_name or appointment.FirstName or '' }}</strong>
-                    <small style="opacity: 0.6;">
-                        UID: {{ appointment.provider }}
-                    </small>
-                </div>
-            </div>
+            <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
 
-            <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+            <td>{{ appointment.uid }}</td>
 
-                data-name="{{ appointment.full_name or appointment.FirstName }}"
-                data-uid="{{ appointment.user_uid }}"
-                data-sex="{{ appointment.get('Sex', 'Female') }}"
-                data-age="{{ appointment.get('Age', 'N/A') }}"
-                data-lastname="{{ appointment.get('LastName', '') }}"
-                data-middlename="{{ appointment.get('MiddleName', '') }}"
-                data-birthday="{{ appointment.get('Birthday', '') }}"
-                data-nationality="{{ appointment.get('Nationality', '') }}"
-                data-religion="{{ appointment.get('Religion', '') }}"
-                data-occupation="{{ appointment.get('Occupation', '') }}"
-                data-civilstatus="{{ appointment.get('CivilStatus', '') }}"
-                data-contact="{{ appointment.get('ContactNumber', '') }}"
-                data-service="{{ appointment.get('Service', '') }}"
-                data-dentist="{{ appointment.get('dentist_name', '') }}"
-                data-q1="{{ appointment.get('q1', 'N') }}"
-                data-q2="{{ appointment.get('q2', 'N') }}"
-                data-q3="{{ appointment.get('q3', 'N') }}"
-                data-q4="{{ appointment.get('q4', 'N') }}"
-                data-q5="{{ appointment.get('q5', 'N') }}"
-                data-q6="{{ appointment.get('q6', 'N') }}"
-                data-q7="{{ appointment.get('q7', 'N') }}"
-                data-q9="{{ appointment.get('q9', 'N') }}"
-                data-w-preg="{{ appointment.get('w_preg', 'N') }}"
-                data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
-                data-w-pill="{{ appointment.get('w_pill', 'N') }}">
+            <td>{{ appointment.get('Sex', 'Female') }}</td>
 
-                CHECK INFO
-            </button>
+            <td>{{ appointment.get('Age', 'N/A') }}</td>
 
-        </div>
+            <td>{{ appointment.get('ContactNumber', '') }}</td>
+
+            <td>{{ appointment.get('Service', '') }}</td>
+
+            <td>
+ <button type="button"
+        class="btn-action accept open-patient-modal"
+        style="width:100%;">
+
+    CHECK INFO
+</button>
+            </td>
+
+        </tr>
         {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+<div id="patientModal" class="modal-overlay">
+
+    <div class="modal-box">
+
+        <button id="closeModalBtn" class="btn-back">Close</button>
+
+        <div id="patientContent">
+            Loading...
+        </div>
 
     </div>
 </div>
 
+
+<script>
+const modal = document.getElementById("patientModal");
+const content = document.getElementById("patientContent");
+const closeBtn = document.getElementById("closeModalBtn");
+
+document.querySelectorAll(".open-patient-modal").forEach(btn => {
+    btn.addEventListener("click", function () {
+
+        const uid = this.dataset.uid;
+
+        modal.style.display = "flex";
+        content.innerHTML = "Loading...";
+
+        fetch(`/get_patient/${uid}`)
+            .then(res => res.json())
+            .then(data => {
+
+                let procedures = data.Done_procedure?.procedures || [];
+
+                let html = `
+                    <h3>${data.full_name}</h3>
+                    <p><b>UID:</b> ${data.uid}</p>
+                    <p><b>Sex:</b> ${data.sex}</p>
+                    <p><b>Age:</b> ${data.age}</p>
+                    <p><b>Contact:</b> ${data.contact}</p>
+                    <p><b>Service:</b> ${data.service}</p>
+
+                    <hr>
+                    <h4>Procedures</h4>
+                `;
+
+                if (procedures.length === 0) {
+                    html += `<p>No procedure records found.</p>`;
+                } else {
+                    html += `
+                        <table style="width:100%; border-collapse:collapse;">
+                            <thead>
+                                <tr>
+                                    <th>Balance</th>
+                                    <th>Date</th>
+                                    <th>Next Appointment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    procedures.forEach(p => {
+                        html += `
+                            <tr>
+                                <td>${p.balance ?? ''}</td>
+                                <td>${p.date ?? ''}</td>
+                                <td>${p.next_appointment ?? ''}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                content.innerHTML = html;
+            });
+    });
+});
+
+closeBtn.onclick = () => modal.style.display = "none";
+
+window.onclick = (e) => {
+    if (e.target === modal) modal.style.display = "none";
+};
+</script>
+
+
+
+
+  
                 <div id="section-WeeklyClients" class="content-section">
             <div class="patient-card-grid">
+
+
+                
                 {% for appointment in Approve %}
                 <div class="patient-card">
                     <div class="p-card-header">
                         <div class="p-info">
                             <strong>NAME: {{ appointment.FirstName }}</strong>
+                             
                             <small style="opacity: 0.6;">UID: {{ appointment.uid }}</small>
                         </div>
                     </div>
                     <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>{{ appointment.DentistName|default('Not Assigned') }}</strong></p>
                      <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
                         data-name="{{ appointment.FirstName }}"
+                        data-Patient_unq_id="{{ appointment.Patient_unq_id }}"
+                        data-="{{ appointment.FirstName }}"
                         data-uid="{{ appointment.uid }}"
                         data-sex="{{ appointment.Sex|default('Female') }}"
                         data-age="{{ appointment.Age|default('N/A') }}"
@@ -169,6 +294,7 @@
                         data-w-preg="{{ appointment.get('w_preg', 'N') }}"
                         data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
                         data-w-pill="{{ appointment.get('w_pill', 'N') }}">
+
                         CHECK INFO
                     </button>
                 </div>
@@ -265,6 +391,7 @@
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
                     <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
+                     
                     
                 </div>
                 <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
@@ -300,10 +427,11 @@
 
             <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                 <div class="content-panel">
-                     <div class="panel-header"><h3>Visits History</h3></div>
+                     <div class="panel-header"><h3>Visits History <p id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
                      
                      <table class="appointment-table">
     <thead>
+        
         <tr>
             <th>Assigned Dentist</th>
             <th>Assigned uid</th>
@@ -317,12 +445,12 @@
    <tbody id="pd-visit-history">
 
             <tr>
-                <td><p id="pd-id"></p></td>
-                <td>s</td>
-                <td>s</td>
-                <td>s</td>
-                <td>s</td>
-                <td>s</td>
+            
+                <td>dentist</td>
+                <td>tooth</td>
+                <td>value</td>
+                <td>paid</td>
+                <td>next_appointment</td>
             </tr>
 
 </tbody>
@@ -369,6 +497,11 @@
                         <div class="info-group">
                             <label>Service</label>
                             <p id="pd-disp-service">-</p>
+                        </div>
+
+                        <div class="info-group">
+                            <label>Service</label>
+                            <p id="pd-disp-Patient_unq_id">-</p>
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
@@ -477,7 +610,11 @@
             <!-- Treatment Notes -->
             <div id="td-treatment-section" class="treatment-section" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3 style="margin:0;">Treatment Notes</h3>
+                        <h3  style="margin:0;">Treatment Notes </h3>
+                            <p>
+        Patient Record ID:
+        <span id="td-Patient_unq_id">-</span>
+    </p>
                         <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size:14px; padding:6px 18px;">Save</button>
                     </div>
                     <table class="treatment-table" id="td-treatment-table">
@@ -491,6 +628,7 @@
                                 <th>Amount Paid</th>
                                 <th>Balance</th>
                                 <th>Next Appointment</th>
+                                <th>Example</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -544,6 +682,7 @@
                                 <td><input type="text" class="td-balance" placeholder="Balance" /></td>
                                 <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
                             </tr>
+                            
                         </tbody>
                     </table>
                     <button type="button" id="td-add-row-btn" style="margin-top:10px; padding:5px 12px; border:1px dashed gold; background:transparent; color:gold; border-radius:5px; cursor:pointer; font-size:13px;">+ Add Row</button>
@@ -614,7 +753,7 @@ async function downloadDentalChartPDF() {
             height: chartSection.scrollHeight,
         });
 
-        const imgData = canvas.toDataURL('image/jpeg', 0.7);
+        const imgData = canvas.toDataURL('image/png');
 
         // Use landscape A4 for wide dental charts
         const pdf = new jsPDF({
@@ -695,10 +834,10 @@ async function downloadDentalChartPDF() {
             const titles = {
                 'dashboard': 'Dashboard Overview',
                 'appointments': 'Appointment Requests',
-                'mypatients': 'My Patients',
                 'WeeklyClients': 'My Weekly Clients',
                 'records': 'Patient Database',
-                'patientdashboard': 'Patient Dashboard'
+                'patientdashboard': 'Patient Dashboard',
+                 'mypatients': 'My Patients',
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
         }
@@ -715,8 +854,10 @@ function openPatientDashboard(
     occupation,
     civilstatus,
     contact,
-    service
+    service,
+    Patient_unq_id
 ) {
+
     document.getElementById('pd-name').innerText = name || 'Unknown';
     document.getElementById('pd-id').innerText = 'Patient ID: ' + (uid || 'N/A');
 
@@ -735,25 +876,34 @@ function openPatientDashboard(
     document.getElementById('pd-disp-contact').innerText = contact || 'Unknown';
     document.getElementById('pd-disp-service').innerText = service || 'Unknown';
 
-            // Blood type - hardcoded since Approve doc does not store it
-            document.getElementById('pd-blood').innerText = 'O+';
+    document.getElementById('pd-disp-Patient_unq_id').innerText = Patient_unq_id || 'Unknown';
+    document.getElementById('td-Patient_unq_id').innerText = Patient_unq_id || 'Unknown';
+    document.getElementById('td-history-uid').innerText = uid || 'Unknown';
+    // 🧠 IMPORTANT: store correct patient record ID globally
+    window.currentPatientId = Patient_unq_id;
 
-            // Set initials
-            document.getElementById('pd-avatar').innerText = name ? name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase() : '??';
+    // Blood type - hardcoded
+    document.getElementById('pd-blood').innerText = 'O+';
 
-            // Show hidden nav link and switch section
-            var navLink = document.getElementById('nav-patientdashboard');
-            if (navLink) navLink.style.display = 'block';
-            showSection('patientdashboard');
+    // Set initials
+    document.getElementById('pd-avatar').innerText =
+        name
+            ? name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase()
+            : '??';
 
-            // Show treatment section
-            var tdSection = document.getElementById('td-treatment-section');
-            if (tdSection) tdSection.style.display = 'block';
+    // Show nav link
+    var navLink = document.getElementById('nav-patientdashboard');
+    if (navLink) navLink.style.display = 'block';
 
-            // Load saved treatment notes for this patient
-            loadTreatmentNotes(uid);
-        }
+    showSection('patientdashboard');
 
+    // Show treatment section
+    var tdSection = document.getElementById('td-treatment-section');
+    if (tdSection) tdSection.style.display = 'block';
+
+    // ✅ FIX: always use Patient_unq_id, NOT uid
+    loadTreatmentNotes(Patient_unq_id);
+}
         function setCheckbox(id, value) {
             var el = document.getElementById(id);
             if (el) {
@@ -784,6 +934,7 @@ function openPatientDashboard(
             buttons.forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     openPatientDashboard(
+                
                 this.getAttribute('data-name'),
                 this.getAttribute('data-uid'),
                 this.getAttribute('data-birthday'),
@@ -795,7 +946,8 @@ function openPatientDashboard(
                 this.getAttribute('data-occupation'),
                 this.getAttribute('data-civilstatus'),
                 this.getAttribute('data-contact'),
-                this.getAttribute('data-service')
+                this.getAttribute('data-service'),
+                this.getAttribute('data-Patient_unq_id'),    
 
                         
                         
@@ -903,7 +1055,7 @@ function openPatientDashboard(
 
             function saveTreatmentNotes() {
                 var uidEl = document.getElementById('pd-id');
-                var uid = uidEl ? uidEl.innerText.replace('Patient ID: ', '').trim() : 'unknown';
+                var uid = uidEl.innerText.replace('Patient ID: ', '').trim();
                 var rows = [];
                 var rowEls = document.querySelectorAll('#td-treatment-table tbody tr');
                 rowEls.forEach(function(tr) {
@@ -1144,9 +1296,26 @@ function openPatientDashboard(
 // =========================
 // SAVE DENTAL RECORD
 // =========================
+
+
 async function saveDentalRecord(uid) {
 
   try {
+
+    const chartSection = document.querySelector('.dental-chart');
+
+    const canvas = await html2canvas(chartSection, {
+      scale: 1,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    });
+
+    // =========================
+    // SAFE PROMISE WRAPPER FOR BLOB
+    // =========================
+    const blob = await new Promise(resolve => {
+      canvas.toBlob(resolve, "image/jpeg", 0.7);
+    });
 
     const formData = new FormData();
 
@@ -1156,22 +1325,21 @@ async function saveDentalRecord(uid) {
     formData.append("uid", uid);
 
     // =========================
-    // CAPTURE DENTAL CHART IMAGE
+    // PATIENT UNIQUE ID (FOR DELETE APPROVE RECORD)
     // =========================
-    const chartSection = document.querySelector('.dental-chart');
+    const patient_unq_id =
+    document.getElementById("td-Patient_unq_id")?.innerText?.trim();
 
-    const canvas = await html2canvas(chartSection, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff'
-    });
-
-    const imageData = canvas.toDataURL('image/png');
-
-    formData.append("dental_chart_image", imageData);
+    if (patient_unq_id) {
+    formData.append("Patient_unq_id", patient_unq_id);
+    }
+    // =========================
+    // IMAGE
+    // =========================
+    formData.append("dental_chart_image", blob, "chart.jpg");
 
     // =========================
-    // SAVE TOOTH STATUS
+    // TOOTH DATA
     // =========================
     document.querySelectorAll(".tooth-unit").forEach(tooth => {
 
@@ -1191,49 +1359,18 @@ async function saveDentalRecord(uid) {
     });
 
     // =========================
-    // TREATMENT NOTES
+    // TREATMENT TABLE
     // =========================
     document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
 
-      formData.append(
-        "date[]",
-        row.querySelector(".td-date")?.value || ""
-      );
-
-      formData.append(
-        "tooth[]",
-        row.querySelector(".td-tooth")?.value || ""
-      );
-
-      formData.append(
-        "procedure[]",
-        row.querySelector(".td-procedure")?.value || ""
-      );
-
-      formData.append(
-        "dentist[]",
-        row.querySelector(".td-dentist")?.value || ""
-      );
-
-      formData.append(
-        "value[]",
-        row.querySelector(".td-value")?.value || ""
-      );
-
-      formData.append(
-        "paid[]",
-        row.querySelector(".td-paid")?.value || ""
-      );
-
-      formData.append(
-        "balance[]",
-        row.querySelector(".td-balance")?.value || ""
-      );
-
-      formData.append(
-        "next_appointment[]",
-        row.querySelector(".td-next-appt")?.value || ""
-      );
+      formData.append("date[]", row.querySelector(".td-date")?.value || "");
+      formData.append("tooth[]", row.querySelector(".td-tooth")?.value || "");
+      formData.append("procedure[]", row.querySelector(".td-procedure")?.value || "");
+      formData.append("dentist[]", row.querySelector(".td-dentist")?.value || "");
+      formData.append("value[]", row.querySelector(".td-value")?.value || "");
+      formData.append("paid[]", row.querySelector(".td-paid")?.value || "");
+      formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
+      formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
     });
 
     // =========================
@@ -1250,122 +1387,28 @@ async function saveDentalRecord(uid) {
     console.log("RESPONSE:", result);
 
     if (result.success) {
+  alert("Dental record saved successfully!");
 
-      console.log("IMAGE URL:", result.chart_image);
+  window.location.href = "admin_dashboard";
 
-      alert("Dental record saved successfully!");
-
-    } else {
-
-      alert("Error: " + result.message);
-    }
+} else {
+  alert("Error: " + result.message);
+}
 
   } catch (error) {
-
     console.error("SAVE ERROR:", error);
-
     alert("Failed to save dental record.");
   }
 }
 
 
 // =========================
-// SAVE BUTTON
+// SINGLE CLEAN BUTTON HANDLER
 // =========================
 document.getElementById("td-save-btn").addEventListener("click", () => {
 
-  const uid = document.getElementById("pd-id")
-    ?.innerText
-    .replace("Patient ID: ", "")
-    .trim();
-
-  if (!uid) {
-
-    alert("No patient selected!");
-    return;
-  }
-
-  saveDentalRecord(uid);
-});
-
-
-// =========================
-// HANDLE TOOTH ACTION
-// =========================
-function handleToothAction(id) {
-
-    var tooth = document.getElementById('tooth-' + id);
-
-    // REMOVE OLD STATUS CLASSES
-    tooth.classList.remove(
-        'healthy',
-        'caries',
-        'filling',
-        'crown',
-        'rootcanal',
-        'missing',
-        'extraction',
-        'check'
-    );
-
-    // ADD CURRENT TOOL CLASS
-    tooth.classList.add(currentTool);
-
-    var markX = tooth.querySelector('.mark-x');
-    var markLine = tooth.querySelector('.mark-line');
-
-    if (currentTool === 'healthy') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#ffffff');
-
-        markX.style.display = 'none';
-        markLine.style.display = 'none';
-
-    }
-    else if (currentTool === 'caries') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#ff4d4d');
-
-    }
-    else if (currentTool === 'filling') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#156699');
-
-    }
-    else if (currentTool === 'extraction') {
-
-        markX.style.display = 'block';
-
-    }
-    else if (currentTool === 'crown') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#ff4d4d');
-
-    }
-    else if (currentTool === 'rootcanal') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#156699');
-
-    }
-    else if (currentTool === 'missing') {
-
-        tooth.querySelectorAll('.segment')
-            .forEach(s => s.style.fill = '#000000');
-    }
-}
-
-// =========================
-// BUTTON CLICK (FIXED UID)
-// =========================
-document.getElementById("td-save-btn").addEventListener("click", () => {
-  const uid = document.getElementById("pd-id")?.innerText
-    .replace("Patient ID: ", "")
-    .trim();
+  const uidText = document.getElementById("pd-id")?.innerText || "";
+  const uid = uidText.replace("Patient ID:", "").trim();
 
   if (!uid) {
     alert("No patient selected!");

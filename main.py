@@ -454,7 +454,8 @@ def approve():
 
     data = {
         "status": action,
-        "uid": uid,
+        "Patient_unq_id":appointment_id,
+        "uid":uid,
         "email": email,
         "DentistName": DentistName,
         "FirstName": request.form.get("firstname"),
@@ -776,25 +777,51 @@ def adminDashboard():
 @app.route("/get_patient/<uid>")
 def get_patient(uid):
 
-    doc = db.collection("google_create_account").document(uid).get()
+    # =========================
+    # TRY GOOGLE ACCOUNTS FIRST
+    # =========================
+    doc_ref = db.collection("google_create_account").document(uid)
+    doc = doc_ref.get()
+
+    account_type = "Google"
+
+    # =========================
+    # IF NOT FOUND → TRY MANUAL
+    # =========================
+    if not doc.exists:
+        doc_ref = db.collection(Account_clients).document(uid)
+        doc = doc_ref.get()
+        account_type = "Manual"
 
     if not doc.exists:
-        doc = db.collection(Account_clients).document(uid).get()
+        return {"error": "Not found"}
 
     data = doc.to_dict()
-    data["uid"] = uid
+    data["uid"] = doc.id
+    data["account_type"] = account_type
 
-    done_docs = db.collection("google_create_account") \
-        .document(uid) \
-        .collection("Done_procedure") \
-        .stream()
+    # =========================
+    # NORMALIZE NAME (same as your loop)
+    # =========================
+    first = data.get("firstname") or data.get("first_name") or ""
+    last = data.get("lastname") or data.get("last_name") or ""
 
-    data["Done_procedure"] = {
-        "procedures": [d.to_dict() for d in done_docs]
-    }
+    data["first_name"] = first
+    data["last_name"] = last
+    data["full_name"] = data.get("name") or f"{first} {last}".strip()
 
-    return jsonify(data)
+    # =========================
+    # DONE PROCEDURE (IMPORTANT FIX)
+    # =========================
+    done_doc = (
+        doc_ref.collection("Done_procedure")
+        .document(uid)
+        .get()
+    )
 
+    data["Done_procedure"] = done_doc.to_dict() if done_doc.exists else {}
+
+    return data
 
 @app.route("/admin_login", methods=["GET", "POST"])  # ← Add methods=["GET", "POST"]
 def adminLogin():
@@ -1023,7 +1050,6 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 def save_dental_record():
 
     try:
-
         uid = request.form.get("uid")
 
         if not uid:
@@ -1063,33 +1089,22 @@ def save_dental_record():
         # =========================
         image_url = ""
 
-        image_data = request.form.get("dental_chart_image")
+        image_file = request.files.get("dental_chart_image")
 
-        if image_data:
-
+        if image_file:
             try:
-
-                if "," in image_data:
-                    image_data = image_data.split(",")[1]
-
-                image_bytes = base64.b64decode(image_data)
-
                 save_folder = os.path.join("static", "dental_charts")
                 os.makedirs(save_folder, exist_ok=True)
 
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
-                filename = f"{uid}_{timestamp}.png"
-
+                filename = f"{uid}_{timestamp}.jpg"
                 filepath = os.path.join(save_folder, filename)
 
-                with open(filepath, "wb") as f:
-                    f.write(image_bytes)
+                image_file.save(filepath)
 
                 image_url = f"/static/dental_charts/{filename}"
 
             except Exception as img_error:
-
                 print("IMAGE SAVE ERROR:", img_error)
 
         # =========================
@@ -1115,13 +1130,9 @@ def save_dental_record():
             len(next_appts)
         )
 
-        # =========================
-        # BUILD PROCEDURE LIST
-        # =========================
         done_procedures = []
 
         for i in range(length):
-
             if not procedures[i] and not teeth[i]:
                 continue
 
@@ -1137,15 +1148,33 @@ def save_dental_record():
             })
 
         # =========================
-        # SAVE EVERYTHING
+        # SAVE DENTAL RECORD
         # =========================
-        user_ref.collection("Done_procedure") \
-            .document(uid).set({
-                "chart": dental_chart,
-                "chart_image": image_url,
-                "procedures": done_procedures,
-                "updated_at": firestore.SERVER_TIMESTAMP
-            }, merge=True)
+        user_ref.collection("Done_procedure").add({
+            "uid": uid,
+            "chart": dental_chart,
+            "chart_image": image_url,
+            "procedures": done_procedures,
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+
+        # =========================
+        # DELETE APPROVE RECORD
+        # =========================
+        Patient_unq_id = request.form.get("Patient_unq_id")
+
+        print("Received Patient_unq_id:", Patient_unq_id)
+
+        if Patient_unq_id:
+            try:
+
+                # Delete from the same location where approve() saved it
+                user_ref.collection("Approve").document(Patient_unq_id).delete()
+
+                print("Deleted Approve document:", Patient_unq_id)
+
+            except Exception as del_error:
+                print("DELETE APPROVE ERROR:", del_error)     
 
         return jsonify({
             "success": True,
@@ -1154,14 +1183,37 @@ def save_dental_record():
         })
 
     except Exception as e:
-
         print("ERROR:", e)
-
         return jsonify({
             "success": False,
             "message": str(e)
         }), 500
+    
 
+
+
+
+@app.route("/get_approve/<uid>")
+def get_approve(uid):
+    try:
+        approve_docs = (
+            db.collection("google_create_account")
+            .document(uid)
+            .collection("Approve")
+            .stream()
+        )
+
+        approve_list = []
+
+        for doc in approve_docs:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            approve_list.append(data)
+
+        return jsonify(approve_list)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
     

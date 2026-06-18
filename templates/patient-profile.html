@@ -187,7 +187,8 @@
             border: 1px solid rgba(255,255,255,0.4); 
             border-radius: 10px;
             margin-bottom: 10px;
-            margin-right: 1100px;
+            margin: 0 0 10px 0;
+            display: inline-block;
             
         }
 
@@ -608,7 +609,7 @@ body.dark-mode .nav-card span {
             <div class="info-grid">
                 <div class="info-item">
                     <label>Full Name</label>
-                    <p>{{ user.get('firstname', '') + ' ' + user.get('lastname', '') or 'N/A' }}</p>
+                    <p>{{ user.get('firstname', name) }}</p>
                 </div>
 
                 <div class="info-item">
@@ -650,11 +651,172 @@ body.dark-mode .nav-card span {
                 <span>Notifications</span>
             </a>
 
-        <!-- My Schedule -->
-        <a href="#" class="nav-card">
-            <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
-            <span>My Schedule</span>
-        </a>
+            <!-- My Schedule Card -->
+<a href="#" class="nav-card" id="scheduleBtn">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
+    <span>My Schedule</span>
+    
+</a>
+
+<!-- Schedule Modal -->
+<div id="scheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <h2>My Schedule</h2>
+<h2 style="display: none;">{{ user.get('uid', id) }}</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date and Time</th>
+                        <th>Services</th>
+                        <th>Dentist</th>
+   
+                    </tr>
+                </thead>
+                <tbody id="scheduleTableBody"> </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+<script>
+function loadApprove(uid) {
+    const tbody = document.getElementById("scheduleTableBody");
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="3" style="text-align:center; padding:15px;">
+                Loading schedule...
+            </td>
+        </tr>
+    `;
+
+    fetch(`/get_approve/${uid}`)
+        .then(res => res.json())
+        .then(data => {
+            const list = Array.isArray(data) ? data : [];
+
+            if (!list.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding:15px;">
+                            No schedule found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = "";
+
+            list.forEach(item => {
+                const date = item.Birthday || item.Birthday || "—";
+                const service = item.Service || item.service || "—";
+                const dentist = item.DentistName || item.DentistName || "—";
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${date}</td>
+                        <td>${service}</td>
+                        <td>${dentist}</td>
+                    </tr>
+                `;
+            });
+        })
+        .catch(err => {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align:center; color:red;">
+                        Failed to load schedule
+                    </td>
+                </tr>
+            `;
+            console.error(err);
+        });
+}
+</script>
+
+<style>
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+    background: #fff;
+    width: 95%;
+    max-width: 800px;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 12px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Table */
+.table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #007bff;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background: #f5f5f5;
+}
+</style>
+
+<script>
+const scheduleModal = document.getElementById("scheduleModal");
+const scheduleBtn = document.getElementById("scheduleBtn");
+const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
+
+scheduleBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    scheduleModal.style.display = "block";
+
+    loadApprove("{{ user.get('uid', '') }}");
+});
+
+scheduleCloseBtn.addEventListener("click", () => {
+    scheduleModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+    if (e.target === scheduleModal) {
+        scheduleModal.style.display = "none";
+    }
+});
+</script>
 
         <!-- Medical Records -->
         <a href="/medical_recordss" class="nav-card">
@@ -693,7 +855,7 @@ function closePaymentModal() {
 }
 
 // Close when clicking outside the modal
-window.onclick = function(event) {
+addEventListener = function(event) {
     const modal = document.getElementById('paymentModal');
 
     if (event.target === modal) {
