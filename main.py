@@ -14,12 +14,7 @@ import os
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
 from datetime import timedelta
 
-# -----------------------------
-# Initialize Firebase safely (prevents duplicate init on debug reload)
-# -----------------------------
-# -----------------------------
-# Initialize Firebase safely
-# -----------------------------
+
 import os
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -78,9 +73,8 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 
 
 
-#------------------------------------------------------------------------------------------------------------------------------------------------
 #notification for gmail ni client
-# -----------------------------------------------------------------------------------------------------------------------------------------
+
 app.permanent_session_lifetime = timedelta(minutes=2)
 
 @app.before_request
@@ -517,7 +511,7 @@ def approve():
     user_ref.collection("Approve").document(appointment_id).set(data)
     user_ref.collection(Appointment_cliets).document(appointment_id).delete()
 
-    # Get patient's email and send notification
+
     user_doc = user_ref.get()
 
     if user_doc.exists:
@@ -573,74 +567,6 @@ def p_profile():
     
     return render_template("patient-profile.html", name=session.get('name'), user=user_data)
 
-@app.route("/update-profile", methods=["POST"])
-def update_profile():
-    user_id = session.get("uid")
-    if not user_id:
-        flash("User not logged in", "error")
-        return redirect(url_for("p_profile"))
-
-    try:
-        # 1. Grab & clean form data
-        new_fullname = bleach.clean(request.form.get("new_name", "").strip())
-        new_username = bleach.clean(request.form.get("new_username", "").strip())
-        new_phone = bleach.clean(request.form.get("new_phone", "").strip())
-        new_email = bleach.clean(request.form.get("new_email", "").strip())
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
-
-        # 2. Verify document exists
-        user_ref = db.collection(Account_clients).document(user_id)
-        user_doc = user_ref.get()
-        if not user_doc.exists:
-            flash("User record not found in database.", "error")
-            return redirect(url_for("p_profile"))
-
-        current_user = user_doc.to_dict()
-        is_google = current_user.get('provider') == 'google'
-
-        # 3. Password validation
-        if new_password and new_password != confirm_password:
-            flash("Passwords do not match!", "error")
-            return redirect(url_for("p_profile"))
-
-        # 4. Split full name safely
-        name_parts = new_fullname.split(maxsplit=1)
-        new_firstname = name_parts[0] if name_parts else ""
-        new_lastname = name_parts[1] if len(name_parts) > 1 else ""
-
-        # 5. Build update payload
-        update_data = {
-            "firstname": new_firstname,
-            "lastname": new_lastname,
-            "username": new_username,
-            "contact_number": new_phone,
-            "updated_at": datetime.utcnow().isoformat(),
-        }
-
-        # 6. Handle auth-sensitive fields
-        if not is_google:
-            if new_email: update_data["email"] = new_email
-            if new_password: update_data["password"] = generate_password_hash(new_password)
-        else:
-            # Preserve Google-linked email & password to avoid auth breaks
-            update_data["email"] = current_user.get("email")
-            update_data["password"] = current_user.get("password")
-
-        # 7. SAFE UPDATE: merge=True prevents "document not found" errors & won't delete other fields
-        user_ref.set(update_data, merge=True)
-
-        # 8. Refresh session
-        session['username'] = new_username
-        session['name'] = new_fullname
-        flash("Profile updated successfully!", "success")
-
-    except Exception as e:
-        # 🔍 TEMPORARY: Shows exact error in UI for debugging
-        flash(f"Update failed: {str(e)}", "error")
-        print(f"🔥 Firestore Update Error: {e}")  # Also logs to terminal
-
-    return redirect(url_for("p_profile"))
 
 
 
@@ -655,9 +581,9 @@ def update_profile():
 @app.route("/admin_dashboard")
 def adminDashboard():
 
-    # =========================
+
     # APPOINTMENTS COLLECTION
-    # =========================
+
     docs = db.collection_group("appointments").get()
 
     appointment_list = []
@@ -669,9 +595,8 @@ def adminDashboard():
         data["source"] = "appointment"
         appointment_list.append(data)
 
-    # =========================
     # APPROVE SUBCOLLECTION
-    # =========================
+
     approve_docs = db.collection_group("Approve").get()
 
     approve_list = []
@@ -684,17 +609,15 @@ def adminDashboard():
         data["source"] = "approve"
         approve_list.append(data)
 
-    # =========================
     # ACCOUNTS
-    # =========================
+
     google_docs = db.collection("google_create_account").stream()
     manual_docs = db.collection(Account_clients).stream()
 
     accounts = []
 
-    # =========================
     # GOOGLE ACCOUNTS
-    # =========================
+
     for doc in google_docs:
 
         data = doc.to_dict()
@@ -710,9 +633,8 @@ def adminDashboard():
         data["last_name"] = last
         data["full_name"] = data.get("name") or f"{first} {last}".strip()
 
-        # =========================
         # DONE PROCEDURE
-        # =========================
+
         done_doc = (
             db.collection("google_create_account")
             .document(doc.id)
@@ -727,9 +649,9 @@ def adminDashboard():
 
         accounts.append(data)
 
-    # =========================
+
     # MANUAL ACCOUNTS
-    # =========================
+
     for doc in manual_docs:
 
         data = doc.to_dict()
@@ -745,9 +667,8 @@ def adminDashboard():
         data["last_name"] = last
         data["full_name"] = f"{first} {last}".strip()
 
-        # =========================
         # DONE PROCEDURE
-        # =========================
+  
         done_doc = (
             db.collection(Account_clients)
             .document(doc.id)
@@ -778,7 +699,7 @@ def adminDashboard():
 def get_patient(uid):
 
     # =========================
-    # TRY GOOGLE ACCOUNTS FIRST
+    # TRY GOOGLE ACCOUNT FIRST
     # =========================
     doc_ref = db.collection("google_create_account").document(uid)
     doc = doc_ref.get()
@@ -786,7 +707,7 @@ def get_patient(uid):
     account_type = "Google"
 
     # =========================
-    # IF NOT FOUND → TRY MANUAL
+    # TRY MANUAL ACCOUNT
     # =========================
     if not doc.exists:
         doc_ref = db.collection(Account_clients).document(uid)
@@ -794,15 +715,16 @@ def get_patient(uid):
         account_type = "Manual"
 
     if not doc.exists:
-        return {"error": "Not found"}
+        return {"error": "Patient not found"}
 
+    # =========================
+    # ACCOUNT INFORMATION
+    # =========================
     data = doc.to_dict()
+
     data["uid"] = doc.id
     data["account_type"] = account_type
 
-    # =========================
-    # NORMALIZE NAME (same as your loop)
-    # =========================
     first = data.get("firstname") or data.get("first_name") or ""
     last = data.get("lastname") or data.get("last_name") or ""
 
@@ -811,15 +733,35 @@ def get_patient(uid):
     data["full_name"] = data.get("name") or f"{first} {last}".strip()
 
     # =========================
-    # DONE PROCEDURE (IMPORTANT FIX)
+    # LOAD DONE PROCEDURE
     # =========================
-    done_doc = (
-        doc_ref.collection("Done_procedure")
-        .document(uid)
-        .get()
-    )
+    visit_history = []
 
-    data["Done_procedure"] = done_doc.to_dict() if done_doc.exists else {}
+    done_docs = doc_ref.collection("Done_procedure").stream()
+
+    for done in done_docs:
+
+        done_data = done.to_dict()
+
+        procedures = done_data.get("procedures", [])
+
+        for p in procedures:
+            visit_history.append({
+                "dentist": p.get("dentist", ""),
+                "uid": p.get("uid", ""),
+                "date": p.get("date", ""),
+                "procedure": p.get("procedure", ""),
+                "paid": p.get("paid", 0),
+                "balance": p.get("balance", 0),
+                "tooth": p.get("tooth", ""),
+                "value": p.get("value", 0),
+                "status": p.get("status", ""),   # <-- ADD THIS
+                "next_appointment": p.get("next_appointment", ""),
+                "status": p.get("status", ""),
+                "medicine": p.get("medicine", "")
+            })
+
+    data["Done_procedure"] = visit_history
 
     return data
 
@@ -1058,9 +1000,6 @@ def save_dental_record():
                 "message": "UID is required"
             }), 400
 
-        # =========================
-        # DETECT MAIN COLLECTION
-        # =========================
         if db.collection("google_create_account").document(uid).get().exists:
             main_collection = "google_create_account"
 
@@ -1084,9 +1023,6 @@ def save_dental_record():
             if key.startswith("tooth_"):
                 dental_chart[key] = request.form.get(key)
 
-        # =========================
-        # DENTAL CHART IMAGE
-        # =========================
         image_url = ""
 
         image_file = request.files.get("dental_chart_image")
@@ -1108,7 +1044,7 @@ def save_dental_record():
                 print("IMAGE SAVE ERROR:", img_error)
 
         # =========================
-        # TREATMENT NOTES
+        # TREATMENT TABLE
         # =========================
         dates = request.form.getlist("date[]")
         teeth = request.form.getlist("tooth[]")
@@ -1118,6 +1054,8 @@ def save_dental_record():
         paids = request.form.getlist("paid[]")
         balances = request.form.getlist("balance[]")
         next_appts = request.form.getlist("next_appointment[]")
+        medicines = request.form.getlist("medicine[]")
+        statuses = request.form.getlist("status[]")
 
         length = min(
             len(dates),
@@ -1127,12 +1065,15 @@ def save_dental_record():
             len(values),
             len(paids),
             len(balances),
-            len(next_appts)
+            len(next_appts),
+            len(medicines),
+            len(statuses)
         )
 
         done_procedures = []
 
         for i in range(length):
+
             if not procedures[i] and not teeth[i]:
                 continue
 
@@ -1144,11 +1085,13 @@ def save_dental_record():
                 "value": safe_float(values[i]),
                 "paid": safe_float(paids[i]),
                 "balance": safe_float(balances[i]),
-                "next_appointment": next_appts[i]
+                "next_appointment": next_appts[i],
+                "medicine": medicines[i],
+                "status": statuses[i]
             })
 
         # =========================
-        # SAVE DENTAL RECORD
+        # SAVE TO FIRESTORE
         # =========================
         user_ref.collection("Done_procedure").add({
             "uid": uid,
@@ -1159,7 +1102,7 @@ def save_dental_record():
         })
 
         # =========================
-        # DELETE APPROVE RECORD
+        # DELETE APPROVED RECORD
         # =========================
         Patient_unq_id = request.form.get("Patient_unq_id")
 
@@ -1167,14 +1110,11 @@ def save_dental_record():
 
         if Patient_unq_id:
             try:
-
-                # Delete from the same location where approve() saved it
                 user_ref.collection("Approve").document(Patient_unq_id).delete()
-
                 print("Deleted Approve document:", Patient_unq_id)
 
             except Exception as del_error:
-                print("DELETE APPROVE ERROR:", del_error)     
+                print("DELETE APPROVE ERROR:", del_error)
 
         return jsonify({
             "success": True,
@@ -1188,9 +1128,50 @@ def save_dental_record():
             "success": False,
             "message": str(e)
         }), 500
-    
 
 
+
+@app.route("/get_treatment_info/<uid>")
+def get_treatment_info(uid):
+
+    # Find the patient
+    if db.collection("google_create_account").document(uid).get().exists:
+        user_ref = db.collection("google_create_account").document(uid)
+
+    elif db.collection(Account_clients).document(uid).get().exists:
+        user_ref = db.collection(Account_clients).document(uid)
+
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Patient not found"
+        }), 404
+
+    procedures = []
+
+    # Read all Done_procedure documents
+    for doc in user_ref.collection("Done_procedure").stream():
+
+        data = doc.to_dict()
+
+        for p in data.get("procedures", []):
+            procedures.append({
+                "dentist": p.get("dentist", ""),
+                "medicine": p.get("medicine", ""),
+                "date": p.get("date", ""),
+                "procedure": p.get("procedure", ""),
+                "paid": p.get("paid", 0),
+                "next_appointment": p.get("next_appointment", ""),
+                "status": p.get("status", ""),
+                "balance": p.get("balance", 0),
+                "value": p.get("value", 0),
+                "tooth": p.get("tooth", "")
+            })
+
+    return jsonify({
+        "success": True,
+        "procedures": procedures
+    })
 
 
 @app.route("/get_approve/<uid>")

@@ -793,6 +793,52 @@ td {
 tr:hover {
     background: #f5f5f5;
 }
+
+.payment-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+}
+
+.payment-table th{
+    background:#0d47a1;
+    color:white;
+    padding:10px;
+    text-align:center;
+}
+
+.payment-table td{
+    padding:10px;
+    border:1px solid #ddd;
+    text-align:center;
+}
+
+.payment-table tr:nth-child(even){
+    background:#f5f5f5;
+}
+
+.gcash-btn{
+    background:#007bff;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+.gcash-btn:hover{
+    background:#0056b3;
+}
+
+.paid{
+    color:green;
+    font-weight:bold;
+}
+
+.unpaid{
+    color:red;
+    font-weight:bold;
+}
 </style>
 
 <script>
@@ -819,50 +865,247 @@ window.addEventListener("click", (e) => {
 </script>
 
         <!-- Medical Records -->
-        <a href="/medical_recordss" class="nav-card">
-            <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
-            <span>Medical Records</span>
-        </a>
+ <a href="javascript:void(0);" class="nav-card" onclick="openVisitHistory('{{ user.get('uid', '') }}')">
+    <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
+    <span>Medical Records</span>
+</a>
+
+<div id="visitHistoryModal" class="modal">
+    <div class="modal-content" style="max-width:900px;">
+
+        <span class="close" onclick="closeVisitHistory()">&times;</span>
+
+        <h2>Medical Records</h2>
+
+        <table class="payment-table">
+
+            <thead>
+                <tr>
+                    <th>Assigned Dentist</th>
+                    <th>Assigned UID</th>
+                    <th>Date</th>
+                    <th>Procedure</th>
+                    <th>Fee Paid</th>
+                    <th>Next Appointment</th>
+                </tr>
+            </thead>
+
+            <tbody id="visitHistoryBody">
+
+            </tbody>
+
+        </table>
+
+    </div>
+</div>
+
+
+<script>function openVisitHistory(uid){
+
+    document.getElementById("visitHistoryModal").style.display = "block";
+
+    const body = document.getElementById("visitHistoryBody");
+
+    body.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align:center;">
+                Loading...
+            </td>
+        </tr>
+    `;
+
+    fetch(`/get_patient/${uid}`)
+    .then(res => res.json())
+    .then(data=>{
+
+        body.innerHTML = "";
+
+        const procedures = data.Done_procedure || [];
+
+        if(procedures.length===0){
+
+            body.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;">
+                        No medical records found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        procedures.forEach(function(p){
+
+            body.innerHTML += `
+                <tr>
+                    <td>${p.dentist || ""}</td>
+                    <td>${p.uid || ""}</td>
+                    <td>${p.date || ""}</td>
+                    <td>${p.procedure || ""}</td>
+                    <td>₱${p.paid || ""}</td>
+                    <td>${p.next_appointment || ""}</td>
+                </tr>
+            `;
+
+        });
+
+    });
+
+}
+
+function closeVisitHistory(){
+
+    document.getElementById("visitHistoryModal").style.display="none";
+
+}
+
+window.onclick=function(e){
+
+    const modal=document.getElementById("visitHistoryModal");
+
+    if(e.target===modal){
+
+        modal.style.display="none";
+
+    }
+
+}</script>
 
 <!-- Payments Card -->
-<a href="#" class="nav-card" onclick="openPaymentModal()">
+<!-- Payments Card -->
+<a href="#" class="nav-card" onclick="openPaymentModal(); return false;">
     <img src="https://img.icons8.com/ios-filled/50/ffffff/cash.png" alt="Payments">
     <span>Payments</span>
 </a>
 
-<!-- Modal -->
+<!-- Payment Modal -->
 <div id="paymentModal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:900px;">
         <span class="close" onclick="closePaymentModal()">&times;</span>
 
-<h1>PAYMENTS</h1>
+        <h2>Payments</h2>
 
-        <button onclick="closePaymentModal()">Close</button>
+        <table style="width:100%; border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Procedure</th>
+                    <th>Amount Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="paymentTableBody">
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        Loading...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
 </div>
-
-    </div>
-</div>
-
 
 <script>
 function openPaymentModal() {
-    document.getElementById('paymentModal').style.display = 'block';
+
+    document.getElementById("paymentModal").style.display = "block";
+
+    const body = document.getElementById("paymentTableBody");
+
+    body.innerHTML = `
+        <tr>
+            <td colspan="4" style="text-align:center;">
+                Loading...
+            </td>
+        </tr>
+    `;
+
+    fetch("/get_patient/{{ user.get('uid','') }}")
+    .then(res => res.json())
+    .then(data => {
+
+        const procedures = data.Done_procedure || [];
+
+        body.innerHTML = "";
+
+        if (procedures.length === 0) {
+            body.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align:center;">
+                        No payment records found.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+procedures.forEach(p => {
+
+    const status = p.status || "Unpaid";
+
+    body.innerHTML += `
+        <tr>
+            <td>${p.date || "-"}</td>
+            <td>${p.procedure || "-"}</td>
+            <td>₱${p.paid || 0}</td>
+            <td>₱${p.balance || 0}</td>
+            <td>
+
+                ${
+                    status === "Paid"
+                    ? `<span class="paid">Paid</span>`
+                    : `
+                        <span class="unpaid">${status}</span><br><br>
+                        <button class="gcash-btn"
+                            onclick="payGCash('${p.uid}','${p.procedure}','${p.balance}')">
+                            Pay 
+                        </button>
+                    `
+                }
+
+            </td>
+        </tr>
+    `;
+
+});
+
+    })
+    .catch(err => {
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="4" style="text-align:center;color:red;">
+                    Failed to load payment records.
+                </td>
+            </tr>
+        `;
+
+        console.error(err);
+
+    });
+
 }
 
 function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
+    document.getElementById("paymentModal").style.display = "none";
 }
 
-// Close when clicking outside the modal
-addEventListener = function(event) {
-    const modal = document.getElementById('paymentModal');
+window.addEventListener("click", function(event) {
+
+    const modal = document.getElementById("paymentModal");
 
     if (event.target === modal) {
         closePaymentModal();
     }
-}
+
+});
 </script>
+</div>
+</div>
 
 <div class="modal-overlay" id="updateModal">
     <div class="modal-content">

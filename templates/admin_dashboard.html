@@ -107,6 +107,8 @@
                 </div>
             </div>
         </div>
+
+
 <div id="section-mypatients" class="content-section">
                 <section class="content-panel">
                 <table class="appointment-table">
@@ -115,11 +117,8 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>UID</th>
-                <th>Sex</th>
+                 <th>Account Number</th>
                 <th>Age</th>
-                <th>Contact</th>
-                <th>Service</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -130,22 +129,22 @@
         <tr>
 
             <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
+             <td>{{ appointment.uid}}</td>
 
-            <td>{{ appointment.uid }}</td>
 
             <td>{{ appointment.get('Sex', 'Female') }}</td>
 
-            <td>{{ appointment.get('Age', 'N/A') }}</td>
+            
 
-            <td>{{ appointment.get('ContactNumber', '') }}</td>
+        
 
-            <td>{{ appointment.get('Service', '') }}</td>
 
             <td>
- <button type="button"
-        class="btn-action accept open-patient-modal"
-        style="width:100%;">
-
+<button
+    type="button"
+    class="btn-action accept"
+    style="width:100%;"
+    onclick="openCheckInfoModal('{{ appointment.uid }}')">
     CHECK INFO
 </button>
             </td>
@@ -159,18 +158,77 @@
 
 </div>
 
-<div id="patientModal" class="modal-overlay">
-
-    <div class="modal-box">
-
-        <button id="closeModalBtn" class="btn-back">Close</button>
-
-        <div id="patientContent">
-            Loading...
+<div id="checkInfoModal" class="modal" style="display:none;">
+    <div class="modal-content" style="width:90%;max-width:1000px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h2>Treatment Information</h2>
+            <span onclick="closeCheckInfoModal()" style="font-size:28px;cursor:pointer;">&times;</span>
         </div>
 
+        <table class="treatment-table" style="width:100%;">
+            <thead>
+                <tr>
+                    <th>Assigned Dentist</th>
+                    <th>Medicine</th>
+                    <th>Visit Date</th>
+                    <th>Procedure</th>
+                    <th>Fee Paid</th>
+                    <th>Next Appointment</th>
+                </tr>
+            </thead>
+
+            <tbody id="checkInfoBody">
+
+            </tbody>
+        </table>
     </div>
 </div>
+
+<script>
+async function openCheckInfoModal(uid) {
+
+    const response = await fetch("/get_treatment_info/" + uid);
+    const result = await response.json();
+
+    const tbody = document.getElementById("checkInfoBody");
+    tbody.innerHTML = "";
+
+    if (result.success && result.procedures.length > 0) {
+
+        result.procedures.forEach(item => {
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.dentist || "-"}</td>
+                    <td>${item.medicine || "-"}</td>
+                    <td>${item.date || "-"}</td>
+                    <td>${item.procedure || "-"}</td>
+                    <td>₱${item.paid || 0}</td>
+                    <td>${item.next_appointment || "-"}</td>
+                </tr>
+            `;
+
+        });
+
+    } else {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center;">
+                    No treatment history found.
+                </td>
+            </tr>
+        `;
+
+    }
+
+    document.getElementById("checkInfoModal").style.display = "flex";
+}
+
+function closeCheckInfoModal() {
+    document.getElementById("checkInfoModal").style.display = "none";
+}
+</script>
 
 
 <script>
@@ -186,57 +244,100 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
         modal.style.display = "flex";
         content.innerHTML = "Loading...";
 
-        fetch(`/get_patient/${uid}`)
-            .then(res => res.json())
-            .then(data => {
+     fetch(`/get_patient/${uid}`)
+    .then(res => res.json())
+    .then(data => {
 
-                let procedures = data.Done_procedure?.procedures || [];
+        // Patient Information
+        let html = `
+            <h3>${data.full_name}</h3>
+            <p><b>UID:</b> ${data.uid}</p>
+            <p><b>Sex:</b> ${data.sex ?? ""}</p>
+            <p><b>Age:</b> ${data.age ?? ""}</p>
+            <p><b>Contact:</b> ${data.contact ?? ""}</p>
+            <p><b>Service:</b> ${data.service ?? ""}</p>
 
-                let html = `
-                    <h3>${data.full_name}</h3>
-                    <p><b>UID:</b> ${data.uid}</p>
-                    <p><b>Sex:</b> ${data.sex}</p>
-                    <p><b>Age:</b> ${data.age}</p>
-                    <p><b>Contact:</b> ${data.contact}</p>
-                    <p><b>Service:</b> ${data.service}</p>
+            <hr>
+            <h4>Procedures</h4>
+        `;
 
-                    <hr>
-                    <h4>Procedures</h4>
+        const procedures = data.Done_procedure || [];
+
+        if (procedures.length === 0) {
+
+            html += `<p>No procedure records found.</p>`;
+
+            document.getElementById("pd-visit-history").innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;">
+                        No visit history found.
+                    </td>
+                </tr>
+            `;
+
+        } else {
+
+            // Modal Table
+            html += `
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr>
+                            <th>Assigned Dentist</th>
+                            <th>Assigned UID</th>
+                            <th>Visit Date</th>
+                            <th>Procedure</th>
+                            <th>Fee Paid</th>
+                            <th>Next Appointment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            procedures.forEach(p => {
+
+                html += `
+                    <tr>
+                        <td>${p.dentist}</td>
+                        <td>${p.uid}</td>
+                        <td>${p.date}</td>
+                        <td>${p.procedure}</td>
+                        <td>₱${p.paid}</td>
+                        <td>${p.next_appointment}</td>
+                    </tr>
                 `;
 
-                if (procedures.length === 0) {
-                    html += `<p>No procedure records found.</p>`;
-                } else {
-                    html += `
-                        <table style="width:100%; border-collapse:collapse;">
-                            <thead>
-                                <tr>
-                                    <th>Balance</th>
-                                    <th>Date</th>
-                                    <th>Next Appointment</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                    `;
-
-                    procedures.forEach(p => {
-                        html += `
-                            <tr>
-                                <td>${p.balance ?? ''}</td>
-                                <td>${p.date ?? ''}</td>
-                                <td>${p.next_appointment ?? ''}</td>
-                            </tr>
-                        `;
-                    });
-
-                    html += `
-                            </tbody>
-                        </table>
-                    `;
-                }
-
-                content.innerHTML = html;
             });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            // Visits History Table
+            let historyHTML = "";
+
+            procedures.forEach(p => {
+
+                historyHTML += `
+                    <tr>
+                        <td>${p.dentist}</td>
+                        <td>${p.uid}</td>
+                        <td>${p.date}</td>
+                        <td>${p.procedure}</td>
+                        <td>₱${p.paid}</td>
+                        <td>${p.next_appointment}</td>
+                    </tr>
+                `;
+
+            });
+
+            document.getElementById("pd-visit-history").innerHTML = historyHTML;
+
+        }
+
+        content.innerHTML = html;
+
+    });
     });
 });
 
@@ -442,17 +543,12 @@ window.onclick = (e) => {
             <th>Next Appointmnet</th>
         </tr>
     </thead>
-   <tbody id="pd-visit-history">
-
-            <tr>
-            
-                <td>dentist</td>
-                <td>tooth</td>
-                <td>value</td>
-                <td>paid</td>
-                <td>next_appointment</td>
-            </tr>
-
+<tbody id="pd-visit-history">
+    <tr>
+        <td colspan="6" style="text-align:center;">
+            Select a patient to view visit history.
+        </td>
+    </tr>
 </tbody>
 </table>
 </div>
@@ -611,10 +707,10 @@ window.onclick = (e) => {
             <div id="td-treatment-section" class="treatment-section" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h3  style="margin:0;">Treatment Notes </h3>
-                            <p>
-        Patient Record ID:
-        <span id="td-Patient_unq_id">-</span>
-    </p>
+         <p hidden>
+    Patient Record ID:
+    <span id="td-Patient_unq_id">-</span>
+</p>
                         <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size:14px; padding:6px 18px;">Save</button>
                     </div>
                     <table class="treatment-table" id="td-treatment-table">
@@ -628,7 +724,8 @@ window.onclick = (e) => {
                                 <th>Amount Paid</th>
                                 <th>Balance</th>
                                 <th>Next Appointment</th>
-                                <th>Example</th>
+                                <th>Medicine</th>
+                                <th>Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -639,7 +736,7 @@ window.onclick = (e) => {
                                 <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
                                 <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
                                 <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                               <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
                                 <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
                             </tr>
                             <tr>
@@ -649,7 +746,7 @@ window.onclick = (e) => {
                                 <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
                                 <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
                                 <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                               <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
                                 <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
                             </tr>
                             <tr>
@@ -659,7 +756,18 @@ window.onclick = (e) => {
                                 <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
                                 <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
                                 <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            
+                            </tr>
+                            <tr>
+                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
+                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
+                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
                                 <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
                             </tr>
                             <tr>
@@ -669,19 +777,19 @@ window.onclick = (e) => {
                                 <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
                                 <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
                                 <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
                                 <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+                            
+       
                             </tr>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            </tr>
+<tr>
+                            <td>
+    <select class="td-status" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;box-sizing:border-box;">
+        <option value="Not Paid">Not Paid</option>
+        <option value="Paid">Paid</option>
+    </select>
+    </tr>
+</td>
                             
                         </tbody>
                     </table>
@@ -689,6 +797,23 @@ window.onclick = (e) => {
                     <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
                 </div>
             </div>
+
+  <script>
+document.addEventListener("input", function(e) {
+
+    if (e.target.classList.contains("td-value") || 
+        e.target.classList.contains("td-paid")) {
+
+        let row = e.target.closest("tr");
+
+        let value = parseFloat(row.querySelector(".td-value").value) || 0;
+        let paid = parseFloat(row.querySelector(".td-paid").value) || 0;
+
+        row.querySelector(".td-balance").value = (value - paid).toFixed(2);
+    }
+
+});
+</script>
 
 
         <div id="section-records" class="content-section">
@@ -903,6 +1028,45 @@ function openPatientDashboard(
 
     // ✅ FIX: always use Patient_unq_id, NOT uid
     loadTreatmentNotes(Patient_unq_id);
+
+    // Load Visit History
+fetch(`/get_patient/${uid}`)
+.then(res => res.json())
+.then(data => {
+
+    const history = document.getElementById("pd-visit-history");
+    history.innerHTML = "";
+
+    const procedures = data.Done_procedure || [];
+
+    if (procedures.length === 0) {
+
+        history.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center;">
+                    No visit history found.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+procedures.forEach(function(p){
+
+    history.innerHTML += `
+        <tr>
+            <td>${p.dentist || ""}</td>
+            <td>${p.uid || ""}</td>
+            <td>${p.date || ""}</td>
+            <td>${p.procedure || ""}</td>
+            <td>₱${p.paid || 0}</td>
+            <td>${p.next_appointment || ""}</td>
+        </tr>
+    `;
+
+});
+
+});
 }
         function setCheckbox(id, value) {
             var el = document.getElementById(id);
@@ -1091,24 +1255,64 @@ function openPatientDashboard(
             }
 
             function appendRow(data) {
-                var tableBody = document.querySelector('#td-treatment-table tbody');
-                if (!tableBody) return;
-                var tr = document.createElement('tr');
-                tr.innerHTML =
-                    '<td><input type="date" class="td-date" value="' + escHtml(data.date) + '" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>' +
-                    '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth) + '" placeholder="e.g. 18" /></td>' +
-                    '<td><input type="text" class="td-procedure" value="' + escHtml(data.procedure) + '" placeholder="Procedure..." /></td>' +
-                    '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist) + '" placeholder="Dentist name..." /></td>' +
-                    '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork) + '" placeholder="0.00" step="0.01" /></td>' +
-                    '<td><input type="number" class="td-paid" value="' + escHtml(data.amountPaid) + '" placeholder="0.00" step="0.01" /></td>' +
-                    '<td><input type="text" class="td-balance" value="' + escHtml(data.balance) + '" placeholder="Balance" /></td>' +
-                    '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt) + '" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>';
-                tableBody.appendChild(tr);
-            }
+    var tableBody = document.querySelector('#td-treatment-table tbody');
+    if (!tableBody) return;
 
-            function addTreatmentRow() {
-                appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
-            }
+    var tr = document.createElement('tr');
+
+    tr.innerHTML =
+        '<td><input type="date" class="td-date" value="' + escHtml(data.date || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+
+        '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18"></td>' +
+
+        '<td><input type="text" class="td-procedure" value="' + escHtml(data.procedure || '') + '" placeholder="Procedure..."></td>' +
+
+        '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Dentist name..."></td>' +
+
+        '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork || '') + '" placeholder="0.00" step="0.01"></td>' +
+
+        '<td><input type="number" class="td-paid" value="' + escHtml(data.amountPaid || '') + '" placeholder="0.00" step="0.01"></td>' +
+
+        '<td><input type="text" class="td-balance" value="' + escHtml(data.balance || '') + '" placeholder="Balance" readonly></td>' +
+
+        '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+
+        '<td>' +
+            '<select class="td-medicine" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                '<option value="">Select Medicine</option>' +
+                '<option value="Amoxicillin"' + (data.medicine === "Amoxicillin" ? " selected" : "") + '>Amoxicillin</option>' +
+                '<option value="Ibuprofen"' + (data.medicine === "Ibuprofen" ? " selected" : "") + '>Ibuprofen</option>' +
+                '<option value="Paracetamol"' + (data.medicine === "Paracetamol" ? " selected" : "") + '>Paracetamol</option>' +
+                '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
+                '<option value="Clindamycin"' + (data.medicine === "Clindamycin" ? " selected" : "") + '>Clindamycin</option>' +
+                '<option value="Other"' + (data.medicine === "Other" ? " selected" : "") + '>Other</option>' +
+            '</select>' +
+        '</td>' +
+
+        '<td>' +
+            '<select class="td-status" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
+                '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
+            '</select>' +
+        '</td>';
+
+    tableBody.appendChild(tr);
+}
+
+function addTreatmentRow() {
+    appendRow({
+        date: '',
+        tooth: '',
+        procedure: '',
+        dentist: '',
+        valueOfWork: '',
+        amountPaid: '',
+        balance: '',
+        nextAppt: '',
+        medicine: '',
+        status: 'Not Paid'
+    });
+}
 
             function escHtml(s) {
                 var d = document.createElement('div');
@@ -1371,6 +1575,8 @@ async function saveDentalRecord(uid) {
       formData.append("paid[]", row.querySelector(".td-paid")?.value || "");
       formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
       formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
+      formData.append("medicine[]", row.querySelector(".td-medicine")?.value || "");
+    formData.append("status[]", row.querySelector(".td-status")?.value || "");
     });
 
     // =========================
