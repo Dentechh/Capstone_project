@@ -481,17 +481,7 @@ body.dark-mode .panel-content {
     cursor: pointer;
     transition: all 0.2s ease;
 }
-.treatment-table select.td-medicine {
-    width: 150px;
-    height: 35px;
-    padding: 5px;
-    border: 1px solid var(--navy);
-    border-radius: 6px;
-    background: white;
-    color: #222;
-    font-size: 14px;
-    cursor: pointer;
-}
+
 
 
 .appointment-table button:hover {

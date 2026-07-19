@@ -13,7 +13,7 @@ app = Flask(__name__)
 import os
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
 from datetime import timedelta
-
+import random
 
 import os
 import firebase_admin
@@ -56,10 +56,60 @@ Doc_Patients = "Patients"
 
 
 # Paymongo api keys
-
 pay_mongo_secret_key = "sk_test_CYiQMSXw2cHHhtF564gZ3mMx"
 pay_mongo_public_key = "pk_test_m4rG4iv4L9S5MC8d4dxq39ko"
 
+import requests
+import base64
+
+@app.route("/create_gcash_payment", methods=["POST"])
+def create_gcash_payment():
+
+    data = request.json
+
+    amount = int(float(data["amount"]) * 100)
+
+    auth = base64.b64encode(
+        f"{pay_mongo_secret_key}:".encode()
+    ).decode()
+
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json",
+        "authorization": f"Basic {auth}"
+    }
+
+    payload = {
+        "data": {
+            "attributes": {
+                "billing": {
+                    "name": "Dental Patient",
+                    "email": "patient@example.com"
+                },
+                "line_items": [{
+                    "currency": "PHP",
+                    "amount": amount,
+                    "name": data["procedure"],
+                    "quantity": 1
+                }],
+                "payment_method_types": ["gcash"],
+                "success_url": "https://yourdomain.com/payment-success",
+                "cancel_url": "https://yourdomain.com/payment-cancel"
+            }
+        }
+    }
+
+    r = requests.post(
+        "https://api.paymongo.com/v1/checkout_sessions",
+        headers=headers,
+        json=payload
+    )
+
+    result = r.json()
+
+    return {
+        "checkout_url": result["data"]["attributes"]["checkout_url"]
+    }
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
@@ -99,29 +149,34 @@ def google_index():
     email = session.get('email', '')
     return render_template("google_index.html",uid = uid, name=name, email=email)
 
-
 @app.route("/login", methods=["POST"])
 def login_manual():
-    email = bleach.clean(request.form.get("email",''))
-    password = bleach.clean(request.form.get("Password"))
 
-    # Search for user in Firestore
+    email = bleach.clean(request.form.get("email", "").strip())
+    password = bleach.clean(request.form.get("Password", "").strip())
+
     user_query = db.collection(Account_clients).where("email", "==", email).get()
 
     if user_query:
+
         user_data = user_query[0].to_dict()
-        # Verify the hashed password
-        if check_password_hash(user_data['password'], password):
-            session['name'] = user_data.get('firstname', '')
-            session['email'] = user_data.get('email', '')
-            session['uid'] = user_query[0].id           # ✅ ADD THIS
+
+        if check_password_hash(user_data["password"], password):
+
+            # Check if email is verified
+            if not user_data.get("verified", False):
+                flash("Please verify your email first.", "error")
+                return redirect(url_for("verify_otp", uid=user_query[0].id))
+
+            session["name"] = user_data.get("firstname", "")
+            session["email"] = user_data.get("email", "")
+            session["uid"] = user_query[0].id
 
             flash(f"Welcome back, {user_data['firstname']}!", "success")
             return redirect(url_for("index"))
-    
-    flash("Invalid username or password!", "error") # Added error category
-    return redirect("/") # Redirect to the root route
 
+    flash("Invalid email or password!", "error")
+    return redirect("/")
 
 #  GOOGLE AUTH ROUTE
 
@@ -151,6 +206,34 @@ def login_g_auth():
 
 #  MANUAL SIGN UP
 
+def generate_otp():
+    return str(random.randint(100000, 999999))
+
+def send_otp(email, otp):
+
+    msg = Message(
+        subject="Verify Your Email",
+        recipients=[email]
+    )
+
+    msg.body = f"""
+Hello,
+
+Thank you for creating an account.
+
+Your verification code is:
+
+{otp}
+
+This code expires in 10 minutes.
+
+If you didn't request this account, ignore this email.
+
+Dentech Dental Clinic
+"""
+
+    mail.send(msg)
+
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
@@ -162,16 +245,16 @@ def sign_up():
         email = bleach.clean(request.form["UserName"].strip())
         password = bleach.clean(request.form["Password"].strip())
         contact_number = bleach.clean(request.form["MobileNumber"].strip())
-        
 
         check_account = db.collection(Account_clients).where("email", "==", email).get()
 
         if check_account:
-            flash("Username already taken!")
+            flash("Email already exists!", "error")
             return redirect(url_for("sign_up"))
 
         hashed_password = generate_password_hash(password)
 
+        otp = generate_otp()
 
         doc_ref = db.collection(Account_clients).document()
         uid = doc_ref.id
@@ -179,16 +262,82 @@ def sign_up():
         doc_ref.set({
             "uid": uid,
             "firstname": firstname,
+            "lastname": lastname,
             "email": email,
             "password": hashed_password,
             "created_at": datetime.now(UTC).isoformat(),
-            "contact_number":contact_number,
-            "lastname":lastname
+            "contact_number": contact_number,
+
+            # OTP Verification
+            "verified": False,
+            "otp": otp
         })
 
-        return redirect(url_for("index"))
+        send_otp(email, otp)
+
+        flash("A verification code has been sent to your email.", "success")
+
+        return redirect(url_for("verify_otp", uid=uid))
 
     return render_template("index.html")
+
+
+@app.route("/verify_otp/<uid>", methods=["GET", "POST"])
+def verify_otp(uid):
+
+    doc_ref = db.collection(Account_clients).document(uid)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        flash("Account not found.", "error")
+        return redirect(url_for("index"))
+
+    user = doc.to_dict()
+
+    if request.method == "POST":
+
+        code = request.form["otp"].strip()
+
+        if code == user.get("otp"):
+
+            doc_ref.update({
+                "verified": True,
+                "otp": firestore.DELETE_FIELD
+            })
+
+            flash("Email verified successfully!", "success")
+
+            return redirect(url_for("index"))
+
+        flash("Invalid OTP.", "error")
+
+    return render_template("verify_otp.html", email=user["email"])
+
+
+
+@app.route("/resend_otp/<uid>")
+def resend_otp(uid):
+
+    doc_ref = db.collection(Account_clients).document(uid)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        flash("User not found.", "error")
+        return redirect(url_for("index"))
+
+    user = doc.to_dict()
+
+    otp = generate_otp()
+
+    doc_ref.update({
+        "otp": otp
+    })
+
+    send_otp(user["email"], otp)
+
+    flash("A new OTP has been sent.", "success")
+
+    return redirect(url_for("verify_otp", uid=uid))
 
 #  LOGOUT
 

@@ -1060,10 +1060,10 @@ procedures.forEach(p => {
                     ? `<span class="paid">Paid</span>`
                     : `
                         <span class="unpaid">${status}</span><br><br>
-                        <button class="gcash-btn"
-                            onclick="payGCash('${p.uid}','${p.procedure}','${p.balance}')">
-                            Pay 
-                        </button>
+                      <button class="gcash-btn"
+    onclick="payGCash('${p.balance}','${p.procedure}')">
+    Pay with GCash
+</button>
                     `
                 }
 
@@ -1106,6 +1106,31 @@ window.addEventListener("click", function(event) {
 </script>
 </div>
 </div>
+
+<script>function payGCash(amount, procedure){
+
+    fetch("/create_gcash_payment",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+            amount: amount,
+            procedure: procedure
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+
+        if(data.checkout_url){
+            window.location.href = data.checkout_url;
+        }else{
+            alert(data.error || "Unable to create payment.");
+        }
+
+    });
+
+}</script>
 
 <div class="modal-overlay" id="updateModal">
     <div class="modal-content">
