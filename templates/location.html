@@ -9,298 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
-    <style>
-        
-        .location-container {
-            padding: 40px 5%;
-            max-width: 1500px;
-            margin: 0 auto;
-            
-        }
-
-        .location-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .location-header h2 {
-            color: #ffffff;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .location-container h2{
-            color: white;
-            text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.8);
-        }
-        .location-container p{
-            color: white;
-            font-size: 20px;
-            text-shadow: 1px 1px 5px rgba(0, 0, 0, 1);
-        }
-
-        .map-wrapper {
-            background: var(--grad-navy);
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
-            height: 500px;
-            margin-bottom: 30px;
-            border: 1px solid #eee;
-        }
-
-        .info-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .info-card {
-            background: var(--grad-navy);
-            padding: 25px;
-            border-radius: 10px;
-            border-left: 5px solid #156699;
-        }
-
-        .info-card h4 {
-            color: #ffffff;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn-directions {
-            display: inline-block;
-            background: #156699;
-            color: white;
-            padding: 12px 25px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
-
-        .btn-directions:hover {
-            background: #115580;
-        }
-
-        .main-footer {
-    background: var(--grad-navy);
-    color: #000;
-    padding: 30px 10% 20px;
-    font-family: 'Kumbh Sans', sans-serif;
-}
-
-.footer-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 40px;
-    margin-bottom: 30px;
-}
-
-.footer-brand .brand-name { font-size: 1.4rem; font-weight: 700; display: block; }
-.footer-brand .brand-sub { font-size: 0.8rem; letter-spacing: 2px; }
-.footer-tagline { margin-top: 15px; font-size: 0.9rem; opacity: 0.8; }
-
-.footer-contact h4, .footer-socials h4 {
-    font-size: 1.1rem;
-    margin-bottom: 20px;
-    border-bottom: 2px solid rgba(255,255,255,0.2);
-    padding-bottom: 10px;
-    display: inline-block;
-}
-
-.footer-contact ul { list-style: none; padding: 0; }
-.footer-contact li { margin-bottom: 12px; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; }
-
-.social-links a {
-    color: #000;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.9rem;
-    transition: opacity 0.3s;
-}
-
-.social-links a:hover { opacity: 0.7; }
-
-.footer-bottom {
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.8rem;
-    opacity: 0.7;
-}
-
-        .footer-legal a {
-            color: #000;
-            margin-left: 20px;
-            text-decoration: none;
-        }
-
-        /* Dark Mode Styles */
-        body.dark-mode::before {
-            filter: blur(8px) brightness(0.3);
-        }
-
-        body.dark-mode header {
-            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-        }
-
-        body.dark-mode .nav-links a {
-            color: #e0e0e0;
-        }
-
-        body.dark-mode .nav-links a:hover,
-        body.dark-mode .nav-links a.active {
-            color: #64b5f6;
-        }
-
-        body.dark-mode .user-info-brief {
-            color: #e0e0e0;
-        }
-
-        body.dark-mode .profile-nav {
-            border-left-color: rgba(255,255,255,0.1);
-        }
-
-        body.dark-mode .btn-login {
-            color: #e0e0e0;
-            border-color: rgba(255,255,255,0.2);
-        }
-
-        body.dark-mode .footer {
-            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-        }
-
-        body.dark-mode .footer-contact h4,
-        body.dark-mode .footer-socials h4 {
-            border-bottom-color: rgba(255,255,255,0.1);
-        }
-
-        body.dark-mode .footer-legal a {
-            color: #64b5f6;
-        }
-
-        body.dark-mode .dropdown-menu {
-            background: #1e1e1e;
-        }
-
-        body.dark-mode .dropdown-menu a {
-            color: #e0e0e0;
-            border-bottom-color: #333;
-        }
-
-        body.dark-mode .dropdown-menu a:hover {
-            background: #2d2d2d;
-            color: #64b5f6;
-        }
-
-        body.dark-mode .dropdown-menu a:last-child {
-            color: #ef5350;
-        }
-
-        /* Theme Toggle Button */
-        .theme-toggle {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.3s;
-            width: 40px;
-            height: 40px;
-            margin-left: auto;
-            margin-right: 10px;
-        }
-
-        .theme-toggle:hover {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .theme-icon {
-            width: 24px;
-            height: 24px;
-            transition: transform 0.3s;
-        }
-
-        .sun-icon {
-            color: #ff9800;
-        }
-
-        .moon-icon {
-            color: #bb86fc;
-        }
-
-        body.dark-mode .sun-icon {
-            display: block;
-        }
-
-        body.dark-mode .moon-icon {
-            display: none;
-        }
-
-        body:not(.dark-mode) .sun-icon {
-            display: none;
-        }
-
-        body:not(.dark-mode) .moon-icon {
-            display: block;
-        }
-
-        /* Dark mode overrides for location page */
-        body.dark-mode .info-card {
-            background: var(--dark-black);
-            color: #e0e0e0;
-        }
-
-        body.dark-mode .info-card h4 {
-            color: var(--gold-light);
-        }
-
-        body.dark-mode .btn-directions {
-            background: var(--gold);
-            color: white;
-        }
-
-        body.dark-mode .btn-directions:hover {
-            background: var(--gold-light);
-        }
-
-        /* Ensure footer matches dark mode (also in index-s.css) */
-        body.dark-mode .main-footer {
-            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-            color: #e0e0e0;
-        }
-
-        body.dark-mode .footer-contact h4,
-        body.dark-mode .footer-socials h4 {
-            color: #ffffff;
-            border-bottom-color: rgba(255,255,255,0.1);
-        }
-
-        body.dark-mode .footer-contact li,
-        body.dark-mode .social-links a,
-        body.dark-mode .social-links img {
-            color: #ffffff;
-        }
-
-        body.dark-mode .footer-bottom {
-            border-top-color: rgba(255,255,255,0.1);
-        }
-
-        body.dark-mode .footer-legal a {
-            color: #64b5f6;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/location.css') }}">
 </head>
 <body>
 
@@ -319,7 +28,7 @@
             </div>
         </a>
 
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
             <li><a href="/">HOME</a></li>
             <li><a href="/about">ABOUT</a></li>
             <li class="dropdown">
@@ -340,10 +49,14 @@
                     </div>
                 </li>
             <li><a href="/location" class="active">LOCATION</a></li>
+            {% if name == "Guest" or not name %}
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">LOGIN</a></li>
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">REGISTER</a></li>
+            {% endif %}
         </ul>
 
         {% if name == "Guest" or not name %}
-        <div class="auth-buttons">
+        <div class="nav-actions">
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
@@ -360,33 +73,41 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
             </button>
-            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
-            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+            <div class="auth-buttons">
+                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
         {% else %}
 
+        <div class="nav-actions">
+           <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+               <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                   <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+               </svg>
+               <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   <circle cx="12" cy="12" r="5"></circle>
+                   <line x1="12" y1="1" x2="12" y2="3"></line>
+                   <line x1="12" y1="21" x2="12" y2="23"></line>
+                   <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                   <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                   <line x1="1" y1="12" x2="3" y2="12"></line>
+                   <line x1="21" y1="12" x2="23" y2="12"></line>
+                   <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+               </svg>
+           </button>
         <div class="profile-nav">
             <div class="user-info-brief">   
                 <span>{{ name }}</span>
                 <small>Patient Account</small>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                    </svg>
-                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
                 <div class="profile-img-container" id="profileDropdownTrigger">
                     <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
                     
@@ -397,7 +118,13 @@
                 </div>
             </div>
         </div>
-        {% endif %}
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+         {% endif %}
     </nav>
 </header>
 
@@ -450,7 +177,7 @@
             <h4>FOLLOW US</h4>
             <div class="social-links">
                 <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
-                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook">
                     Facebook Page
                 </a>
             </div>
@@ -488,6 +215,17 @@
             }
         });
     });
+
+    // Hamburger menu toggle
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+
+    if (hamburger && navLinks) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+    }
 
     // Theme Toggle Functionality
     const themeToggle = document.getElementById('themeToggle');
@@ -637,4 +375,4 @@ document.getElementById("signupBtn").addEventListener("click", () => {
     </script>
 
 </body>
-</html> 
+</html>

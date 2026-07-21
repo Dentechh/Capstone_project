@@ -2,6 +2,11 @@
      SERVICE PAGE LAYOUT
 ========================== */
 
+/* Auth Nav Items (Login/Register in nav - mobile only) */
+.auth-nav-item-mobile {
+    display: none;
+}
+
 /* Hero Styling - No background, just text */
 .service-hero {
     background: transparent;
@@ -127,6 +132,170 @@
 @media (max-width: 900px) {
     .service-details-container { flex-direction: column; }
     .service-sidebar { position: static; }
+    
+    .service-hero {
+        padding: 80px 5% 40px;
+    }
+    
+    .service-hero h1 {
+        font-size: 32px;
+    }
+    
+    .service-hero p {
+        font-size: 1rem;
+    }
+    
+    .service-main {
+        padding: 35px 25px;
+    }
+    
+    .service-benefits li {
+        font-size: 1rem;
+    }
+    
+    .service-cta-box {
+        padding: 30px 20px;
+    }
+}
+
+/* =========================
+   MOBILE RESPONSIVENESS
+   ========================= */
+
+@media (max-width: 768px) {
+    .service-hero {
+        padding: 60px 5% 30px;
+    }
+    
+    .service-hero h1 {
+        font-size: 26px;
+    }
+    
+    .service-hero p {
+        font-size: 15px;
+    }
+    
+    .service-details-container {
+        padding: 40px 5%;
+        gap: 25px;
+    }
+    
+    .service-main {
+        padding: 25px 20px;
+    }
+    
+    .service-benefits li {
+        font-size: 0.95rem;
+        padding-left: 35px;
+    }
+    
+    .service-benefits li::before {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+    }
+    
+    .service-cta-box {
+        padding: 25px 20px;
+        margin-top: 25px;
+    }
+    
+    .service-cta-box h3 {
+        font-size: 18px;
+    }
+    
+    /* Footer - Left Aligned */
+    .main-footer {
+        padding: 25px 5% 15px;
+    }
+    
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+        text-align: left;
+    }
+    
+    .footer-contact ul {
+        align-items: flex-start;
+    }
+    
+    .footer-contact li {
+        justify-content: flex-start;
+    }
+    
+    .social-links {
+        justify-content: flex-start;
+    }
+    
+    .footer-bottom {
+        flex-direction: column;
+        gap: 10px;
+        text-align: left;
+    }
+    
+    .footer-legal a {
+        margin: 0 10px;
+    }
+    
+    /* Show mobile auth items, hide desktop auth buttons */
+    .nav-actions .auth-buttons {
+        display: none !important;
+    }
+    
+    .auth-nav-item-mobile {
+        display: block;
+    }
+    
+    body.dark-mode .nav-links {
+        background: var(--dark-black);
+    }
+}
+
+@media (max-width: 480px) {
+    .service-hero {
+        padding: 50px 5% 20px;
+    }
+    
+    .service-hero h1 {
+        font-size: 22px;
+    }
+    
+    .service-hero p {
+        font-size: 14px;
+    }
+    
+    .service-main {
+        padding: 20px 15px;
+    }
+    
+    .service-benefits li {
+        font-size: 0.9rem;
+    }
+}
+
+/* Dark mode mobile font fixes */
+@media (max-width: 768px) {
+    body.dark-mode .service-hero h1 {
+        font-size: 24px;
+    }
+    
+    body.dark-mode .service-hero p {
+        font-size: 15px;
+    }
+    
+    body.dark-mode .service-main p {
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body.dark-mode .service-hero h1 {
+        font-size: 20px;
+    }
+    
+    body.dark-mode .service-hero p {
+        font-size: 14px;
+    }
 }
 
 /* =========================
@@ -163,6 +332,21 @@ body.dark-mode .service-cta-box {
 
 body.dark-mode .service-cta-box h3 {
     color: var(--gold-light);
+}
+
+body.dark-mode .dropdown-content {
+    background-color: var(--dark-black);
+}
+
+body.dark-mode .dropdown-content a {
+    color: #e0e0e0 !important;
+    border-bottom-color: #333;
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .dropdown-content a:hover {
+    background: #2d2d2d;
+    color: #64b5f6 !important;
 }
 
 /* Footer matching index */

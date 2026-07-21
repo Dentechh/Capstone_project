@@ -48,7 +48,7 @@
             </div>
         </a>
 
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
             <li><a href="#" class="active">HOME</a></li>
             <li><a href="/about">ABOUT</a></li>
             <li class="dropdown">
@@ -69,13 +69,14 @@
                 </div>
             </li>
             <li><a href="/location">LOCATION</a></li>
+            {% if name == "Guest" or not name %}
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">LOGIN</a></li>
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">REGISTER</a></li>
+            {% endif %}
         </ul>
 
+        <div class="nav-actions">
 
-        
-
-        {% if name == "Guest" or not name %}
-        <div class="auth-buttons">
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
@@ -92,45 +93,37 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
             </button>
-            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
-            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
-        </div>
-        {% else %}
 
-        <div class="profile-nav">
-            <div class="user-info-brief">
-                <span>{{ name }}</span>
-                <small>Patient Account</small>
+            {% if name == "Guest" or not name %}
+            <div class="auth-buttons">
+                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
             </div>
+            {% else %}
 
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                    </svg>
-                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
+            <div class="profile-nav">
+                <div class="user-info-brief">
+                    <span>{{ name }}</span>
+                    <small>Patient Account</small>
+                </div>
 
                 <div class="profile-img-container" id="profileDropdownTrigger">
                     <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
                 
-                <div class="dropdown-menu" id="profileDropdown">
-                    <a href="/patient-profile">PROFILE</a>
-                    <a href="/logout">LOGOUT</a>
+                    <div class="dropdown-menu" id="profileDropdown">
+                        <a href="/patient-profile">PROFILE</a>
+                        <a href="/logout">LOGOUT</a>
+                    </div>
                 </div>
             </div>
+            {% endif %}
+
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
-        {% endif %}
     </nav>
 </header>
 
@@ -229,9 +222,9 @@
 
 
 <div id="appointmentModal" class="modal">
-    <div class="appointment-modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;" id="appointmentModalContent">
-        <div class="consent-sidebar" style="flex: 1; padding: 40px; border-right: 1px solid #dee2e6; overflow-y: auto; background: #ffffff; color: #333333;">
-            <h3 style="color: #64b5f6; margin-top: 0;">Informed Consent</h3>
+    <div class="appointment-modal-content" id="appointmentModalContent">
+        <div class="consent-sidebar">
+            <h3>Informed Consent</h3>
             <div class="consent-body" >
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
 
@@ -253,18 +246,18 @@
                 
                 <p><strong>DENTURES:</strong> I understand that wearing of dentures can be difficult. Sore spots, altered speech & difficulty in eating are common problems.</p>
                 <hr>
-                <p style="font-size: 0.75rem;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+                <p class="consent-note">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
                 
-                <div style="margin-top: 20px;">
-                    <p style="font-weight: bold; margin-bottom: 5px;">Patient Signature:</p>
-                    <div style="display: flex; gap: 10px; align-items: flex-start;">
-                        <div>
-                            <canvas id="signaturePad" width="300" height="80" style="border: 1px solid #ccc; border-radius: 4px; background: white; cursor: crosshair;"></canvas>
-                            <button type="button" onclick="clearSignature()" style="margin-top: 5px; padding: 4px 10px; font-size: 0.7rem; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Clear</button>
+                <div class="signature-section">
+                    <p>Patient Signature:</p>
+                    <div class="signature-row">
+                        <div class="signature-draw">
+                            <canvas id="signaturePad" width="300" height="80"></canvas>
+                            <button type="button" onclick="clearSignature()" class="clear-btn">Clear</button>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-left: 1px solid #ccc;">
+                        <div class="signature-upload">
                             <span>OR</span>
-                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)" style="font-size: 0.7rem;">
+                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)">
                             <span>Upload PNG image</span>
                         </div>
                     </div>
@@ -273,28 +266,28 @@
             </div>
         </div>
 
-<div class="form-container" style="flex: 1.5; padding: 40px; overflow-y: auto; background: white;">
-            <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
-            <h2 style="color: #64b5f6; margin-bottom: 20px;">Patient Information </h2>
+<div class="form-container">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Patient Information </h2>
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
-                <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="display: flex; gap: 5px; grid-column: span 2;">
-                        <input type="text" placeholder="First Name" name="First_Name" required style="flex: 1; ">
-                        <input type="text" placeholder="Middle Name" name="Middle_Name" style="flex: 1; ">
-                        <input type="text" placeholder="Last Name" name="Last_Name" required style="flex: 1; ">
+                <div class="personal-info-grid">
+                    <div class="name-fields">
+                        <input type="text" placeholder="First Name" name="First_Name" required>
+                        <input type="text" placeholder="Middle Name" name="Middle_Name">
+                        <input type="text" placeholder="Last Name" name="Last_Name" required>
                     </div>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="text" placeholder="House No." name="House_No" required style="width: 80px; ">
-                        <input type="text" placeholder="Street" name="Street" style="flex: 1; ">
+                    <div class="address-fields">
+                        <input type="text" placeholder="House No." name="House_No" required>
+                        <input type="text" placeholder="Street" name="Street">
                     </div>
                     
                     <input type="text" placeholder="Barangay" name="Brgy" required>
                     <input type="text" placeholder="Municipality/City" name="Municipality/City" required>
-                    <input type="text" placeholder="Province" name="Province" required >
+                    <input type="text" placeholder="Province" name="Province" required>
                     <input type="text" placeholder="Nationality" name="Nationality">
                     
-                    <select name="Religion" >
+                    <select name="Religion">
                         <option value="" disabled selected>Religion</option>
                         <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Christian">Christian</option>
@@ -312,19 +305,19 @@
                         <option value="Other">Other</option>
                     </select>
                     
-                    <div style="display: flex; gap: 5px;">
-                        <input type="number" placeholder="Age" name="Age" style="width: 50%; ">
-                        <select name="Sex" id="sexSelect" style="width: 50%; ">
+                    <div class="age-sex-group">
+                        <input type="number" placeholder="Age" name="Age">
+                        <select name="Sex" id="sexSelect">
                             <option value="" disabled selected>Sex</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                         </select>
                     </div>
-                    <input type="tel" placeholder="Contact Number" name="Contact_number" required >
-                    <input type="date" name="Birthday" required >
-                          
+                    <input type="tel" placeholder="Contact Number" name="Contact_number" required>
+                    <input type="date" name="Birthday" required>
                     
-                    <select name="Occupation" >
+                    
+                    <select name="Occupation">
                         <option value="" disabled selected>Occupation</option>
                         <option value="Student">Student</option>
                         <option value="Employee">Employee</option>
@@ -340,16 +333,14 @@
                     </select>
 
 
-                    <select name="Occupation" >
+                    <select name="Urgency_Level">
                         <option value="" disabled selected>Urgency Level</option>
-                        <option value="Student">Normal</option>
-                        <option value="Student">Ugrent</option>
-                        <option value="Student">Emergency</option>
-                        
-
+                        <option value="Normal">Normal</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Emergency">Emergency</option>
                     </select>
                     
-                    <select name="Civil_Status" >
+                    <select name="Civil_Status">
                         <option value="" disabled selected>Civil Status</option>
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>
@@ -358,27 +349,13 @@
                         <option value="Divorced">Divorced</option>
                     </select>
 
-                    <div style="grid-column: 1 / -1; width: 100%;">
+                    <div class="service-schedule-section">
 
                         <!-- SELECT SERVICE -->
-                        <div style="margin-top: 15px;">
-                            <label style="
-                                display: block;
-                                color: #0d47a1;
-                                font-size: 16px;
-                                font-weight: 600;
-                                margin-bottom: 8px;
-                            ">
-                                SELECT SERVICE
-                            </label>
+                        <div>
+                            <label>SELECT SERVICE</label>
 
-                            <select name="Service" required style="
-                                width: 100%;
-                                padding: 12px;
-                                border-radius: 8px;
-                                border: 1px solid #ddd;
-                                background: #f8f9fa;
-                            ">
+                            <select name="Service" required>
                         <option value="" disabled selected>Choose a service</option>
                         <option value="Dental Consultation">Dental Consultation <p>300</p></option>
                         <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) <p>800 -2,000</p></option>
@@ -389,122 +366,102 @@
                         </div>
 
                         <!-- SELECT SCHEDULE -->
-                        <div style="margin-top: 20px;">
-                            <label for="schedule" style="
-                                display: block;
-                                color: #333;
-                                font-size: 14px;
-                                font-weight: 600;
-                                margin-bottom: 8px;
-                            ">
-                                Select Schedule:
-                            </label>
+                        <div>
+                            <label for="schedule">Select Schedule:</label>
 
                             <input type="datetime-local"
                                 id="schedule"
                                 name="appointment_date"
-                                required
-                                style="
-                                        width: 100%;
-                                        padding: 12px;
-                                        border-radius: 8px;
-                                        border: 1px solid #ddd;
-                                        background: #f8f9fa;
-                                ">
+                                required>
                         </div>
 
                     </div>
                 </div> <!-- This closes the personal-info-grid div -->
 
-                <h3 style="color: #64b5f6; border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
+                <h3>Medical History</h3>
                 
-                <div class="medical-history-questions" style="font-size: 0.92rem; margin-top: 10px; ;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div class="medical-history-questions">
+                    <div class="question-row">
                         <span>1. Are you in good health?</span>
                         <div><input type="radio" name="q1" value="Yes"> Yes <input type="radio" name="q1" value="No"> No</div>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>2. Are you under medical treatment now?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>2. Are you under medical treatment now?</span>
                         <div><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes <input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</div></div>
-                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>3. Serious illness / surgical operation?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>3. Serious illness / surgical operation?</span>
                         <div><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes <input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</div></div>
-                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>4. Have you ever been hospitalized?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>4. Have you ever been hospitalized?</span>
                         <div><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes <input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</div></div>
-                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>5. Are you taking any medication?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>5. Are you taking any medication?</span>
                         <div><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes <input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</div></div>
-                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" disabled>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div class="question-row">
                         <span>6. Do you use tobacco products?</span>
                         <div><input type="radio" name="q6" value="Yes"> Yes <input type="radio" name="q6" value="No"> No</div>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>7. Do you have any allergy?</span>
+                    <div>
+                        <div class="question-row"><span>7. Do you have any allergy?</span>
                         <div><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes <input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</div></div>
-                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" disabled>
                     </div>
 
                     <!-- 8. For Women Only -->
-<div id="womenSection" style="background: #fdf6f6; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #feeaea; transition: opacity 0.3s ease;">
-    <p style="font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; color: #333;">8. For Women Only:</p>
+<div id="womenSection">
+    <p>8. For Women Only:</p>
     
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-        <!-- Question 1 -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Are you pregnant?</span>
-            <div>
-                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_pregnant" value="Yes" style="margin-right: 5px;"> Yes</label>
-                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_pregnant" value="No" style="margin-right: 5px;"> No</label>
-            </div>
+    <div class="women-question">
+        <span>Are you pregnant?</span>
+        <div>
+            <label><input type="radio" name="w_pregnant" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_pregnant" value="No"> No</label>
         </div>
+    </div>
 
-        <!-- Question 2 -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Are you nursing?</span>
-            <div>
-                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_nursing" value="Yes" style="margin-right: 5px;"> Yes</label>
-                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_nursing" value="No" style="margin-right: 5px;"> No</label>
-            </div>
+    <div class="women-question">
+        <span>Are you nursing?</span>
+        <div>
+            <label><input type="radio" name="w_nursing" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_nursing" value="No"> No</label>
         </div>
+    </div>
 
-        <!-- Question 3 -->
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>On birth control pills?</span>
-            <div>
-                <label style="font-weight: normal; cursor: pointer;"><input type="radio" name="w_pill" value="Yes" style="margin-right: 5px;"> Yes</label>
-                <label style="font-weight: normal; cursor: pointer; margin-left: 10px;"><input type="radio" name="w_pill" value="No" style="margin-right: 5px;"> No</label>
-            </div>
+    <div class="women-question">
+        <span>On birth control pills?</span>
+        <div>
+            <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_pill" value="No"> No</label>
         </div>
     </div>
 </div>
 
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
+                    <div>
+                        <div class="question-row"><span>9. Do you have any medical condition/s?</span>
                         <div><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes <input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</div></div>
-                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px; " disabled>
+                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" disabled>
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; font-size: 0.92rem; border-top: 1px solid #333; padding-top: 15px; ;">
+                <div class="consent-checkbox">
                     <label><input type="checkbox" required> I authorize the doctor to proceed with treatment & understand dentistry is not an exact science.</label>
                 </div>
 
-                <button type="button" id="confirmAppointmentBtn" class="submit-btn" style="width: 100%; margin-top: 15px; background: #64b5f6; color: white; padding: 12px; border-radius: 6px; font-weight: bold;">Confirm Appointment</button>
+                <button type="button" id="confirmAppointmentBtn" class="submit-btn">Confirm Appointment</button>
             </form>
         </div>
     </div>
@@ -641,6 +598,17 @@ document.getElementById("signupBtn").addEventListener("click", () => {
         form.submit();
     }
 
+    // Hamburger menu toggle
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+
+    if (hamburger && navLinks) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+    }
+
     function openAuthModal(modalId) {
     document.getElementById(modalId).style.display = "flex";
     }
@@ -654,15 +622,14 @@ document.getElementById("signupBtn").addEventListener("click", () => {
      const dropdownTrigger = document.getElementById('profileDropdownTrigger');
      const dropdownMenu = document.getElementById('profileDropdown');
 
-    if(dropdownTrigger) {
-        dropdownTrigger.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = dropdownMenu.style.display === 'flex';
-            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
-        };
-    }
+     if(dropdownTrigger && dropdownMenu) {
+         dropdownTrigger.onclick = (e) => {
+             e.stopPropagation();
+             dropdownMenu.classList.toggle('show');
+         };
+     }
 
-    // 2. Toggle Chatbot Modal
+     // 2. Toggle Chatbot Modal
     const launcher = document.getElementById('chatLauncher');
     const windowChat = document.getElementById('chatWindow');
 
@@ -735,10 +702,10 @@ document.getElementById("signupBtn").addEventListener("click", () => {
              windowChat.style.display = 'none';
          }
  
-         // Close dropdown if clicking outside
-         if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-             dropdownMenu.style.display = 'none';
-         }
+          // Close dropdown if clicking outside
+          if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+              dropdownMenu.classList.remove('show');
+          }
      };
 
     // Calendar Initialization
