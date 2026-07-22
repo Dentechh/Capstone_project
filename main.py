@@ -125,7 +125,7 @@ CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleuserconten
 
 #notification for gmail ni client
 
-app.permanent_session_lifetime = timedelta(minutes=2)
+app.permanent_session_lifetime = timedelta(minutes=10)
 
 @app.before_request
 def refresh_session():
@@ -586,6 +586,44 @@ Dental Clinic
     mail.send(msg)
 
 
+
+def send_email(recipient, fullname, status):
+
+    msg = Message(
+        subject=f"Appointment {status.capitalize()}",
+        recipients=[recipient]
+    )
+
+    if status == "accepted":
+        msg.body = f"""
+Hello {fullname},
+
+Good news!
+
+Your dental appointment has been ACCEPTED.
+
+Please arrive at the clinic on your scheduled date and time.
+
+Thank you,
+Dental Clinic
+"""
+
+    elif status == "declined":
+        msg.body = f"""
+Hello {fullname},
+
+We regret to inform you that your appointment request has been declined.
+
+Please log in to the Dental Clinic system and schedule another appointment at your convenience.
+
+Thank you for your understanding.
+
+Dental Clinic
+"""
+
+    mail.send(msg)
+
+
 @app.route("/approve", methods=["POST"])
 def approve():
 
@@ -593,12 +631,12 @@ def approve():
     DentistName = bleach.clean(request.form.get("dentist_name", ""))
     appointment_id = request.form.get("appointment_id")
     action = request.form.get("action")
-    email = session.get('email')
+    email = session.get("email")
 
     data = {
         "status": action,
-        "Patient_unq_id":appointment_id,
-        "uid":uid,
+        "Patient_unq_id": appointment_id,
+        "uid": uid,
         "email": email,
         "DentistName": DentistName,
         "FirstName": request.form.get("firstname"),
@@ -622,29 +660,9 @@ def approve():
         "Occupation": request.form.get("occupation"),
         "CivilStatus": request.form.get("civilstatus"),
         "Service": request.form.get("service"),
-
-        "q1": request.form.get("q1"),
-        "q2": request.form.get("q2"),
-        "q3": request.form.get("q3"),
-        "q4": request.form.get("q4"),
-        "q5": request.form.get("q5"),
-        "q6": request.form.get("q6"),
-        "q7": request.form.get("q7"),
-        "q9": request.form.get("q9"),
-
-        "q2_spec": request.form.get("q2_spec"),
-        "q3_spec": request.form.get("q3_spec"),
-        "q4_spec": request.form.get("q4_spec"),
-        "q5_spec": request.form.get("q5_spec"),
-        "q7_spec": request.form.get("q7_spec"),
-        "q9_spec": request.form.get("q9_spec"),
-
-        "w_preg": request.form.get("w_preg"),
-        "w_nurse": request.form.get("w_nurse"),
-        "w_pill": request.form.get("w_pill"),
     }
 
-    # Check where uid exists
+    # Find user
     if db.collection("google_create_account").document(uid).get().exists:
         main_collection = "google_create_account"
 
@@ -656,26 +674,43 @@ def approve():
 
     user_ref = db.collection(main_collection).document(uid)
 
-    # Save approved appointment
-    user_ref.collection("Approve").document(appointment_id).set(data)
-    user_ref.collection(Appointment_cliets).document(appointment_id).delete()
-
-
+    # Get email
     user_doc = user_ref.get()
+    patient_email = None
 
     if user_doc.exists:
         patient_email = user_doc.to_dict().get("email")
 
+    fullname = f"{data['FirstName']} {data['LastName']}"
+
+    # ==========================
+    # ACCEPT
+    # ==========================
+    if action == "accept":
+
+        user_ref.collection("Approve").document(appointment_id).set(data)
+
+        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+
         if patient_email:
-            fullname = f"{data['FirstName']} {data['LastName']}"
+            send_email(patient_email, fullname, "accepted")
 
-            send_email(
-                patient_email,
-                fullname,
-                action
-            )
+        return "Appointment accepted"
 
-    return "Approved successfully"
+    # ==========================
+    # DECLINE
+    # ==========================
+    elif action == "decline":
+
+        # Delete appointment only
+        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+
+        if patient_email:
+            send_email(patient_email, fullname, "declined")
+
+        return "Appointment declined"
+
+    return "Invalid action", 400
 
 
 @app.route("/test-email")
