@@ -557,13 +557,18 @@ def bookedCustomer():
 
     return redirect(url_for("index"))
 
+import os
+from dotenv import load_dotenv
+from flask_mail import Mail
+
+load_dotenv()
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'jayralphbonitillo09@gmail.com'
-app.config['MAIL_PASSWORD'] = 'ijzp mfvs kkmb xshe'
-app.config['MAIL_DEFAULT_SENDER'] = 'jayralphbonitillo09@gmail.com'
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
 
 mail = Mail(app)
 
@@ -718,7 +723,7 @@ def test_email():
 
     msg = Message(
         subject="SMTP Test",
-        recipients=["jayralphbonitillo09@gmail.com"]
+        recipients=["jayr.bonitillo.ui@phinmaed.com"]
     )
 
     msg.body = "SMTP is working!"
