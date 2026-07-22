@@ -1397,29 +1397,17 @@ function addTreatmentRow() {
                 })
                 .then(response => {
                     if (response.ok) {
-                        // Show success message and redirect after accepting
                         if (action === 'accept') {
                             alert('Appointment accepted successfully!');
-                            // Remove the row from the table immediately
                             if (rowElement) {
                                 rowElement.remove();
                             }
-                            // Set hash to mypatients and reload after accepting
-                            setTimeout(() => {
-                                window.location.hash = 'mypatients';
-                                location.reload();
-                            }, );
+                            showSection('mypatients');
                         } else {
                             alert('Appointment declined successfully!');
-                            // Remove the row from the table immediately for decline too
                             if (rowElement) {
                                 rowElement.remove();
                             }
-                            // Set hash to appointments and reload after declining
-                            setTimeout(() => {
-                                window.location.hash = 'appointments';
-                                location.reload();
-                            }, );
                         }
                     } else {
                         throw new Error('Failed to ' + action + ' appointment');

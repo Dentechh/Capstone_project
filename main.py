@@ -698,12 +698,19 @@ def approve():
     # ==========================
     if action == "accept":
 
-        user_ref.collection("Approve").document(appointment_id).set(data)
+        approve_ref = user_ref.collection("Approve").document(appointment_id)
+        appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
-        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+        batch = db.batch()
+        batch.set(approve_ref, data)
+        batch.delete(appt_ref)
+        batch.commit()
 
         if patient_email:
-            send_email(patient_email, fullname, "accepted")
+            try:
+                send_email(patient_email, fullname, "accepted")
+            except Exception as e:
+                print(f"Email send failed for accept: {e}")
 
         return "Appointment accepted"
 
@@ -712,11 +719,17 @@ def approve():
     # ==========================
     elif action == "decline":
 
-        # Delete appointment only
-        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+        appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
+
+        batch = db.batch()
+        batch.delete(appt_ref)
+        batch.commit()
 
         if patient_email:
-            send_email(patient_email, fullname, "declined")
+            try:
+                send_email(patient_email, fullname, "declined")
+            except Exception as e:
+                print(f"Email send failed for decline: {e}")
 
         return "Appointment declined"
 
