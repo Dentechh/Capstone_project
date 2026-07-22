@@ -227,7 +227,6 @@ def generate_otp():
     return str(random.randint(100000, 999999))
 
 def send_otp(email, otp):
-
     msg = Message(
         subject="Verify Your Email",
         recipients=[email]
@@ -236,21 +235,19 @@ def send_otp(email, otp):
     msg.body = f"""
 Hello,
 
-Thank you for creating an account.
-
 Your verification code is:
 
 {otp}
 
 This code expires in 10 minutes.
-
-If you didn't request this account, ignore this email.
-
-Dentech Dental Clinic
 """
 
-    mail.send(msg)
-
+    try:
+        mail.send(msg)
+        print("✅ OTP email sent.")
+    except Exception as e:
+        print("❌ MAIL ERROR:", repr(e))
+        raise
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
