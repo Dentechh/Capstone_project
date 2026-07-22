@@ -241,26 +241,44 @@ from email.message import EmailMessage
 def _send_email_async(recipient, subject, body):
     def _task():
         try:
+            print("1. Creating SMTP connection...")
+
+            server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+
+            print("2. Connected!")
+
+            server.ehlo()
+
+            print("3. Starting TLS...")
+
+            server.starttls()
+
+            print("4. Logging in...")
+
+            server.login(
+                os.getenv("MAIL_USERNAME"),
+                os.getenv("MAIL_PASSWORD")
+            )
+
+            print("5. Sending email...")
+
             msg = EmailMessage()
             msg["Subject"] = subject
             msg["From"] = os.getenv("MAIL_USERNAME")
             msg["To"] = recipient
             msg.set_content(body)
 
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(os.getenv("MAIL_USERNAME"), os.getenv("MAIL_PASSWORD"))
-                server.send_message(msg)
+            server.send_message(msg)
 
-            print(f"✅ Email sent to {recipient}")
+            print("6. Email sent!")
+
+            server.quit()
+
         except Exception as e:
-            print(f"❌ Async email failed to {recipient}: {repr(e)}")
+            import traceback
+            traceback.print_exc()
 
-    t = threading.Thread(target=_task, daemon=True)
-    t.start()
-    print(f"📤 Email thread started for {recipient}")
+    threading.Thread(target=_task, daemon=True).start()
 
 
 def send_otp(email, otp):
