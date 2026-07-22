@@ -10,6 +10,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sys
 import os
 import threading
+import smtplib
+from email.message import EmailMessage
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 
@@ -233,20 +235,32 @@ def login_g_auth():
 def generate_otp():
     return str(random.randint(100000, 999999))
 
+import smtplib
+from email.message import EmailMessage
+
 def _send_email_async(recipient, subject, body):
     def _task():
         try:
-            with app.app_context():
-                msg = Message(subject=subject, recipients=[recipient])
-                msg.body = body
-                mail.send(msg)
-                print(f"✅ Email sent to {recipient}")
+            msg = EmailMessage()
+            msg["Subject"] = subject
+            msg["From"] = os.getenv("MAIL_USERNAME")
+            msg["To"] = recipient
+            msg.set_content(body)
+
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(os.getenv("MAIL_USERNAME"), os.getenv("MAIL_PASSWORD"))
+                server.send_message(msg)
+
+            print(f"✅ Email sent to {recipient}")
         except Exception as e:
             print(f"❌ Async email failed to {recipient}: {repr(e)}")
 
     t = threading.Thread(target=_task, daemon=True)
     t.start()
-    return t
+    print(f"📤 Email thread started for {recipient}")
 
 
 def send_otp(email, otp):
@@ -260,18 +274,7 @@ Your verification code is:
 
 This code expires in 10 minutes.
 """
-    try:
-        with app.app_context():
-            msg = Message(subject=subject, recipients=[email])
-            msg.body = body
-            mail.send(msg)
-            print(f"✅ OTP sent to {email}")
-            return True
-    except Exception as e:
-        print(f"❌ Failed to send OTP to {email}: {repr(e)}")
-        _send_email_async(email, subject, body)
-        print(f"⚠️  OTP async fallback started for {email}")
-        return False
+    _send_email_async(email, subject, body)
 
 
 def send_email(recipient, fullname, status):
@@ -312,31 +315,37 @@ Your appointment has been {status}.
 Thank you,
 Dental Clinic
 """
-    return _send_email_async(recipient, subject, body)
+    _send_email_async(recipient, subject, body)
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
     if request.method == "POST":
         try:
+            print("=== Sign-up POST received ===")
             firstname = bleach.clean(request.form["FirstName"].strip())
             lastname = bleach.clean(request.form["LastName"].strip())
             email = bleach.clean(request.form["UserName"].strip())
             password = bleach.clean(request.form["Password"].strip())
             contact_number = bleach.clean(request.form["MobileNumber"].strip())
+            print(f"Sign-up: form data parsed: {email}")
 
             check_account = db.collection(Account_clients).where("email", "==", email).get()
+            print(f"Sign-up: Firestore query completed")
 
             if check_account:
                 flash("Email already exists!", "error")
                 return redirect(url_for("sign_up"))
 
             hashed_password = generate_password_hash(password)
+            print(f"Sign-up: password hashed")
 
             otp = generate_otp()
+            print(f"Sign-up: OTP generated")
 
             doc_ref = db.collection(Account_clients).document()
             uid = doc_ref.id
+            print(f"Sign-up: doc ref created: {uid}")
 
             doc_ref.set({
                 "uid": uid,
@@ -351,19 +360,20 @@ def sign_up():
                 "verified": False,
                 "otp": otp
             })
+            print(f"Sign-up: Firestore write completed")
 
-            print(f"Sign-up: attempting to send OTP to {email}")
-            sent = send_otp(email, otp)
-            print(f"Sign-up: send_otp returned {sent} for {email}")
+            print(f"Sign-up: about to send OTP to {email}")
+            send_otp(email, otp)
+            print(f"Sign-up: send_otp call returned")
 
-            if sent:
-                flash("A verification code has been sent to your email.", "success")
-            else:
-                flash("Account created, but OTP delivery failed. Please use Resend Code.", "warning")
+            flash("A verification code has been sent to your email.", "success")
 
             return redirect(url_for("verify_otp", uid=uid))
+
         except Exception as e:
-            print(f"Sign-up ERROR: {repr(e)}")
+            import traceback
+            print("===== SIGN-UP ERROR =====")
+            traceback.print_exc()
             flash(f"Sign-up failed: {e}", "error")
             return redirect(url_for("sign_up"))
 
@@ -757,17 +767,28 @@ def approve():
 
 @app.route("/test-email")
 def test_email():
+    try:
+        msg = Message(
+            subject="SMTP Test",
+            recipients=["jayr.bonitillo.ui@phinmaed.com"]
+        )
 
-    msg = Message(
-        subject="SMTP Test",
-        recipients=["jayr.bonitillo.ui@phinmaed.com"]
-    )
+        msg.body = "SMTP is working!"
 
-    msg.body = "SMTP is working!"
+        mail.send(msg)
 
-    mail.send(msg)
+        return "Email sent!"
+    except Exception as e:
+        return f"Email failed: {e}", 500
 
-    return "Email sent!"
+
+@app.route("/test-otp")
+def test_otp():
+    try:
+        send_otp("jayr.bonitillo.ui@phinmaed.com", "999999")
+        return "OTP send dispatched. Check logs for result."
+    except Exception as e:
+        return f"OTP dispatch failed: {e}", 500
 
 
 
