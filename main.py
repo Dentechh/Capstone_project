@@ -10,12 +10,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+
+mail = Mail(app)
+
+print("MAIL USER:", app.config["MAIL_USERNAME"])
+print("MAIL PASS:", "Loaded" if app.config["MAIL_PASSWORD"] else "Missing")
+
 import os
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
 from datetime import timedelta
 import random
 
-import os
 import firebase_admin
 from firebase_admin import credentials, firestore
 
@@ -557,20 +573,6 @@ def bookedCustomer():
 
     return redirect(url_for("index"))
 
-import os
-from dotenv import load_dotenv
-from flask_mail import Mail
-
-load_dotenv()
-
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv('MAIL_USERNAME')
-
-mail = Mail(app)
 
 
 def send_email(recipient, fullname, status):
