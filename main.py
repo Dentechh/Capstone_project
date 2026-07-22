@@ -1383,42 +1383,8 @@ def get_approve(uid):
 
     
 if __name__ == "__main__":
-    # 🔧 Optional: Test PayMongo connection (uncomment to test)
-    """
-    import requests
-    url = "https://api.paymongo.com/v1/checkout_sessions"
-    payload = { "data": { "attributes": {
-                "billing": { "email": "test@capizonda.com" },
-                "send_email_receipt": True,
-                "show_description": True,
-                "payment_method_types": ["gcash", "paymaya"],
-                "reference_number": "TEST-001",
-                "cancel_url": "http://localhost:5000/cancel",
-                "description": "Test payment",
-                "line_items": [{
-                    "currency": "PHP",
-                    "amount": 50000,
-                    "description": "Dental Consultation",
-                    "name": "Consultation Fee",
-                    "quantity": 1
-                }]
-            } } }
-    headers = {
-        "accept": "application/json",
-        "Content-Type": "application/json",
-        "authorization": "Basic c2tfdGVzdF9DWWlRTVNYdzJjSEhodEY1NjRnWjNtTXg6cGtfdGVzdF9tNHJHNGl2NEw5UzVNQzhkNGR4cTM5a28="
-    }
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=10)
-        print(f"✅ PayMongo: {response.status_code}")
-    except Exception as e:
-        print(f"❌ PayMongo Error: {e}")
-    """
-    
     print("🦷 Capizonda Dental Clinic Server Starting...")
-    print("🔐 Admin Login: http://localhost:5000/admin_login")
     app.run(debug=True, port=5000)
-
 
 
 
