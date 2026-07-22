@@ -8,6 +8,7 @@ import bleach
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
+import os
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 
@@ -27,7 +28,7 @@ mail = Mail(app)
 print("MAIL USER:", app.config["MAIL_USERNAME"])
 print("MAIL PASS:", "Loaded" if app.config["MAIL_PASSWORD"] else "Missing")
 
-import os
+
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure session key
 from datetime import timedelta
 import random
