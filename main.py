@@ -130,7 +130,11 @@ def create_gcash_payment():
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
-CLIENT_ID = "921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+
+CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+if not CLIENT_ID:
+    raise Exception("Missing GOOGLE_CLIENT_ID environment variable")
 
 
 
