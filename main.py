@@ -561,9 +561,9 @@ def bookedCustomer():
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'jayr.bonitillo.ui@phinmaed.com'
-app.config['MAIL_PASSWORD'] = 'htal wzrv wyai rgsi'
-app.config['MAIL_DEFAULT_SENDER'] = 'jayr.bonitillo.ui@phinmaed.com'
+app.config['MAIL_USERNAME'] = 'jayralphbonitillo09@gmail.com'
+app.config['MAIL_PASSWORD'] = 'ijzp mfvs kkmb xshe'
+app.config['MAIL_DEFAULT_SENDER'] = 'jayralphbonitillo09@gmail.com'
 
 mail = Mail(app)
 
@@ -718,7 +718,7 @@ def test_email():
 
     msg = Message(
         subject="SMTP Test",
-        recipients=["jayr.bonitillo.ui@phinmaed.com"]
+        recipients=["jayralphbonitillo09@gmail.com"]
     )
 
     msg.body = "SMTP is working!"
