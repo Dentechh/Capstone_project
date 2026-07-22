@@ -517,51 +517,8 @@
 
 </form>
 
+        <!-- Sign-up is handled by the standard form POST to /sign-up -->
 
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-
-import {
-  getAuth,
-  createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
-  authDomain: "dentech-c2ee0.firebaseapp.com",
-  projectId: "dentech-c2ee0",
-  storageBucket: "dentech-c2ee0.firebasestorage.app",
-  messagingSenderId: "921529543911",
-  appId: "1:921529543911:web:08e91a5f6982eb541b0642"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-document.getElementById("signupBtn").addEventListener("click", () => {
-
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
-
-          alert("Account created!");
-          console.log(userCredential.user);
-
-      })
-      .catch((error) => {
-
-          console.log(error.code);
-          console.log(error.message);
-
-          alert(error.message);
-      });
-
-});
-</script>
-        
         <div class="divider">OR</div>
 
         <!--

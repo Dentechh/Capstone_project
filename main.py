@@ -254,7 +254,13 @@ This code expires in 10 minutes.
         print("✅ OTP email sent.")
     except Exception as e:
         print("❌ MAIL ERROR:", repr(e))
-        raise
+
+def _send_otp_async(email, otp):
+    try:
+        with app.app_context():
+            send_otp(email, otp)
+    except Exception as e:
+        print(f"Async OTP email failed: {e}")
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
@@ -294,7 +300,11 @@ def sign_up():
             "otp": otp
         })
 
-        send_otp(email, otp)
+        threading.Thread(
+            target=_send_otp_async,
+            args=(email, otp),
+            daemon=True
+        ).start()
 
         flash("A verification code has been sent to your email.", "success")
 
