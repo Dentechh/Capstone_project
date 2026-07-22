@@ -104,16 +104,34 @@
         <div id="section-dashboard" class="content-section active-section">
             <div class="metric-cards">
                 <div class="metric-card">
-                    <div class="metric-icon">&#128197;</div>
-                    <div class="metric-data"><h3>12</h3><p>Today's Appointments</p></div>
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3>{{ approved_count }}</h3>
+                        <p>Approved Patients</p>
+                    </div>
+                    <div class="metric-bg-icon">&#128101;</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-icon">&#9203;</div>
-                    <div class="metric-data"><h3>5</h3><p>Pending Requests</p></div>
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3>{{ pending_count }}</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                    <div class="metric-bg-icon">&#9203;</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-icon">&#128101;</div>
-                    <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3>{{ total_patients }}</h3>
+                        <p>Total Patients</p>
+                    </div>
+                    <div class="metric-bg-icon">&#128197;</div>
                 </div>
             </div>
         </div>

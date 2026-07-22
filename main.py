@@ -888,8 +888,11 @@ def adminDashboard():
         data["Done_procedure"] = (
             done_doc.to_dict() if done_doc.exists else {}
         )
-
         accounts.append(data)
+
+    pending_count = len(appointment_list)
+    approved_count = len(approve_list)
+    total_patients = len(accounts)
 
     # =========================
     # SEND ALL TO TEMPLATE
@@ -899,7 +902,9 @@ def adminDashboard():
         Appointment_clients=appointment_list,
         Approve=approve_list,
         accounts=accounts,
-        
+        pending_count=pending_count,
+        approved_count=approved_count,
+        total_patients=total_patients,
     )
 
 
