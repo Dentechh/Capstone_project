@@ -8,8 +8,7 @@
 }
 
 .location-container {
-    padding: 40px 5%;
-    max-width: 1500px;
+    padding: 40px 0;
     margin: 0 auto;
 }
 
@@ -36,12 +35,9 @@
 
 .map-wrapper {
     background: var(--grad-navy);
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     overflow: hidden;
-    height: 500px;
+    height: 750px;
     margin-bottom: 30px;
-    border: 1px solid #eee;
     width: 100%;
 }
 
@@ -332,6 +328,21 @@ body.dark-mode .footer-legal a {
 /* =========================
    MOBILE RESPONSIVENESS
    ========================= */
+
+/* Desktop: full-bleed map, no card styling so it doesn't look like a small phone map */
+@media (min-width: 769px) {
+    .location-container {
+        padding: 0;
+    }
+
+    .map-wrapper {
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+        height: 78vh;
+        margin-bottom: 0;
+    }
+}
 
 @media (max-width: 900px) {
     .location-header h2 {

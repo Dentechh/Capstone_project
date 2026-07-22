@@ -43,6 +43,16 @@
 
 <body class="dashboard-body">
 
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+    
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <aside class="sidebar">
         <div class="sidebar-brand">
             <h2>CAPIZONDA</h2>
@@ -526,81 +536,55 @@ window.onclick = (e) => {
                 <span id="pd-w-pill"></span>
             </div>
 
-            <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                <div class="content-panel">
-                     <div class="panel-header"><h3>Visits History <p id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
-                     
-                     <table class="appointment-table">
-    <thead>
-        
-        <tr>
-            <th>Assigned Dentist</th>
-            <th>Assigned uid</th>
-            <th>Visit Date</th>
-            <th>Procedure</th>
-            <th>Fee Paid</th>
-            <th>Next Appointmnet</th>
-        </tr>
-    </thead>
-<tbody id="pd-visit-history">
-    <tr>
-        <td colspan="6" style="text-align:center;">
-            Select a patient to view visit history.
-        </td>
-    </tr>
-</tbody>
-</table>
-</div>
-
-
-
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                 <div class="content-panel">
                     <div class="panel-header"><h3>Patient Information</h3></div>
                     <div class="panel-content">
-                        <div class="info-group">
-                            <label>Full Name</label>
-                            <p id="pd-disp-fullname"></p>
-                        </div>
-                        <div class="info-group">
-                            <label>Middle Name</label>
-                            <p id="pd-disp-middlename">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Birthday</label>
-                            <p id="pd-disp-birthday">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Nationality</label>
-                            <p id="pd-disp-nationality">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Religion</label>
-                            <p id="pd-disp-religion">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Occupation</label>
-                            <p id="pd-disp-occupation">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Civil Status</label>
-                            <p id="pd-disp-civilstatus">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Contact Number</label>
-                            <p id="pd-disp-contact">-</p>
-                        </div>
-                        <div class="info-group">
-                            <label>Service</label>
-                            <p id="pd-disp-service">-</p>
-                        </div>
-
-                        <div class="info-group">
-                            <label>Service</label>
-                            <p id="pd-disp-Patient_unq_id">-</p>
+                        <div class="info-grid">
+                            <div class="info-group">
+                                <label>Full Name</label>
+                                <p id="pd-disp-fullname"></p>
+                            </div>
+                            <div class="info-group">
+                                <label>Middle Name</label>
+                                <p id="pd-disp-middlename">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Birthday</label>
+                                <p id="pd-disp-birthday">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Nationality</label>
+                                <p id="pd-disp-nationality">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Religion</label>
+                                <p id="pd-disp-religion">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Occupation</label>
+                                <p id="pd-disp-occupation">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Civil Status</label>
+                                <p id="pd-disp-civilstatus">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Contact Number</label>
+                                <p id="pd-disp-contact">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Service</label>
+                                <p id="pd-disp-service">-</p>
+                            </div>
+                            <div class="info-group">
+                                <label>Patient ID</label>
+                                <p id="pd-disp-Patient_unq_id">-</p>
+                            </div>
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
-<ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                        <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
                              <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
                              <li id="q2-check">Q2 (HBP): <span>-</span></li>
                              <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
@@ -619,12 +603,39 @@ window.onclick = (e) => {
                         </ul>
                     </div>
                 </div>
+
+                <div class="content-panel">
+                     <div class="panel-header"><h3>Visits History <p id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
+                     <table class="appointment-table">
+    <thead>
+        <tr>
+            <th>Assigned Dentist</th>
+            <th>Assigned uid</th>
+            <th>Visit Date</th>
+            <th>Procedure</th>
+            <th>Fee Paid</th>
+            <th>Next Appointmnet</th>
+        </tr>
+    </thead>
+<tbody id="pd-visit-history">
+    <tr>
+        <td colspan="6" style="text-align:center;">
+            Select a patient to view visit history.
+        </td>
+    </tr>
+</tbody>
+</table>
+</div>
             </div>
                                 <div style="text-align: center; margin: 12px 0;">
-                        <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
-                            ⬇ Download Dental Chart as PDF
-                        </button>
-                    </div>
+                <button id="open-chart-btn" type="button" onclick="openChartModal()" style="background: var(--navy); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-rounded" style="font-size: 20px;">dentistry</span>
+                    Open Dental Chart
+                </button>
+                <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
+                    ⬇ Download Dental Chart as PDF
+                </button>
+            </div>
 
 
             <div id="section-chart" class="chart-section">
@@ -849,8 +860,14 @@ document.addEventListener("input", function(e) {
 <script>
 async function downloadDentalChartPDF() {
     const { jsPDF } = window.jspdf;
-    const btn = document.getElementById('download-pdf-btn');
-    const chartSection = document.querySelector('.dental-chart');
+    const btn = document.getElementById('modal-download-pdf-btn') || document.getElementById('download-pdf-btn');
+    const modalContent = document.getElementById('modal-chart-content');
+    const chartSection = (modalContent && modalContent.querySelector('.dental-chart')) || document.querySelector('.dental-chart');
+
+    if (!chartSection) {
+        alert('Dental chart not found. Please open the chart first.');
+        return;
+    }
 
     // Hide button so it won't appear in PDF
     btn.style.display = 'none';
@@ -947,13 +964,6 @@ async function downloadDentalChartPDF() {
 
             const target = document.getElementById('section-' + sectionId);
             if (target) target.classList.add('active-section');
-
-            const chart = document.getElementById('section-chart');
-            if (sectionId === 'patientdashboard') {
-                if (chart) chart.classList.add('active-section');
-            } else {
-                if (chart) chart.classList.remove('active-section');
-            }
 
             const titles = {
                 'dashboard': 'Dashboard Overview',
@@ -1622,7 +1632,115 @@ document.getElementById("td-save-btn").addEventListener("click", () => {
 
   saveDentalRecord(uid);
 });
+
+// Sidebar Toggle for Mobile
+const sidebarToggle = document.getElementById('sidebarToggle');
+const sidebar = document.querySelector('.sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+if (sidebarToggle && sidebar && sidebarOverlay) {
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('active');
+    });
+    
+    sidebarOverlay.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+    });
+    
+    const navItems = sidebar.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('open');
+                sidebarOverlay.classList.remove('active');
+            }
+        });
+    });
+}
+
+// Dental Chart Modal
+function openChartModal() {
+    const modal = document.getElementById('chartModal');
+    const chartSection = document.getElementById('section-chart');
+    const modalChart = document.getElementById('modal-chart-content');
+    
+    if (modal && chartSection && modalChart) {
+        modalChart.innerHTML = chartSection.innerHTML;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Request fullscreen first (required for orientation lock on mobile)
+        if (modal.requestFullscreen) {
+            modal.requestFullscreen().then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            }).catch(() => {
+                // Fullscreen denied, try orientation lock anyway
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            });
+        } else if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+    }
+}
+
+function closeChartModal() {
+    const modal = document.getElementById('chartModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+        }
+        
+        if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        }
+    }
+}
+
+// Close modal on backdrop click
+window.addEventListener('click', function(e) {
+    const modal = document.getElementById('chartModal');
+    if (e.target === modal) {
+        closeChartModal();
+    }
+});
+
+// Close modal on Escape key
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeChartModal();
+    }
+});
 </script>
 </main>
+
+<!-- Dental Chart Modal -->
+<div id="chartModal" class="chart-modal-overlay" style="display: none;">
+    <div class="chart-modal-content">
+        <div class="chart-modal-header">
+            <h3>Dental Record Chart</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="modal-download-pdf-btn" onclick="downloadDentalChartPDF()" style="background: var(--gold); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">download</span>
+                    Download PDF
+                </button>
+                <button class="chart-modal-close" onclick="closeChartModal()" title="Close">
+                    <span class="material-symbols-rounded">close</span>
+                </button>
+            </div>
+        </div>
+        <div id="modal-chart-content" class="chart-modal-body">
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

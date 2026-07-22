@@ -105,8 +105,8 @@ body.dark-mode .sidebar-brand span{
 /* MAIN CONTENT & BLUR FIX */
 .main-content { 
     margin-left: 260px; /* ✅ prevent overlap with fixed sidebar */
-    height: 100vh;      /* ✅ full screen */
-    overflow: hidden;   /* ❗ stop global scroll */
+    min-height: 100vh;      /* ✅ full screen minimum */
+    overflow-y: auto;   /* ✅ allow natural scroll */
     padding: 40px;
     position: relative;
     
@@ -129,16 +129,47 @@ body.dark-mode .main-content::before {
     -webkit-backdrop-filter: blur(10px) brightness(0.7);
 }
 
-#section-patientdashboard.active-section {
-    overflow-y: auto;
-    height: calc(100vh - 100px); /* adjust for header */
+.content-section.active-section {
+    display: block !important;
     padding-right: 10px;
     padding: 20px 10px 20px 20px;
 }
 
-/* ─────────────────────────────────────────
-   Treatment Notes table — 8 columns
-───────────────────────────────────────── */
+/* Scrollbar for main content area */
+.main-content::-webkit-scrollbar,
+.profile-body-scrollable::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.main-content::-webkit-scrollbar-track,
+.profile-body-scrollable::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.main-content::-webkit-scrollbar-thumb,
+.profile-body-scrollable::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--navy), var(--gold));
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.main-content::-webkit-scrollbar-thumb:hover,
+.profile-body-scrollable::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--gold), var(--navy));
+}
+
+body.dark-mode .main-content::-webkit-scrollbar-track,
+body.dark-mode .profile-body-scrollable::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .main-content::-webkit-scrollbar-thumb,
+body.dark-mode .profile-body-scrollable::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #64b5f6, #90caf9);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
 .treatment-table thead th {
     font-size: 11px;
     white-space: nowrap;
@@ -159,36 +190,36 @@ body.dark-mode .main-content::before {
     padding: 6px 8px;
     font-size: 13px;
 }
-#section-patientdashboard.active-section::-webkit-scrollbar,
+.content-section.active-section::-webkit-scrollbar,
 .profile-body-scrollable::-webkit-scrollbar {
     width: 12px;
     height: 12px;
 }
 
-#section-patientdashboard.active-section::-webkit-scrollbar-track,
+.content-section.active-section::-webkit-scrollbar-track,
 .profile-body-scrollable::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.1);
     border-radius: 10px;
 }
 
-#section-patientdashboard.active-section::-webkit-scrollbar-thumb,
+.content-section.active-section::-webkit-scrollbar-thumb,
 .profile-body-scrollable::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, var(--navy), var(--gold));
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-#section-patientdashboard.active-section::-webkit-scrollbar-thumb:hover,
+.content-section.active-section::-webkit-scrollbar-thumb:hover,
 .profile-body-scrollable::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, var(--gold), var(--navy));
 }
 
-body.dark-mode #section-patientdashboard.active-section::-webkit-scrollbar-track,
+body.dark-mode .content-section.active-section::-webkit-scrollbar-track,
 body.dark-mode .profile-body-scrollable::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.1);
 }
 
-body.dark-mode #section-patientdashboard.active-section::-webkit-scrollbar-thumb,
+body.dark-mode .content-section.active-section::-webkit-scrollbar-thumb,
 body.dark-mode .profile-body-scrollable::-webkit-scrollbar-thumb {
     background: linear-gradient(180deg, #64b5f6, #90caf9);
     border: 2px solid rgba(255, 255, 255, 0.1);
@@ -394,8 +425,14 @@ body.dark-mode .panel-content {
 }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 20px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
 }
 
 .action-grid {
@@ -600,6 +637,53 @@ body.dark-mode .treatment-table input:focus {
     color: #ff4d4d;
     border: 1px solid #ff4d4d;
     margin-left: 5px;
+}
+
+/* Status Badge */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.badge.accepted {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #28a745;
+}
+
+.badge.declined {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #dc3545;
+}
+
+body.dark-mode .badge.pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border-color: rgba(255, 193, 7, 0.4);
+}
+
+body.dark-mode .badge.accepted {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border-color: rgba(40, 167, 69, 0.4);
+}
+
+body.dark-mode .badge.declined {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ef5350;
+    border-color: rgba(220, 53, 69, 0.4);
 }
 
 .search-input { width: 100%; padding: 15px 25px; background: var(--dark-form); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; color: white; margin-bottom: 20px; outline: none; }
@@ -1190,10 +1274,106 @@ body.dark-mode .label-side.rotated{
 .btn-modal-blue { background: var(--navy); }
     .btn-modal-cancel { background: #555; }
 
+/* =========================
+     DENTAL CHART MODAL
+   ========================= */
+.chart-modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-modal-content {
+    background: var(--dark-form);
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    border-radius: 15px;
+    border: 2px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.chart-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.chart-modal-header h3 {
+    margin: 0;
+    color: white;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.chart-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.chart-modal-close:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.chart-modal-close .material-symbols-rounded {
+    font-size: 24px;
+}
+
+.chart-modal-body {
+    flex: 1;
+    overflow: auto;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    -webkit-overflow-scrolling: touch;
+}
+
+.chart-modal-body .chart-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+
+.chart-modal-body .dental-chart {
+    background: var(--grad-navy);
+    box-shadow: none;
+}
+
+body.dark-mode .chart-modal-content {
+    background: #1a1a1a;
+    border-color: var(--gold);
+}
+
+body.dark-mode .chart-modal-header {
+    background: linear-gradient(180deg, #0d47a1 0%, #1565c0 100%);
+}
 
 /* =========================
-     DARK MODE OVERRIDES
-======================= */
+      DARK MODE OVERRIDES
+   ========================= */
 body.dark-mode {
     background: #121212;
     color: #e0e0e0;
@@ -1515,3 +1695,820 @@ body.dark-mode .datetime-text {
     #download-pdf-btn:active {
         transform: scale(0.98);
     }
+
+/* =========================================
+   RESPONSIVE MEDIA QUERIES
+   ========================================= */
+
+/* Tablet Landscape */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 220px;
+        padding: 30px 15px;
+    }
+    
+    .main-content {
+        margin-left: 220px;
+        padding: 30px 20px;
+    }
+    
+    .main-content::before {
+        left: 220px;
+    }
+    
+    .metric-cards {
+        gap: 15px;
+    }
+    
+    .metric-card {
+        padding: 15px 20px;
+    }
+    
+    .metric-data h3 {
+        font-size: 22px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .patient-card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    
+    .content-panel {
+        padding: 20px;
+    }
+    
+    .top-header h2 {
+        font-size: 24px;
+    }
+    
+    .top-header span {
+        font-size: 16px;
+    }
+    
+    .odontogram-container {
+        padding: 20px 40px;
+    }
+    
+    .unified-grid,
+    .unified-grid.wide,
+    .teeth-row.wide,
+    .permanent-block {
+        width: 600px;
+    }
+    
+    .grid-box {
+        width: 38px;
+        height: 28px;
+    }
+    
+    .tooth-unit {
+        width: 38px;
+    }
+    
+    .tooth-svg {
+        width: 34px;
+        height: 34px;
+    }
+    
+    .tooth-label {
+        font-size: 14px;
+    }
+    
+    .profile-modal-content {
+        width: 90%;
+        max-width: 1000px;
+    }
+}
+
+/* Mobile / Tablet Portrait */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 2000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        padding: 20px 15px;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 20px 15px;
+        height: auto;
+        overflow: visible;
+    }
+    
+    .main-content::before {
+        left: 0;
+        width: 100%;
+    }
+    
+    .top-header {
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 25px;
+        padding-left: 70px;
+    }
+    
+    .top-header h2 {
+        font-size: 20px;
+    }
+    
+    .metric-cards {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .metric-card {
+        padding: 20px;
+    }
+    
+    .metric-data h3 {
+        font-size: 24px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Hide dental chart on mobile - use modal instead */
+    #section-patientdashboard.active-section #section-chart {
+        display: none;
+    }
+    
+    .patient-card-grid {
+        grid-template-columns: 1fr;
+        margin-right: 0;
+    }
+    
+    .patient-profile-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .patient-profile-header > div:last-child {
+        margin-left: 0 !important;
+        padding-left: 0 !important;
+        border-left: none !important;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+    
+    .pd-stat {
+        min-width: 80px;
+    }
+    
+    .patient-profile-header .p-avatar-circle.large {
+        width: 60px;
+        height: 60px;
+        font-size: 22px;
+    }
+    
+    #pd-name {
+        font-size: 20px !important;
+    }
+    
+    #pd-id {
+        font-size: 12px !important;
+    }
+    
+    .content-panel {
+        padding: 15px;
+        border-radius: 15px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    /* Patient info grid - single column on mobile */
+    #section-patientdashboard .info-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    #section-patientdashboard .panel-header h3 {
+        font-size: 18px;
+    }
+    
+    #section-patientdashboard .panel-header p {
+        font-size: 12px;
+    }
+    
+    /* Patient Information first, Visit History second on mobile */
+    #section-patientdashboard .content-panel:first-child {
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+    }
+    
+    #section-patientdashboard .content-panel:nth-child(2) {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #section-patientdashboard .appointment-table {
+        min-width: 500px;
+        font-size: 12px;
+    }
+    
+    #section-patientdashboard .appointment-table th,
+    #section-patientdashboard .appointment-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    /* Patient Information panel - compact */
+    #section-patientdashboard .panel-content {
+        padding: 12px;
+    }
+    
+    #section-patientdashboard .info-group {
+        margin-bottom: 10px;
+    }
+    
+    #section-patientdashboard .info-group label {
+        font-size: 10px;
+    }
+    
+    #section-patientdashboard .info-group p {
+        font-size: 12px;
+    }
+    
+    #section-patientdashboard hr {
+        margin: 10px 0;
+    }
+    
+    #section-patientdashboard #pd-meds {
+        font-size: 12px;
+        padding-left: 15px;
+    }
+    
+    .info-group {
+        margin-bottom: 12px;
+    }
+    
+    .info-group label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-group p {
+        font-size: 13px;
+    }
+    
+    #download-pdf-btn {
+        display: none !important;
+        font-size: 14px;
+        padding: 10px 20px;
+    }
+    
+    /* Dental Chart Mobile */
+    .chart-container {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .dental-chart {
+        padding: 15px 10px;
+        border-radius: 15px;
+    }
+    
+    .odontogram-container {
+        padding: 10px 5px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .unified-grid,
+    .unified-grid.wide,
+    .teeth-row.wide,
+    .permanent-block {
+        width: 450px;
+    }
+    
+    .grid-box {
+        width: 32px;
+        height: 24px;
+    }
+    
+    .tooth-unit {
+        width: 32px;
+    }
+    
+    .tooth-svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .tooth-label {
+        font-size: 12px;
+    }
+    
+    .chart-title {
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+    
+    .section-label {
+        font-size: 11px;
+    }
+    
+    .label-inline {
+        font-size: 11px;
+        width: 70px;
+    }
+    
+    .label-side.rotated {
+        font-size: 11px;
+        left: -20px;
+    }
+    
+    .action-palette {
+        padding: 10px 15px;
+        gap: 6px;
+    }
+    
+    .tool {
+        padding: 6px 10px;
+        font-size: 11px;
+        gap: 4px;
+    }
+    
+    .palette-title {
+        font-size: 11px;
+        margin-right: 8px;
+    }
+    
+    .material-symbols-rounded {
+        font-size: 16px;
+    }
+    
+    .tool span:not(.material-symbols-rounded) {
+        font-size: 11px;
+    }
+    
+    /* Treatment Notes Mobile */
+    #section-patientdashboard .treatment-section {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 15px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    #section-patientdashboard .treatment-section > div:first-child {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    #section-patientdashboard .treatment-section h3 {
+        font-size: 16px;
+    }
+    
+    #section-patientdashboard #td-save-btn {
+        font-size: 12px;
+        padding: 6px 14px;
+    }
+    
+    #section-patientdashboard .treatment-table {
+        min-width: 900px;
+    }
+    
+    #section-patientdashboard .treatment-table th {
+        padding: 6px 6px;
+        font-size: 10px;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+    }
+    
+    #section-patientdashboard .treatment-table td {
+        padding: 3px 4px;
+        white-space: nowrap;
+    }
+    
+    #section-patientdashboard .treatment-table input[type="date"],
+    #section-patientdashboard .treatment-table input[type="number"],
+    #section-patientdashboard .treatment-table input[type="text"] {
+        font-size: 11px !important;
+        padding: 5px 6px !important;
+    }
+    
+    /* Override inline date input styles on mobile */
+    #section-patientdashboard .td-date {
+        font-size: 11px !important;
+        padding: 5px 6px !important;
+    }
+    
+    /* Modal */
+    .profile-modal-content {
+        width: 95%;
+        max-width: 500px;
+        padding: 20px;
+        margin: 10% auto;
+    }
+    
+    .modal-content {
+        padding: 25px 20px;
+        margin: 10% 5px;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .p-avatar-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
+    .p-avatar-circle.large {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
+    /* Tables - horizontal scroll */
+    #section-appointments .content-panel {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+    
+    #section-appointments .appointment-table {
+        min-width: 600px;
+    }
+    
+    .treatment-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .treatment-table {
+        min-width: 500px;
+    }
+    
+    #section-mypatients .content-panel {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+    
+    #section-mypatients .appointment-table {
+        min-width: 400px;
+    }
+    
+    #section-mypatients .btn-action.accept {
+        width: 100%;
+        white-space: nowrap;
+    }
+    
+    /* Modal */
+    .profile-modal-content {
+        width: 95%;
+        max-width: 500px;
+        padding: 20px;
+        margin: 10% auto;
+    }
+    
+    .modal-content {
+        padding: 25px 20px;
+        margin: 10% 5px;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .p-avatar-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
+    .p-avatar-circle.large {
+        width: 50px;
+        height: 50px;
+        font-size: 18px;
+    }
+    
+    /* Medical Dashboard */
+    .medical-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .quick-stats-grid {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .medical-section {
+        padding: 15px;
+    }
+    
+    .medical-table th,
+    .medical-table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    /* Search Input */
+    .search-input {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    /* Schedule */
+    .schedule-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .p-info {
+        font-size: 16px;
+    }
+    
+    /* Footer */
+    .sidebar-footer {
+        margin-top: auto;
+    }
+    
+    /* Hamburger Menu Button */
+    .sidebar-toggle {
+        display: flex !important;
+    }
+    
+    /* Overlay when sidebar is open */
+    .sidebar-overlay {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1500;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Dental Chart Modal - Mobile */
+    .chart-modal-overlay {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.95);
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    
+    .chart-modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        border-radius: 0;
+        border: none;
+    }
+    
+    .chart-modal-header {
+        padding: 10px 15px;
+    }
+    
+    .chart-modal-header h3 {
+        font-size: 16px;
+    }
+    
+    .chart-modal-body {
+        padding: 10px;
+    }
+    
+    .chart-modal-close .material-symbols-rounded {
+        font-size: 20px;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .sidebar {
+        width: 100%;
+        transform: translateX(-100%);
+    }
+    
+    .sidebar-brand h2 {
+        font-size: 20px;
+    }
+    
+    .sidebar-brand span {
+        font-size: 13px;
+    }
+    
+    .nav-item {
+        font-size: 16px;
+        padding: 12px 15px;
+    }
+    
+    .main-content {
+        padding: 15px 10px;
+    }
+    
+    .top-header h2 {
+        font-size: 18px;
+    }
+    
+    .datetime-text {
+        font-size: 0.75rem;
+    }
+    
+    .metric-card {
+        padding: 15px;
+    }
+    
+    .metric-icon {
+        font-size: 22px;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .metric-data h3 {
+        font-size: 20px;
+    }
+    
+    .metric-data p {
+        font-size: 9px;
+    }
+    
+    .content-panel {
+        padding: 12px;
+    }
+    
+    .appointment-table th,
+    .appointment-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .odontogram-container {
+        padding: 5px;
+    }
+    
+    .unified-grid,
+    .unified-grid.wide,
+    .teeth-row.wide,
+    .permanent-block {
+        width: 350px;
+    }
+    
+    .grid-box {
+        width: 26px;
+        height: 20px;
+    }
+    
+    .tooth-unit {
+        width: 26px;
+    }
+    
+    .tooth-svg {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .tooth-label {
+        font-size: 10px;
+    }
+    
+    .chart-title {
+        font-size: 12px;
+    }
+    
+    .section-label {
+        font-size: 11px;
+    }
+    
+    .label-inline {
+        font-size: 11px;
+        width: 70px;
+    }
+    
+    .tool {
+        padding: 5px 8px;
+        font-size: 10px;
+    }
+    
+    .palette-title {
+        font-size: 10px;
+    }
+    
+    .material-symbols-rounded {
+        font-size: 14px;
+    }
+    
+    .tool span:not(.material-symbols-rounded) {
+        font-size: 10px;
+    }
+    
+    .profile-modal-content {
+        width: 98%;
+        padding: 15px;
+        margin: 5% auto;
+    }
+    
+    .info-group label {
+        font-size: 10px;
+    }
+    
+    .info-group p {
+        font-size: 13px;
+    }
+    
+    .section-label {
+        font-size: 11px;
+    }
+    
+    .label-inline {
+        font-size: 11px;
+    }
+    
+    .admin-profile span {
+        font-size: 14px;
+    }
+    
+    .avatar {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Show sidebar toggle button on mobile */
+@media (max-width: 768px) {
+    .sidebar-toggle {
+        display: flex !important;
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        z-index: 2500;
+        background: var(--grad-gold);
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .sidebar-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: white;
+    }
+    
+    .sidebar-overlay {
+        display: block;
+    }
+}
+
+/* Hide sidebar toggle on desktop */
+@media (min-width: 769px) {
+    .sidebar-toggle {
+        display: none !important;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+}
