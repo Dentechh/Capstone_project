@@ -9,6 +9,7 @@ from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
 import os
+import threading
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 
@@ -22,6 +23,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
 app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_TIMEOUT'] = 10
 
 mail = Mail(app)
 
@@ -693,45 +695,64 @@ def approve():
 
     fullname = f"{data['FirstName']} {data['LastName']}"
 
+    def _send_email_async(recipient, fullname, status):
+        try:
+            with app.app_context():
+                send_email(recipient, fullname, status)
+        except Exception as e:
+            print(f"Async email send failed for {status}: {e}")
+
     # ==========================
     # ACCEPT
     # ==========================
     if action == "accept":
 
-        approve_ref = user_ref.collection("Approve").document(appointment_id)
-        appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
+        try:
+            approve_ref = user_ref.collection("Approve").document(appointment_id)
+            appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
-        batch = db.batch()
-        batch.set(approve_ref, data)
-        batch.delete(appt_ref)
-        batch.commit()
+            batch = db.batch()
+            batch.set(approve_ref, data)
+            batch.delete(appt_ref)
+            batch.commit()
 
-        if patient_email:
-            try:
-                send_email(patient_email, fullname, "accepted")
-            except Exception as e:
-                print(f"Email send failed for accept: {e}")
+            if patient_email:
+                threading.Thread(
+                    target=_send_email_async,
+                    args=(patient_email, fullname, "accepted"),
+                    daemon=True
+                ).start()
 
-        return "Appointment accepted"
+            return "Appointment accepted"
+
+        except Exception as e:
+            print(f"Accept error: {e}")
+            return f"Failed to accept appointment: {e}", 500
 
     # ==========================
     # DECLINE
     # ==========================
     elif action == "decline":
 
-        appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
+        try:
+            appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
-        batch = db.batch()
-        batch.delete(appt_ref)
-        batch.commit()
+            batch = db.batch()
+            batch.delete(appt_ref)
+            batch.commit()
 
-        if patient_email:
-            try:
-                send_email(patient_email, fullname, "declined")
-            except Exception as e:
-                print(f"Email send failed for decline: {e}")
+            if patient_email:
+                threading.Thread(
+                    target=_send_email_async,
+                    args=(patient_email, fullname, "declined"),
+                    daemon=True
+                ).start()
 
-        return "Appointment declined"
+            return "Appointment declined"
+
+        except Exception as e:
+            print(f"Decline error: {e}")
+            return f"Failed to decline appointment: {e}", 500
 
     return "Invalid action", 400
 
