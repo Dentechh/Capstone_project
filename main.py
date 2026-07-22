@@ -130,6 +130,7 @@ def create_gcash_payment():
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
+import os
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
