@@ -579,26 +579,6 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
-
-def send_email(recipient, fullname, status):
-    msg = Message(
-        subject=f"Appointment {status}",
-        recipients=[recipient]
-    )
-
-    msg.body = f"""
-Hello {fullname},
-
-Your appointment has been {status}.
-
-Thank you,
-Dental Clinic
-"""
-
-    mail.send(msg)
-
-
-
 def send_email(recipient, fullname, status):
 
     msg = Message(
