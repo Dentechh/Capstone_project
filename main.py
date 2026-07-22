@@ -260,7 +260,18 @@ Your verification code is:
 
 This code expires in 10 minutes.
 """
-    return _send_email_async(email, subject, body)
+    try:
+        with app.app_context():
+            msg = Message(subject=subject, recipients=[email])
+            msg.body = body
+            mail.send(msg)
+            print(f"✅ OTP sent to {email}")
+            return True
+    except Exception as e:
+        print(f"❌ Failed to send OTP to {email}: {repr(e)}")
+        _send_email_async(email, subject, body)
+        print(f"⚠️  OTP async fallback started for {email}")
+        return False
 
 
 def send_email(recipient, fullname, status):
@@ -307,45 +318,54 @@ Dental Clinic
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
     if request.method == "POST":
+        try:
+            firstname = bleach.clean(request.form["FirstName"].strip())
+            lastname = bleach.clean(request.form["LastName"].strip())
+            email = bleach.clean(request.form["UserName"].strip())
+            password = bleach.clean(request.form["Password"].strip())
+            contact_number = bleach.clean(request.form["MobileNumber"].strip())
 
-        firstname = bleach.clean(request.form["FirstName"].strip())
-        lastname = bleach.clean(request.form["LastName"].strip())
-        email = bleach.clean(request.form["UserName"].strip())
-        password = bleach.clean(request.form["Password"].strip())
-        contact_number = bleach.clean(request.form["MobileNumber"].strip())
+            check_account = db.collection(Account_clients).where("email", "==", email).get()
 
-        check_account = db.collection(Account_clients).where("email", "==", email).get()
+            if check_account:
+                flash("Email already exists!", "error")
+                return redirect(url_for("sign_up"))
 
-        if check_account:
-            flash("Email already exists!", "error")
+            hashed_password = generate_password_hash(password)
+
+            otp = generate_otp()
+
+            doc_ref = db.collection(Account_clients).document()
+            uid = doc_ref.id
+
+            doc_ref.set({
+                "uid": uid,
+                "firstname": firstname,
+                "lastname": lastname,
+                "email": email,
+                "password": hashed_password,
+                "created_at": datetime.now(UTC).isoformat(),
+                "contact_number": contact_number,
+
+                # OTP Verification
+                "verified": False,
+                "otp": otp
+            })
+
+            print(f"Sign-up: attempting to send OTP to {email}")
+            sent = send_otp(email, otp)
+            print(f"Sign-up: send_otp returned {sent} for {email}")
+
+            if sent:
+                flash("A verification code has been sent to your email.", "success")
+            else:
+                flash("Account created, but OTP delivery failed. Please use Resend Code.", "warning")
+
+            return redirect(url_for("verify_otp", uid=uid))
+        except Exception as e:
+            print(f"Sign-up ERROR: {repr(e)}")
+            flash(f"Sign-up failed: {e}", "error")
             return redirect(url_for("sign_up"))
-
-        hashed_password = generate_password_hash(password)
-
-        otp = generate_otp()
-
-        doc_ref = db.collection(Account_clients).document()
-        uid = doc_ref.id
-
-        doc_ref.set({
-            "uid": uid,
-            "firstname": firstname,
-            "lastname": lastname,
-            "email": email,
-            "password": hashed_password,
-            "created_at": datetime.now(UTC).isoformat(),
-            "contact_number": contact_number,
-
-            # OTP Verification
-            "verified": False,
-            "otp": otp
-        })
-
-        send_otp(email, otp)
-
-        flash("A verification code has been sent to your email.", "success")
-
-        return redirect(url_for("verify_otp", uid=uid))
 
     return render_template("index.html")
 
@@ -401,9 +421,12 @@ def resend_otp(uid):
         "otp": otp
     })
 
-    send_otp(user["email"], otp)
-
-    flash("A new OTP has been sent.", "success")
+    try:
+        send_otp(user["email"], otp)
+        flash("A new OTP has been sent.", "success")
+    except Exception as e:
+        print(f"Resend OTP error: {e}")
+        flash("Account found, but email delivery failed. Please try again later.", "warning")
 
     return redirect(url_for("verify_otp", uid=uid))
 
