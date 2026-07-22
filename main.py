@@ -233,13 +233,25 @@ def login_g_auth():
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-def send_otp(email, otp):
-    msg = Message(
-        subject="Verify Your Email",
-        recipients=[email]
-    )
+def _send_email_async(recipient, subject, body):
+    def _task():
+        try:
+            with app.app_context():
+                msg = Message(subject=subject, recipients=[recipient])
+                msg.body = body
+                mail.send(msg)
+                print(f"✅ Email sent to {recipient}")
+        except Exception as e:
+            print(f"❌ Async email failed to {recipient}: {repr(e)}")
 
-    msg.body = f"""
+    t = threading.Thread(target=_task, daemon=True)
+    t.start()
+    return t
+
+
+def send_otp(email, otp):
+    subject = "Verify Your Email"
+    body = f"""
 Hello,
 
 Your verification code is:
@@ -248,19 +260,48 @@ Your verification code is:
 
 This code expires in 10 minutes.
 """
+    return _send_email_async(email, subject, body)
 
-    try:
-        mail.send(msg)
-        print("✅ OTP email sent.")
-    except Exception as e:
-        print("❌ MAIL ERROR:", repr(e))
 
-def _send_otp_async(email, otp):
-    try:
-        with app.app_context():
-            send_otp(email, otp)
-    except Exception as e:
-        print(f"Async OTP email failed: {e}")
+def send_email(recipient, fullname, status):
+    if status == "accepted":
+        subject = "Appointment Accepted"
+        body = f"""
+Hello {fullname},
+
+Good news!
+
+Your dental appointment has been ACCEPTED.
+
+Please arrive at the clinic on your scheduled date and time.
+
+Thank you,
+Dental Clinic
+"""
+    elif status == "declined":
+        subject = "Appointment Declined"
+        body = f"""
+Hello {fullname},
+
+We regret to inform you that your appointment request has been declined.
+
+Please log in to the Dental Clinic system and schedule another appointment at your convenience.
+
+Thank you for your understanding.
+
+Dental Clinic
+"""
+    else:
+        subject = f"Appointment {status.capitalize()}"
+        body = f"""
+Hello {fullname},
+
+Your appointment has been {status}.
+
+Thank you,
+Dental Clinic
+"""
+    return _send_email_async(recipient, subject, body)
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
@@ -286,31 +327,25 @@ def sign_up():
         doc_ref = db.collection(Account_clients).document()
         uid = doc_ref.id
 
-    doc_ref.set({
-        "uid": uid,
-        "firstname": firstname,
-        "lastname": lastname,
-        "email": email,
-        "password": hashed_password,
-        "created_at": datetime.now(UTC).isoformat(),
-        "contact_number": contact_number,
+        doc_ref.set({
+            "uid": uid,
+            "firstname": firstname,
+            "lastname": lastname,
+            "email": email,
+            "password": hashed_password,
+            "created_at": datetime.now(UTC).isoformat(),
+            "contact_number": contact_number,
 
-        # OTP Verification
-        "verified": False,
-        "otp": otp
-    })
+            # OTP Verification
+            "verified": False,
+            "otp": otp
+        })
 
-    t = threading.Thread(
-        target=_send_otp_async,
-        args=(email, otp),
-        daemon=True
-    )
-    t.start()
-    print(f"OTP thread started for {email}: alive={t.is_alive()}")
+        send_otp(email, otp)
 
-    flash("A verification code has been sent to your email.", "success")
+        flash("A verification code has been sent to your email.", "success")
 
-    return redirect(url_for("verify_otp", uid=uid))
+        return redirect(url_for("verify_otp", uid=uid))
 
     return render_template("index.html")
 
@@ -591,43 +626,6 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
-def send_email(recipient, fullname, status):
-
-    msg = Message(
-        subject=f"Appointment {status.capitalize()}",
-        recipients=[recipient]
-    )
-
-    if status == "accepted":
-        msg.body = f"""
-Hello {fullname},
-
-Good news!
-
-Your dental appointment has been ACCEPTED.
-
-Please arrive at the clinic on your scheduled date and time.
-
-Thank you,
-Dental Clinic
-"""
-
-    elif status == "declined":
-        msg.body = f"""
-Hello {fullname},
-
-We regret to inform you that your appointment request has been declined.
-
-Please log in to the Dental Clinic system and schedule another appointment at your convenience.
-
-Thank you for your understanding.
-
-Dental Clinic
-"""
-
-    mail.send(msg)
-
-
 @app.route("/approve", methods=["POST"])
 def approve():
 
@@ -687,13 +685,6 @@ def approve():
 
     fullname = f"{data['FirstName']} {data['LastName']}"
 
-    def _send_email_async(recipient, fullname, status):
-        try:
-            with app.app_context():
-                send_email(recipient, fullname, status)
-        except Exception as e:
-            print(f"Async email send failed for {status}: {e}")
-
     # ==========================
     # ACCEPT
     # ==========================
@@ -709,11 +700,7 @@ def approve():
             batch.commit()
 
             if patient_email:
-                threading.Thread(
-                    target=_send_email_async,
-                    args=(patient_email, fullname, "accepted"),
-                    daemon=True
-                ).start()
+                send_email(patient_email, fullname, "accepted")
 
             return "Appointment accepted"
 
@@ -734,11 +721,7 @@ def approve():
             batch.commit()
 
             if patient_email:
-                threading.Thread(
-                    target=_send_email_async,
-                    args=(patient_email, fullname, "declined"),
-                    daemon=True
-                ).start()
+                send_email(patient_email, fullname, "declined")
 
             return "Appointment declined"
 
