@@ -286,29 +286,31 @@ def sign_up():
         doc_ref = db.collection(Account_clients).document()
         uid = doc_ref.id
 
-        doc_ref.set({
-            "uid": uid,
-            "firstname": firstname,
-            "lastname": lastname,
-            "email": email,
-            "password": hashed_password,
-            "created_at": datetime.now(UTC).isoformat(),
-            "contact_number": contact_number,
+    doc_ref.set({
+        "uid": uid,
+        "firstname": firstname,
+        "lastname": lastname,
+        "email": email,
+        "password": hashed_password,
+        "created_at": datetime.now(UTC).isoformat(),
+        "contact_number": contact_number,
 
-            # OTP Verification
-            "verified": False,
-            "otp": otp
-        })
+        # OTP Verification
+        "verified": False,
+        "otp": otp
+    })
 
-        threading.Thread(
-            target=_send_otp_async,
-            args=(email, otp),
-            daemon=True
-        ).start()
+    t = threading.Thread(
+        target=_send_otp_async,
+        args=(email, otp),
+        daemon=True
+    )
+    t.start()
+    print(f"OTP thread started for {email}: alive={t.is_alive()}")
 
-        flash("A verification code has been sent to your email.", "success")
+    flash("A verification code has been sent to your email.", "success")
 
-        return redirect(url_for("verify_otp", uid=uid))
+    return redirect(url_for("verify_otp", uid=uid))
 
     return render_template("index.html")
 
