@@ -9,6 +9,9 @@ from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
 import os
+import threading
+import smtplib
+from email.message import EmailMessage
 sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 
@@ -22,6 +25,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
 app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
 app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_TIMEOUT'] = 10
 
 mail = Mail(app)
 
@@ -231,13 +235,55 @@ def login_g_auth():
 def generate_otp():
     return str(random.randint(100000, 999999))
 
-def send_otp(email, otp):
-    msg = Message(
-        subject="Verify Your Email",
-        recipients=[email]
-    )
+import smtplib
+from email.message import EmailMessage
 
-    msg.body = f"""
+def _send_email_async(recipient, subject, body):
+    def _task():
+        try:
+            print("1. Creating SMTP connection...")
+
+            server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
+
+            print("2. Connected!")
+
+            server.ehlo()
+
+            print("3. Starting TLS...")
+
+            server.starttls()
+
+            print("4. Logging in...")
+
+            server.login(
+                os.getenv("MAIL_USERNAME"),
+                os.getenv("MAIL_PASSWORD")
+            )
+
+            print("5. Sending email...")
+
+            msg = EmailMessage()
+            msg["Subject"] = subject
+            msg["From"] = os.getenv("MAIL_USERNAME")
+            msg["To"] = recipient
+            msg.set_content(body)
+
+            server.send_message(msg)
+
+            print("6. Email sent!")
+
+            server.quit()
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+
+    threading.Thread(target=_task, daemon=True).start()
+
+
+def send_otp(email, otp):
+    subject = "Verify Your Email"
+    body = f"""
 Hello,
 
 Your verification code is:
@@ -246,57 +292,108 @@ Your verification code is:
 
 This code expires in 10 minutes.
 """
+    _send_email_async(email, subject, body)
 
-    try:
-        mail.send(msg)
-        print("✅ OTP email sent.")
-    except Exception as e:
-        print("❌ MAIL ERROR:", repr(e))
-        raise
+
+def send_email(recipient, fullname, status):
+    if status == "accepted":
+        subject = "Appointment Accepted"
+        body = f"""
+Hello {fullname},
+
+Good news!
+
+Your dental appointment has been ACCEPTED.
+
+Please arrive at the clinic on your scheduled date and time.
+
+Thank you,
+Dental Clinic
+"""
+    elif status == "declined":
+        subject = "Appointment Declined"
+        body = f"""
+Hello {fullname},
+
+We regret to inform you that your appointment request has been declined.
+
+Please log in to the Dental Clinic system and schedule another appointment at your convenience.
+
+Thank you for your understanding.
+
+Dental Clinic
+"""
+    else:
+        subject = f"Appointment {status.capitalize()}"
+        body = f"""
+Hello {fullname},
+
+Your appointment has been {status}.
+
+Thank you,
+Dental Clinic
+"""
+    _send_email_async(recipient, subject, body)
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
     if request.method == "POST":
+        try:
+            print("=== Sign-up POST received ===")
+            firstname = bleach.clean(request.form["FirstName"].strip())
+            lastname = bleach.clean(request.form["LastName"].strip())
+            email = bleach.clean(request.form["UserName"].strip())
+            password = bleach.clean(request.form["Password"].strip())
+            contact_number = bleach.clean(request.form["MobileNumber"].strip())
+            print(f"Sign-up: form data parsed: {email}")
 
-        firstname = bleach.clean(request.form["FirstName"].strip())
-        lastname = bleach.clean(request.form["LastName"].strip())
-        email = bleach.clean(request.form["UserName"].strip())
-        password = bleach.clean(request.form["Password"].strip())
-        contact_number = bleach.clean(request.form["MobileNumber"].strip())
+            check_account = db.collection(Account_clients).where("email", "==", email).get()
+            print(f"Sign-up: Firestore query completed")
 
-        check_account = db.collection(Account_clients).where("email", "==", email).get()
+            if check_account:
+                flash("Email already exists!", "error")
+                return redirect(url_for("sign_up"))
 
-        if check_account:
-            flash("Email already exists!", "error")
+            hashed_password = generate_password_hash(password)
+            print(f"Sign-up: password hashed")
+
+            otp = generate_otp()
+            print(f"Sign-up: OTP generated")
+
+            doc_ref = db.collection(Account_clients).document()
+            uid = doc_ref.id
+            print(f"Sign-up: doc ref created: {uid}")
+
+            doc_ref.set({
+                "uid": uid,
+                "firstname": firstname,
+                "lastname": lastname,
+                "email": email,
+                "password": hashed_password,
+                "created_at": datetime.now(UTC).isoformat(),
+                "contact_number": contact_number,
+
+                # OTP Verification
+                "verified": False,
+                "otp": otp
+            })
+            print(f"Sign-up: Firestore write completed")
+
+            print(f"Sign-up: about to send OTP to {email}")
+            send_otp(email, otp)
+            print(f"Sign-up: send_otp call returned")
+
+            flash("A verification code has been sent to your email.", "success")
+
+            return redirect(url_for("verify_otp", uid=uid))
+
+        except Exception as e:
+            import traceback
+            print("===== SIGN-UP ERROR =====")
+            traceback.print_exc()
+            flash(f"Sign-up failed: {e}", "error")
             return redirect(url_for("sign_up"))
-
-        hashed_password = generate_password_hash(password)
-
-        otp = generate_otp()
-
-        doc_ref = db.collection(Account_clients).document()
-        uid = doc_ref.id
-
-        doc_ref.set({
-            "uid": uid,
-            "firstname": firstname,
-            "lastname": lastname,
-            "email": email,
-            "password": hashed_password,
-            "created_at": datetime.now(UTC).isoformat(),
-            "contact_number": contact_number,
-
-            # OTP Verification
-            "verified": False,
-            "otp": otp
-        })
-
-        send_otp(email, otp)
-
-        flash("A verification code has been sent to your email.", "success")
-
-        return redirect(url_for("verify_otp", uid=uid))
 
     return render_template("index.html")
 
@@ -352,9 +449,12 @@ def resend_otp(uid):
         "otp": otp
     })
 
-    send_otp(user["email"], otp)
-
-    flash("A new OTP has been sent.", "success")
+    try:
+        send_otp(user["email"], otp)
+        flash("A new OTP has been sent.", "success")
+    except Exception as e:
+        print(f"Resend OTP error: {e}")
+        flash("Account found, but email delivery failed. Please try again later.", "warning")
 
     return redirect(url_for("verify_otp", uid=uid))
 
@@ -577,63 +677,6 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
-
-def send_email(recipient, fullname, status):
-    msg = Message(
-        subject=f"Appointment {status}",
-        recipients=[recipient]
-    )
-
-    msg.body = f"""
-Hello {fullname},
-
-Your appointment has been {status}.
-
-Thank you,
-Dental Clinic
-"""
-
-    mail.send(msg)
-
-
-
-def send_email(recipient, fullname, status):
-
-    msg = Message(
-        subject=f"Appointment {status.capitalize()}",
-        recipients=[recipient]
-    )
-
-    if status == "accepted":
-        msg.body = f"""
-Hello {fullname},
-
-Good news!
-
-Your dental appointment has been ACCEPTED.
-
-Please arrive at the clinic on your scheduled date and time.
-
-Thank you,
-Dental Clinic
-"""
-
-    elif status == "declined":
-        msg.body = f"""
-Hello {fullname},
-
-We regret to inform you that your appointment request has been declined.
-
-Please log in to the Dental Clinic system and schedule another appointment at your convenience.
-
-Thank you for your understanding.
-
-Dental Clinic
-"""
-
-    mail.send(msg)
-
-
 @app.route("/approve", methods=["POST"])
 def approve():
 
@@ -698,44 +741,72 @@ def approve():
     # ==========================
     if action == "accept":
 
-        user_ref.collection("Approve").document(appointment_id).set(data)
+        try:
+            approve_ref = user_ref.collection("Approve").document(appointment_id)
+            appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
-        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+            batch = db.batch()
+            batch.set(approve_ref, data)
+            batch.delete(appt_ref)
+            batch.commit()
 
-        if patient_email:
-            send_email(patient_email, fullname, "accepted")
+            if patient_email:
+                send_email(patient_email, fullname, "accepted")
 
-        return "Appointment accepted"
+            return "Appointment accepted"
+
+        except Exception as e:
+            print(f"Accept error: {e}")
+            return f"Failed to accept appointment: {e}", 500
 
     # ==========================
     # DECLINE
     # ==========================
     elif action == "decline":
 
-        # Delete appointment only
-        user_ref.collection(Appointment_cliets).document(appointment_id).delete()
+        try:
+            appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
-        if patient_email:
-            send_email(patient_email, fullname, "declined")
+            batch = db.batch()
+            batch.delete(appt_ref)
+            batch.commit()
 
-        return "Appointment declined"
+            if patient_email:
+                send_email(patient_email, fullname, "declined")
+
+            return "Appointment declined"
+
+        except Exception as e:
+            print(f"Decline error: {e}")
+            return f"Failed to decline appointment: {e}", 500
 
     return "Invalid action", 400
 
 
 @app.route("/test-email")
 def test_email():
+    try:
+        msg = Message(
+            subject="SMTP Test",
+            recipients=["jayr.bonitillo.ui@phinmaed.com"]
+        )
 
-    msg = Message(
-        subject="SMTP Test",
-        recipients=["jayr.bonitillo.ui@phinmaed.com"]
-    )
+        msg.body = "SMTP is working!"
 
-    msg.body = "SMTP is working!"
+        mail.send(msg)
 
-    mail.send(msg)
+        return "Email sent!"
+    except Exception as e:
+        return f"Email failed: {e}", 500
 
-    return "Email sent!"
+
+@app.route("/test-otp")
+def test_otp():
+    try:
+        send_otp("jayr.bonitillo.ui@phinmaed.com", "999999")
+        return "OTP send dispatched. Check logs for result."
+    except Exception as e:
+        return f"OTP dispatch failed: {e}", 500
 
 
 
@@ -874,8 +945,11 @@ def adminDashboard():
         data["Done_procedure"] = (
             done_doc.to_dict() if done_doc.exists else {}
         )
-
         accounts.append(data)
+
+    pending_count = len(appointment_list)
+    approved_count = len(approve_list)
+    total_patients = len(accounts)
 
     # =========================
     # SEND ALL TO TEMPLATE
@@ -885,7 +959,9 @@ def adminDashboard():
         Appointment_clients=appointment_list,
         Approve=approve_list,
         accounts=accounts,
-        
+        pending_count=pending_count,
+        approved_count=approved_count,
+        total_patients=total_patients,
     )
 
 
