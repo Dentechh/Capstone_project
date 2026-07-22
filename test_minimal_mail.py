@@ -21,7 +21,7 @@ mail = Mail(app)
 @app.route('/send')
 def send():
     try:
-        msg = Message('SMTP Test', recipients=['jayr.bonitillo.ui@phinmaed.com'])
+        msg = Message('SMTP Test', recipients=['jerichoph01@gmail.com'])
         msg.body = 'hello from minimal app'
         mail.send(msg)
         return 'sent'

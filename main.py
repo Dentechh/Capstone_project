@@ -43,32 +43,26 @@ from firebase_admin import credentials, firestore
 basedir = os.path.abspath(os.path.dirname(__file__))
 key_path = os.path.join(basedir, "dentech_key.json")
 
-# Check service account file
-if not os.path.exists(key_path):
-    raise FileNotFoundError(
-        f"Firebase key not found at: {key_path}"
-    )
-
 # Prevent re-initialization during Flask debug reload
 if not firebase_admin._apps:
     try:
+        if not os.path.exists(key_path):
+            raise FileNotFoundError(f"Firebase key not found at: {key_path}")
         cred = credentials.Certificate(key_path)
-
-        firebase_admin.initialize_app(cred, {
-            "projectId": "dentech-c2ee0"
-        })
-
+        firebase_admin.initialize_app(cred, {"projectId": "dentech-c2ee0"})
         db = firestore.client()
-
         print("✅ Firebase initialized successfully")
-
     except Exception as e:
         print("❌ Firebase initialization failed:", e)
-        raise
-
+        db = None
 else:
     db = firestore.client()
     print("♻️ Firebase already initialized")
+
+
+def require_firebase():
+    if db is None:
+        raise RuntimeError("Firebase is not initialized. Check dentech_key.json")
 
 Account_clients = "manual_create_account"
 Appointment_cliets = "appointments"
@@ -139,7 +133,7 @@ import os
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
 if not CLIENT_ID:
-    raise Exception("Missing GOOGLE_CLIENT_ID environment variable")
+    print("⚠️  GOOGLE_CLIENT_ID is missing; Google login will be disabled until it's set in .env")
 
 
 
