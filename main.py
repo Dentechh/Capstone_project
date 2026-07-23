@@ -76,54 +76,171 @@ pay_mongo_public_key = "pk_test_m4rG4iv4L9S5MC8d4dxq39ko"
 import requests
 import base64
 
+def update_payment_status(patient_uid, procedure):
+    try:
+        patient_collection = None
+        if db.collection(Account_clients).document(patient_uid).get().exists:
+            patient_collection = Account_clients
+        elif db.collection("google_create_account").document(patient_uid).get().exists:
+            patient_collection = "google_create_account"
+
+        if patient_collection:
+            user_ref = db.collection(patient_collection).document(patient_uid)
+            done_procedures = user_ref.collection("Done_procedure").stream()
+
+            updated = False
+            for proc_doc in done_procedures:
+                if updated:
+                    break
+
+                proc_data = proc_doc.to_dict()
+                procedures = proc_data.get("procedures", [])
+
+                for p in procedures:
+                    if p.get("procedure") == procedure and p.get("status") != "Paid":
+                        p["status"] = "Paid"
+                        p["paid"] = p.get("balance", p.get("paid", 0))
+                        p["balance"] = 0
+                        proc_doc.reference.update({"procedures": procedures})
+                        updated = True
+                        break
+
+    except Exception as e:
+        print(f"Error updating payment status: {e}")
+
+
+@app.route("/payment-success")
+def payment_success():
+    checkout_session_id = request.args.get("checkout_session_id")
+    patient_uid = request.args.get("uid", "")
+    procedure = request.args.get("procedure", "")
+
+    if checkout_session_id:
+        try:
+            auth = base64.b64encode(f"{pay_mongo_secret_key}:".encode()).decode()
+            headers = {
+                "accept": "application/json",
+                "authorization": f"Basic {auth}"
+            }
+
+            r = requests.get(
+                f"https://api.paymongo.com/v1/checkout_sessions/{checkout_session_id}",
+                headers=headers,
+                timeout=30
+            )
+
+            result = r.json()
+            session_data = result.get("data", {}).get("attributes", {})
+            payment_status = session_data.get("payment_status", "")
+
+            if payment_status == "paid":
+                update_payment_status(patient_uid, procedure)
+                flash("Payment successful! Your appointment is now confirmed.", "success")
+            else:
+                flash("Payment received and is being processed. Your status will update shortly.", "info")
+
+        except Exception as e:
+            print(f"Error verifying payment: {e}")
+            flash("Could not verify payment status. Please contact support.", "error")
+
+    return redirect(url_for("index"))
+
+
+@app.route("/payment-cancel")
+def payment_cancel():
+    flash("Payment was cancelled or expired.", "error")
+    return redirect(url_for("index"))
+
+
+@app.route("/webhook/paymongo", methods=["POST"])
+def paymongo_webhook():
+    try:
+        event = request.json
+        attributes = event.get("data", {}).get("attributes", {})
+        event_type = attributes.get("type", "")
+
+        if event_type == "checkout.session.completed":
+            session_attrs = attributes.get("data", {}).get("attributes", {})
+            metadata = session_attrs.get("metadata", {})
+            patient_uid = metadata.get("patient_uid", "")
+            procedure = metadata.get("procedure", "")
+            payment_status = session_attrs.get("payment_status", "")
+
+            if payment_status == "paid" and patient_uid and procedure:
+                update_payment_status(patient_uid, procedure)
+
+    except Exception as e:
+        print(f"Webhook error: {e}")
+
+    return "", 200
+
+
 @app.route("/create_gcash_payment", methods=["POST"])
 def create_gcash_payment():
+    try:
+        data = request.json
+        amount = int(float(data.get("amount", 0)) * 100)
+        procedure = data.get("procedure", "")
+        patient_uid = data.get("uid", "")
 
-    data = request.json
+        patient_email = session.get("email", "patient@example.com")
+        patient_name = session.get("name", "Dental Patient")
 
-    amount = int(float(data["amount"]) * 100)
+        base_url = request.host_url.rstrip('/')
+        success_url = f"{base_url}/payment-success?uid={patient_uid}&procedure={procedure}"
+        cancel_url = f"{base_url}/payment-cancel"
 
-    auth = base64.b64encode(
-        f"{pay_mongo_secret_key}:".encode()
-    ).decode()
+        auth = base64.b64encode(f"{pay_mongo_secret_key}:".encode()).decode()
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": f"Basic {auth}"
+        }
 
-    headers = {
-        "accept": "application/json",
-        "content-type": "application/json",
-        "authorization": f"Basic {auth}"
-    }
-
-    payload = {
-        "data": {
-            "attributes": {
-                "billing": {
-                    "name": "Dental Patient",
-                    "email": "patient@example.com"
-                },
-                "line_items": [{
-                    "currency": "PHP",
-                    "amount": amount,
-                    "name": data["procedure"],
-                    "quantity": 1
-                }],
-                "payment_method_types": ["gcash"],
-                "success_url": "https://yourdomain.com/payment-success",
-                "cancel_url": "https://yourdomain.com/payment-cancel"
+        payload = {
+            "data": {
+                "attributes": {
+                    "billing": {
+                        "name": patient_name,
+                        "email": patient_email
+                    },
+                    "line_items": [{
+                        "currency": "PHP",
+                        "amount": amount,
+                        "name": procedure,
+                        "quantity": 1
+                    }],
+                    "payment_method_types": ["gcash"],
+                    "success_url": success_url,
+                    "cancel_url": cancel_url,
+                    "metadata": {
+                        "patient_uid": patient_uid,
+                        "procedure": procedure
+                    }
+                }
             }
         }
-    }
 
-    r = requests.post(
-        "https://api.paymongo.com/v1/checkout_sessions",
-        headers=headers,
-        json=payload
-    )
+        r = requests.post(
+            "https://api.paymongo.com/v1/checkout_sessions",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
 
-    result = r.json()
+        result = r.json()
 
-    return {
-        "checkout_url": result["data"]["attributes"]["checkout_url"]
-    }
+        if "data" in result:
+            return {
+                "checkout_url": result["data"]["attributes"]["checkout_url"]
+            }
+        else:
+            return {
+                "error": result.get("error", {}).get("message", "Failed to create payment session")
+            }
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0

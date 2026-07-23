@@ -1108,6 +1108,7 @@ window.addEventListener("click", function(event) {
 </div>
 
 <script>function payGCash(amount, procedure){
+    const uid = "{{ user.get('uid', '') }}";
 
     fetch("/create_gcash_payment",{
         method:"POST",
@@ -1116,7 +1117,8 @@ window.addEventListener("click", function(event) {
         },
         body:JSON.stringify({
             amount: amount,
-            procedure: procedure
+            procedure: procedure,
+            uid: uid
         })
     })
     .then(res=>res.json())
