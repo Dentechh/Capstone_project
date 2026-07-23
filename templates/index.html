@@ -289,7 +289,7 @@
                   
                     <input type="text" placeholder="Nationality" name="Nationality">
                     
-                    <select name="Religion">
+                    <select name="Religion" required>
                         <option value="" disabled selected>Religion</option>
                         <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Christian">Christian</option>
@@ -308,8 +308,8 @@
                     </select>
                     
                     <div class="age-sex-group">
-                        <input type="number" placeholder="Age" name="Age">
-                        <select name="Sex" id="sexSelect">
+                        <input type="number" placeholder="Age" name="Age"required>
+                        <select name="Sex" id="sexSelect"required>
                             <option value="" disabled selected>Sex</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -319,7 +319,7 @@
                     <input type="date" name="Birthday" required>
                     
                     
-                    <select name="Occupation">
+                    <select name="Occupation" required>
                         <option value="" disabled selected>Occupation</option>
                         <option value="Student">Student</option>
                         <option value="Employee">Employee</option>
@@ -335,14 +335,14 @@
                     </select>
 
 
-                    <select name="Urgency_Level">
+                    <select name="Urgency_Level" required>
                         <option value="" disabled selected>Urgency Level</option>
                         <option value="Normal">Normal</option>
                         <option value="Urgent">Urgent</option>
                         <option value="Emergency">Emergency</option>
                     </select>
                     
-                    <select name="Civil_Status">
+                    <select name="Civil_Status" required>
                         <option value="" disabled selected>Civil Status</option>
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>

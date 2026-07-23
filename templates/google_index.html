@@ -269,15 +269,15 @@
                     </div>
                     <div style="display: flex; gap: 5px;">
                         <input type="text" placeholder="House No." name="House_No" required style="width: 80px;">
-                        <input type="text" placeholder="Street" name="Street" style="flex: 1;">
+                        <input type="text" placeholder="Street" name="Street" style="flex: 1;"required>
                     </div>
                     
                     <input type="text" placeholder="Barangay" name="Brgy" required>
                     <input type="text" placeholder="Municipality" name="Municipality" required>
                     <input type="text" placeholder="City" name="City" required>
-                    <input type="text" placeholder="Nationality" name="Nationality">
+                    <input type="text" placeholder="Nationality" name="Nationality" required>
                     
-                    <select name="Religion">
+                    <select name="Religion" required>
                         <option value="" disabled selected>Religion</option>
                         <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Christian">Christian</option>
@@ -297,7 +297,7 @@
                     
                     <div style="display: flex; gap: 5px;">
                         <input type="number" placeholder="Age" name="Age" style="width: 50%;">
-                        <select name="Sex" id="sexSelect" style="width: 50%;">
+                        <select name="Sex" id="sexSelect" style="width: 50%;" required>
                             <option value="" disabled selected>Sex</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -306,7 +306,7 @@
                     <input type="tel" placeholder="Contact Number" name="Contact_number" required>
                     <input type="date" name="Birthday" required>
                     
-                    <select name="Occupation">
+                    <select name="Occupation" required>
                         <option value="" disabled selected>Occupation</option>
                         <option value="Student">Student</option>
                         <option value="Employee">Employee</option>
@@ -322,7 +322,7 @@
                     </select>
 
                     
-                    <select name="Occupation" >
+                    <select name="Urgency_Level" required>
                         <option value="" disabled selected>Urgency Level</option>
                         <option value="Student">Normal</option>
                         <option value="Student">Ugrent</option>
@@ -330,7 +330,7 @@
 
                     </select>
                     
-                    <select name="Civil_Status">
+                    <select name="Civil_Status" required>
                         <option value="" disabled selected>Civil Status</option>
                         <option value="Single">Single</option>
                         <option value="Married">Married</option>
@@ -343,7 +343,7 @@
                     </h3>
 
 
-                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;">
+                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;" required>
                         <option value="" disabled selected>Choose a service</option>
                         <option value="Dental Consultation">Dental Consultation <p>300</p></option>
                         <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) <p>800 -2,000</p></option>
