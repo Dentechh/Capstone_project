@@ -657,19 +657,33 @@ def p_profile():
     name = session.get('name')
     email = session.get('email')
     user_data = {}
+    user_appointments = []
+    user_history = []
 
-    # 1. Try to find in manual accounts
-    user_query = db.collection(Account_clients).where("username", "==", session.get('username')).get()
-    
-    # 2. If not found/empty, try Google accounts
-    if not user_query:
-        user_query = db.collection("google_create_account").where("email", "==", email).get()
+    if email:
+        user_query = db.collection(Account_clients).where("email", "==", email).get()
+        
+        if user_query:
+            user_data = user_query[0].to_dict()
+            user_data['id'] = user_query[0].id
+            user_data['account_type'] = 'Manual'
+        else:
+            user_query = db.collection("google_create_account").where("email", "==", email).get()
+            if user_query:
+                user_data = user_query[0].to_dict()
+                user_data['id'] = user_query[0].id
+                user_data['account_type'] = 'Google'
 
-    if user_query:
-        user_data = user_query[0].to_dict()
-        user_data['id'] = user_query[0].id # Store ID for updates
-    
-    return render_template("patient-profile.html", name=session.get('name'), user=user_data)
+        uid = user_data.get('uid') or user_data.get('id', '')
+        if uid:
+            try:
+                main_collection = "google_create_account" if user_data.get('account_type') == 'Google' else Account_clients
+                appt_ref = db.collection(main_collection).document(uid).collection("Approve")
+                user_appointments = [doc.to_dict() for doc in appt_ref.stream()]
+            except Exception:
+                pass
+
+    return render_template("patient-profile.html", name=name, user=user_data, uid=user_data.get('id', ''), appointments=user_appointments)
 
 
 

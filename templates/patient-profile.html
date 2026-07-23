@@ -601,25 +601,15 @@ body.dark-mode .nav-card span {
         </div>
 
         <div class="profile-right">
-            <h2>{{ user.get('firstname', name) }}</h2>
+            <h2>{{ user.get('firstname', '') }} {{ user.get('lastname', '') }}</h2>
             <p style="opacity:0.8; font-weight: 300;">
-                @{{ user.get('username', 'username') }} | Clinic Member
+                {{ user.get('email', '') }} | {{ (user.get('account_type', 'Manual') + ' Account') }}
             </p>
 
             <div class="info-grid">
                 <div class="info-item">
                     <label>Full Name</label>
-                    <p>{{ user.get('firstname', name) }}</p>
-                </div>
-
-                <div class="info-item">
-                    <label>Username</label>
-                    <p>{{ user.get('username', 'Not set') }}</p>
-                </div>
-
-                <div class="info-item">
-                    <label>Phone Number</label>
-                    <p>{{ user.get('contact_number', 'Not set') }}</p>
+                    <p>{{ user.get('firstname', '') }} {{ user.get('lastname', '') }}</p>
                 </div>
 
                 <div class="info-item">
@@ -628,8 +618,23 @@ body.dark-mode .nav-card span {
                 </div>
 
                 <div class="info-item">
+                    <label>Phone Number</label>
+                    <p>{{ user.get('contact_number', 'Not set') }}</p>
+                </div>
+
+                <div class="info-item">
+                    <label>Status</label>
+                    <p>{{ 'Verified' if user.get('verified') else 'Not Verified' }}</p>
+                </div>
+
+                <div class="info-item">
+                    <label>Member Since</label>
+                    <p>{{ user.get('created_at', 'N/A')[:10] if user.get('created_at') else 'N/A' }}</p>
+                </div>
+
+                <div class="info-item">
                     <label>Account Type</label>
-                    <p>{{ user.get('provider', 'Manual').capitalize() }} Account</p>
+                    <p>{{ user.get('account_type', 'Manual').capitalize() }} Account</p>
                 </div>
             </div>
 
@@ -638,6 +643,34 @@ body.dark-mode .nav-card span {
             </button>
         </div>
     </div>
+
+    {% if appointments %}
+    <div class="profile-card">
+        <div class="profile-right">
+            <h2>My Schedules</h2>
+            <div style="overflow-x: auto;">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Dentist</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td>{{ appt.get('Service', '—') }}</td>
+                            <td>{{ appt.get('DentistName', '—') }}</td>
+                            <td><span class="badge" style="background: #28a745; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem;">{{ appt.get('status', 'pending').capitalize() }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- =========================
          NAVIGATION BUTTONS
