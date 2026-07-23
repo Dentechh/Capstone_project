@@ -13,8 +13,6 @@ import threading
 import smtplib
 from email.message import EmailMessage
 sys.stdout.reconfigure(encoding='utf-8')
-from dotenv import load_dotenv
-from flask_mail import Mail
 app = Flask(__name__)
 
 from dotenv import load_dotenv
@@ -24,9 +22,9 @@ load_dotenv()
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'jayralphbonitillo09@gmail.com'
-app.config['MAIL_PASSWORD'] = 'lrvfjqrxeggztuxs'
-app.config['MAIL_DEFAULT_SENDER'] = 'jayralphbonitillo09@gmail.com'
+app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
 app.config['MAIL_TIMEOUT'] = 10
 
 mail = Mail(app)
@@ -234,6 +232,7 @@ def generate_otp():
 import smtplib
 from email.message import EmailMessage
 
+
 def _send_email_async(recipient, subject, body):
     def _task():
         try:
@@ -266,13 +265,32 @@ def _send_email_async(recipient, subject, body):
 
             server.send_message(msg)
 
-            print("6. Email sent!")
+            print("✅ Email sent successfully!")
 
             server.quit()
 
+        except smtplib.SMTPAuthenticationError as e:
+            print("❌ Gmail Authentication Failed")
+            print(e)
+
+        except smtplib.SMTPRecipientsRefused as e:
+            print("❌ Recipient email address is invalid")
+            print(e)
+
+        except smtplib.SMTPException as e:
+            error = str(e)
+
+            if "Daily user sending quota exceeded" in error:
+                print("🚨 GMAIL DAILY LIMIT REACHED! OTP WAS NOT SENT!")
+
+            elif "Too many login attempts" in error:
+                print("🚨 TOO MANY LOGIN ATTEMPTS! TRY AGAIN LATER!")
+
+            else:
+                print("❌ SMTP ERROR:", error)
+
         except Exception as e:
-            import traceback
-            traceback.print_exc()
+            print("❌ Unexpected Error:", e)
 
     threading.Thread(target=_task, daemon=True).start()
 
