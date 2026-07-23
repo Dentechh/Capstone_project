@@ -184,7 +184,7 @@ def login_manual():
         user_doc = user_query[0]
         user_data = user_doc.to_dict()
 
-        if check_password_hash(user_data["password"], password):
+        if check_password_hash(user_data.get("password", ""), password):
 
             # Check email verification
             firebase_user = auth.get_user(user_doc.id)
@@ -203,10 +203,13 @@ def login_manual():
             )
 
             return redirect(url_for("index"))
+        else:
+            flash("Incorrect password.", "error")
+            return redirect(url_for("index"))
 
-
-    flash("Invalid email or password!", "error")
-    return redirect("/")
+    else:
+        flash("Incorrect email.", "error")
+        return redirect(url_for("index"))
 
 
 #  GOOGLE AUTH ROUTE
@@ -251,6 +254,7 @@ def sign_up():
         lastname = bleach.clean(request.form["LastName"].strip())
         email = bleach.clean(request.form["UserName"].strip())
         contact_number = bleach.clean(request.form["MobileNumber"].strip())
+        password = request.form.get("Password", "")
 
         # Get the Firebase Auth user that was already created in JavaScript
         user = auth.get_user_by_email(email)
@@ -269,6 +273,7 @@ def sign_up():
             "lastname": lastname,
             "email": email,
             "contact_number": contact_number,
+            "password": generate_password_hash(password),
             "verified": user.email_verified,
             "created_at": datetime.now(UTC).isoformat()
         })

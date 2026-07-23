@@ -516,6 +516,8 @@
 
     <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
 
+    <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
+
     <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
 
     <button type="submit" id="signupBtn" class="sign-up-btn">
@@ -571,8 +573,16 @@ document.getElementById("email").value;
 let password =
 document.getElementById("password").value;
 
+let confirmPassword =
+document.getElementById("confirmPassword").value;
+
 let mobileNumber =
 document.querySelector('#signupForm input[name="MobileNumber"]').value;
+
+if (password !== confirmPassword) {
+    alert("Passwords do not match.");
+    return;
+}
 
 try{
 
