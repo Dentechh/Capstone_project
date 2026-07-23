@@ -533,7 +533,8 @@ import { initializeApp } from
 import { 
 getAuth,
 createUserWithEmailAndPassword,
-sendEmailVerification
+sendEmailVerification,
+onAuthStateChanged
 } from 
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -587,19 +588,15 @@ await sendEmailVerification(
 userCredential.user
 );
 
-await auth.signOut();
-
-await fetch('/sign-up', {
-method: 'POST',
-headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-body: new URLSearchParams({
+localStorage.setItem('pendingSignup', JSON.stringify({
 FirstName: firstName,
 LastName: lastName,
 UserName: email,
 Password: password,
 MobileNumber: mobileNumber
-})
-});
+}));
+
+await auth.signOut();
 
 alert(
 "Verification email sent. Check your Gmail."
@@ -613,6 +610,22 @@ alert(error.message);
 
 }
 
+});
+
+onAuthStateChanged(auth, (user) => {
+    if (user && user.emailVerified) {
+        const pending = localStorage.getItem('pendingSignup');
+        if (pending) {
+            const data = JSON.parse(pending);
+            fetch('/sign-up', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams(data)
+            }).then(() => {
+                localStorage.removeItem('pendingSignup');
+            });
+        }
+    }
 });
 
 </script>
