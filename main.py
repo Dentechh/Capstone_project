@@ -13,6 +13,8 @@ import threading
 import smtplib
 from email.message import EmailMessage
 sys.stdout.reconfigure(encoding='utf-8')
+from dotenv import load_dotenv
+from flask_mail import Mail
 app = Flask(__name__)
 
 from dotenv import load_dotenv
@@ -22,9 +24,9 @@ load_dotenv()
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv("MAIL_USERNAME")
-app.config['MAIL_PASSWORD'] = os.getenv("MAIL_PASSWORD")
-app.config['MAIL_DEFAULT_SENDER'] = os.getenv("MAIL_USERNAME")
+app.config['MAIL_USERNAME'] = 'jayralphbonitillo09@gmail.com'
+app.config['MAIL_PASSWORD'] = 'lrvfjqrxeggztuxs'
+app.config['MAIL_DEFAULT_SENDER'] = 'jayralphbonitillo09@gmail.com'
 app.config['MAIL_TIMEOUT'] = 10
 
 mail = Mail(app)
