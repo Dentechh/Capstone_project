@@ -452,6 +452,7 @@ def google_bookedCustomer():
     Occupation = bleach.clean(request.form.get("Occupation", ""))
     CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
     Service = bleach.clean(request.form.get("Service", ""))
+    UrgencyLevel = bleach.clean(request.form.get("Urgency_Level", ""))
     appointment_date = bleach.clean(request.form.get("appointment_date", ""))
     q1 = bleach.clean(request.form.get("q1", ""))
     q2 = bleach.clean(request.form.get("q2", ""))
@@ -494,6 +495,7 @@ def google_bookedCustomer():
             "CivilStatus": CivilStatus,
 
             "Service": Service,
+            "UrgencyLevel": UrgencyLevel,
             "appointment_date": appointment_date,
 
             "q1": q1,
@@ -548,6 +550,7 @@ def bookedCustomer():
     Occupation = bleach.clean(request.form.get("Occupation", ""))
     CivilStatus = bleach.clean(request.form.get("Civil_Status", ""))
     Service = bleach.clean(request.form.get("Service", ""))
+    UrgencyLevel = bleach.clean(request.form.get("Urgency_Level", ""))
     appointment_date = bleach.clean(request.form.get("appointment_date", ""))
     q1 = bleach.clean(request.form.get("q1", ""))
     q2 = bleach.clean(request.form.get("q2", ""))
@@ -590,6 +593,7 @@ def bookedCustomer():
             "CivilStatus": CivilStatus,
 
             "Service": Service,
+            "UrgencyLevel": UrgencyLevel,
             "appointment_date": appointment_date,
 
             "q1": q1,
@@ -713,6 +717,7 @@ def approve():
 
         "Occupation": request.form.get("occupation", ""),
         "CivilStatus": request.form.get("civilstatus", ""),
+        "UrgencyLevel": request.form.get("UrgencyLevel", ""),
         "Service": request.form.get("service", ""),
     }
 
@@ -910,6 +915,9 @@ def adminDashboard():
     pending_count = len(appointment_list)
     approved_count = len(approve_list)
     total_patients = len(accounts)
+
+    urgency_order = {"Emergency": 0, "Urgent": 1, "Normal": 2}
+    appointment_list.sort(key=lambda x: urgency_order.get(x.get("UrgencyLevel", ""), 99))
 
     # =========================
     # SEND ALL TO TEMPLATE
