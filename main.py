@@ -505,14 +505,73 @@ def bookedCustomer():
     return redirect(url_for("index"))
 
 
+def send_appointment_email(patient_email, fullname, action, appointment_data):
+    try:
+        if not patient_email:
+            return None
+
+        service = appointment_data.get("Service", "your appointment")
+        dentist = appointment_data.get("DentistName", "our dentist")
+        appointment_date = appointment_data.get("appointment_date", "")
+
+        if action == "accept":
+            subject = "Appointment Accepted - Capizonda Dental Clinic"
+            body = f"""
+Hello {fullname},
+
+Good news! Your appointment for {service} has been accepted by Dr. {dentist}.
+{f'Appointment Date: {appointment_date}' if appointment_date else ''}
+
+Please arrive 10 minutes before your scheduled time.
+If you have any questions, feel free to contact us.
+
+Best regards,
+Capizonda Dental Clinic Team
+"""
+        else:
+            subject = "Appointment Declined - Capizonda Dental Clinic"
+            body = f"""
+Hello {fullname},
+
+We regret to inform you that your appointment request for {service} has been declined by Dr. {dentist}.
+{f'Your previously scheduled appointment date was: {appointment_date}' if appointment_date else ''}
+
+Please feel free to book another appointment at your convenience.
+We apologize for any inconvenience this may have caused.
+
+Best regards,
+Capizonda Dental Clinic Team
+"""
+
+        msg = Message(
+            subject=subject,
+            sender=app.config["MAIL_DEFAULT_SENDER"],
+            recipients=[patient_email]
+        )
+        msg.body = body
+        mail.send(msg)
+        return True
+
+    except Exception as e:
+        print(f"EMAIL SEND ERROR: {e}")
+        return False
+
+
 @app.route("/approve", methods=["POST"])
 def approve():
 
-    uid = request.form.get("user_id")
-    DentistName = bleach.clean(request.form.get("dentist_name", ""))
-    appointment_id = request.form.get("appointment_id")
-    action = request.form.get("action")
+    uid = request.form.get("user_id", "").strip()
+    appointment_id = request.form.get("appointment_id", "").strip()
+    action = request.form.get("action", "").strip().lower()
     email = session.get("email")
+
+    if not uid or not appointment_id:
+        return "Missing user_id or appointment_id", 400
+
+    if action not in ("accept", "decline"):
+        return "Invalid action", 400
+
+    DentistName = bleach.clean(request.form.get("dentist_name", ""))
 
     data = {
         "status": action,
@@ -520,56 +579,49 @@ def approve():
         "uid": uid,
         "email": email,
         "DentistName": DentistName,
-        "FirstName": request.form.get("firstname"),
-        "MiddleName": request.form.get("middlename"),
-        "LastName": request.form.get("lastname"),
+        "FirstName": request.form.get("firstname", ""),
+        "MiddleName": request.form.get("middlename", ""),
+        "LastName": request.form.get("lastname", ""),
 
-        "HouseNo": request.form.get("houseno"),
-        "Street": request.form.get("street"),
-        "Brgy": request.form.get("brgy"),
-        "Municipality": request.form.get("municipality"),
-        "City": request.form.get("city"),
+        "HouseNo": request.form.get("houseno", ""),
+        "Street": request.form.get("street", ""),
+        "Brgy": request.form.get("brgy", ""),
+        "Municipality": request.form.get("municipality", ""),
+        "City": request.form.get("city", ""),
 
-        "ContactNumber": request.form.get("contactnumber"),
-        "Nationality": request.form.get("nationality"),
-        "Religion": request.form.get("religion"),
+        "ContactNumber": request.form.get("contactnumber", ""),
+        "Nationality": request.form.get("nationality", ""),
+        "Religion": request.form.get("religion", ""),
 
-        "Age": request.form.get("age"),
-        "Sex": request.form.get("sex"),
-        "Birthday": request.form.get("birthday"),
+        "Age": request.form.get("age", ""),
+        "Sex": request.form.get("sex", ""),
+        "Birthday": request.form.get("birthday", ""),
 
-        "Occupation": request.form.get("occupation"),
-        "CivilStatus": request.form.get("civilstatus"),
-        "Service": request.form.get("service"),
+        "Occupation": request.form.get("occupation", ""),
+        "CivilStatus": request.form.get("civilstatus", ""),
+        "Service": request.form.get("service", ""),
     }
 
-    # Find user
+    main_collection = None
     if db.collection("google_create_account").document(uid).get().exists:
         main_collection = "google_create_account"
-
     elif db.collection(Account_clients).document(uid).get().exists:
         main_collection = Account_clients
 
-    else:
+    if not main_collection:
         return "User not found", 404
 
     user_ref = db.collection(main_collection).document(uid)
 
-    # Get email
     user_doc = user_ref.get()
-    patient_email = None
-
-    if user_doc.exists:
-        patient_email = user_doc.to_dict().get("email")
+    patient_email = user_doc.to_dict().get("email") if user_doc.exists else None
 
     fullname = f"{data['FirstName']} {data['LastName']}"
 
-    # ==========================
-    # ACCEPT
-    # ==========================
-    if action == "accept":
+    send_appointment_email(patient_email, fullname, action, data)
 
-        try:
+    try:
+        if action == "accept":
             approve_ref = user_ref.collection("Approve").document(appointment_id)
             appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
@@ -578,35 +630,20 @@ def approve():
             batch.delete(appt_ref)
             batch.commit()
 
-            if patient_email:
-                send_email(patient_email, fullname, "accepted")
-
             return "Appointment accepted"
 
-        except Exception as e:
-            print(f"Accept error: {e}")
-            return f"Failed to accept appointment: {e}", 500
-
-    # ==========================
-    # DECLINE
-    # ==========================
-    elif action == "decline":
-
-        try:
+        elif action == "decline":
             appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
             batch = db.batch()
             batch.delete(appt_ref)
             batch.commit()
 
-            if patient_email:
-                send_email(patient_email, fullname, "declined")
-
             return "Appointment declined"
 
-        except Exception as e:
-            print(f"Decline error: {e}")
-            return f"Failed to decline appointment: {e}", 500
+    except Exception as e:
+        print(f"{action.capitalize()} error: {e}")
+        return f"Failed to {action} appointment: {e}", 500
 
     return "Invalid action", 400
 
