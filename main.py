@@ -8,6 +8,7 @@ import bleach
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
+import os
 import threading
 import smtplib
 from email.message import EmailMessage
@@ -126,7 +127,7 @@ def create_gcash_payment():
 
 
 # makita nisa sa diri https://console.cloud.google.com/auth/clients?project=dentech-c2ee0
-import os
+
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
@@ -1123,7 +1124,7 @@ import base64
 from datetime import datetime
 from flask import request, jsonify
 from firebase_admin import firestore
-
+import os
 
 app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
 
