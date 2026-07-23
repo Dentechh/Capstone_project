@@ -657,8 +657,6 @@ def p_profile():
     name = session.get('name')
     email = session.get('email')
     user_data = {}
-    user_appointments = []
-    user_history = []
 
     if email:
         user_query = db.collection(Account_clients).where("email", "==", email).get()
@@ -666,24 +664,16 @@ def p_profile():
         if user_query:
             user_data = user_query[0].to_dict()
             user_data['id'] = user_query[0].id
-            user_data['account_type'] = 'Manual'
         else:
             user_query = db.collection("google_create_account").where("email", "==", email).get()
             if user_query:
                 user_data = user_query[0].to_dict()
                 user_data['id'] = user_query[0].id
-                user_data['account_type'] = 'Google'
 
-        uid = user_data.get('uid') or user_data.get('id', '')
-        if uid:
-            try:
-                main_collection = "google_create_account" if user_data.get('account_type') == 'Google' else Account_clients
-                appt_ref = db.collection(main_collection).document(uid).collection("Approve")
-                user_appointments = [doc.to_dict() for doc in appt_ref.stream()]
-            except Exception:
-                pass
-
-    return render_template("patient-profile.html", name=name, user=user_data, uid=user_data.get('id', ''), appointments=user_appointments)
+        if user_data:
+            user_data.setdefault('uid', user_data.get('id', ''))
+    
+    return render_template("patient-profile.html", name=name, user=user_data)
 
 
 
@@ -1313,6 +1303,19 @@ def get_approve(uid):
             data = doc.to_dict()
             data["id"] = doc.id
             approve_list.append(data)
+
+        if not approve_list:
+            approve_docs = (
+                db.collection(Account_clients)
+                .document(uid)
+                .collection("Approve")
+                .stream()
+            )
+
+            for doc in approve_docs:
+                data = doc.to_dict()
+                data["id"] = doc.id
+                approve_list.append(data)
 
         return jsonify(approve_list)
 
