@@ -563,7 +563,7 @@ def approve():
     uid = request.form.get("user_id", "").strip()
     appointment_id = request.form.get("appointment_id", "").strip()
     action = request.form.get("action", "").strip().lower()
-    email = session.get("email")
+    dentist_name = bleach.clean(request.form.get("dentist_name", ""))
 
     if not uid or not appointment_id:
         return "Missing user_id or appointment_id", 400
@@ -571,14 +571,11 @@ def approve():
     if action not in ("accept", "decline"):
         return "Invalid action", 400
 
-    DentistName = bleach.clean(request.form.get("dentist_name", ""))
-
     data = {
         "status": action,
         "Patient_unq_id": appointment_id,
         "uid": uid,
-        "email": email,
-        "DentistName": DentistName,
+        "DentistName": dentist_name,
         "FirstName": request.form.get("firstname", ""),
         "MiddleName": request.form.get("middlename", ""),
         "LastName": request.form.get("lastname", ""),
@@ -615,10 +612,7 @@ def approve():
 
     user_doc = user_ref.get()
     patient_email = user_doc.to_dict().get("email") if user_doc.exists else None
-
     fullname = f"{data['FirstName']} {data['LastName']}"
-
-    send_appointment_email(patient_email, fullname, action, data)
 
     try:
         if action == "accept":
@@ -630,8 +624,6 @@ def approve():
             batch.delete(appt_ref)
             batch.commit()
 
-            return "Appointment accepted"
-
         elif action == "decline":
             appt_ref = user_ref.collection(Appointment_cliets).document(appointment_id)
 
@@ -639,13 +631,20 @@ def approve():
             batch.delete(appt_ref)
             batch.commit()
 
-            return "Appointment declined"
+        else:
+            return "Invalid action", 400
+
+        threading.Thread(
+            target=send_appointment_email,
+            args=(patient_email, fullname, action, data),
+            daemon=True
+        ).start()
+
+        return f"Appointment {action}ed"
 
     except Exception as e:
         print(f"{action.capitalize()} error: {e}")
         return f"Failed to {action} appointment: {e}", 500
-
-    return "Invalid action", 400
 
 
 
