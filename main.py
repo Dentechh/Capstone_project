@@ -248,7 +248,6 @@ from firebase_admin import auth
 
 @app.route("/sign-up", methods=["POST"])
 def sign_up():
-
     try:
         firstname = bleach.clean(request.form["FirstName"].strip())
         lastname = bleach.clean(request.form["LastName"].strip())
@@ -256,13 +255,14 @@ def sign_up():
         contact_number = bleach.clean(request.form["MobileNumber"].strip())
         password = request.form.get("Password", "")
 
-        # Get the Firebase Auth user that was already created in JavaScript
+        # Get Firebase Authentication user
         user = auth.get_user_by_email(email)
         uid = user.uid
 
-        # Check if already exists in Firestore
+        # Firestore document reference
         doc_ref = db.collection(Account_clients).document(uid)
 
+        # If already exists, do nothing
         if doc_ref.get().exists:
             return "OK", 200
 
@@ -273,17 +273,18 @@ def sign_up():
             "lastname": lastname,
             "email": email,
             "contact_number": contact_number,
-            "password": generate_password_hash(password),
+            "password": generate_password_hash(password) if password else "",
             "verified": user.email_verified,
             "created_at": datetime.now(UTC).isoformat()
         })
 
+        print("✅ User saved to Firestore:", uid)
+
         return "OK", 200
 
     except Exception as e:
-        print("SIGNUP ERROR:", e)
+        print("❌ SIGNUP ERROR:", e)
         return str(e), 500
-
 
 #  LOGOUT
 

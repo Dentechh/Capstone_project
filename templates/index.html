@@ -599,6 +599,7 @@ userCredential.user
 
 await auth.signOut();
 
+
 const response = await fetch('/sign-up', {
     method: 'POST',
     headers: {
@@ -608,9 +609,15 @@ const response = await fetch('/sign-up', {
         FirstName: firstName,
         LastName: lastName,
         UserName: email,
-        MobileNumber: mobileNumber
+        MobileNumber: mobileNumber,
+        Password: password
     })
 });
+
+if (!response.ok) {
+    throw new Error(await response.text());
+}
+
 
 if (!response.ok) {
     throw new Error(await response.text());
