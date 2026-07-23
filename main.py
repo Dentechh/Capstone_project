@@ -243,115 +243,41 @@ def login_g_auth():
 from firebase_admin import auth
 
 
-@app.route("/sign-up", methods=["GET", "POST"])
+@app.route("/sign-up", methods=["POST"])
 def sign_up():
 
-    if request.method == "POST":
+    try:
+        firstname = bleach.clean(request.form["FirstName"].strip())
+        lastname = bleach.clean(request.form["LastName"].strip())
+        email = bleach.clean(request.form["UserName"].strip())
+        contact_number = bleach.clean(request.form["MobileNumber"].strip())
 
-        try:
-            firstname = bleach.clean(request.form["FirstName"].strip())
-            lastname = bleach.clean(request.form["LastName"].strip())
-            email = bleach.clean(request.form["UserName"].strip())
-            contact_number = bleach.clean(request.form["MobileNumber"].strip())
-            password = request.form["Password"].strip()
+        # Get the Firebase Auth user that was already created in JavaScript
+        user = auth.get_user_by_email(email)
+        uid = user.uid
 
+        # Check if already exists in Firestore
+        doc_ref = db.collection(Account_clients).document(uid)
 
-            # CHECK EXISTING ACCOUNT
-            check_account = db.collection(Account_clients).where(
-                "email", "==", email
-            ).get()
+        if doc_ref.get().exists:
+            return "OK", 200
 
+        # Save to Firestore
+        doc_ref.set({
+            "uid": uid,
+            "firstname": firstname,
+            "lastname": lastname,
+            "email": email,
+            "contact_number": contact_number,
+            "verified": user.email_verified,
+            "created_at": datetime.now(UTC).isoformat()
+        })
 
-            if check_account:
-                flash("Email already exists!", "error")
-                return redirect(url_for("sign_up"))
+        return "OK", 200
 
-
-            # CREATE FIREBASE AUTH USER
-            uid = None
-            try:
-                user = auth.create_user(
-                    email=email,
-                    password=password,
-                    email_verified=False
-                )
-                uid = user.uid
-            except Exception as e:
-                print(f"Firebase auth user creation note: {e}")
-                try:
-                    existing_user = auth.get_user_by_email(email)
-                    uid = existing_user.uid
-                except Exception:
-                    uid = None
-
-
-            # CREATE VERIFICATION LINK
-            verification_link = auth.generate_email_verification_link(email)
-
-
-            # SAVE USER TO FIRESTORE
-            db.collection(Account_clients).document(uid).set({
-
-                "uid": uid,
-                "firstname": firstname,
-                "lastname": lastname,
-                "email": email,
-                "contact_number": contact_number,
-                "verified": False,
-                "created_at": datetime.now(UTC).isoformat()
-
-            })
-
-
-            # SEND EMAIL
-            msg = Message(
-                "Verify your Dental Clinic Account",
-                sender=app.config["MAIL_DEFAULT_SENDER"],
-                recipients=[email]
-            )
-
-            msg.body = f"""
-Hello {firstname},
-
-Thank you for registering.
-
-Please verify your email by clicking this link:
-
-{verification_link}
-
-
-After verification you can login to your account.
-
-Dental Clinic Team
-"""
-
-            mail.send(msg)
-
-
-            flash(
-                "Account created. Please check your email for verification.",
-                "success"
-            )
-
-
-            return redirect(url_for("index"))
-
-
-        except Exception as e:
-
-            print("SIGNUP ERROR:", e)
-
-            flash(
-                f"Signup failed: {e}",
-                "error"
-            )
-
-            return redirect(url_for("sign_up"))
-
-
-    return render_template("index.html")
-
-
+    except Exception as e:
+        print("SIGNUP ERROR:", e)
+        return str(e), 500
 
 
 #  LOGOUT

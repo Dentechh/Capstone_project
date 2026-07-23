@@ -589,22 +589,24 @@ userCredential.user
 
 await auth.signOut();
 
-await fetch('/sign-up', {
-method: 'POST',
-headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-body: new URLSearchParams({
-FirstName: firstName,
-LastName: lastName,
-UserName: email,
-Password: password,
-MobileNumber: mobileNumber
-})
+const response = await fetch('/sign-up', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+        FirstName: firstName,
+        LastName: lastName,
+        UserName: email,
+        MobileNumber: mobileNumber
+    })
 });
 
-alert(
-"Verification email sent. Check your Gmail."
-);
+if (!response.ok) {
+    throw new Error(await response.text());
+}
 
+alert("Verification email sent. Check your Gmail.");
 window.location.href = "/";
 
 }catch(error){
