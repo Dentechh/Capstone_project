@@ -357,14 +357,21 @@
                         <div>
                             <label>SELECT SERVICE</label>
 
-                            <select name="Service" required>
-                        <option value="" disabled selected>Choose a service</option>
-                        <option value="Dental Consultation">Dental Consultation <p>300</p></option>
-                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) <p>800 -2,000</p></option>
-                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)<p>800-1,500</p></option>
-                        <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)<p>800 - 1,500</p></option>
-                        <option value="Dentures (Pustiso)">Dentur
-                            </select>
+                        <select name="Service" required>
+                    <option value="" disabled selected>Choose a service</option>
+                    <option value="Dental Consultation">Dental Consultation - ₱300</option>
+                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) - ₱800 - 2,000</option>
+                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta) - ₱800 - 1,500</option>
+                    <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot) - ₱800 - 1,500</option>
+                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                    <option value="Crowns and Bridges">Crowns and Bridges</option>
+                    <option value="Teeth Whitening">Teeth Whitening</option>
+                    <option value="Fluoride Treatment">Fluoride Treatment</option>
+                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                    <option value="Periapical Xray">Periapical Xray</option>
+                        </select>
                         </div>
 
                         <!-- SELECT SCHEDULE -->
@@ -498,7 +505,7 @@
     <div class="modal-content auth-card">
         <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
         <h2>Create Account</h2>
-        <form id="signupForm" action="/sign-up" method="POST">
+        <form id="signupForm">
 
     <div style="display:flex; gap:10px;">
         <input type="text" name="FirstName" placeholder="First Name" required>
@@ -507,15 +514,108 @@
 
     <input type="email" id="email" name="UserName" placeholder="Email" required>
 
-    <input type="password" id="password" name="Password" placeholder="Password" required>
+    <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
 
-    <input type="tel" name="MobileNumber" placeholder="Contact Number" required>
+    <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
 
     <button type="submit" id="signupBtn" class="sign-up-btn">
         Sign Up
     </button>
 
 </form>
+
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { 
+getAuth,
+createUserWithEmailAndPassword,
+sendEmailVerification
+} from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
+  authDomain: "dentech-c2ee0.firebaseapp.com",
+  projectId: "dentech-c2ee0",
+  storageBucket: "dentech-c2ee0.firebasestorage.app",
+  messagingSenderId: "921529543911",
+  appId: "1:921529543911:web:08e91a5f6982eb541b0642",
+  measurementId: "G-Y3X4RF50Y5"
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const signupForm = document.getElementById("signupForm");
+
+signupForm.addEventListener("submit", async(e)=>{
+
+e.preventDefault();
+
+let firstName =
+document.querySelector('#signupForm input[name="FirstName"]').value;
+
+let lastName =
+document.querySelector('#signupForm input[name="LastName"]').value;
+
+let email =
+document.getElementById("email").value;
+
+let password =
+document.getElementById("password").value;
+
+let mobileNumber =
+document.querySelector('#signupForm input[name="MobileNumber"]').value;
+
+try{
+
+const userCredential =
+await createUserWithEmailAndPassword(
+auth,
+email,
+password
+);
+
+await sendEmailVerification(
+userCredential.user
+);
+
+await auth.signOut();
+
+await fetch('/sign-up', {
+method: 'POST',
+headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+body: new URLSearchParams({
+FirstName: firstName,
+LastName: lastName,
+UserName: email,
+Password: password,
+MobileNumber: mobileNumber
+})
+});
+
+alert(
+"Verification email sent. Check your Gmail."
+);
+
+window.location.href = "/";
+
+}catch(error){
+
+alert(error.message);
+
+}
+
+});
+
+</script>
 
         <!-- Sign-up is handled by the standard form POST to /sign-up -->
 
@@ -631,44 +731,48 @@
     
 // Confirm Appointment Button - direct form submission
      const confirmBtn = document.getElementById("confirmAppointmentBtn");
-     if (confirmBtn) {
-         confirmBtn.onclick = function() {
-             const form = document.getElementById("appointmentForm");
-             if (form.checkValidity()) {
-                 // Submit the form directly
-                 form.submit();
-             } else {
-                 form.reportValidity();
-             }
-         };
-     }
+      if (confirmBtn) {
+          confirmBtn.onclick = function() {
+              const signatureData = document.getElementById("signatureData").value;
+              if (!signatureData || signatureData === "") {
+                  alert("Please provide your signature.");
+                  return;
+              }
+              const form = document.getElementById("appointmentForm");
+              if (form.checkValidity()) {
+                  form.submit();
+              } else {
+                  form.reportValidity();
+              }
+          };
+      }
     
      // Close payment modal removed - no longer needed
     
 // Global click listener to close modals/dropdowns if clicking outside
-     window.onclick = (e) => { 
-         if(e.target == modal) modal.style.display = "none";
-         if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
-         
-         const loginM = document.getElementById('loginModal');
-         if(e.target == loginM) loginM.style.display = "none";
-         
-         const regM = document.getElementById('registerModal');
-         if(e.target == regM) regM.style.display = "none";
-         
-         // Close chat if clicking outside
-         if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
-             windowChat.style.display = 'none';
-         }
- 
-          // Close dropdown if clicking outside
-          if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-              dropdownMenu.classList.remove('show');
+      window.addEventListener('click', (e) => { 
+          if(e.target == modal) modal.style.display = "none";
+          if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
+          
+          const loginM = document.getElementById('loginModal');
+          if(e.target == loginM) loginM.style.display = "none";
+          
+          const regM = document.getElementById('registerModal');
+          if(e.target == regM) regM.style.display = "none";
+          
+          // Close chat if clicking outside
+          if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+              windowChat.style.display = 'none';
           }
-     };
+  
+           // Close dropdown if clicking outside
+           if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+               dropdownMenu.classList.remove('show');
+           }
+      });
 
     // Calendar Initialization
-    flatpickr("#appointmentDate", {
+    flatpickr("#schedule", {
         minDate: "today",
         dateFormat: "F j, Y",
         disable: [
@@ -809,42 +913,6 @@
         body.classList.toggle('dark-mode');
         const isDark = body.classList.contains('dark-mode');
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
-
-// ... inside your DOMContentLoaded block ...
-
-const sexSelect = document.getElementById('sexSelect');
-const womenSection = document.getElementById('womenSection');
-
-if (sexSelect && womenSection) {
-    
-    // Function to check and lock/unlock
-    function toggleWomenSection() {
-        // If "Female" is selected
-        if (sexSelect.value === 'Female') {
-            // Unlock: Make fully opaque and enable inputs
-            womenSection.style.opacity = '1';
-            womenSection.querySelectorAll('input').forEach(input => {
-                input.disabled = false;
-                input.style.cursor = 'pointer';
-            });
-        } 
-        // If "Male" or Empty/Other is selected
-        else {
-            // Lock: Dim slightly but keep visible, disable inputs
-            womenSection.style.opacity = '0.6'; 
-            womenSection.querySelectorAll('input').forEach(input => {
-                input.disabled = true;
-                input.style.cursor = 'not-allowed';
-            });
-        }
-    }
-
-    // Listen for changes in the Sex dropdown
-    sexSelect.addEventListener('change', toggleWomenSection);
-
-    // Run once on page load to set the initial state
-    toggleWomenSection();
-}
     });
 </script>
 

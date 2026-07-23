@@ -8,7 +8,6 @@ import bleach
 from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
-import os
 import threading
 import smtplib
 from email.message import EmailMessage
@@ -37,8 +36,7 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)  # Secure sessio
 from datetime import timedelta
 import random
 
-import firebase_admin
-from firebase_admin import credentials, firestore
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 key_path = os.path.join(basedir, "dentech_key.json")
@@ -169,34 +167,46 @@ def google_index():
     email = session.get('email', '')
     return render_template("google_index.html",uid = uid, name=name, email=email)
 
+
 @app.route("/login", methods=["POST"])
 def login_manual():
 
     email = bleach.clean(request.form.get("email", "").strip())
     password = bleach.clean(request.form.get("Password", "").strip())
 
-    user_query = db.collection(Account_clients).where("email", "==", email).get()
+    user_query = db.collection(Account_clients).where(
+        "email", "==", email
+    ).get()
 
     if user_query:
 
-        user_data = user_query[0].to_dict()
+        user_doc = user_query[0]
+        user_data = user_doc.to_dict()
 
         if check_password_hash(user_data["password"], password):
 
-            # Check if email is verified
-            if not user_data.get("verified", False):
+            # Check email verification
+            firebase_user = auth.get_user(user_doc.id)
+
+            if not firebase_user.email_verified:
                 flash("Please verify your email first.", "error")
-                return redirect(url_for("verify_otp", uid=user_query[0].id))
+                return redirect(url_for("index"))
 
             session["name"] = user_data.get("firstname", "")
             session["email"] = user_data.get("email", "")
-            session["uid"] = user_query[0].id
+            session["uid"] = user_doc.id
 
-            flash(f"Welcome back, {user_data['firstname']}!", "success")
+            flash(
+                f"Welcome back, {user_data.get('firstname', '')}!",
+                "success"
+            )
+
             return redirect(url_for("index"))
+
 
     flash("Invalid email or password!", "error")
     return redirect("/")
+
 
 #  GOOGLE AUTH ROUTE
 
@@ -226,251 +236,122 @@ def login_g_auth():
 
 #  MANUAL SIGN UP
 
-def generate_otp():
-    return str(random.randint(100000, 999999))
-
-import smtplib
-from email.message import EmailMessage
 
 
-def _send_email_async(recipient, subject, body):
-    def _task():
-        try:
-            print("1. Creating SMTP connection...")
 
-            server = smtplib.SMTP("smtp.gmail.com", 587, timeout=20)
-
-            print("2. Connected!")
-
-            server.ehlo()
-
-            print("3. Starting TLS...")
-
-            server.starttls()
-
-            print("4. Logging in...")
-
-            server.login(
-                os.getenv("MAIL_USERNAME"),
-                os.getenv("MAIL_PASSWORD")
-            )
-
-            print("5. Sending email...")
-
-            msg = EmailMessage()
-            msg["Subject"] = subject
-            msg["From"] = os.getenv("MAIL_USERNAME")
-            msg["To"] = recipient
-            msg.set_content(body)
-
-            server.send_message(msg)
-
-            print("✅ Email sent successfully!")
-
-            server.quit()
-
-        except smtplib.SMTPAuthenticationError as e:
-            print("❌ Gmail Authentication Failed")
-            print(e)
-
-        except smtplib.SMTPRecipientsRefused as e:
-            print("❌ Recipient email address is invalid")
-            print(e)
-
-        except smtplib.SMTPException as e:
-            error = str(e)
-
-            if "Daily user sending quota exceeded" in error:
-                print("🚨 GMAIL DAILY LIMIT REACHED! OTP WAS NOT SENT!")
-
-            elif "Too many login attempts" in error:
-                print("🚨 TOO MANY LOGIN ATTEMPTS! TRY AGAIN LATER!")
-
-            else:
-                print("❌ SMTP ERROR:", error)
-
-        except Exception as e:
-            print("❌ Unexpected Error:", e)
-
-    threading.Thread(target=_task, daemon=True).start()
-
-
-def send_otp(email, otp):
-    subject = "Verify Your Email"
-    body = f"""
-Hello,
-
-Your verification code is:
-
-{otp}
-
-This code expires in 10 minutes.
-"""
-    _send_email_async(email, subject, body)
-
-
-def send_email(recipient, fullname, status):
-    if status == "accepted":
-        subject = "Appointment Accepted"
-        body = f"""
-Hello {fullname},
-
-Good news!
-
-Your dental appointment has been ACCEPTED.
-
-Please arrive at the clinic on your scheduled date and time.
-
-Thank you,
-Dental Clinic
-"""
-    elif status == "declined":
-        subject = "Appointment Declined"
-        body = f"""
-Hello {fullname},
-
-We regret to inform you that your appointment request has been declined.
-
-Please log in to the Dental Clinic system and schedule another appointment at your convenience.
-
-Thank you for your understanding.
-
-Dental Clinic
-"""
-    else:
-        subject = f"Appointment {status.capitalize()}"
-        body = f"""
-Hello {fullname},
-
-Your appointment has been {status}.
-
-Thank you,
-Dental Clinic
-"""
-    _send_email_async(recipient, subject, body)
+from firebase_admin import auth
 
 
 @app.route("/sign-up", methods=["GET", "POST"])
 def sign_up():
+
     if request.method == "POST":
+
         try:
-            print("=== Sign-up POST received ===")
             firstname = bleach.clean(request.form["FirstName"].strip())
             lastname = bleach.clean(request.form["LastName"].strip())
             email = bleach.clean(request.form["UserName"].strip())
-            password = bleach.clean(request.form["Password"].strip())
             contact_number = bleach.clean(request.form["MobileNumber"].strip())
-            print(f"Sign-up: form data parsed: {email}")
+            password = request.form["Password"].strip()
 
-            check_account = db.collection(Account_clients).where("email", "==", email).get()
-            print(f"Sign-up: Firestore query completed")
+
+            # CHECK EXISTING ACCOUNT
+            check_account = db.collection(Account_clients).where(
+                "email", "==", email
+            ).get()
+
 
             if check_account:
                 flash("Email already exists!", "error")
                 return redirect(url_for("sign_up"))
 
-            hashed_password = generate_password_hash(password)
-            print(f"Sign-up: password hashed")
 
-            otp = generate_otp()
-            print(f"Sign-up: OTP generated")
+            # CREATE FIREBASE AUTH USER
+            uid = None
+            try:
+                user = auth.create_user(
+                    email=email,
+                    password=password,
+                    email_verified=False
+                )
+                uid = user.uid
+            except Exception as e:
+                print(f"Firebase auth user creation note: {e}")
+                try:
+                    existing_user = auth.get_user_by_email(email)
+                    uid = existing_user.uid
+                except Exception:
+                    uid = None
 
-            doc_ref = db.collection(Account_clients).document()
-            uid = doc_ref.id
-            print(f"Sign-up: doc ref created: {uid}")
 
-            doc_ref.set({
+            # CREATE VERIFICATION LINK
+            verification_link = auth.generate_email_verification_link(email)
+
+
+            # SAVE USER TO FIRESTORE
+            db.collection(Account_clients).document(uid).set({
+
                 "uid": uid,
                 "firstname": firstname,
                 "lastname": lastname,
                 "email": email,
-                "password": hashed_password,
-                "created_at": datetime.now(UTC).isoformat(),
                 "contact_number": contact_number,
-
-                # OTP Verification
                 "verified": False,
-                "otp": otp
+                "created_at": datetime.now(UTC).isoformat()
+
             })
-            print(f"Sign-up: Firestore write completed")
 
-            print(f"Sign-up: about to send OTP to {email}")
-            send_otp(email, otp)
-            print(f"Sign-up: send_otp call returned")
 
-            flash("A verification code has been sent to your email.", "success")
+            # SEND EMAIL
+            msg = Message(
+                "Verify your Dental Clinic Account",
+                sender=app.config["MAIL_DEFAULT_SENDER"],
+                recipients=[email]
+            )
 
-            return redirect(url_for("verify_otp", uid=uid))
+            msg.body = f"""
+Hello {firstname},
+
+Thank you for registering.
+
+Please verify your email by clicking this link:
+
+{verification_link}
+
+
+After verification you can login to your account.
+
+Dental Clinic Team
+"""
+
+            mail.send(msg)
+
+
+            flash(
+                "Account created. Please check your email for verification.",
+                "success"
+            )
+
+
+            return redirect(url_for("index"))
+
 
         except Exception as e:
-            import traceback
-            print("===== SIGN-UP ERROR =====")
-            traceback.print_exc()
-            flash(f"Sign-up failed: {e}", "error")
+
+            print("SIGNUP ERROR:", e)
+
+            flash(
+                f"Signup failed: {e}",
+                "error"
+            )
+
             return redirect(url_for("sign_up"))
+
 
     return render_template("index.html")
 
 
-@app.route("/verify_otp/<uid>", methods=["GET", "POST"])
-def verify_otp(uid):
 
-    doc_ref = db.collection(Account_clients).document(uid)
-    doc = doc_ref.get()
-
-    if not doc.exists:
-        flash("Account not found.", "error")
-        return redirect(url_for("index"))
-
-    user = doc.to_dict()
-
-    if request.method == "POST":
-
-        code = request.form["otp"].strip()
-
-        if code == user.get("otp"):
-
-            doc_ref.update({
-                "verified": True,
-                "otp": firestore.DELETE_FIELD
-            })
-
-            flash("Email verified successfully!", "success")
-
-            return redirect(url_for("index"))
-
-        flash("Invalid OTP.", "error")
-
-    return render_template("verify_otp.html", email=user["email"])
-
-
-
-@app.route("/resend_otp/<uid>")
-def resend_otp(uid):
-
-    doc_ref = db.collection(Account_clients).document(uid)
-    doc = doc_ref.get()
-
-    if not doc.exists:
-        flash("User not found.", "error")
-        return redirect(url_for("index"))
-
-    user = doc.to_dict()
-
-    otp = generate_otp()
-
-    doc_ref.update({
-        "otp": otp
-    })
-
-    try:
-        send_otp(user["email"], otp)
-        flash("A new OTP has been sent.", "success")
-    except Exception as e:
-        print(f"Resend OTP error: {e}")
-        flash("Account found, but email delivery failed. Please try again later.", "warning")
-
-    return redirect(url_for("verify_otp", uid=uid))
 
 #  LOGOUT
 
@@ -796,31 +677,6 @@ def approve():
 
     return "Invalid action", 400
 
-
-@app.route("/test-email")
-def test_email():
-    try:
-        msg = Message(
-            subject="SMTP Test",
-            recipients=["jayr.bonitillo.ui@phinmaed.com"]
-        )
-
-        msg.body = "SMTP is working!"
-
-        mail.send(msg)
-
-        return "Email sent!"
-    except Exception as e:
-        return f"Email failed: {e}", 500
-
-
-@app.route("/test-otp")
-def test_otp():
-    try:
-        send_otp("jayr.bonitillo.ui@phinmaed.com", "999999")
-        return "OTP send dispatched. Check logs for result."
-    except Exception as e:
-        return f"OTP dispatch failed: {e}", 500
 
 
 
