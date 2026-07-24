@@ -213,25 +213,25 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    window.onclick = (e) =>{
-            // Close profile dropdown
-    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-        dropdownMenu.style.display = 'none';
-        }
-    };
-    
-    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
-    const dropdownMenu = document.getElementById('profileDropdown');
-
-    if(dropdownTrigger) {
-        dropdownTrigger.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = dropdownMenu.style.display === 'flex';
-            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
-        };
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
+        const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+        const dropdownMenu = document.getElementById('profileDropdown');
+
+        if(dropdownTrigger) {
+            dropdownTrigger.onclick = (e) => {
+                e.stopPropagation();
+                const isVisible = dropdownMenu.style.display === 'flex';
+                dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+            };
+        }
+
+        // Close profile dropdown when clicking outside
+        window.addEventListener('click', function(e) {
+            if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+                dropdownMenu.style.display = 'none';
+            }
+        });
+
         const dropBtn = document.getElementById('servicesDropdownBtn');
         const dropMenu = document.getElementById('servicesDropdownMenu');
 

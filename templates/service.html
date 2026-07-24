@@ -250,6 +250,24 @@
             window.addEventListener('click', function() {
                 servicesMenu.classList.remove('show');
             });
+
+            // Profile dropdown toggle
+            const profileTrigger = document.getElementById('profileDropdownTrigger');
+            const profileMenu = document.getElementById('profileDropdown');
+
+            if (profileTrigger && profileMenu) {
+                profileTrigger.onclick = function(e) {
+                    e.stopPropagation();
+                    const isVisible = profileMenu.style.display === 'flex';
+                    profileMenu.style.display = isVisible ? 'none' : 'flex';
+                };
+
+                window.addEventListener('click', function(e) {
+                    if (!profileTrigger.contains(e.target)) {
+                        profileMenu.style.display = 'none';
+                    }
+                });
+            }
         });
 
         // Hamburger menu toggle
