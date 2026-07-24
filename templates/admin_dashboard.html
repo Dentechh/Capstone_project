@@ -1007,7 +1007,18 @@ function openPatientDashboard(
     civilstatus,
     contact,
     service,
-    Patient_unq_id
+    Patient_unq_id,
+    q1,
+    q2,
+    q3,
+    q4,
+    q5,
+    q6,
+    q7,
+    q9,
+    w_preg,
+    w_nurse,
+    w_pill
 ) {
 
     document.getElementById('pd-name').innerText = name || 'Unknown';
@@ -1042,6 +1053,21 @@ function openPatientDashboard(
         name
             ? name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase()
             : '??';
+
+    // Medical History
+    setCheckbox('q1-check', q1);
+    setCheckbox('q2-check', q2);
+    setCheckbox('q3-check', q3);
+    setCheckbox('q4-check', q4);
+    setCheckbox('q5-check', q5);
+    setCheckbox('q6-check', q6);
+    setCheckbox('q7-check', q7);
+    setCheckbox('q9-check', q9);
+
+    // Women's Health
+    setCheckbox('w-preg-check', w_preg);
+    setCheckbox('w-nurse-check', w_nurse);
+    setCheckbox('w-pill-check', w_pill);
 
     // Show nav link
     var navLink = document.getElementById('nav-patientdashboard');
@@ -1138,11 +1164,22 @@ procedures.forEach(function(p){
                 this.getAttribute('data-civilstatus'),
                 this.getAttribute('data-contact'),
                 this.getAttribute('data-service'),
-                this.getAttribute('data-Patient_unq_id'),    
-
-                        
-                        
-                    );
+                this.getAttribute('data-Patient_unq_id'),
+                this.getAttribute('data-q1'),
+                this.getAttribute('data-q2'),
+                this.getAttribute('data-q3'),
+                this.getAttribute('data-q4'),
+                this.getAttribute('data-q5'),
+                this.getAttribute('data-q6'),
+                this.getAttribute('data-q7'),
+                this.getAttribute('data-q9'),
+                this.getAttribute('data-w-preg'),
+                this.getAttribute('data-w-nurse'),
+                this.getAttribute('data-w-pill')
+                    
+                    
+                    
+                );
                 });
             });
 

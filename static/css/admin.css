@@ -1279,6 +1279,7 @@ body.dark-mode .chart-title{
 
 .permanent-block {
     width: 780px;
+    margin: 0 auto;
 }
 body.dark-mode .label-side.rotated{
     color: white;
@@ -1860,6 +1861,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 600px;
+        margin: 0 auto;
     }
     
     .grid-box {
@@ -2105,6 +2107,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 450px;
+        margin: 0 auto;
     }
     
     .grid-box {
@@ -2493,6 +2496,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 350px;
+        margin: 0 auto;
     }
     
     .grid-box {
