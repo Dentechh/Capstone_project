@@ -141,13 +141,11 @@
                 <section class="content-panel">
                 <table class="appointment-table">
 
-                       
         <thead>
             <tr>
                 <th>Name</th>
                  <th>Account Number</th>
-                <th>Age</th>
-                <th>Action</th>
+                 <th>Action</th>
             </tr>
         </thead>
 
@@ -160,12 +158,12 @@
              <td>{{ appointment.uid}}</td>
 
 
-            <td>{{ appointment.get('Sex', 'Female') }}</td>
+
+            
 
             
 
         
-
 
             <td>
 <button
@@ -495,11 +493,11 @@ window.onclick = (e) => {
                                   <span class="badge pending">pending</span>
                               </td>
                               <td>
-                                  <button class="btn-action-accept"
+                                  <button class="btn-action"
                                        onclick="updateStatus(this.closest('tr'), 'accept')">
                                       Accept
                                   </button>
-                                  <button class="btn-action-decline"
+                                  <button class="btn-action"
                                        onclick="updateStatus(this.closest('tr'), 'decline')">
                                       Decline
                                   </button>
