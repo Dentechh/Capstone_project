@@ -158,6 +158,12 @@
 }
 
 /* Dark Mode Styles */
+body.dark-mode {
+    background: #121212;
+    color: #e0e0e0;
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
 body.dark-mode::before {
     filter: blur(8px) brightness(0.3);
 }
