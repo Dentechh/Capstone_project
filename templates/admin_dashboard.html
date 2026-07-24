@@ -54,22 +54,28 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>CAPIZONDA</h2>
-            <span>ADMIN PANEL</span>
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <h2>CAPIZONDA</h2>
+                <span>ADMIN PANEL</span>
+            </div>
+            <button class="sidebar-logout-btn" id="sidebarLogoutBtn" title="Logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
         </div>
         <nav class="sidebar-nav">
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
            <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
-            <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
+           <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
             <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Weekly Patient</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
         </nav>
-        <div class="sidebar-footer">
-            <a href="/logout" class="nav-item logout">Logout</a>
-        </div>
     </aside>
 
 <main class="main-content">
@@ -96,8 +102,6 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
             </button>
-            <span>Dr. Admin</span>
-            <div class="avatar"></div>
         </div>
     </header>
 
@@ -516,7 +520,6 @@ window.onclick = (e) => {
             <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
 
             <div class="patient-profile-header">
-                <div class="p-avatar-circle large" id="pd-avatar">??</div>
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
                     <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
@@ -1047,12 +1050,6 @@ function openPatientDashboard(
 
     // Blood type - hardcoded
     document.getElementById('pd-blood').innerText = 'O+';
-
-    // Set initials
-    document.getElementById('pd-avatar').innerText =
-        name
-            ? name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase()
-            : '??';
 
     // Medical History
     setCheckbox('q1-check', q1);
@@ -1703,6 +1700,42 @@ if (sidebarToggle && sidebar && sidebarOverlay) {
     });
 }
 
+// Logout Confirmation Modal
+function openLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.style.display = 'flex';
+    }
+}
+
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function confirmLogout() {
+    window.location.href = '/logout';
+}
+
+// Sidebar Logout Button
+const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
+if (sidebarLogoutBtn) {
+    sidebarLogoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLogoutModal();
+    });
+}
+
+// Close logout modal when clicking outside
+window.addEventListener('click', function(e) {
+    const logoutModal = document.getElementById('logoutModal');
+    if (e.target === logoutModal) {
+        closeLogoutModal();
+    }
+});
+
 // Dental Chart Modal
 function openChartModal() {
     const modal = document.getElementById('chartModal');
@@ -1781,6 +1814,19 @@ window.addEventListener('keydown', function(e) {
             </div>
         </div>
         <div id="modal-chart-content" class="chart-modal-body">
+        </div>
+    </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div id="logoutModal" class="modal" style="display: none;">
+    <div class="modal-content auth-card" style="max-width: 400px;">
+        <span class="close-btn" onclick="closeLogoutModal()">&times;</span>
+        <h2>Confirm Logout</h2>
+        <p style="margin: 20px 0; text-align: center;">Are you sure you want to logout?</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="confirmLogout()" class="sign-up-btn" style="background: #ef4444; color: white;">Yes, Logout</button>
+            <button onclick="closeLogoutModal()" class="sign-up-btn" style="background: #6b7280; color: white;">Cancel</button>
         </div>
     </div>
 </div>

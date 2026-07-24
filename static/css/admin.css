@@ -250,14 +250,6 @@ body.dark-mode .profile-body-scrollable::-webkit-scrollbar-thumb {
     text-shadow: 1px 4px 3px rgba(0, 0, 0, 0.8);
 }
 body.dark-mode .top-header { color: #e0e0e0; }
-.admin-profile { display: flex; align-items: center; gap: 12px; color: #000000; }
-body.dark-mode .admin-profile { color: #e0e0e0; }
-.avatar { 
-    width: 45px; height: 45px; border-radius: 50%; 
-    background: var(--grad-navy); border: 2px solid var(--gold); 
-    flex-shrink: 0; 
-}
-
 /* UPCOMING PATIENTS ALIGNMENT FIX */
 .schedule-list { list-style: none; }
 .schedule-item {
@@ -308,7 +300,6 @@ body.dark-mode .p-info{
     gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; 
     color: #000000;
 }
-.p-avatar-circle { width: 45px; height: 45px; background: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid var(--gold); }
 
 .patient-profile-header {
     background: var(--grad-navy);
@@ -325,10 +316,6 @@ body.dark-mode .p-info{
 body.dark-mode .patient-profile-header {
     background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
     color: #e0e0e0;
-}
-
-.p-avatar-circle{
-    width: 70px; 
     height: 70px; 
     font-size: 24px; 
     background:var(--grad-navy);
@@ -338,6 +325,7 @@ body.dark-mode .patient-profile-header {
     justify-content: center; 
     border-radius: 50%; 
     font-weight: bold;
+
 }
 /* DASHBOARD COMPONENTS */
 .metric-cards {
@@ -892,15 +880,8 @@ body:not(.dark-mode) .nav-item {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 20px;
             margin-bottom: 20px;
-        }
-
-        .p-avatar-circle.large {
-            width: 70px;
             height: 70px;
             font-size: 24px;
-        }
-
-        .info-group {
             margin-bottom: 15px;
         }
 
@@ -1974,19 +1955,12 @@ body.dark-mode .datetime-text {
     
     .pd-stat {
         min-width: 80px;
-    }
-    
-    .patient-profile-header .p-avatar-circle.large {
-        width: 60px;
         height: 60px;
         font-size: 22px;
-    }
-    
-    #pd-name {
         font-size: 20px !important;
     }
     
-    #pd-id {
+    .pd-id {
         font-size: 12px !important;
     }
     
@@ -2239,21 +2213,11 @@ body.dark-mode .datetime-text {
     .profile-header {
         flex-direction: column;
         text-align: center;
-    }
-    
-    .p-avatar-circle {
-        width: 50px;
+        height: 50px;
+        font-size: 18px;
         height: 50px;
         font-size: 18px;
     }
-    
-    .p-avatar-circle.large {
-        width: 50px;
-        height: 50px;
-        font-size: 18px;
-    }
-    
-    /* Tables - horizontal scroll */
     #section-appointments .content-panel {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -2304,21 +2268,15 @@ body.dark-mode .datetime-text {
     .profile-header {
         flex-direction: column;
         text-align: center;
-    }
     
-    .p-avatar-circle {
-        width: 50px;
+    
         height: 50px;
         font-size: 18px;
-    }
     
-    .p-avatar-circle.large {
-        width: 50px;
         height: 50px;
         font-size: 18px;
-    }
     
-    /* Medical Dashboard */
+    }
     .medical-header {
         flex-direction: column;
         gap: 15px;
@@ -2567,18 +2525,10 @@ body.dark-mode .datetime-text {
     
     .label-inline {
         font-size: 11px;
-    }
-    
-    .admin-profile span {
-        font-size: 14px;
-    }
-    
-    .avatar {
-        width: 35px;
         height: 35px;
     }
-}
 
+}
 /* Show sidebar toggle button on mobile */
 @media (max-width: 768px) {
     .sidebar-toggle {
