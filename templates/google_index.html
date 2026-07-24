@@ -32,10 +32,12 @@
   {% endif %}
 {% endwith %}
 
-<div id="g_id_onload"
+
+    <div id="g_id_onload"
      data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
      data-callback="handleCredentialResponse">
 </div>
+
 
 <header>
     <nav class="navbar">
@@ -47,7 +49,7 @@
             </div>
         </a>
 
-        <ul class="nav-links">
+        <ul class="nav-links" id="navLinks">
             <li><a href="#" class="active">HOME</a></li>
             <li><a href="/about">ABOUT</a></li>
             <li class="dropdown">
@@ -68,10 +70,14 @@
                 </div>
             </li>
             <li><a href="/location">LOCATION</a></li>
+            {% if name == "Guest" or not name %}
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">LOGIN</a></li>
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">REGISTER</a></li>
+            {% endif %}
         </ul>
 
-        {% if name == "Guest" or not name %}
-        <div class="auth-buttons">
+        <div class="nav-actions">
+
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
@@ -88,61 +94,67 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
             </button>
-            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
-            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
-        </div>
-        {% else %}
 
-        <div class="profile-nav">
-            <div class="user-info-brief">   
-                <span>{{ name }}</span>
-                <small>Patient Account</small>
+            {% if name == "Guest" or not name %}
+            <div class="auth-buttons">
+                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                    </svg>
-                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                </button>
+            {% else %}
+
+            <div class="profile-nav">
+                <div class="user-info-brief">
+                    <span>{{ name }}</span>
+                    <small>Patient Account</small>
+                </div>
+
                 <div class="profile-img-container" id="profileDropdownTrigger">
                     <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
-                    
+                
                     <div class="dropdown-menu" id="profileDropdown">
                         <a href="/patient-profile">PROFILE</a>
                         <a href="/logout">LOGOUT</a>
                     </div>
                 </div>
             </div>
+            {% endif %}
+
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
-        {% endif %}
     </nav>
 </header>
 
 <main class="hero-section">
     <div class="hero-content">
-        <div class="user-greeting">
-              <div class="crop-container">
+<div class="user-greeting">
+            <div class="crop-container">
                 <img src="{{ url_for('static', filename='img/tooth-wave.gif') }}" alt="Waving Tooth" class="tooth-gif">
             </div>
-            <h1>Welcome,  {{ name}}!</h1>
-            <p>Ready for a brighter smile today?</p>
-        </div>
+
+             <h1>Welcome,  {{ name}}!</h1>
+             <p>Ready for a brighter smile today?</p>
+         </div>
 
         <div class="cta-box">
             <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo">
-            <p>Your smile is our passion!</p>
+            <p>
+                Your smile is our passion! We provide gentle, quality dental care for a healthier and more confident smile.
+            </p>
             <a href="#" class="btn-appointment" id="openAppointment">Book an Appointment</a>
+        </div>
+    </div>
+    
+    <!-- Login Prompt Modal for non-logged in users -->
+    <div id="loginPromptModal" class="modal" style="display: none;">
+        <div class="modal-content auth-card" style="max-width: 400px;">
+            <span class="close-btn" onclick="closeAuthModal('loginPromptModal')">&times;</span>
+            <h2>Login Required</h2>
+            <p style="margin: 20px 0; text-align: center;">You need to login first to book an appointment.</p>
+            <button onclick="closeAuthModal('loginPromptModal'); openAuthModal('loginModal');" class="sign-up-btn" style="width: 100%;">Go to Login</button>
         </div>
     </div>
 </main>
@@ -170,7 +182,7 @@
             <h4>FOLLOW US</h4>
             <div class="social-links">
                 <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
-                    <img src="https://img.icons8.com/ios-filled/50/ffffff/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    <img src="https://img.icons8.com/ios-filled/50/blue/facebook--v1.png" alt="Facebook" style="width: 24px;">
                     Facebook Page
                 </a>
             </div>
@@ -211,11 +223,10 @@
 
 
 <div id="appointmentModal" class="modal">
-    <div class="appointment-modal-content" style="max-width: 1600px; padding: 0; display: flex; flex-direction: row; height: 92vh; border-radius: 12px; overflow: hidden;" id="appointmentModalContent">
-        
-        <div class="consent-sidebar" style="flex: 1; padding: 40px; border-right: 1px solid #dee2e6; overflow-y: auto; background: #ffffff; color: #333333;">
-            <h3 style="color: #156699; margin-top: 0;">Informed Consent</h3>
-            <div class="consent-body" style="font-size: 0.82rem; line-height: 1.5; color: #333; text-align: justify;">
+    <div class="appointment-modal-content" id="appointmentModalContent">
+        <div class="consent-sidebar">
+            <h3>Informed Consent</h3>
+            <div class="consent-body" >
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
 
                 <p><strong>DRUGS & MEDICATIONS:</strong> I understand that antibiotics, analgesics, & other medications can cause allergic reactions like redness & swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
@@ -236,19 +247,19 @@
                 
                 <p><strong>DENTURES:</strong> I understand that wearing of dentures can be difficult. Sore spots, altered speech & difficulty in eating are common problems.</p>
                 <hr>
-                <p style="font-size: 0.75rem;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+                <p class="consent-note">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
                 
-                <div style="margin-top: 20px;">
-                    <p style="font-weight: bold; margin-bottom: 5px;">Patient Signature:</p>
-                    <div style="display: flex; gap: 10px; align-items: flex-start;">
-                        <div>
-                            <canvas id="signaturePad" width="300" height="80" style="border: 1px solid #ccc; border-radius: 4px; background: white; cursor: crosshair;"></canvas>
-                            <button type="button" onclick="clearSignature()" style="margin-top: 5px; padding: 4px 10px; font-size: 0.7rem; background: #ccc; border: none; border-radius: 4px; cursor: pointer;">Clear</button>
+                <div class="signature-section">
+                    <p>Patient Signature:</p>
+                    <div class="signature-row">
+                        <div class="signature-draw">
+                            <canvas id="signaturePad" width="300" height="80"></canvas>
+                            <button type="button" onclick="clearSignature()" class="clear-btn">Clear</button>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; border-left: 1px solid #ccc;">
-                            <span style="font-size: 0.7rem; color: #666; margin-bottom: 5px;">OR</span>
-                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)" style="font-size: 0.7rem;">
-                            <span style="font-size: 0.65rem; color: #999;">Upload PNG image</span>
+                        <div class="signature-upload">
+                            <span>OR</span>
+                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)">
+                            <span>Upload PNG image</span>
                         </div>
                     </div>
                     <input type="hidden" name="signature" id="signatureData">
@@ -256,33 +267,34 @@
             </div>
         </div>
 
-        <div class="form-container" style="flex: 1.5; padding: 40px; overflow-y: auto; background: white;">
-            <span class="close-btn" id="closeModal" style="float: right; cursor: pointer; font-size: 24px;">&times;</span>
-            <h2 style="color: #156699; margin-bottom: 20px;">Patient Information </h2>
+<div class="form-container">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <h2>Patient Information </h2>
 
             <form action="/google_booked_customer" id="appointmentForm" method="POST">
-                <div class="personal-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="display: flex; gap: 5px; grid-column: span 2;">
-                        <input type="text" placeholder="First Name" name="First_Name" required style="flex: 1;">
-                        <input type="text" placeholder="Middle Name" name="Middle_Name" style="flex: 1;">
-                        <input type="text" placeholder="Last Name" name="Last_Name" required style="flex: 1;">
-                    </div>
-                    <div style="display: flex; gap: 5px;">
-                        <input type="text" placeholder="House No." name="House_No" required style="width: 80px;">
-                        <input type="text" placeholder="Street" name="Street" style="flex: 1;"required>
+                <div class="personal-info-grid">
+                    <div class="name-fields">
+                        <input type="text" placeholder="First Name" name="First_Name" required>
+                        <input type="text" placeholder="Middle Name" name="Middle_Name">
+                        <input type="text" placeholder="Last Name" name="Last_Name" required>
                     </div>
                     
+                        <input type="text" placeholder="House No." name="House_No" required>
+                        <input type="text" placeholder="Street" name="Street">
+               
+                    
                     <input type="text" placeholder="Barangay" name="Brgy" required>
-                    <input type="text" placeholder="Municipality" name="Municipality" required>
-                    <input type="text" placeholder="City" name="City" required>
-                    <input type="text" placeholder="Nationality" name="Nationality" required>
+                    <input type="text" placeholder="Municipality/City" name="Municipality/City" required>
+                    <input type="text" placeholder="Province" name="Province" required>
+                  
+                    <input type="text" placeholder="Nationality" name="Nationality">
                     
                     <select name="Religion" required>
                         <option value="" disabled selected>Religion</option>
                         <option value="Roman Catholic">Roman Catholic</option>
                         <option value="Christian">Christian</option>
                         <option value="Islam">Islam</option>
-                        <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
                         <option value="Baptist">Baptist</option>
                         <option value="Methodist">Methodist</option>
                         <option value="Presbyterian">Presbyterian</option>
@@ -295,9 +307,9 @@
                         <option value="Other">Other</option>
                     </select>
                     
-                    <div style="display: flex; gap: 5px;">
-                        <input type="number" placeholder="Age" name="Age" style="width: 50%;">
-                        <select name="Sex" id="sexSelect" style="width: 50%;" required>
+                    <div class="age-sex-group">
+                        <input type="number" placeholder="Age" name="Age"required>
+                        <select name="Sex" id="sexSelect"required>
                             <option value="" disabled selected>Sex</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
@@ -305,6 +317,7 @@
                     </div>
                     <input type="tel" placeholder="Contact Number" name="Contact_number" required>
                     <input type="date" name="Birthday" required>
+                    
                     
                     <select name="Occupation" required>
                         <option value="" disabled selected>Occupation</option>
@@ -321,8 +334,8 @@
                         <option value="Retired">Retired</option>
                     </select>
 
-                    
-                   <select name="Urgency_Level" required>
+
+                    <select name="Urgency_Level" required>
                         <option value="" disabled selected>Urgency Level</option>
                         <option value="Normal">Normal</option>
                         <option value="Urgent">Urgent</option>
@@ -337,88 +350,127 @@
                         <option value="Separated">Separated</option>
                         <option value="Divorced">Divorced</option>
                     </select>
-                    <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">
-                        Select Service
-                    </h3>
 
+                    <div class="service-schedule-section">
 
-                    <select name="Service" required style="width: 100%; padding: 10px; border-radius: 6px; margin-top: 10px;" required>
-                        <option value="" disabled selected>Choose a service</option>
-                        <option value="Dental Consultation">Dental Consultation <p>300</p></option>
-                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) <p>800 -2,000</p></option>
-                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)<p>800-1,500</p></option>
-                        <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)<p>800 - 1,500</p></option>
-                        <option value="Dentures (Pustiso)">Dentures (Pustiso)<p>1,500 - 15,000</p></option>
-                        <option value="Others">Others</option>
-                    </select>
+                        <!-- SELECT SERVICE -->
+                        <div>
+                            <label>SELECT SERVICE</label>
+
+                        <select name="Service" required>
+                    <option value="" disabled selected>Choose a service</option>
+                    <option value="Dental Consultation">Dental Consultation - ₱300</option>
+                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) - ₱800 - 2,000</option>
+                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta) - ₱800 - 1,500</option>
+                    <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot) - ₱800 - 1,500</option>
+                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                    <option value="Crowns and Bridges">Crowns and Bridges</option>
+                    <option value="Teeth Whitening">Teeth Whitening</option>
+                    <option value="Fluoride Treatment">Fluoride Treatment</option>
+                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                    <option value="Periapical Xray">Periapical Xray</option>
+                        </select>
+                        </div>
+
+                        <!-- SELECT SCHEDULE -->
+                        <div>
                             <label for="schedule">Select Schedule:</label>
-                        <input type="datetime-local" id="schedule" name="appointment_date" required>
-                </div>
 
-                <h3 style="color: #156699; border-bottom: 2px solid #f1f1f1; padding-bottom: 5px; margin-top: 25px; font-size: 1.1rem;">Medical History</h3>
+                            <input type="datetime-local"
+                                id="schedule"
+                                name="appointment_date"
+                                required>
+                        </div>
+
+                    </div>
+                </div> <!-- This closes the personal-info-grid div -->
+
+                <h3>Medical History</h3>
                 
-                <div class="medical-history-questions" style="font-size: 0.85rem; margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <div class="medical-history-questions">
+                    <div class="question-row">
                         <span>1. Are you in good health?</span>
                         <div><input type="radio" name="q1" value="Yes"> Yes <input type="radio" name="q1" value="No"> No</div>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>2. Are you under medical treatment now?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>2. Are you under medical treatment now?</span>
                         <div><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes <input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</div></div>
-                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>3. Serious illness / surgical operation?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>3. Serious illness / surgical operation?</span>
                         <div><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes <input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</div></div>
-                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>4. Have you ever been hospitalized?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>4. Have you ever been hospitalized?</span>
                         <div><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes <input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</div></div>
-                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" disabled>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>5. Are you taking any medication?</span>
+                    <div class="question-item">
+                        <div class="question-row"><span>5. Are you taking any medication?</span>
                         <div><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes <input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</div></div>
-                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" disabled>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <div class="question-row">
                         <span>6. Do you use tobacco products?</span>
                         <div><input type="radio" name="q6" value="Yes"> Yes <input type="radio" name="q6" value="No"> No</div>
                     </div>
 
-                    <div style="margin-bottom: 8px;">
-                        <div style="display: flex; justify-content: space-between;"><span>7. Do you have any allergy?</span>
+                    <div>
+                        <div class="question-row"><span>7. Do you have any allergy?</span>
                         <div><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes <input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</div></div>
-                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" disabled>
                     </div>
 
-                    <div id="womenSection" style="background: #fdf6f6; padding: 10px; border-radius: 6px; margin-top: 10px; border: 1px solid #feeaea; opacity: 0.5; pointer-events: none;">
-                        <p style="font-weight: bold; margin-bottom: 5px; font-size: 0.75rem;">8. For Women Only:</p>
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
-                            <label><input type="checkbox" name="w_preg"> Are you pregnant?</label>
-                            <label><input type="checkbox" name="w_nurse"> Are you nursing?</label>
-                            <label><input type="checkbox" name="w_pill"> On birth control pills?</label>
-                        </div>
-                    </div>
+                    <!-- 8. For Women Only -->
+<div id="womenSection">
+    <p>8. For Women Only:</p>
+    
+    <div class="women-question">
+        <span>Are you pregnant?</span>
+        <div>
+            <label><input type="radio" name="w_pregnant" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_pregnant" value="No"> No</label>
+        </div>
+    </div>
 
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; justify-content: space-between;"><span>9. Do you have any medical condition/s?</span>
+    <div class="women-question">
+        <span>Are you nursing?</span>
+        <div>
+            <label><input type="radio" name="w_nursing" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_nursing" value="No"> No</label>
+        </div>
+    </div>
+
+    <div class="women-question">
+        <span>On birth control pills?</span>
+        <div>
+            <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
+            <label><input type="radio" name="w_pill" value="No"> No</label>
+        </div>
+    </div>
+</div>
+
+                    <div>
+                        <div class="question-row"><span>9. Do you have any medical condition/s?</span>
                         <div><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes <input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</div></div>
-                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" style="width: 100%; margin-top: 4px;" disabled>
+                        <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" disabled>
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; font-size: 0.8rem; border-top: 1px solid #eee; padding-top: 15px;">
+                <div class="consent-checkbox">
                     <label><input type="checkbox" required> I authorize the doctor to proceed with treatment & understand dentistry is not an exact science.</label>
                 </div>
 
-                <button type="submit" class="submit-btn" style="width: 100%; margin-top: 15px; background: #156699; color: white; padding: 12px; border-radius: 6px; font-weight: bold;">Confirm Appointment</button>
+                <button type="submit" id="confirmAppointmentBtn" class="submit-btn">Confirm Appointment</button>
             </form>
         </div>
     </div>
@@ -428,24 +480,22 @@
     <div class="modal-content auth-card">
         <span class="close-btn" onclick="closeAuthModal('loginModal')">&times;</span>
 
-        
-
         <h2>Welcome Back</h2>
         
         <form action="/login" method="POST">
-            <input type="text" name="UserName" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="Password" placeholder="Password" required>
-            <button type="submit" class="sign-up-btn">Login</button>
+            <button type="submit" id="loginBtn" class="sign-up-btn">Login</button>
         </form>
 
         <div class="divider">OR</div>
-        
+
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div class="g_id_signin" data-type="standard"></div>
         </div>
 
         <p class="footer-text">
-            Don't have an account yet? 
+            Don't have an account yet?
             <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
         </p>
     </div>
@@ -455,22 +505,146 @@
     <div class="modal-content auth-card">
         <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
         <h2>Create Account</h2>
-        <form action="/sign-up" method="POST">
-            <div style="display:flex; gap:10px;">
-                <input type="text" name="FirstName" placeholder="First Name" required>
-                <input type="text" name="LastName" placeholder="Last Name" required>
-            </div>
-            <input type="text" name="UserName" placeholder="Username" required>
-            <input type="password" name="Password" placeholder="Password" required>
-            <input type="tel" name="MobileNumber" placeholder="Contact Number" required>
-            <button type="submit" class="sign-up-btn">Sign Up</button>
-        </form>
-        
+        <form id="signupForm">
+
+    <div style="display:flex; gap:10px;">
+        <input type="text" name="FirstName" placeholder="First Name" required>
+        <input type="text" name="LastName" placeholder="Last Name" required>
+    </div>
+
+    <input type="email" id="email" name="UserName" placeholder="Email" required>
+
+    <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
+
+    <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
+
+    <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
+
+    <button type="submit" id="signupBtn" class="sign-up-btn">
+        Sign Up
+    </button>
+
+</form>
+
+
+<script type="module">
+
+import { initializeApp } from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import { 
+getAuth,
+createUserWithEmailAndPassword,
+sendEmailVerification
+} from 
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
+  authDomain: "dentech-c2ee0.firebaseapp.com",
+  projectId: "dentech-c2ee0",
+  storageBucket: "dentech-c2ee0.firebasestorage.app",
+  messagingSenderId: "921529543911",
+  appId: "1:921529543911:web:08e91a5f6982eb541b0642",
+  measurementId: "G-Y3X4RF50Y5"
+};
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const signupForm = document.getElementById("signupForm");
+
+signupForm.addEventListener("submit", async(e)=>{
+
+e.preventDefault();
+
+let firstName =
+document.querySelector('#signupForm input[name="FirstName"]').value;
+
+let lastName =
+document.querySelector('#signupForm input[name="LastName"]').value;
+
+let email =
+document.getElementById("email").value;
+
+let password =
+document.getElementById("password").value;
+
+let confirmPassword =
+document.getElementById("confirmPassword").value;
+
+let mobileNumber =
+document.querySelector('#signupForm input[name="MobileNumber"]').value;
+
+if (password !== confirmPassword) {
+    alert("Passwords do not match.");
+    return;
+}
+
+try{
+
+const userCredential =
+await createUserWithEmailAndPassword(
+auth,
+email,
+password
+);
+
+await sendEmailVerification(
+userCredential.user
+);
+
+await auth.signOut();
+
+
+const response = await fetch('/sign-up', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+        FirstName: firstName,
+        LastName: lastName,
+        UserName: email,
+        MobileNumber: mobileNumber,
+        Password: password
+    })
+});
+
+if (!response.ok) {
+    throw new Error(await response.text());
+}
+
+
+if (!response.ok) {
+    throw new Error(await response.text());
+}
+
+alert("Verification email sent. Check your Gmail.");
+window.location.href = "/";
+
+}catch(error){
+
+alert(error.message);
+
+}
+
+});
+
+</script>
+
+        <!-- Sign-up is handled by the standard form POST to /sign-up -->
+
         <div class="divider">OR</div>
 
+        <!--
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div class="g_id_signin" data-type="standard" data-text="signup_with"></div>
         </div>
+        -->
 
         <p class="footer-text">
             Already have an account? 
@@ -501,6 +675,17 @@
         form.submit();
     }
 
+    // Hamburger menu toggle
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+
+    if (hamburger && navLinks) {
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.classList.toggle('active');
+        });
+    }
+
     function openAuthModal(modalId) {
     document.getElementById(modalId).style.display = "flex";
     }
@@ -509,41 +694,19 @@
         document.getElementById(modalId).style.display = "none";
     }
 
-    window.onclick = (e) => { 
-    // Close Appointment Modal
-    if(e.target == modal) modal.style.display = "none";
-    
-    // Close Login Modal if clicking background
-    const loginM = document.getElementById('loginModal');
-    if(e.target == loginM) loginM.style.display = "none";
+// Global click listener to close modals/dropdowns if clicking outside
+     // 1. Dropdown Toggle Logic
+     const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+     const dropdownMenu = document.getElementById('profileDropdown');
 
-    // Close Register Modal if clicking background
-    const regM = document.getElementById('registerModal');
-    if(e.target == regM) regM.style.display = "none";
+     if(dropdownTrigger && dropdownMenu) {
+         dropdownTrigger.onclick = (e) => {
+             e.stopPropagation();
+             dropdownMenu.classList.toggle('show');
+         };
+     }
 
-    // Close chat if clicking outside
-    if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
-        windowChat.style.display = 'none';
-    }
-
-    // Close profile dropdown
-    if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-        dropdownMenu.style.display = 'none';
-    }
-};
-    // 1. Dropdown Toggle Logic
-    const dropdownTrigger = document.getElementById('profileDropdownTrigger');
-    const dropdownMenu = document.getElementById('profileDropdown');
-
-    if(dropdownTrigger) {
-        dropdownTrigger.onclick = (e) => {
-            e.stopPropagation();
-            const isVisible = dropdownMenu.style.display === 'flex';
-            dropdownMenu.style.display = isVisible ? 'none' : 'flex';
-        };
-    }
-
-    // 2. Toggle Chatbot Modal
+     // 2. Toggle Chatbot Modal
     const launcher = document.getElementById('chatLauncher');
     const windowChat = document.getElementById('chatWindow');
 
@@ -569,26 +732,65 @@
 
     // 4. Appointment Modal Logic
     const modal = document.getElementById("appointmentModal");
-    document.getElementById("openAppointment").onclick = (e) => { e.preventDefault(); modal.style.display = "flex"; };
-    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    const paymentModal = document.getElementById("paymentModal");
+    const loginPromptModal = document.getElementById("loginPromptModal");
     
-    // Global click listener to close modals/dropdowns if clicking outside
-    window.onclick = (e) => { 
-        if(e.target == modal) modal.style.display = "none";
-        
-        // Close chat if clicking outside
-        if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
-            windowChat.style.display = 'none';
-        }
-
-        // Close dropdown if clicking outside
-        if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-            dropdownMenu.style.display = 'none';
+    document.getElementById("openAppointment").onclick = (e) => { 
+        e.preventDefault(); 
+        // Check if user is logged in (name is not "Guest")
+        const userName = "{{ name }}";
+        if (userName === "Guest" || !userName) {
+            loginPromptModal.style.display = "flex";
+        } else {
+            modal.style.display = "flex"; 
         }
     };
+    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
+    
+// Confirm Appointment Button - direct form submission
+     const confirmBtn = document.getElementById("confirmAppointmentBtn");
+      if (confirmBtn) {
+          confirmBtn.onclick = function() {
+              const signatureData = document.getElementById("signatureData").value;
+              if (!signatureData || signatureData === "") {
+                  alert("Please provide your signature.");
+                  return;
+              }
+              const form = document.getElementById("appointmentForm");
+              if (form.checkValidity()) {
+                  form.submit();
+              } else {
+                  form.reportValidity();
+              }
+          };
+      }
+    
+     // Close payment modal removed - no longer needed
+    
+// Global click listener to close modals/dropdowns if clicking outside
+       window.addEventListener('click', (e) => { 
+           if(e.target == modal) modal.style.display = "none";
+           if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
+           
+           const loginM = document.getElementById('loginModal');
+           if(e.target == loginM) loginM.style.display = "none";
+           
+           const regM = document.getElementById('registerModal');
+           if(e.target == regM) regM.style.display = "none";
+           
+           // Close chat if clicking outside
+           if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
+               windowChat.style.display = 'none';
+           }
+   
+            // Close dropdown if clicking outside
+            if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+       });
 
     // Calendar Initialization
-    flatpickr("#appointmentDate", {
+    flatpickr("#schedule", {
         minDate: "today",
         dateFormat: "F j, Y",
         disable: [
@@ -640,23 +842,6 @@
         if(specInput) {
             specInput.disabled = disable;
         }
-    }
-
-    // Theme Toggle Functionality
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-    }
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-mode');
-            const isDark = body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        });
     }
 
     // Signature Pad
@@ -731,6 +916,22 @@
             reader.readAsDataURL(file);
         }
     }
+
+    // Theme Toggle Functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+
+    // Check saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+    }
+
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        const isDark = body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
 </script>
 
 </body>

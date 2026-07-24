@@ -1183,13 +1183,16 @@ SERVICES_DATA = {
 
 @app.route('/services/<service_id>')
 def service_detail(service_id):
-    # Check if the requested service exists in our dictionary
     service = SERVICES_DATA.get(service_id)
     
     if not service:
-        abort(404) # Show a 404 page if they type a wrong URL
-        
-    return render_template('service.html', service=service)
+        abort(404)
+    
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    uid = session.get('uid', '')
+    
+    return render_template('service.html', service=service, name=name, email=email, uid=uid)
 
 @app.route("/location")
 def dental_location():
