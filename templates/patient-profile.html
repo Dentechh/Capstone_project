@@ -255,7 +255,7 @@
     }
 
     .modal-content {
-        background: var(--grad-navy);
+        background: #ffffff;
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: var(--text-primary);
@@ -840,6 +840,26 @@ body.dark-mode .nav-card span {
 
 
 <script>
+const scheduleBtn = document.getElementById("scheduleBtn");
+const scheduleModal = document.getElementById("scheduleModal");
+const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
+
+scheduleBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    scheduleModal.style.display = "block";
+    loadApprove("{{ user.get('uid', '') }}");
+});
+
+scheduleCloseBtn.addEventListener("click", () => {
+    scheduleModal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+    if (e.target === scheduleModal) {
+        scheduleModal.style.display = "none";
+    }
+});
+
 function loadApprove(uid) {
     const tbody = document.getElementById("scheduleTableBody");
 

@@ -2666,6 +2666,48 @@ body.dark-mode .datetime-text {
         height: 35px;
     }
 
+    #section-patientdashboard .treatment-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 5px;
+    }
+
+    #section-patientdashboard .treatment-section > div:first-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    #section-patientdashboard .treatment-section h3 {
+        font-size: 15px;
+    }
+
+    #section-patientdashboard .treatment-table {
+        min-width: 800px;
+        font-size: 11px;
+    }
+
+    #section-patientdashboard .treatment-table th {
+        padding: 5px 4px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard .treatment-table td {
+        padding: 4px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard .treatment-table input[type="date"],
+    #section-patientdashboard .treatment-table input[type="number"],
+    #section-patientdashboard .treatment-table input[type="text"] {
+        padding: 3px 5px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard #td-save-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
 }
 /* Show sidebar toggle button on mobile */
 @media (max-width: 768px) {
