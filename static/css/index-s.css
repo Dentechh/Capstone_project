@@ -1198,8 +1198,56 @@
 }
 
 body.dark-mode .appointment-modal-content{
-    background-color: var(--grad-glass);
-    color: white;
+    background-color: #121212;
+    color: #e0e0e0;
+    border-top-color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar {
+    background: #000000;
+    color: #e0e0e0;
+    border-right-color: #333333;
+}
+
+body.dark-mode .appointment-modal-content .form-container {
+    background: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode .appointment-modal-content .form-container h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar h3 {
+    color: #64b5f6;
+}
+
+body.dark-mode .personal-info-grid label,
+body.dark-mode .service-schedule-section label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .personal-info-grid input,
+body.dark-mode .personal-info-grid select,
+body.dark-mode .service-schedule-section select,
+body.dark-mode .service-schedule-section input[type="datetime-local"] {
+    background: #ffffff;
+    color: #000000;
+    border-color: #cccccc;
+}
+
+body.dark-mode .personal-info-grid input::placeholder,
+body.dark-mode .personal-info-grid select::placeholder {
+    color: #666666;
+}
+
+body.dark-mode .personal-info-grid input:focus,
+body.dark-mode .personal-info-grid select:focus,
+body.dark-mode .service-schedule-section select:focus,
+body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
+    border-color: #64b5f6;
+    background: #ffffff;
+    color: #000000;
 }
 
 /* Consent Section */
@@ -1342,20 +1390,6 @@ body.dark-mode .appointment-modal-content{
     transform: scale(1.1);
 }
 
-.appointment-modal-content{
-    background-color: #ffffff;
-    padding: 50px;
-    border-radius: 15px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    color: #000000;
-    border-top: 8px solid #0d47a1;
-    display: flex;
-    flex-direction: row;
-    height: 92vh;
-    max-width: 1600px;
-    overflow: hidden;
-}
-
 .appointment-modal-content .consent-sidebar {
     flex: 1;
     padding: 40px;
@@ -1373,10 +1407,57 @@ body.dark-mode .appointment-modal-content{
 }
 
 body.dark-mode .appointment-modal-content{
-    background-color: var(--grad-glass);
-    color: white;
+    background-color: #121212;
+    color: #e0e0e0;
+    border-top-color: #64b5f6;
 }
 
+body.dark-mode .appointment-modal-content .consent-sidebar {
+    background: #000000;
+    color: #e0e0e0;
+    border-right-color: #333333;
+}
+
+body.dark-mode .appointment-modal-content .form-container {
+    background: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode .appointment-modal-content .form-container h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar h3 {
+    color: #64b5f6;
+}
+
+body.dark-mode .personal-info-grid label,
+body.dark-mode .service-schedule-section label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .personal-info-grid input,
+body.dark-mode .personal-info-grid select,
+body.dark-mode .service-schedule-section select,
+body.dark-mode .service-schedule-section input[type="datetime-local"] {
+    background: #ffffff;
+    color: #000000;
+    border-color: #cccccc;
+}
+
+body.dark-mode .personal-info-grid input::placeholder,
+body.dark-mode .personal-info-grid select::placeholder {
+    color: #666666;
+}
+
+body.dark-mode .personal-info-grid input:focus,
+body.dark-mode .personal-info-grid select:focus,
+body.dark-mode .service-schedule-section select:focus,
+body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
+    border-color: #64b5f6;
+    background: #ffffff;
+    color: #000000;
+}
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
