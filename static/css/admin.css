@@ -1871,6 +1871,26 @@ body.dark-mode .datetime-text {
 
 /* Mobile / Tablet Portrait */
 @media (max-width: 768px) {
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .sidebar-logout-btn.mobile-only {
+        display: flex;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .sidebar-brand {
+        text-align: left;
+        margin-bottom: 0;
+    }
+
     .sidebar {
         width: 100%;
         height: auto;
@@ -2558,6 +2578,10 @@ body.dark-mode .datetime-text {
     }
 }
 
+.sidebar-logout-btn.mobile-only {
+    display: none;
+}
+
 /* Hide sidebar toggle on desktop */
 @media (min-width: 769px) {
     .sidebar-toggle {
@@ -2566,5 +2590,13 @@ body.dark-mode .datetime-text {
     
     .sidebar-overlay {
         display: none !important;
+    }
+    
+    .sidebar-logout-btn.mobile-only {
+        display: none !important;
+    }
+    
+    .sidebar-footer {
+        display: flex !important;
     }
 }
