@@ -236,38 +236,195 @@
 
 
 
-    .modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-}
-
-.modal-content {
-    background: #fff;
-    width: 90%;
-    max-width: 450px;
-    margin: 10% auto;
-    padding: 25px;
-    border-radius: 12px;
-    text-align: center;
-    position: relative;
-}
-
-.close {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
-    cursor: pointer;
-}
         /* =========================
-   NAVIGATION GRID
-========================= */
+    MODAL STYLES
+    ========================= */
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: var(--grad-navy);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: var(--text-primary);
+        width: 90%;
+        max-width: 900px;
+        margin: 5% auto;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-content h2 {
+        color: var(--navy);
+        margin-bottom: 20px;
+    }
+
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--navy);
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .close:hover {
+        opacity: 1;
+    }
+
+    /* Dark mode modal styles */
+    body.dark-mode .modal {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    body.dark-mode .modal-content {
+        background: #1e1e1e;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .modal-content h2 {
+        color: #64b5f6;
+    }
+
+    body.dark-mode .close {
+        color: #64b5f6;
+    }
+
+    /* Table styles inside modals */
+    .table-container {
+        overflow-x: auto;
+        margin-top: 15px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: var(--navy);
+        color: #fff;
+        padding: 12px;
+        text-align: left;
+    }
+
+    td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+    .payment-table th {
+        background: var(--navy);
+        color: white;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .payment-table td {
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+    }
+
+    .payment-table tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .gcash-btn {
+        background: var(--navy);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .gcash-btn:hover {
+        background: var(--navy-dark);
+    }
+
+    .paid {
+        color: #4ade80;
+        font-weight: bold;
+    }
+
+    .unpaid {
+        color: #f87171;
+        font-weight: bold;
+    }
+
+    /* Mobile responsive modals */
+    @media (max-width: 768px) {
+        .modal-content {
+            width: 95%;
+            max-width: none;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .modal-content h2 {
+            font-size: 1.25rem;
+            margin-bottom: 15px;
+        }
+
+        th, td {
+            padding: 8px;
+            font-size: 0.9rem;
+        }
+
+        .close {
+            font-size: 24px;
+            right: 10px;
+            top: 5px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .modal-content {
+            width: 98%;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        th, td {
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+
+        .gcash-btn {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
+    }
 
 .nav-grid {
     display: grid;
@@ -739,132 +896,7 @@ function loadApprove(uid) {
 }
 </script>
 
-<style>
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-}
-
-.modal-content {
-    background: #fff;
-    width: 95%;
-    max-width: 800px;
-    margin: 5% auto;
-    padding: 20px;
-    border-radius: 12px;
-    position: relative;
-}
-
-.close {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
-    cursor: pointer;
-}
-
-/* Table */
-.table-container {
-    overflow-x: auto;
-    margin-top: 15px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th {
-    background: #007bff;
-    color: #fff;
-    padding: 12px;
-    text-align: left;
-}
-
-td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-tr:hover {
-    background: #f5f5f5;
-}
-
-.payment-table{
-    width:100%;
-    border-collapse:collapse;
-    margin-top:15px;
-}
-
-.payment-table th{
-    background:#0d47a1;
-    color:white;
-    padding:10px;
-    text-align:center;
-}
-
-.payment-table td{
-    padding:10px;
-    border:1px solid #ddd;
-    text-align:center;
-}
-
-.payment-table tr:nth-child(even){
-    background:#f5f5f5;
-}
-
-.gcash-btn{
-    background:#007bff;
-    color:white;
-    border:none;
-    padding:6px 12px;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-.gcash-btn:hover{
-    background:#0056b3;
-}
-
-.paid{
-    color:green;
-    font-weight:bold;
-}
-
-.unpaid{
-    color:red;
-    font-weight:bold;
-}
-</style>
-
-<script>
-const scheduleModal = document.getElementById("scheduleModal");
-const scheduleBtn = document.getElementById("scheduleBtn");
-const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
-
-scheduleBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    scheduleModal.style.display = "block";
-
-    loadApprove("{{ user.get('uid', '') }}");
-});
-
-scheduleCloseBtn.addEventListener("click", () => {
-    scheduleModal.style.display = "none";
-});
-
-window.addEventListener("click", (e) => {
-    if (e.target === scheduleModal) {
-        scheduleModal.style.display = "none";
-    }
-});
-</script>
-
-        <!-- Medical Records -->
+<!-- Medical Records -->
  <a href="javascript:void(0);" class="nav-card" onclick="openVisitHistory('{{ user.get('uid', '') }}')">
     <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
     <span>Medical Records</span>
@@ -1134,7 +1166,7 @@ window.addEventListener("click", function(event) {
 
 }</script>
 
-<div class="modal-overlay" id="updateModal">
+<div class="modal" id="updateModal">
     <div class="modal-content">
         <h3 style="margin-bottom: 20px; font-size: 1.5rem; text-align: center;">Edit Profile</h3>
 
