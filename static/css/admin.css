@@ -77,6 +77,34 @@ body.dark-mode .sidebar-brand h2{
 body.dark-mode .sidebar-brand span{
     color: rgb(255, 255, 255);
 }
+
+.sidebar-logout-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.sidebar-logout-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.sidebar-logout-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
 .sidebar-nav { 
     flex: 1; 
     display: flex; 
@@ -2576,10 +2604,6 @@ body.dark-mode .datetime-text {
     .sidebar-overlay {
         display: block;
     }
-}
-
-.sidebar-logout-btn.mobile-only {
-    display: none;
 }
 
 /* Hide sidebar toggle on desktop */
