@@ -77,7 +77,7 @@
             color: #ffffff;
             font-size: 15px;
         }
-nav
+
         body.dark-mode .nav-links a {
             color: #e0e0e0;
             transition: color 0.3s ease;
@@ -1382,6 +1382,10 @@ body.dark-mode .women-question label{
     color: black;
 }
 
+body.dark-mode .women-question span{
+    color: black;
+}
+
 /* Consent checkbox */
 .consent-checkbox {
     margin-top: 20px;
@@ -1441,6 +1445,60 @@ body.dark-mode .women-question label{
     
     body:not(.dark-mode) .appointment-modal .consent-sidebar {
         border-bottom: 1px solid #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content {
+        background-color: #121212 !important;
+        color: #e0e0e0 !important;
+        border-top-color: #64b5f6 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar {
+        background: #000000 !important;
+        color: #e0e0e0 !important;
+        border-right-color: #333333 !important;
+        border-bottom-color: #333333 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .form-container {
+        background: #121212 !important;
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .form-container h2 {
+        color: #64b5f6 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar h3 {
+        color: #64b5f6 !important;
+    }
+
+    body.dark-mode .personal-info-grid label,
+    body.dark-mode .service-schedule-section label {
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .personal-info-grid input,
+    body.dark-mode .personal-info-grid select,
+    body.dark-mode .service-schedule-section select,
+    body.dark-mode .service-schedule-section input[type="datetime-local"] {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-color: #cccccc !important;
+    }
+
+    body.dark-mode .personal-info-grid input::placeholder,
+    body.dark-mode .personal-info-grid select::placeholder {
+        color: #666666 !important;
+    }
+
+    body.dark-mode .personal-info-grid input:focus,
+    body.dark-mode .personal-info-grid select:focus,
+    body.dark-mode .service-schedule-section select:focus,
+    body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
+        border-color: #64b5f6 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
     }
 }
 
@@ -2396,6 +2454,10 @@ h3 {
         display: flex;
         align-items: center;
         gap: 6px;
+    }
+
+    body.dark-mode .navbar a{
+        color: white;
     }
     
     .logo-container {

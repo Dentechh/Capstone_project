@@ -413,7 +413,6 @@ body::before {
             }
 
             body.dark-mode .nav-links {
-                
                 position: absolute;
                 top: 100%;
                 left: 0;
