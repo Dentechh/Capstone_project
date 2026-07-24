@@ -304,16 +304,17 @@
          body.dark-mode #appointmentForm input[type="date"],
          body.dark-mode #appointmentForm input[type="datetime-local"],
          body.dark-mode #appointmentForm select {
-             background: #2d2d2d;
-             color: #e0e0e0;
-             border-color: #444;
+             background: #ffffff;
+             color: #000000;
+             border-color: #cccccc;
              transition: all 0.3s ease;
          }
 
          body.dark-mode #appointmentForm input:focus,
          body.dark-mode #appointmentForm select:focus {
              border-color: #64b5f6;
-             background: #3d3d3d;
+             background: #ffffff;
+             color: #000000;
          }
 
          body.dark-mode #signaturePad {
@@ -1404,59 +1405,6 @@ body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
     padding: 40px;
     overflow-y: auto;
     background: white;
-}
-
-body.dark-mode .appointment-modal-content{
-    background-color: #121212;
-    color: #e0e0e0;
-    border-top-color: #64b5f6;
-}
-
-body.dark-mode .appointment-modal-content .consent-sidebar {
-    background: #000000;
-    color: #e0e0e0;
-    border-right-color: #333333;
-}
-
-body.dark-mode .appointment-modal-content .form-container {
-    background: #121212;
-    color: #e0e0e0;
-}
-
-body.dark-mode .appointment-modal-content .form-container h2 {
-    color: #64b5f6;
-}
-
-body.dark-mode .appointment-modal-content .consent-sidebar h3 {
-    color: #64b5f6;
-}
-
-body.dark-mode .personal-info-grid label,
-body.dark-mode .service-schedule-section label {
-    color: #e0e0e0;
-}
-
-body.dark-mode .personal-info-grid input,
-body.dark-mode .personal-info-grid select,
-body.dark-mode .service-schedule-section select,
-body.dark-mode .service-schedule-section input[type="datetime-local"] {
-    background: #ffffff;
-    color: #000000;
-    border-color: #cccccc;
-}
-
-body.dark-mode .personal-info-grid input::placeholder,
-body.dark-mode .personal-info-grid select::placeholder {
-    color: #666666;
-}
-
-body.dark-mode .personal-info-grid input:focus,
-body.dark-mode .personal-info-grid select:focus,
-body.dark-mode .service-schedule-section select:focus,
-body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
-    border-color: #64b5f6;
-    background: #ffffff;
-    color: #000000;
 }
 
 /* Responsive adjustments */
