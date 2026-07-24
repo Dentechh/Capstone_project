@@ -316,7 +316,7 @@
                         </select>
                     </div>
                     <input type="tel" placeholder="Contact Number" name="Contact_number" required>
-                    <input type="date" name="Birthday" required>
+                    <input type="date" name="Birthday" placeholder="Birthday" required>
                     
                     
                     <select name="Occupation" required>
@@ -792,7 +792,9 @@ alert(error.message);
     // Calendar Initialization
     flatpickr("#schedule", {
         minDate: "today",
-        dateFormat: "F j, Y",
+        enableTime: true,
+        dateFormat: "F j, Y h:i K",
+        time_24hr: false,
         disable: [
             "2026-03-25", "2026-03-26",
             function(date) { return (date.getDay() === 0); }

@@ -1380,9 +1380,98 @@ body.dark-mode .label-side.rotated{
     font-weight: 700;
 }
 
-.btn-modal-red { background: #ff4d4d; }
-.btn-modal-blue { background: var(--navy); }
-    .btn-modal-cancel { background: #555; }
+.btn-modal-red { background: #ff4d4d; color: white; }
+.btn-modal-blue { background: var(--navy); color: white; }
+.btn-modal-cancel { background: #6b7280; color: white; }
+
+/* Logout Confirmation Modal */
+#logoutModal .modal-content {
+    background: #ffffff;
+    border: 2px solid #ef4444;
+    color: #111827;
+    box-shadow: 0 25px 60px rgba(239, 68, 68, 0.25);
+    max-width: 420px;
+    padding: 28px 24px;
+}
+
+#logoutModal h2 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: #111827;
+}
+
+#logoutModal p {
+    margin: 0 0 22px;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+#logoutModal .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#logoutModal .btn-logout-confirm {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#logoutModal .btn-logout-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+
+#logoutModal .btn-logout-cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+#logoutModal .btn-logout-cancel:hover {
+    background: #e5e7eb;
+}
+
+#logoutModal .close-btn {
+    color: #ef4444;
+}
+
+body.dark-mode #logoutModal .modal-content {
+    background: rgba(20, 25, 35, 0.95);
+    border-color: #ef4444;
+    color: #e0e0e0;
+}
+
+body.dark-mode #logoutModal h2 {
+    color: #ffffff;
+}
+
+body.dark-mode #logoutModal p {
+    color: #cbd5e1;
+}
+
+body.dark-mode #logoutModal .btn-logout-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e0e0e0;
+}
+
+body.dark-mode #logoutModal .btn-logout-cancel:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
 
 /* =========================
      DENTAL CHART MODAL
@@ -1917,6 +2006,7 @@ body.dark-mode .datetime-text {
     .sidebar-brand {
         text-align: left;
         margin-bottom: 0;
+        padding-left: 50px;
     }
 
     .sidebar {
