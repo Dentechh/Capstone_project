@@ -217,18 +217,16 @@
         const dropdownTrigger = document.getElementById('profileDropdownTrigger');
         const dropdownMenu = document.getElementById('profileDropdown');
 
-        if(dropdownTrigger) {
+        if(dropdownTrigger && dropdownMenu) {
             dropdownTrigger.onclick = (e) => {
                 e.stopPropagation();
-                const isVisible = dropdownMenu.style.display === 'flex';
-                dropdownMenu.style.display = isVisible ? 'none' : 'flex';
+                dropdownMenu.classList.toggle('show');
             };
         }
 
-        // Close profile dropdown when clicking outside
         window.addEventListener('click', function(e) {
             if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
-                dropdownMenu.style.display = 'none';
+                dropdownMenu.classList.remove('show');
             }
         });
 

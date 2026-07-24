@@ -1919,7 +1919,7 @@ h3 {
 
         /* Styling for the Login and Register Modal Cards */
         .auth-card {
-            background: var(--grad-navy) !important; /* Uses your navy gradient */
+            background: var(--grad-navy) !important;
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
             color: var(--text-primary);
@@ -1927,6 +1927,7 @@ h3 {
             width: 90%;
             margin: 0 auto;
             padding: 40px;
+            border-radius: 15px;
         }
 
         .auth-card h2 {

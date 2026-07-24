@@ -252,22 +252,21 @@
             });
 
             // Profile dropdown toggle
-            const profileTrigger = document.getElementById('profileDropdownTrigger');
-            const profileMenu = document.getElementById('profileDropdown');
+            const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+            const dropdownMenu = document.getElementById('profileDropdown');
 
-            if (profileTrigger && profileMenu) {
-                profileTrigger.onclick = function(e) {
+            if(dropdownTrigger && dropdownMenu) {
+                dropdownTrigger.onclick = (e) => {
                     e.stopPropagation();
-                    const isVisible = profileMenu.style.display === 'flex';
-                    profileMenu.style.display = isVisible ? 'none' : 'flex';
+                    dropdownMenu.classList.toggle('show');
                 };
-
-                window.addEventListener('click', function(e) {
-                    if (!profileTrigger.contains(e.target)) {
-                        profileMenu.style.display = 'none';
-                    }
-                });
             }
+
+            window.addEventListener('click', function(e) {
+                if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
         });
 
         // Hamburger menu toggle
