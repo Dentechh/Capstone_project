@@ -1357,7 +1357,9 @@ class DentalClinicApp(BaseFlaskApp):
 
 
 
+app_instance = DentalClinicApp()
+app = app_instance.app
+
 if __name__ == "__main__":
     print("🦷 Capizonda Dental Clinic Server Starting...")
-    app_instance = DentalClinicApp()
-    app_instance.app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)
