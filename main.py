@@ -869,7 +869,405 @@ class DentalClinicApp(BaseFlaskApp):
     
     
     
+<<<<<<< HEAD
     
+=======
+    return render_template("admin_login.html")  # ✅ This now works!
+
+
+from flask import abort, render_template
+
+SERVICES_DATA = {
+    "cleaning": {
+        "title": "Oral Prophylaxis (Cleaning)",
+        "short_desc": "Keep your gums healthy and your smile bright.",
+        "full_desc": "Oral prophylaxis is a thorough dental cleaning procedure performed by our professionals. It involves the removal of dental plaque and tartar to prevent cavities, gingivitis, and gum disease.",
+        "benefits": [
+            "Prevents tooth decay and gum disease",
+            "Removes stubborn stains for a whiter smile",
+            "Eliminates bad breath",
+            "Early detection of dental issues"
+        ],
+        "image": "cleaning.jpg"
+    },
+    "root-canal": {
+        "title": "Root Canal Treatment",
+        "short_desc": "Save your natural tooth and relieve severe pain.",
+        "full_desc": "A root canal is a treatment to repair and save a badly damaged or infected tooth instead of removing it. The procedure involves removing the damaged area of the tooth (the pulp) and cleaning and disinfecting it.",
+        "benefits": [
+            "Stops the spread of infection",
+            "Relieves severe toothache",
+            "Preserves your natural tooth structure",
+            "Highly successful and long-lasting"
+        ],
+        "image": "root-canal.jpg"
+    },
+    "consultation": {
+        "title": "Dental Consultation",
+        "short_desc": "Start your journey to a healthier smile with a professional check-up.",
+        "full_desc": "A comprehensive dental examination where our dentists assess your overall oral health. This includes checking for cavities, gum disease, and oral cancer, followed by a personalized treatment plan.",
+        "benefits": [
+            "Comprehensive oral health assessment",
+            "Personalized treatment planning",
+            "Professional advice on oral hygiene",
+            "Early detection of potential dental problems"
+        ],
+        "image": "consultation.jpg"
+    },
+    "pasta": {
+        "title": "Tooth Restoration (Pasta)",
+        "short_desc": "Restore the strength and beauty of your teeth.",
+        "full_desc": "Commonly known as 'Pasta,' this procedure uses tooth-colored composite resins to fill cavities or repair chipped teeth, restoring their natural function and appearance.",
+        "benefits": [
+            "Matches your natural tooth color",
+            "Prevents further tooth decay",
+            "Restores tooth strength and function",
+            "Quick and minimally invasive procedure"
+        ],
+        "image": "pasta.jpg"
+    },
+    "extraction": {
+        "title": "Tooth Extraction",
+        "short_desc": "Safe and gentle removal of problematic teeth.",
+        "full_desc": "When a tooth is too damaged to be saved by a filling or crown, a professional extraction is performed. We ensure the process is as comfortable and pain-free as possible.",
+        "benefits": [
+            "Eliminates severe dental pain",
+            "Prevents the spread of infection to other teeth",
+            "Prepares for orthodontic or denture treatment",
+            "Fast relief from overcrowded teeth"
+        ],
+        "image": "extraction.jpg"
+    },
+    "dentures": {
+        "title": "Dentures",
+        "short_desc": "Regain your smile and confidence with custom-fit dentures.",
+        "full_desc": "Custom-made removable replacements for missing teeth and surrounding tissues. We offer both full and partial dentures designed to look natural and fit comfortably.",
+        "benefits": [
+            "Restores ability to chew and speak clearly",
+            "Supports facial muscles for a younger look",
+            "Customized for a natural appearance",
+            "Cost-effective solution for missing teeth"
+        ],
+        "image": "dentures.jpg"
+    },
+    "crowns-bridges": {
+        "title": "Crowns and Bridges",
+        "short_desc": "Permanent solutions for broken or missing teeth.",
+        "full_desc": "Dental crowns cover a damaged tooth to restore its shape, while bridges fill the gap created by one or more missing teeth, anchored by healthy teeth on either side.",
+        "benefits": [
+            "Long-lasting and durable restoration",
+            "Restores the natural shape and size of teeth",
+            "Prevents remaining teeth from shifting",
+            "Enhances overall smile aesthetics"
+        ],
+        "image": "crowns-bridges.jpg"
+    },
+    "whitening": {
+        "title": "Teeth Whitening",
+        "short_desc": "Brighten your smile by several shades in one visit.",
+        "full_desc": "A professional cosmetic procedure that uses high-quality whitening agents to remove deep-seated stains caused by coffee, tea, or aging, giving you a radiant smile.",
+        "benefits": [
+            "Immediate and noticeable results",
+            "Safe and professionally supervised",
+            "Boosts self-confidence",
+            "Removes tough stains that toothpaste can't"
+        ],
+        "image": "whitening.jpg"
+    },
+    "fluoride": {
+        "title": "Fluoride Treatment",
+        "short_desc": "Strengthen your tooth enamel against decay.",
+        "full_desc": "A quick preventive treatment where a high concentration of fluoride is applied to the teeth. This mineral helps rebuild weakened tooth enamel and reverses early signs of cavities.",
+        "benefits": [
+            "Significantly reduces risk of cavities",
+            "Strengthens tooth enamel",
+            "Especially effective for children's developing teeth",
+            "Protects teeth from acid and bacteria"
+        ],
+        "image": "fluoride.jpg"
+    },
+    "sealant": {
+        "title": "Pit and Fissure Sealant",
+        "short_desc": "An invisible shield for your molars.",
+        "full_desc": "A thin, protective coating applied to the chewing surfaces of the back teeth (molars). It seals the deep grooves where food and bacteria often get trapped.",
+        "benefits": [
+            "Highly effective at preventing molar cavities",
+            "Painless and non-invasive application",
+            "Long-lasting protection for many years",
+            "Ideal for children and teenagers"
+        ],
+        "image": "sealant.jpg"
+    },
+    "wisdom-tooth": {
+        "title": "Wisdom Teeth Removal",
+        "short_desc": "Prevent pain and crowding caused by impacted wisdom teeth.",
+        "full_desc": "A surgical procedure to remove one or more wisdom teeth—the four permanent adult teeth located at the back corners of your mouth—that don't have enough room to grow.",
+        "benefits": [
+            "Prevents overcrowding and shifting of teeth",
+            "Relieves jaw pain and gum swelling",
+            "Reduces risk of infection and cysts",
+            "Protects adjacent healthy molars"
+        ],
+        "image": "wisdom-tooth.jpg"
+    },
+    "xray": {
+        "title": "Periapical X-ray",
+        "short_desc": "Detailed imaging to see what's happening beneath the surface.",
+        "full_desc": "A focused X-ray that shows the entire tooth, from the crown to the end of the root where it anchors into the jaw. Essential for detecting abscesses and deep-seated issues.",
+        "benefits": [
+            "Accurate diagnosis of root-level problems",
+            "Detects infections and cysts early",
+            "Shows the exact position of impacted teeth",
+            "Critical for successful root canal planning"
+        ],
+        "image": "xray.jpg"
+    }
+}
+
+@app.route('/services/<service_id>')
+def service_detail(service_id):
+    service = SERVICES_DATA.get(service_id)
+    
+    if not service:
+        abort(404)
+    
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    uid = session.get('uid', '')
+    
+    return render_template('service.html', service=service, name=name, email=email, uid=uid)
+
+@app.route("/location")
+def dental_location():
+    name = session.get('name', 'Guest')
+    email = session.get('email', '')
+    return render_template("location.html",name=name, email=email)
+
+@app.route("/prac")
+def prac():
+    return render_template("prac.html")
+
+@app.route("/medical_records")
+def medical_records():
+    return render_template("medical_records.html")
+
+
+
+
+def safe_float(value):
+    try:
+        return float(value)
+    except:
+        return 0
+
+
+
+import os
+import base64
+from datetime import datetime
+from flask import request, jsonify
+from firebase_admin import firestore
+import os
+
+app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500 MB
+
+
+@app.route("/save_dental_record", methods=["POST"])
+def save_dental_record():
+
+    try:
+        uid = request.form.get("uid")
+
+        if not uid:
+            return jsonify({
+                "success": False,
+                "message": "UID is required"
+            }), 400
+
+        if db.collection("google_create_account").document(uid).get().exists:
+            main_collection = "google_create_account"
+
+        elif db.collection(Account_clients).document(uid).get().exists:
+            main_collection = Account_clients
+
+        else:
+            return jsonify({
+                "success": False,
+                "message": "User not found"
+            }), 404
+
+        user_ref = db.collection(main_collection).document(uid)
+
+        # =========================
+        # DENTAL CHART JSON
+        # =========================
+        dental_chart = {}
+
+        for key in request.form:
+            if key.startswith("tooth_"):
+                dental_chart[key] = request.form.get(key)
+
+        image_url = ""
+
+        image_file = request.files.get("dental_chart_image")
+
+        if image_file:
+            try:
+                save_folder = os.path.join("static", "dental_charts")
+                os.makedirs(save_folder, exist_ok=True)
+
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{uid}_{timestamp}.jpg"
+                filepath = os.path.join(save_folder, filename)
+
+                image_file.save(filepath)
+
+                image_url = f"/static/dental_charts/{filename}"
+
+            except Exception as img_error:
+                print("IMAGE SAVE ERROR:", img_error)
+
+        # =========================
+        # TREATMENT TABLE
+        # =========================
+        dates = request.form.getlist("date[]")
+        teeth = request.form.getlist("tooth[]")
+        procedures = request.form.getlist("procedure[]")
+        dentists = request.form.getlist("dentist[]")
+        values = request.form.getlist("value[]")
+        paids = request.form.getlist("paid[]")
+        balances = request.form.getlist("balance[]")
+        next_appts = request.form.getlist("next_appointment[]")
+        medicines = request.form.getlist("medicine[]")
+        statuses = request.form.getlist("status[]")
+
+        length = min(
+            len(dates),
+            len(teeth),
+            len(procedures),
+            len(dentists),
+            len(values),
+            len(paids),
+            len(balances),
+            len(next_appts),
+            len(medicines),
+            len(statuses)
+        )
+
+        done_procedures = []
+
+        for i in range(length):
+
+            if not procedures[i] and not teeth[i]:
+                continue
+
+            done_procedures.append({
+                "date": dates[i],
+                "tooth": teeth[i],
+                "procedure": procedures[i],
+                "dentist": dentists[i],
+                "value": safe_float(values[i]),
+                "paid": safe_float(paids[i]),
+                "balance": safe_float(balances[i]),
+                "next_appointment": next_appts[i],
+                "medicine": medicines[i],
+                "status": statuses[i]
+            })
+
+        # =========================
+        # SAVE TO FIRESTORE
+        # =========================
+        user_ref.collection("Done_procedure").add({
+            "uid": uid,
+            "chart": dental_chart,
+            "chart_image": image_url,
+            "procedures": done_procedures,
+            "updated_at": firestore.SERVER_TIMESTAMP
+        })
+
+        # =========================
+        # DELETE APPROVED RECORD
+        # =========================
+        Patient_unq_id = request.form.get("Patient_unq_id")
+
+        print("Received Patient_unq_id:", Patient_unq_id)
+
+        if Patient_unq_id:
+            try:
+                user_ref.collection("Approve").document(Patient_unq_id).delete()
+                print("Deleted Approve document:", Patient_unq_id)
+
+            except Exception as del_error:
+                print("DELETE APPROVE ERROR:", del_error)
+
+        return jsonify({
+            "success": True,
+            "message": "Dental record saved successfully",
+            "chart_image": image_url
+        })
+
+    except Exception as e:
+        print("ERROR:", e)
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+
+
+@app.route("/get_treatment_info/<uid>")
+def get_treatment_info(uid):
+
+    # Find the patient
+    if db.collection("google_create_account").document(uid).get().exists:
+        user_ref = db.collection("google_create_account").document(uid)
+
+    elif db.collection(Account_clients).document(uid).get().exists:
+        user_ref = db.collection(Account_clients).document(uid)
+
+    else:
+        return jsonify({
+            "success": False,
+            "message": "Patient not found"
+        }), 404
+
+    procedures = []
+
+    # Read all Done_procedure documents
+    for doc in user_ref.collection("Done_procedure").stream():
+
+        data = doc.to_dict()
+
+        for p in data.get("procedures", []):
+            procedures.append({
+                "dentist": p.get("dentist", ""),
+                "medicine": p.get("medicine", ""),
+                "date": p.get("date", ""),
+                "procedure": p.get("procedure", ""),
+                "paid": p.get("paid", 0),
+                "next_appointment": p.get("next_appointment", ""),
+                "status": p.get("status", ""),
+                "balance": p.get("balance", 0),
+                "value": p.get("value", 0),
+                "tooth": p.get("tooth", "")
+            })
+
+    return jsonify({
+        "success": True,
+        "procedures": procedures
+    })
+
+
+@app.route("/get_approve/<uid>")
+def get_approve(uid):
+    try:
+        approve_docs = (
+            db.collection("google_create_account")
+            .document(uid)
+            .collection("Approve")
+            .stream()
+        )
+>>>>>>> 7494a1cca9ae9f7020197b4db9f84c3ab13faa3b
 
     def adminDashboard(self):
     

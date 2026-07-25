@@ -250,6 +250,23 @@
             window.addEventListener('click', function() {
                 servicesMenu.classList.remove('show');
             });
+
+            // Profile dropdown toggle
+            const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+            const dropdownMenu = document.getElementById('profileDropdown');
+
+            if(dropdownTrigger && dropdownMenu) {
+                dropdownTrigger.onclick = (e) => {
+                    e.stopPropagation();
+                    dropdownMenu.classList.toggle('show');
+                };
+            }
+
+            window.addEventListener('click', function(e) {
+                if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
         });
 
         // Hamburger menu toggle

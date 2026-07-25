@@ -304,21 +304,26 @@
          body.dark-mode #appointmentForm input[type="date"],
          body.dark-mode #appointmentForm input[type="datetime-local"],
          body.dark-mode #appointmentForm select {
-             background: #2d2d2d;
-             color: #e0e0e0;
-             border-color: #444;
+             background: #ffffff;
+             color: #000000;
+             border-color: #cccccc;
              transition: all 0.3s ease;
          }
 
          body.dark-mode #appointmentForm input:focus,
          body.dark-mode #appointmentForm select:focus {
              border-color: #64b5f6;
-             background: #3d3d3d;
+             background: #ffffff;
+             color: #000000;
          }
 
          body.dark-mode #signaturePad {
              background: #1e1e1e !important;
              border-color: #444 !important;
+         }
+
+         body.dark-mode span{
+            color: white;
          }
 
          body.dark-mode #signatureUpload {
@@ -604,6 +609,8 @@
             background: var(--grad-navy); 
             padding: 25px 5%;
             box-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            position: relative;
+            z-index: 100;
         }
 
         .navbar {
@@ -1196,8 +1203,56 @@
 }
 
 body.dark-mode .appointment-modal-content{
-    background-color: var(--grad-glass);
-    color: white;
+    background-color: #121212;
+    color: #e0e0e0;
+    border-top-color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar {
+    background: #000000;
+    color: #e0e0e0;
+    border-right-color: #333333;
+}
+
+body.dark-mode .appointment-modal-content .form-container {
+    background: #121212;
+    color: #e0e0e0;
+}
+
+body.dark-mode .appointment-modal-content .form-container h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar h3 {
+    color: #64b5f6;
+}
+
+body.dark-mode .personal-info-grid label,
+body.dark-mode .service-schedule-section label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .personal-info-grid input,
+body.dark-mode .personal-info-grid select,
+body.dark-mode .service-schedule-section select,
+body.dark-mode .service-schedule-section input[type="datetime-local"] {
+    background: #ffffff;
+    color: #000000;
+    border-color: #cccccc;
+}
+
+body.dark-mode .personal-info-grid input::placeholder,
+body.dark-mode .personal-info-grid select::placeholder {
+    color: #666666;
+}
+
+body.dark-mode .personal-info-grid input:focus,
+body.dark-mode .personal-info-grid select:focus,
+body.dark-mode .service-schedule-section select:focus,
+body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
+    border-color: #64b5f6;
+    background: #ffffff;
+    color: #000000;
 }
 
 /* Consent Section */
@@ -1300,6 +1355,10 @@ body.dark-mode .appointment-modal-content{
     flex: 1;
 }
 
+body.dark-mode .question-row span{
+    color: white;
+}
+
 .medical-history-questions input[type="text"] {
     width: 100%;
     margin-top: 4px;
@@ -1317,6 +1376,14 @@ body.dark-mode .appointment-modal-content{
     font-weight: normal;
     cursor: pointer;
     margin-right: 10px;
+}
+
+body.dark-mode .women-question label{
+    color: black;
+}
+
+body.dark-mode .women-question span{
+    color: black;
 }
 
 /* Consent checkbox */
@@ -1340,20 +1407,6 @@ body.dark-mode .appointment-modal-content{
     transform: scale(1.1);
 }
 
-.appointment-modal-content{
-    background-color: #ffffff;
-    padding: 50px;
-    border-radius: 15px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    color: #000000;
-    border-top: 8px solid #0d47a1;
-    display: flex;
-    flex-direction: row;
-    height: 92vh;
-    max-width: 1600px;
-    overflow: hidden;
-}
-
 .appointment-modal-content .consent-sidebar {
     flex: 1;
     padding: 40px;
@@ -1369,12 +1422,6 @@ body.dark-mode .appointment-modal-content{
     overflow-y: auto;
     background: white;
 }
-
-body.dark-mode .appointment-modal-content{
-    background-color: var(--grad-glass);
-    color: white;
-}
-
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
@@ -1398,6 +1445,60 @@ body.dark-mode .appointment-modal-content{
     
     body:not(.dark-mode) .appointment-modal .consent-sidebar {
         border-bottom: 1px solid #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content {
+        background-color: #121212 !important;
+        color: #e0e0e0 !important;
+        border-top-color: #64b5f6 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar {
+        background: #000000 !important;
+        color: #e0e0e0 !important;
+        border-right-color: #333333 !important;
+        border-bottom-color: #333333 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .form-container {
+        background: #121212 !important;
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .form-container h2 {
+        color: #64b5f6 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar h3 {
+        color: #64b5f6 !important;
+    }
+
+    body.dark-mode .personal-info-grid label,
+    body.dark-mode .service-schedule-section label {
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .personal-info-grid input,
+    body.dark-mode .personal-info-grid select,
+    body.dark-mode .service-schedule-section select,
+    body.dark-mode .service-schedule-section input[type="datetime-local"] {
+        background: #ffffff !important;
+        color: #000000 !important;
+        border-color: #cccccc !important;
+    }
+
+    body.dark-mode .personal-info-grid input::placeholder,
+    body.dark-mode .personal-info-grid select::placeholder {
+        color: #666666 !important;
+    }
+
+    body.dark-mode .personal-info-grid input:focus,
+    body.dark-mode .personal-info-grid select:focus,
+    body.dark-mode .service-schedule-section select:focus,
+    body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
+        border-color: #64b5f6 !important;
+        background: #ffffff !important;
+        color: #000000 !important;
     }
 }
 
@@ -1818,7 +1919,7 @@ h3 {
 
         /* Styling for the Login and Register Modal Cards */
         .auth-card {
-            background: var(--grad-navy) !important; /* Uses your navy gradient */
+            background: var(--grad-navy) !important;
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
             color: var(--text-primary);
@@ -1826,6 +1927,7 @@ h3 {
             width: 90%;
             margin: 0 auto;
             padding: 40px;
+            border-radius: 15px;
         }
 
         .auth-card h2 {
@@ -2353,6 +2455,10 @@ h3 {
         display: flex;
         align-items: center;
         gap: 6px;
+    }
+
+    body.dark-mode .navbar a{
+        color: white;
     }
     
     .logo-container {

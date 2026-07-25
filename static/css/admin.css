@@ -77,6 +77,34 @@ body.dark-mode .sidebar-brand h2{
 body.dark-mode .sidebar-brand span{
     color: rgb(255, 255, 255);
 }
+
+.sidebar-logout-btn {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.sidebar-logout-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.sidebar-logout-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
 .sidebar-nav { 
     flex: 1; 
     display: flex; 
@@ -97,9 +125,11 @@ body.dark-mode .sidebar-brand span{
 .nav-item:hover, .nav-item.active { 
     opacity: 1; 
     background-color: var(--gold-light);
+    color: white;
 }
 .nav-item.active { 
     border-left: 4px solid var(--dark-black); 
+    color: white;
 }
 
 /* MAIN CONTENT & BLUR FIX */
@@ -248,14 +278,6 @@ body.dark-mode .profile-body-scrollable::-webkit-scrollbar-thumb {
     text-shadow: 1px 4px 3px rgba(0, 0, 0, 0.8);
 }
 body.dark-mode .top-header { color: #e0e0e0; }
-.admin-profile { display: flex; align-items: center; gap: 12px; color: #000000; }
-body.dark-mode .admin-profile { color: #e0e0e0; }
-.avatar { 
-    width: 45px; height: 45px; border-radius: 50%; 
-    background: var(--grad-navy); border: 2px solid var(--gold); 
-    flex-shrink: 0; 
-}
-
 /* UPCOMING PATIENTS ALIGNMENT FIX */
 .schedule-list { list-style: none; }
 .schedule-item {
@@ -306,7 +328,6 @@ body.dark-mode .p-info{
     gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; 
     color: #000000;
 }
-.p-avatar-circle { width: 45px; height: 45px; background: var(--navy); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; border: 1px solid var(--gold); }
 
 .patient-profile-header {
     background: var(--grad-navy);
@@ -323,10 +344,6 @@ body.dark-mode .p-info{
 body.dark-mode .patient-profile-header {
     background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
     color: #e0e0e0;
-}
-
-.p-avatar-circle{
-    width: 70px; 
     height: 70px; 
     font-size: 24px; 
     background:var(--grad-navy);
@@ -336,6 +353,7 @@ body.dark-mode .patient-profile-header {
     justify-content: center; 
     border-radius: 50%; 
     font-weight: bold;
+
 }
 /* DASHBOARD COMPONENTS */
 .metric-cards {
@@ -725,15 +743,15 @@ body.dark-mode .treatment-table input:focus {
     border: none;
 }
 .btn-action.accept {
-    background-color: var(--gold-light);
-    color: rgb(255, 255, 255);
-    border: 1px solid var(--gold);
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #93c5fd;
     font-size: 15px;
 }
 .btn-action.decline {
-    background: transparent;
-    color: #ff4d4d;
-    border: 1px solid #ff4d4d;
+    background: #ef4444;
+    color: #ffffff;
+    border: 1px solid #ef4444;
     margin-left: 5px;
 }
 
@@ -890,15 +908,8 @@ body:not(.dark-mode) .nav-item {
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-bottom: 20px;
             margin-bottom: 20px;
-        }
-
-        .p-avatar-circle.large {
-            width: 70px;
             height: 70px;
             font-size: 24px;
-        }
-
-        .info-group {
             margin-bottom: 15px;
         }
 
@@ -1277,6 +1288,7 @@ body.dark-mode .chart-title{
 
 .permanent-block {
     width: 780px;
+    margin: 0 auto;
 }
 body.dark-mode .label-side.rotated{
     color: white;
@@ -1368,9 +1380,98 @@ body.dark-mode .label-side.rotated{
     font-weight: 700;
 }
 
-.btn-modal-red { background: #ff4d4d; }
-.btn-modal-blue { background: var(--navy); }
-    .btn-modal-cancel { background: #555; }
+.btn-modal-red { background: #ff4d4d; color: white; }
+.btn-modal-blue { background: var(--navy); color: white; }
+.btn-modal-cancel { background: #6b7280; color: white; }
+
+/* Logout Confirmation Modal */
+#logoutModal .modal-content {
+    background: #ffffff;
+    border: 2px solid #ef4444;
+    color: #111827;
+    box-shadow: 0 25px 60px rgba(239, 68, 68, 0.25);
+    max-width: 420px;
+    padding: 28px 24px;
+}
+
+#logoutModal h2 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: #111827;
+}
+
+#logoutModal p {
+    margin: 0 0 22px;
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+#logoutModal .modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#logoutModal .btn-logout-confirm {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#logoutModal .btn-logout-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.35);
+}
+
+#logoutModal .btn-logout-cancel {
+    background: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    padding: 10px 22px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+#logoutModal .btn-logout-cancel:hover {
+    background: #e5e7eb;
+}
+
+#logoutModal .close-btn {
+    color: #ef4444;
+}
+
+body.dark-mode #logoutModal .modal-content {
+    background: rgba(20, 25, 35, 0.95);
+    border-color: #ef4444;
+    color: #e0e0e0;
+}
+
+body.dark-mode #logoutModal h2 {
+    color: #ffffff;
+}
+
+body.dark-mode #logoutModal p {
+    color: #cbd5e1;
+}
+
+body.dark-mode #logoutModal .btn-logout-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e0e0e0;
+}
+
+body.dark-mode #logoutModal .btn-logout-cancel:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
 
 /* =========================
      DENTAL CHART MODAL
@@ -1554,13 +1655,15 @@ body.dark-mode .appointment-table td {
 }
 
 body.dark-mode .btn-action.accept {
-    background: var(--navy);
-    border-color: #8CD3FF;
-    color: white;
+    background: #1e3a8a;
+    border-color: #60a5fa;
+    color: #dbeafe;
 }
 
 body.dark-mode .btn-action.decline {
-    color: #ef5350;
+    background: #b91c1c;
+    border-color: #fca5a5;
+    color: #ffffff;
 }
 
 body.dark-mode .modal-content {
@@ -1856,6 +1959,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 600px;
+        margin: 0 auto;
     }
     
     .grid-box {
@@ -1884,6 +1988,27 @@ body.dark-mode .datetime-text {
 
 /* Mobile / Tablet Portrait */
 @media (max-width: 768px) {
+    .sidebar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .sidebar-logout-btn.mobile-only {
+        display: flex;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .sidebar-brand {
+        text-align: left;
+        margin-bottom: 0;
+        padding-left: 50px;
+    }
+
     .sidebar {
         width: 100%;
         height: auto;
@@ -1968,19 +2093,12 @@ body.dark-mode .datetime-text {
     
     .pd-stat {
         min-width: 80px;
-    }
-    
-    .patient-profile-header .p-avatar-circle.large {
-        width: 60px;
         height: 60px;
         font-size: 22px;
-    }
-    
-    #pd-name {
         font-size: 20px !important;
     }
     
-    #pd-id {
+    .pd-id {
         font-size: 12px !important;
     }
     
@@ -2101,6 +2219,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 450px;
+        margin: 0 auto;
     }
     
     .grid-box {
@@ -2232,21 +2351,11 @@ body.dark-mode .datetime-text {
     .profile-header {
         flex-direction: column;
         text-align: center;
-    }
-    
-    .p-avatar-circle {
-        width: 50px;
+        height: 50px;
+        font-size: 18px;
         height: 50px;
         font-size: 18px;
     }
-    
-    .p-avatar-circle.large {
-        width: 50px;
-        height: 50px;
-        font-size: 18px;
-    }
-    
-    /* Tables - horizontal scroll */
     #section-appointments .content-panel {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -2297,21 +2406,15 @@ body.dark-mode .datetime-text {
     .profile-header {
         flex-direction: column;
         text-align: center;
-    }
     
-    .p-avatar-circle {
-        width: 50px;
+    
         height: 50px;
         font-size: 18px;
-    }
     
-    .p-avatar-circle.large {
-        width: 50px;
         height: 50px;
         font-size: 18px;
-    }
     
-    /* Medical Dashboard */
+    }
     .medical-header {
         flex-direction: column;
         gap: 15px;
@@ -2489,6 +2592,7 @@ body.dark-mode .datetime-text {
     .teeth-row.wide,
     .permanent-block {
         width: 350px;
+        margin: 0 auto;
     }
     
     .grid-box {
@@ -2559,18 +2663,52 @@ body.dark-mode .datetime-text {
     
     .label-inline {
         font-size: 11px;
-    }
-    
-    .admin-profile span {
-        font-size: 14px;
-    }
-    
-    .avatar {
-        width: 35px;
         height: 35px;
     }
-}
 
+    #section-patientdashboard .treatment-section {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 5px;
+    }
+
+    #section-patientdashboard .treatment-section > div:first-child {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    #section-patientdashboard .treatment-section h3 {
+        font-size: 15px;
+    }
+
+    #section-patientdashboard .treatment-table {
+        min-width: 800px;
+        font-size: 11px;
+    }
+
+    #section-patientdashboard .treatment-table th {
+        padding: 5px 4px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard .treatment-table td {
+        padding: 4px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard .treatment-table input[type="date"],
+    #section-patientdashboard .treatment-table input[type="number"],
+    #section-patientdashboard .treatment-table input[type="text"] {
+        padding: 3px 5px;
+        font-size: 10px;
+    }
+
+    #section-patientdashboard #td-save-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+}
 /* Show sidebar toggle button on mobile */
 @media (max-width: 768px) {
     .sidebar-toggle {
@@ -2608,5 +2746,13 @@ body.dark-mode .datetime-text {
     
     .sidebar-overlay {
         display: none !important;
+    }
+    
+    .sidebar-logout-btn.mobile-only {
+        display: none !important;
+    }
+    
+    .sidebar-footer {
+        display: flex !important;
     }
 }
