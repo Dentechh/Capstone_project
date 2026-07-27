@@ -2762,7 +2762,7 @@ body.dark-mode .datetime-text {
     #checkInfoModal .modal-content {
         width: 95%;
         max-width: none;
-        margin: 10% auto;
+        margin: 5% auto;
         padding: 15px;
         border-radius: 12px;
     }
@@ -2790,34 +2790,39 @@ body.dark-mode .datetime-text {
 
 @media (max-width: 480px) {
     #checkInfoModal .modal-content {
-        width: 98%;
-        padding: 10px;
-        margin: 5% auto;
-        border-radius: 8px;
+        width: 100%;
+        padding: 12px 8px;
+        margin: 0;
+        border-radius: 0;
     }
 
-    #checkInfoModal .treatment-table {
-        font-size: 0.7rem;
-        display: block;
+    #checkInfoModal .table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
 
+    #checkInfoModal .treatment-table {
+        font-size: 0.75rem;
+        min-width: 500px;
+    }
+
     #checkInfoModal .treatment-table thead th {
-        padding: 4px 3px;
-        font-size: 0.65rem;
+        padding: 6px 4px;
+        font-size: 0.7rem;
     }
 
     #checkInfoModal .treatment-table tbody td {
-        padding: 3px 2px;
-        font-size: 0.65rem;
+        padding: 5px 4px;
+        font-size: 0.7rem;
     }
 
     #checkInfoModal h2 {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 
     #checkInfoModal .close {
-        font-size: 20px;
+        font-size: 22px;
+        right: 8px;
+        top: 4px;
     }
 }
