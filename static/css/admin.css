@@ -343,17 +343,7 @@ body.dark-mode .p-info{
 
 body.dark-mode .patient-profile-header {
     background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: #e0e0e0;
-    height: 70px; 
-    font-size: 24px; 
-    background:var(--grad-navy);
-    color: white; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    border-radius: 50%; 
-    font-weight: bold;
-
+    color: white;
 }
 /* DASHBOARD COMPONENTS */
 .metric-cards {
@@ -2101,7 +2091,29 @@ body.dark-mode .datetime-text {
     .pd-id {
         font-size: 12px !important;
     }
-    
+
+    /* Mobile profile circle */
+    .pd-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--navy);
+        flex-shrink: 0;
+    }
+
+    .pd-name-bg {
+        background: rgba(13, 71, 161, 0.08);
+        padding: 4px 12px;
+        border-radius: 6px;
+        display: inline-block;
+    }
+
+    /* Dark mode name background */
+    body.dark-mode .pd-name-bg {
+        background: rgba(100, 181, 246, 0.12);
+    }
+
     .content-panel {
         padding: 15px;
         border-radius: 15px;

@@ -524,12 +524,15 @@ window.onclick = (e) => {
             <!-- Hidden Approve data for JS access -->
             <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
 
-            <div class="patient-profile-header">
+<div class="patient-profile-header">
                 <div class="p-main-info">
-                    <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
-                    <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
-                     
-                    
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="https://ui-avatars.com/api/?name={{ name }}&background=0d47a1&color=fff&size=120" alt="Profile" class="pd-avatar" id="pd-avatar">
+                        <div>
+                            <h2 id="pd-name" style="margin: 0; font-size: 24px;" class="pd-name-bg">Patient Name</h2>
+                            <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
+                        </div>
+                    </div>
                 </div>
                 <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
                     
