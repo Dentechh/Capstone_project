@@ -248,7 +248,7 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        background-color: rgba(0, 0, 0, 0.7);
         backdrop-filter: blur(4px);
         align-items: center;
         justify-content: center;
@@ -258,6 +258,7 @@
         background: #ffffff;
         backdrop-filter: blur(20px);
         border: 1px solid rgba(255, 255, 255, 0.2);
+        border-top: 8px solid #0d47a1;
         color: var(--text-primary);
         width: 90%;
         max-width: 900px;
@@ -289,14 +290,15 @@
         opacity: 1;
     }
 
-    /* Dark mode modal styles */
+    /* Dark mode modal styles - matching index */
     body.dark-mode .modal {
-        background: rgba(0, 0, 0, 0.75);
+        background: rgba(0, 0, 0, 0.8);
     }
 
     body.dark-mode .modal-content {
-        background: #1e1e1e;
+        background: #121212;
         border-color: rgba(255, 255, 255, 0.1);
+        border-top-color: #64b5f6;
         color: #e0e0e0;
     }
 
@@ -306,6 +308,16 @@
 
     body.dark-mode .close {
         color: #64b5f6;
+    }
+
+    body.dark-mode .modal-form input {
+        background: rgba(255, 255, 255, 0.1);
+        color: #e0e0e0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    body.dark-mode .modal-form input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
     }
 
     /* Table styles inside modals */
@@ -478,22 +490,6 @@ body.dark-mode .nav-card {
 body.dark-mode .nav-card span {
     color: white;
 }
-        .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 9999;
-            align-items: center; justify-content: center; backdrop-filter: blur(5px);
-        }
-
-        .modal-content { 
-            background: var(--navy); 
-            padding: 40px; 
-            border-radius: 25px; 
-            width: 95%; 
-            max-width: 500px; 
-            border: 1px solid var(--sky-blue); 
-            max-height: 90vh;
-            overflow-y: auto;
-        }
         .modal-form { display: flex; flex-direction: column; gap: 15px; }
         .modal-form input { padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255, 255, 255, 0.8); color: rgb(0, 0, 0); outline: none; width: 100%; }
 
