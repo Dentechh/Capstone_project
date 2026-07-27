@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
+from flask import Flask, abort, render_template, request, redirect, url_for, flash, session, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from google.oauth2 import id_token
@@ -1073,8 +1073,9 @@ class DentalClinicApp(BaseFlaskApp):
         
         if not service:
             abort(404) # Show a 404 page if they type a wrong URL
-            
-        return render_template('service.html', service=service)
+
+        name = session.get('name', 'Guest')
+        return render_template('service.html', service=service, name=name)
     
 
     def dental_location(self):

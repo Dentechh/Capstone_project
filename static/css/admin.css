@@ -2756,3 +2756,68 @@ body.dark-mode .datetime-text {
         display: flex !important;
     }
 }
+
+/* Treatment Info Modal - Responsive */
+@media (max-width: 768px) {
+    #checkInfoModal .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10% auto;
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    #checkInfoModal .treatment-table {
+        font-size: 0.8rem;
+    }
+
+    #checkInfoModal .treatment-table thead th {
+        padding: 6px 4px;
+        font-size: 0.7rem;
+        white-space: nowrap;
+    }
+
+    #checkInfoModal .treatment-table tbody td {
+        padding: 4px 3px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    #checkInfoModal h2 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #checkInfoModal .modal-content {
+        width: 98%;
+        padding: 10px;
+        margin: 5% auto;
+        border-radius: 8px;
+    }
+
+    #checkInfoModal .treatment-table {
+        font-size: 0.7rem;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #checkInfoModal .treatment-table thead th {
+        padding: 4px 3px;
+        font-size: 0.65rem;
+    }
+
+    #checkInfoModal .treatment-table tbody td {
+        padding: 3px 2px;
+        font-size: 0.65rem;
+    }
+
+    #checkInfoModal h2 {
+        font-size: 1rem;
+    }
+
+    #checkInfoModal .close {
+        font-size: 20px;
+    }
+}
