@@ -449,6 +449,10 @@ class DentalClinicApp(BaseFlaskApp):
         session.clear()
         return redirect(url_for("index"))
     
+
+    def logoutadmin(self):
+        session.clear()
+        return redirect(url_for("adminLogin"))
     
 
     def p_forms(self):
@@ -1364,6 +1368,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/google-auth", methods=["POST"])(self.login_g_auth)
         self.app.route("/sign-up", methods=["POST"])(self.sign_up)
         self.app.route("/logout")(self.logout)
+        self.app.route("/logoutadmin")(self.logoutadmin)
         self.app.route("/patient_forms")(self.p_forms)
         self.app.route("/about")(self.about_customer)
         self.app.route("/google_booked_customer", methods=["POST"])(self.google_bookedCustomer)
