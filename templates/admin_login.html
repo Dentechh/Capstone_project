@@ -6,14 +6,11 @@
     <title>Capizonda | Admin Access</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Use your existing admin.css if preferred, or keep inline styles below -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     
-    <div id="g_id_onload"
-         data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
-         data-callback="handleCredentialResponse">
-    </div>
-    
     <style>
+        /* Minimal overrides to match your patient portal style */
         :root {
             --primary: #64b5f6;
             --primary-dark: #1976d2;
@@ -67,19 +64,62 @@
         }
         body.dark-mode .brand-sub { color: #aaa; }
         
-        .google-btn-container {
-            display: flex;
-            justify-content: center;
+        .login-form .input-group {
             margin-bottom: 20px;
         }
-        
-        .admin-note {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 0.85rem;
-            color: #777;
+        .login-form label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
         }
-        body.dark-mode .admin-note { color: #aaa; }
+        .login-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #fff;
+            color: #333;
+        }
+        body.dark-mode .login-form input {
+            background: #2a2a2a;
+            border-color: #444;
+            color: #f5f5f5;
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
         
         /* Flash Messages */
         .flash-container {
@@ -130,6 +170,14 @@
         .sun-icon { display: none; }
         body.dark-mode .moon-icon { display: none; }
         body.dark-mode .sun-icon { display: block; }
+        
+        .admin-note {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: #777;
+        }
+        body.dark-mode .admin-note { color: #aaa; }
     </style>
 </head>
 <body>
@@ -181,46 +229,44 @@
         <p class="brand-sub">DENTAL RECORD SYSTEM • OWNER ACCESS</p>
     </div>
 
-    <div class="google-btn-container">
-        <div class="g_id_signin" data-type="standard"></div>
-    </div>
+    <form action="/admin_login" method="POST" class="login-form">
+        <div class="input-group">
+            <label for="email">Admin Email</label>
+            <input type="email" id="email" name="email" placeholder="owner@capizonda.com" required autocomplete="username">
+        </div>
+
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <div class="form-options">
+            <label><input type="checkbox" name="remember" value="1"> Remember me</label>
+        </div>
+
+        <button type="submit" class="btn-primary">🔐 Access Dashboard</button>
+    </form>
 
     <p class="admin-note">
-        🔒 Owner-only access via Google Account
+        🔒 Owner-only access
     </p>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
-    function handleCredentialResponse(response) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = "/admin_login";
+// Theme Toggle
+const themeToggle = document.getElementById('themeToggle');
+const body = document.body;
 
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "token";
-        input.value = response.credential;
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark') {
+    body.classList.add('dark-mode');
+}
 
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    // Theme Toggle
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-    }
-
-    themeToggle?.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        const isDark = body.classList.contains('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-    });
+themeToggle?.addEventListener('click', () => {
+    body.classList.toggle('dark-mode');
+    const isDark = body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
 </script>
 
 </body>
