@@ -427,8 +427,6 @@ def about_customer():
 
 
 
-
-
 @app.route("/google_booked_customer", methods=["POST"])
 def google_bookedCustomer():
     uid = session.get('uid')
