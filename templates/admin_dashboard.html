@@ -144,7 +144,7 @@
         </div>
 
 
-<div id="section-mypatients" class="content-section active-section">
+<div id="section-mypatients" class="content-section">
                 <section class="content-panel">
                 <table class="appointment-table">
 
@@ -219,50 +219,43 @@
 
 <script>
 async function openCheckInfoModal(uid) {
+
+    const response = await fetch("/get_treatment_info/" + uid);
+    const result = await response.json();
+
     const tbody = document.getElementById("checkInfoBody");
-    const modal = document.getElementById("checkInfoModal");
+    tbody.innerHTML = "";
 
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
-    modal.style.display = "flex";
+    if (result.success && result.procedures.length > 0) {
 
-    try {
-        const response = await fetch("/get_treatment_info/" + uid);
-        const result = await response.json();
+        result.procedures.forEach(item => {
 
-        tbody.innerHTML = "";
-
-        if (result.success && result.procedures && result.procedures.length > 0) {
-            result.procedures.forEach(item => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${item.dentist || "-"}</td>
-                        <td>${item.medicine || "-"}</td>
-                        <td>${item.date || "-"}</td>
-                        <td>${item.procedure || "-"}</td>
-                        <td>₱${item.paid || 0}</td>
-                        <td>${item.next_appointment || "-"}</td>
-                    </tr>
-                `;
-            });
-        } else {
-            tbody.innerHTML = `
+            tbody.innerHTML += `
                 <tr>
-                    <td colspan="6" style="text-align:center;">
-                        No treatment history found.
-                    </td>
+                    <td>${item.dentist || "-"}</td>
+                    <td>${item.medicine || "-"}</td>
+                    <td>${item.date || "-"}</td>
+                    <td>${item.procedure || "-"}</td>
+                    <td>₱${item.paid || 0}</td>
+                    <td>${item.next_appointment || "-"}</td>
                 </tr>
             `;
-        }
-    } catch (error) {
-        console.error("Error loading treatment info:", error);
+
+        });
+
+    } else {
+
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align:center; color: #ef4444;">
-                    Failed to load treatment data.
+                <td colspan="6" style="text-align:center;">
+                    No treatment history found.
                 </td>
             </tr>
         `;
+
     }
+
+    document.getElementById("checkInfoModal").style.display = "flex";
 }
 
 function closeCheckInfoModal() {
