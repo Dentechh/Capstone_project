@@ -219,43 +219,55 @@
 
 <script>
 async function openCheckInfoModal(uid) {
-
-    const response = await fetch("/get_treatment_info/" + uid);
-    const result = await response.json();
-
     const tbody = document.getElementById("checkInfoBody");
-    tbody.innerHTML = "";
+    const modal = document.getElementById("checkInfoModal");
 
-    if (result.success && result.procedures.length > 0) {
+    if (!tbody || !modal) {
+        console.error("Modal elements not found");
+        return;
+    }
 
-        result.procedures.forEach(item => {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+    modal.style.display = "flex";
 
-            tbody.innerHTML += `
+    try {
+        const response = await fetch("/get_treatment_info/" + uid);
+        const result = await response.json();
+
+        tbody.innerHTML = "";
+
+        if (result.success && result.procedures && result.procedures.length > 0) {
+            result.procedures.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.dentist || "-"}</td>
+                        <td>${item.medicine || "-"}</td>
+                        <td>${item.date || "-"}</td>
+                        <td>${item.procedure || "-"}</td>
+                        <td>₱${item.paid || 0}</td>
+                        <td>${item.next_appointment || "-"}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tbody.innerHTML = `
                 <tr>
-                    <td>${item.dentist || "-"}</td>
-                    <td>${item.medicine || "-"}</td>
-                    <td>${item.date || "-"}</td>
-                    <td>${item.procedure || "-"}</td>
-                    <td>₱${item.paid || 0}</td>
-                    <td>${item.next_appointment || "-"}</td>
+                    <td colspan="6" style="text-align:center;">
+                        No treatment history found.
+                    </td>
                 </tr>
             `;
-
-        });
-
-    } else {
-
+        }
+    } catch (error) {
+        console.error("Error loading treatment info:", error);
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align:center;">
-                    No treatment history found.
+                <td colspan="6" style="text-align:center; color: #ef4444;">
+                    Failed to load treatment data. Please try again.
                 </td>
             </tr>
         `;
-
     }
-
-    document.getElementById("checkInfoModal").style.display = "flex";
 }
 
 function closeCheckInfoModal() {
@@ -463,7 +475,7 @@ window.onclick = (e) => {
                               <th>Date and Time</th>
                               <th>Procedure</th>
                               <th>Consulting Dentist</th>
-                              <th>Email</th>
+                             
                               <th>Status</th>
                               <th>Action</th>
                           </tr>
@@ -495,7 +507,7 @@ window.onclick = (e) => {
                               <td>
                                   <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                               </td>
-                              <td>{{ appointment.email }}</td>
+                             
                               <td>
                                   <span class="badge pending">pending</span>
                               </td>

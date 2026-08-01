@@ -1277,45 +1277,52 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def get_treatment_info(self, uid):
+        try:
+            # Find the patient
+            if self.db.collection("google_create_account").document(uid).get().exists:
+                user_ref = self.db.collection("google_create_account").document(uid)
     
-        # Find the patient
-        if self.db.collection("google_create_account").document(uid).get().exists:
-            user_ref = self.db.collection("google_create_account").document(uid)
+            elif self.db.collection(self.Account_clients).document(uid).get().exists:
+                user_ref = self.db.collection(self.Account_clients).document(uid)
     
-        elif self.db.collection(self.Account_clients).document(uid).get().exists:
-            user_ref = self.db.collection(self.Account_clients).document(uid)
+            else:
+                return jsonify({
+                    "success": False,
+                    "message": "Patient not found"
+                }), 404
     
-        else:
+            procedures = []
+    
+            # Read all Done_procedure documents
+            for doc in user_ref.collection("Done_procedure").stream():
+    
+                data = doc.to_dict()
+    
+                for p in data.get("procedures", []):
+                    procedures.append({
+                        "dentist": p.get("dentist", ""),
+                        "medicine": p.get("medicine", ""),
+                        "date": p.get("date", ""),
+                        "procedure": p.get("procedure", ""),
+                        "paid": p.get("paid", 0),
+                        "next_appointment": p.get("next_appointment", ""),
+                        "status": p.get("status", ""),
+                        "balance": p.get("balance", 0),
+                        "value": p.get("value", 0),
+                        "tooth": p.get("tooth", "")
+                    })
+    
+            return jsonify({
+                "success": True,
+                "procedures": procedures
+            })
+    
+        except Exception as e:
+            print("ERROR in get_treatment_info:", e)
             return jsonify({
                 "success": False,
-                "message": "Patient not found"
-            }), 404
-    
-        procedures = []
-    
-        # Read all Done_procedure documents
-        for doc in user_ref.collection("Done_procedure").stream():
-    
-            data = doc.to_dict()
-    
-            for p in data.get("procedures", []):
-                procedures.append({
-                    "dentist": p.get("dentist", ""),
-                    "medicine": p.get("medicine", ""),
-                    "date": p.get("date", ""),
-                    "procedure": p.get("procedure", ""),
-                    "paid": p.get("paid", 0),
-                    "next_appointment": p.get("next_appointment", ""),
-                    "status": p.get("status", ""),
-                    "balance": p.get("balance", 0),
-                    "value": p.get("value", 0),
-                    "tooth": p.get("tooth", "")
-                })
-    
-        return jsonify({
-            "success": True,
-            "procedures": procedures
-        })
+                "message": str(e)
+            }), 500
     
     
 
