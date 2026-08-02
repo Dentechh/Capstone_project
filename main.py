@@ -1324,8 +1324,6 @@ class DentalClinicApp(BaseFlaskApp):
             if self.db.collection(self.Customer_Account).document(uid).get().exists:
                 user_ref = self.db.collection(self.Customer_Account).document(uid)
     
-            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
-                user_ref = self.db.collection(self.Customer_Account).document(uid)
     
             else:
                 return jsonify({
