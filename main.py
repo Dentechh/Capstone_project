@@ -1,4 +1,4 @@
-from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
+﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from google.oauth2 import id_token
@@ -358,11 +358,31 @@ class DentalClinicApp(BaseFlaskApp):
             return redirect(url_for("index"))
 
         data = resp.json()
-        if not data.get("emailVerified"):
+
+        # Get the ID token returned after successful sign-in
+        id_token = data["idToken"]
+
+        # Look up the user's account information
+        lookup_resp = requests.post(
+            f"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={self.firebase_api_key}",
+            json={
+                "idToken": id_token
+            }
+        )
+
+        if lookup_resp.status_code != 200:
+            flash("Unable to verify your account.", "error")
+            return redirect(url_for("index"))
+
+        lookup_data = lookup_resp.json()
+
+        verified = lookup_data["users"][0]["emailVerified"]
+
+        if not verified:
             flash("Please verify your email first.", "error")
             return redirect(url_for("index"))
 
-        uid = data.get("localId")
+        uid = lookup_data["users"][0]["localId"]
 
         # Get user data from Firestore
         user_doc = self.db.collection(self.Customer_Account).document(uid).get()
