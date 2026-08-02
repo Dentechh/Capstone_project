@@ -1,8 +1,9 @@
-﻿// firebase-messaging-sw.js
+// firebase-messaging-sw.js
 // Required for FCM push notifications
+// Uses Firebase compat SDK (importScripts) for maximum browser compatibility
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getMessaging, onBackgroundMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js");
 
 const firebaseConfig = {
   apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
@@ -14,11 +15,11 @@ const firebaseConfig = {
   measurementId: "G-Y3X4RF50Y5"
 };
 
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
 
 // Handle background messages (when app is closed/minimized)
-onBackgroundMessage(messaging, (payload) => {
+messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || "Capizonda Dental Clinic";
   const notificationOptions = {
     body: payload.notification?.body || "You have a new notification",
