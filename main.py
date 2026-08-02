@@ -843,7 +843,13 @@ class DentalClinicApp(BaseFlaskApp):
                 args=(patient_email, fullname, action, data),
                 daemon=True
             ).start()
-    
+
+            threading.Thread(
+                target=self.send_push_notification,
+                args=(uid, fullname, action, data),
+                daemon=True
+            ).start()
+
             return f"Appointment {action}ed"
     
         except Exception as e:
@@ -1172,7 +1178,6 @@ class DentalClinicApp(BaseFlaskApp):
     
 
 
-    @self.app.route("/save-fcm-token", methods=["POST"])
     def save_fcm_token(self):
         uid = session.get("uid", "")
         fcm_token = request.json.get("fcm_token", "") if request.json else ""
