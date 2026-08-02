@@ -938,5 +938,9 @@ alert(error.message);
     });
 </script>
 
+{% if name and name != "Guest" %}
+<script src="{{ url_for('static', filename='js/firebase-messaging.js') }}"></script>
+{% endif %}
+
 </body>
 </html>
