@@ -861,12 +861,13 @@ window.addEventListener("click", (e) => {
 });
 
 function loadApprove(uid) {
+
     const tbody = document.getElementById("scheduleTableBody");
 
     tbody.innerHTML = `
         <tr>
-            <td colspan="3" style="text-align:center; padding:15px;">
-                Loading schedule...
+            <td colspan="3" style="text-align:center;">
+                Loading...
             </td>
         </tr>
     `;
@@ -874,13 +875,14 @@ function loadApprove(uid) {
     fetch(`/get_approve/${uid}`)
         .then(res => res.json())
         .then(data => {
-            const list = Array.isArray(data) ? data : [];
 
-            if (!list.length) {
+            console.log(data); // Debug
+
+            if (!Array.isArray(data) || data.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" style="text-align:center; padding:15px;">
-                            No schedule found
+                        <td colspan="3" style="text-align:center;">
+                            No schedule found.
                         </td>
                     </tr>
                 `;
@@ -889,10 +891,11 @@ function loadApprove(uid) {
 
             tbody.innerHTML = "";
 
-            list.forEach(item => {
-                const date = item.Birthday || item.Birthday || "—";
+            data.forEach(item => {
+
+                const date = item.appointment_date || "—";
                 const service = item.Service || item.service || "—";
-                const dentist = item.DentistName || item.DentistName || "—";
+                const dentist = item.DentistName || "—";
 
                 tbody.innerHTML += `
                     <tr>
@@ -902,17 +905,19 @@ function loadApprove(uid) {
                     </tr>
                 `;
             });
+
         })
-        .catch(err => {
+        .catch(error => {
+            console.error(error);
+
             tbody.innerHTML = `
                 <tr>
                     <td colspan="3" style="text-align:center; color:red;">
-                        Failed to load schedule
+                        Failed to load schedule.
                     </td>
-                </tr>
-            `;
-            console.error(err);
+                `;
         });
+
 }
 </script>
 
