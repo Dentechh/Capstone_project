@@ -6,7 +6,7 @@ from google.auth.transport import requests as google_requests
 from datetime import datetime, UTC
 import bleach
 from flask_mail import Mail, Message
-from werkzeug.security import generate_password_hash, check_password_hash
+
 import sys
 import os
 import threading
@@ -108,6 +108,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.Appointment_cliets = "appointments"
         self.Doc_Patients = "Patients"
         self.CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+        self.firebase_api_key = "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE"
         if not self.CLIENT_ID:
             print("⚠️  GOOGLE_CLIENT_ID is missing; Google login will be disabled until it's set in .env")
         self.SERVICES_DATA = {
@@ -339,47 +340,43 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def login_manual(self):
-    
         email = bleach.clean(request.form.get("email", "").strip())
-        password = bleach.clean(request.form.get("Password", "").strip())
-    
-        user_query = self.db.collection(self.Customer_Account).where(
-            "email", "==", email
-        ).get()
-    
-        if user_query:
-    
-            user_doc = user_query[0]
-            user_data = user_doc.to_dict()
-    
-            if check_password_hash(user_data.get("password", ""), password):
-    
-                # Check email verification
-                firebase_user = auth.get_user(user_doc.id)
-    
-                if not firebase_user.email_verified:
-                    flash("Please verify your email first.", "error")
-                    return redirect(url_for("index"))
-    
-                session["name"] = user_data.get("firstname", "")
-                session["email"] = user_data.get("email", "")
-                session["uid"] = user_doc.id
-    
-                flash(
-                    f"Welcome back, {user_data.get('firstname', '')}!",
-                    "success"
-                )
-    
-                return redirect(url_for("index"))
-            else:
-                flash("Incorrect password.", "error")
-                return redirect(url_for("index"))
-    
-        else:
-            flash("Incorrect email.", "error")
+        password = request.form.get("Password", "")
+
+        # Verify credentials with Firebase Auth REST API
+        resp = requests.post(
+            "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + self.firebase_api_key,
+            json={
+                "email": email,
+                "password": password,
+                "returnSecureToken": True
+            }
+        )
+
+        if resp.status_code != 200:
+            flash("Incorrect email or password.", "error")
             return redirect(url_for("index"))
+
+        data = resp.json()
+        if not data.get("emailVerified"):
+            flash("Please verify your email first.", "error")
+            return redirect(url_for("index"))
+
+        uid = data.get("localId")
+
+        # Get user data from Firestore
+        user_doc = self.db.collection(self.Customer_Account).document(uid).get()
+        user_data = user_doc.to_dict() if user_doc.exists else {}
+
+        session["name"] = user_data.get("firstname", "")
+        session["email"] = email
+        session["uid"] = uid
+
+        flash(f"Welcome back, {user_data.get('firstname', '')}!", "success")
+        return redirect(url_for("index"))
+
     
-    
+
 
     def login_g_auth(self):
         token = request.form["token"]
@@ -412,38 +409,48 @@ class DentalClinicApp(BaseFlaskApp):
             email = bleach.clean(request.form["UserName"].strip())
             contact_number = bleach.clean(request.form["MobileNumber"].strip())
             password = request.form.get("Password", "")
-    
-            # Get Firebase Authentication user
-            user = auth.get_user_by_email(email)
-            uid = user.uid
-    
-            # Firestore document reference
+
+            # Create Firebase Auth user server-side
+            try:
+                user = auth.create_user(
+                    email=email,
+                    password=password,
+                    display_name=f"{firstname} {lastname}"
+                )
+                uid = user.uid
+            except auth.EmailAlreadyExistsError:
+                user = auth.get_user_by_email(email)
+                uid = user.uid
+
+            # Send verification email via Firebase Auth REST API
+            requests.post(
+                "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + self.firebase_api_key,
+                json={
+                    "requestType": "VERIFY_EMAIL",
+                    "email": email
+                }
+            )
+
+            # Save to Firestore (no password stored - Firebase Auth handles it)
             doc_ref = self.db.collection(self.Customer_Account).document(uid)
-    
-            # If already exists, do nothing
-            if doc_ref.get().exists:
-                return "OK", 200
-    
-            # Save to Firestore
-            doc_ref.set({
-                "uid": uid,
-                "firstname": firstname,
-                "lastname": lastname,
-                "email": email,
-                "contact_number": contact_number,
-                "password": generate_password_hash(password) if password else "",
-                "verified": user.email_verified,
-                "created_at": datetime.now(UTC).isoformat()
-            })
-    
-            print("✅ User saved to Firestore:", uid)
-    
+            if not doc_ref.get().exists:
+                doc_ref.set({
+                    "uid": uid,
+                    "firstname": firstname,
+                    "lastname": lastname,
+                    "email": email,
+                    "contact_number": contact_number,
+                    "provider": "password",
+                    "created_at": datetime.now(UTC).isoformat()
+                })
+
+            print("User created:", uid)
             return "OK", 200
-    
+
         except Exception as e:
-            print("❌ SIGNUP ERROR:", e)
+            print("Signup error:", e)
             return str(e), 500
-    
+
 
     def logout(self):
         session.clear()
