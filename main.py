@@ -422,14 +422,29 @@ class DentalClinicApp(BaseFlaskApp):
                 user = auth.get_user_by_email(email)
                 uid = user.uid
 
-            # Send verification email via Firebase Auth REST API
-            requests.post(
+            # Sign in to get idToken for sending verification email
+            sign_in_resp = requests.post(
+                "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + self.firebase_api_key,
+                json={
+                    "email": email,
+                    "password": password,
+                    "returnSecureToken": True
+                }
+            )
+
+            id_token = sign_in_resp.json().get("idToken", "")
+
+            # Send verification email via Firebase Auth REST API (requires idToken)
+            oob_resp = requests.post(
                 "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + self.firebase_api_key,
                 json={
                     "requestType": "VERIFY_EMAIL",
-                    "email": email
+                    "idToken": id_token
                 }
             )
+
+            if oob_resp.status_code != 200:
+                print("Verification email error:", oob_resp.text)
 
             # Save to Firestore (no password stored - Firebase Auth handles it)
             doc_ref = self.db.collection(self.Customer_Account).document(uid)
