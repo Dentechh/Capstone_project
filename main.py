@@ -1,6 +1,6 @@
 from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
 import firebase_admin
-from firebase_admin import credentials, firestore, auth, messaging
+from firebase_admin import credentials, firestore, auth
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from datetime import datetime, UTC
@@ -723,44 +723,6 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
-
-    def send_push_notification(self, uid, fullname, action, appointment_data):
-        """Send FCM push notification to patient when appointment is approved/declined."""
-        try:
-            service = appointment_data.get("Service", "your appointment")
-            dentist = appointment_data.get("DentistName", "our dentist")
-            if action == "accept":
-                title = "Appointment Accepted"
-                body = "Hello " + fullname + ", your " + service + " appointment with Dr. " + dentist + " has been accepted."
-            else:
-                title = "Appointment Declined"
-                body = "Hello " + fullname + ", your " + service + " appointment has been declined by Dr. " + dentist + "."
-
-            fcm_token = None
-            if self.db.collection("google_create_account").document(uid).get().exists:
-                doc = self.db.collection("google_create_account").document(uid).get()
-                fcm_token = doc.to_dict().get("fcm_token")
-            if not fcm_token and self.db.collection(self.Account_clients).document(uid).get().exists:
-                doc = self.db.collection(self.Account_clients).document(uid).get()
-                fcm_token = doc.to_dict().get("fcm_token")
-
-            if not fcm_token:
-                print("No FCM token for user " + uid)
-                return False
-
-            message = messaging.Message(
-                token=fcm_token,
-                notification=messaging.Notification(title=title, body=body),
-                data={"action": action, "service": service or "", "dentist": dentist or ""}
-            )
-            response = messaging.send(message)
-            print("Push notification sent to " + uid + ": " + response)
-            return True
-
-        except Exception as e:
-            print("PUSH NOTIFICATION ERROR: " + str(e))
-            return False
-
     def approve(self):
     
         uid = request.form.get("user_id", "").strip()
@@ -843,13 +805,7 @@ class DentalClinicApp(BaseFlaskApp):
                 args=(patient_email, fullname, action, data),
                 daemon=True
             ).start()
-
-            threading.Thread(
-                target=self.send_push_notification,
-                args=(uid, fullname, action, data),
-                daemon=True
-            ).start()
-
+    
             return f"Appointment {action}ed"
     
         except Exception as e:
@@ -1177,39 +1133,6 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
-
-    def save_fcm_token(self):
-        uid = session.get("uid", "")
-        fcm_token = request.json.get("fcm_token", "") if request.json else ""
-        email = session.get("email", "")
-
-        if not fcm_token:
-            return jsonify({"success": False, "message": "No token provided"}), 400
-
-        try:
-            saved = False
-            if uid and self.db.collection("google_create_account").document(uid).get().exists:
-                self.db.collection("google_create_account").document(uid).update({"fcm_token": fcm_token})
-                saved = True
-            elif email:
-                docs = self.db.collection(self.Account_clients).where("email", "==", email).get()
-                for doc in docs:
-                    doc.reference.update({"fcm_token": fcm_token})
-                    saved = True
-                if not saved and uid:
-                    if self.db.collection(self.Account_clients).document(uid).get().exists:
-                        self.db.collection(self.Account_clients).document(uid).update({"fcm_token": fcm_token})
-                        saved = True
-
-            if saved:
-                return jsonify({"success": True, "message": "FCM token saved"})
-            else:
-                return jsonify({"success": False, "message": "User not found"}), 404
-        except Exception as e:
-            print("FCM TOKEN SAVE ERROR: " + str(e))
-            return jsonify({"success": False, "message": str(e)}), 500
-
-
     def save_dental_record(self):
     
         try:
@@ -1467,7 +1390,6 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/prac")(self.prac)
         self.app.route("/medical_records")(self.medical_records)
         self.app.route("/save_dental_record", methods=["POST"])(self.save_dental_record)
-        self.app.route("/save-fcm-token", methods=["POST"])(self.save_fcm_token)
         self.app.route("/get_treatment_info/<uid>")(self.get_treatment_info)
         self.app.route("/get_approve/<uid>")(self.get_approve)
 
