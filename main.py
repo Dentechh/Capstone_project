@@ -890,27 +890,30 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def adminDashboard(self):
-    
-    
+
+        # =========================
         # APPOINTMENTS COLLECTION
-    
+        # =========================
+
         docs = self.db.collection_group("appointments").get()
-    
+
         appointment_list = []
-    
+
         for doc in docs:
             data = doc.to_dict()
             data["id"] = doc.id
             data["user_uid"] = doc.reference.parent.parent.id
             data["source"] = "appointment"
             appointment_list.append(data)
-    
-        # APPROVE SUBCOLLECTION
-    
+
+        # =========================
+        # APPROVED APPOINTMENTS
+        # =========================
+
         approve_docs = self.db.collection_group("Approve").get()
-    
+
         approve_list = []
-    
+
         for doc in approve_docs:
             data = doc.to_dict()
             data["id"] = doc.id
@@ -918,33 +921,33 @@ class DentalClinicApp(BaseFlaskApp):
             data["user_uid"] = doc.reference.parent.parent.parent.id
             data["source"] = "approve"
             approve_list.append(data)
-    
+
+        # =========================
         # ACCOUNTS
-    
-        google_docs = self.db.collection(self.Customer_Account).stream()
-        manual_docs = self.db.collection(self.Customer_Account).stream()
-    
+        # =========================
+
         accounts = []
-    
-        # GOOGLE ACCOUNTS
-    
-        for doc in google_docs:
-    
+
+        docs = self.db.collection(self.Customer_Account).stream()
+
+        for doc in docs:
+
             data = doc.to_dict()
-    
+
             data["uid"] = doc.id
-            data["account_type"] = "Google"
             data["source"] = "account"
-    
-            first = data.get("firstname") or data.get("first_name") or ""
-            last = data.get("lastname") or data.get("last_name") or ""
-    
+
+            provider = data.get("provider", "password")
+            data["account_type"] = provider.capitalize()
+
+            first = data.get("firstname") or ""
+            last = data.get("lastname") or ""
+
             data["first_name"] = first
             data["last_name"] = last
             data["full_name"] = data.get("name") or f"{first} {last}".strip()
-    
+
             # DONE PROCEDURE
-    
             done_doc = (
                 self.db.collection(self.Customer_Account)
                 .document(doc.id)
@@ -952,56 +955,38 @@ class DentalClinicApp(BaseFlaskApp):
                 .document(doc.id)
                 .get()
             )
-    
+
             data["Done_procedure"] = (
                 done_doc.to_dict() if done_doc.exists else {}
             )
-    
+
             accounts.append(data)
-    
-    
-        # MANUAL ACCOUNTS
-    
-        for doc in manual_docs:
-    
-            data = doc.to_dict()
-    
-            data["uid"] = doc.id
-            data["account_type"] = "Manual"
-            data["source"] = "account"
-    
-            first = data.get("firstname") or ""
-            last = data.get("lastname") or ""
-    
-            data["first_name"] = first
-            data["last_name"] = last
-            data["full_name"] = f"{first} {last}".strip()
-    
-            # DONE PROCEDURE
-      
-            done_doc = (
-                self.db.collection(self.Customer_Account)
-                .document(doc.id)
-                .collection("Done_procedure")
-                .document(doc.id)
-                .get()
-            )
-    
-            data["Done_procedure"] = (
-                done_doc.to_dict() if done_doc.exists else {}
-            )
-            accounts.append(data)
-    
+
+        # =========================
+        # COUNTS
+        # =========================
+
         pending_count = len(appointment_list)
         approved_count = len(approve_list)
         total_patients = len(accounts)
-    
-        urgency_order = {"Emergency": 0, "Urgent": 1, "Normal": 2}
-        appointment_list.sort(key=lambda x: urgency_order.get(x.get("UrgencyLevel", ""), 99))
-    
+
+        urgency_order = {
+            "Emergency": 0,
+            "Urgent": 1,
+            "Normal": 2
+        }
+
+        appointment_list.sort(
+            key=lambda x: urgency_order.get(
+                x.get("UrgencyLevel", ""),
+                99
+            )
+        )
+
         # =========================
-        # SEND ALL TO TEMPLATE
+        # RENDER TEMPLATE
         # =========================
+
         return render_template(
             "admin_dashboard.html",
             Appointment_clients=appointment_list,
@@ -1011,7 +996,7 @@ class DentalClinicApp(BaseFlaskApp):
             approved_count=approved_count,
             total_patients=total_patients,
         )
-    
+        
     
 
     def get_patient(self, uid):
@@ -1323,8 +1308,6 @@ class DentalClinicApp(BaseFlaskApp):
             # Find the patient
             if self.db.collection(self.Customer_Account).document(uid).get().exists:
                 user_ref = self.db.collection(self.Customer_Account).document(uid)
-    
-    
             else:
                 return jsonify({
                     "success": False,
