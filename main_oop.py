@@ -63,7 +63,7 @@ def require_firebase():
     if db is None:
         raise RuntimeError("Firebase is not initialized. Check dentech_key.json")
 
-Account_clients = "manual_create_account"
+Customer_Account = "Customer_Account"
 Appointment_cliets = "appointments"
 Doc_Patients = "Patients"
 
@@ -79,10 +79,10 @@ import base64
 def update_payment_status(patient_uid, procedure):
     try:
         patient_collection = None
-        if db.collection(Account_clients).document(patient_uid).get().exists:
-            patient_collection = Account_clients
-        elif db.collection("google_create_account").document(patient_uid).get().exists:
-            patient_collection = "google_create_account"
+        if db.collection(Customer_Account).document(patient_uid).get().exists:
+            patient_collection = Customer_Account
+        elif db.collection(Customer_Account).document(patient_uid).get().exists:
+            patient_collection = Customer_Account
 
         if patient_collection:
             user_ref = db.collection(patient_collection).document(patient_uid)
@@ -292,7 +292,7 @@ def login_manual():
     email = bleach.clean(request.form.get("email", "").strip())
     password = bleach.clean(request.form.get("Password", "").strip())
 
-    user_query = db.collection(Account_clients).where(
+    user_query = db.collection(Customer_Account).where(
         "email", "==", email
     ).get()
 
@@ -342,7 +342,7 @@ def login_g_auth():
         session['email'] = google_account["email"]
         session['name'] = google_account.get("name", "User")
 
-        db.collection("google_create_account").document(session['uid']).set({
+        db.collection(Customer_Account).document(session['uid']).set({
             "uid": session['uid'],
             "email": session['email'],
             "name": session['name'],
@@ -377,7 +377,7 @@ def sign_up():
         uid = user.uid
 
         # Firestore document reference
-        doc_ref = db.collection(Account_clients).document(uid)
+        doc_ref = db.collection(Customer_Account).document(uid)
 
         # If already exists, do nothing
         if doc_ref.get().exists:
@@ -470,7 +470,7 @@ def google_bookedCustomer():
     w_nurse = request.form.get("w_nurse")
     w_pill = request.form.get("w_pill")
     try:
-        db.collection("google_create_account").document(uid).collection(Appointment_cliets).add({
+        db.collection(Customer_Account).document(uid).collection(Appointment_cliets).add({
             "uid": uid,
             "email":email,
             "FirstName": FirstName,
@@ -568,7 +568,7 @@ def bookedCustomer():
     w_nurse = request.form.get("w_nurse")
     w_pill = request.form.get("w_pill")
     try:
-        db.collection(Account_clients).document(uid).collection(Appointment_cliets).add({
+        db.collection(Customer_Account).document(uid).collection(Appointment_cliets).add({
             "uid": uid,
             "email": email,
             "FirstName": FirstName,
@@ -720,10 +720,10 @@ def approve():
     }
 
     main_collection = None
-    if db.collection("google_create_account").document(uid).get().exists:
-        main_collection = "google_create_account"
-    elif db.collection(Account_clients).document(uid).get().exists:
-        main_collection = Account_clients
+    if db.collection(Customer_Account).document(uid).get().exists:
+        main_collection = Customer_Account
+    elif db.collection(Customer_Account).document(uid).get().exists:
+        main_collection = Customer_Account
 
     if not main_collection:
         return "User not found", 404
@@ -779,13 +779,13 @@ def p_profile():
     user_data = {}
 
     if email:
-        user_query = db.collection(Account_clients).where("email", "==", email).get()
+        user_query = db.collection(Customer_Account).where("email", "==", email).get()
         
         if user_query:
             user_data = user_query[0].to_dict()
             user_data['id'] = user_query[0].id
         else:
-            user_query = db.collection("google_create_account").where("email", "==", email).get()
+            user_query = db.collection(Customer_Account).where("email", "==", email).get()
             if user_query:
                 user_data = user_query[0].to_dict()
                 user_data['id'] = user_query[0].id
@@ -839,8 +839,8 @@ def adminDashboard():
 
     # ACCOUNTS
 
-    google_docs = db.collection("google_create_account").stream()
-    manual_docs = db.collection(Account_clients).stream()
+    google_docs = db.collection(Customer_Account).stream()
+    manual_docs = db.collection(Customer_Account).stream()
 
     accounts = []
 
@@ -864,7 +864,7 @@ def adminDashboard():
         # DONE PROCEDURE
 
         done_doc = (
-            db.collection("google_create_account")
+            db.collection(Customer_Account)
             .document(doc.id)
             .collection("Done_procedure")
             .document(doc.id)
@@ -898,7 +898,7 @@ def adminDashboard():
         # DONE PROCEDURE
   
         done_doc = (
-            db.collection(Account_clients)
+            db.collection(Customer_Account)
             .document(doc.id)
             .collection("Done_procedure")
             .document(doc.id)
@@ -937,7 +937,7 @@ def get_patient(uid):
     # =========================
     # TRY GOOGLE ACCOUNT FIRST
     # =========================
-    doc_ref = db.collection("google_create_account").document(uid)
+    doc_ref = db.collection(Customer_Account).document(uid)
     doc = doc_ref.get()
 
     account_type = "Google"
@@ -946,7 +946,7 @@ def get_patient(uid):
     # TRY MANUAL ACCOUNT
     # =========================
     if not doc.exists:
-        doc_ref = db.collection(Account_clients).document(uid)
+        doc_ref = db.collection(Customer_Account).document(uid)
         doc = doc_ref.get()
         account_type = "Manual"
 
@@ -1236,11 +1236,11 @@ def save_dental_record():
                 "message": "UID is required"
             }), 400
 
-        if db.collection("google_create_account").document(uid).get().exists:
-            main_collection = "google_create_account"
+        if db.collection(Customer_Account).document(uid).get().exists:
+            main_collection = Customer_Account
 
-        elif db.collection(Account_clients).document(uid).get().exists:
-            main_collection = Account_clients
+        elif db.collection(Customer_Account).document(uid).get().exists:
+            main_collection = Customer_Account
 
         else:
             return jsonify({
@@ -1371,11 +1371,11 @@ def save_dental_record():
 def get_treatment_info(uid):
     try:
         # Find the patient
-        if db.collection("google_create_account").document(uid).get().exists:
-            user_ref = db.collection("google_create_account").document(uid)
+        if db.collection(Customer_Account).document(uid).get().exists:
+            user_ref = db.collection(Customer_Account).document(uid)
 
-        elif db.collection(Account_clients).document(uid).get().exists:
-            user_ref = db.collection(Account_clients).document(uid)
+        elif db.collection(Customer_Account).document(uid).get().exists:
+            user_ref = db.collection(Customer_Account).document(uid)
 
         else:
             return jsonify({
@@ -1421,7 +1421,7 @@ def get_treatment_info(uid):
 def get_approve(uid):
     try:
         approve_docs = (
-            db.collection("google_create_account")
+            db.collection(Customer_Account)
             .document(uid)
             .collection("Approve")
             .stream()
@@ -1436,7 +1436,7 @@ def get_approve(uid):
 
         if not approve_list:
             approve_docs = (
-                db.collection(Account_clients)
+                db.collection(Customer_Account)
                 .document(uid)
                 .collection("Approve")
                 .stream()

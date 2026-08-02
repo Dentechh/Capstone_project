@@ -104,7 +104,7 @@ class DentalClinicApp(BaseFlaskApp):
             print("♻️ Firebase already initialized")
 
     def _setup_constants(self):
-        self.Account_clients = "manual_create_account"
+        self.Customer_Account = "Customer_Account"
         self.Appointment_cliets = "appointments"
         self.Doc_Patients = "Patients"
         self.CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
@@ -150,10 +150,10 @@ class DentalClinicApp(BaseFlaskApp):
     def update_payment_status(self, patient_uid, procedure):
         try:
             patient_collection = None
-            if self.db.collection(self.Account_clients).document(patient_uid).get().exists:
-                patient_collection = self.Account_clients
-            elif self.db.collection("google_create_account").document(patient_uid).get().exists:
-                patient_collection = "google_create_account"
+            if self.db.collection(self.Customer_Account).document(patient_uid).get().exists:
+                patient_collection = self.Customer_Account
+            elif self.db.collection(self.Customer_Account).document(patient_uid).get().exists:
+                patient_collection = self.Customer_Account
     
             if patient_collection:
                 user_ref = self.db.collection(patient_collection).document(patient_uid)
@@ -343,7 +343,7 @@ class DentalClinicApp(BaseFlaskApp):
         email = bleach.clean(request.form.get("email", "").strip())
         password = bleach.clean(request.form.get("Password", "").strip())
     
-        user_query = self.db.collection(self.Account_clients).where(
+        user_query = self.db.collection(self.Customer_Account).where(
             "email", "==", email
         ).get()
     
@@ -391,7 +391,7 @@ class DentalClinicApp(BaseFlaskApp):
             session['email'] = google_account["email"]
             session['name'] = google_account.get("name", "User")
     
-            self.db.collection("google_create_account").document(session['uid']).set({
+            self.db.collection(self.Customer_Account).document(session['uid']).set({
                 "uid": session['uid'],
                 "email": session['email'],
                 "name": session['name'],
@@ -418,7 +418,7 @@ class DentalClinicApp(BaseFlaskApp):
             uid = user.uid
     
             # Firestore document reference
-            doc_ref = self.db.collection(self.Account_clients).document(uid)
+            doc_ref = self.db.collection(self.Customer_Account).document(uid)
     
             # If already exists, do nothing
             if doc_ref.get().exists:
@@ -515,7 +515,7 @@ class DentalClinicApp(BaseFlaskApp):
         w_nurse = request.form.get("w_nurse")
         w_pill = request.form.get("w_pill")
         try:
-            self.db.collection("google_create_account").document(uid).collection(self.Appointment_cliets).add({
+            self.db.collection(self.Customer_Account).document(uid).collection(self.Appointment_cliets).add({
                 "uid": uid,
                 "email":email,
                 "FirstName": FirstName,
@@ -613,7 +613,7 @@ class DentalClinicApp(BaseFlaskApp):
         w_nurse = request.form.get("w_nurse")
         w_pill = request.form.get("w_pill")
         try:
-            self.db.collection(self.Account_clients).document(uid).collection(self.Appointment_cliets).add({
+            self.db.collection(self.Customer_Account).document(uid).collection(self.Appointment_cliets).add({
                 "uid": uid,
                 "email": email,
                 "FirstName": FirstName,
@@ -766,10 +766,10 @@ class DentalClinicApp(BaseFlaskApp):
         }
     
         main_collection = None
-        if self.db.collection("google_create_account").document(uid).get().exists:
-            main_collection = "google_create_account"
-        elif self.db.collection(self.Account_clients).document(uid).get().exists:
-            main_collection = self.Account_clients
+        if self.db.collection(self.Customer_Account).document(uid).get().exists:
+            main_collection = self.Customer_Account
+        elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+            main_collection = self.Customer_Account
     
         if not main_collection:
             return "User not found", 404
@@ -825,13 +825,13 @@ class DentalClinicApp(BaseFlaskApp):
         user_data = {}
     
         if email:
-            user_query = self.db.collection(self.Account_clients).where("email", "==", email).get()
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
             
             if user_query:
                 user_data = user_query[0].to_dict()
                 user_data['id'] = user_query[0].id
             else:
-                user_query = self.db.collection("google_create_account").where("email", "==", email).get()
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
                 if user_query:
                     user_data = user_query[0].to_dict()
                     user_data['id'] = user_query[0].id
@@ -879,8 +879,8 @@ class DentalClinicApp(BaseFlaskApp):
     
         # ACCOUNTS
     
-        google_docs = self.db.collection("google_create_account").stream()
-        manual_docs = self.db.collection(self.Account_clients).stream()
+        google_docs = self.db.collection(self.Customer_Account).stream()
+        manual_docs = self.db.collection(self.Customer_Account).stream()
     
         accounts = []
     
@@ -904,7 +904,7 @@ class DentalClinicApp(BaseFlaskApp):
             # DONE PROCEDURE
     
             done_doc = (
-                self.db.collection("google_create_account")
+                self.db.collection(self.Customer_Account)
                 .document(doc.id)
                 .collection("Done_procedure")
                 .document(doc.id)
@@ -938,7 +938,7 @@ class DentalClinicApp(BaseFlaskApp):
             # DONE PROCEDURE
       
             done_doc = (
-                self.db.collection(self.Account_clients)
+                self.db.collection(self.Customer_Account)
                 .document(doc.id)
                 .collection("Done_procedure")
                 .document(doc.id)
@@ -977,7 +977,7 @@ class DentalClinicApp(BaseFlaskApp):
         # =========================
         # TRY GOOGLE ACCOUNT FIRST
         # =========================
-        doc_ref = self.db.collection("google_create_account").document(uid)
+        doc_ref = self.db.collection(self.Customer_Account).document(uid)
         doc = doc_ref.get()
     
         account_type = "Google"
@@ -986,7 +986,7 @@ class DentalClinicApp(BaseFlaskApp):
         # TRY MANUAL ACCOUNT
         # =========================
         if not doc.exists:
-            doc_ref = self.db.collection(self.Account_clients).document(uid)
+            doc_ref = self.db.collection(self.Customer_Account).document(uid)
             doc = doc_ref.get()
             account_type = "Manual"
     
@@ -1144,11 +1144,11 @@ class DentalClinicApp(BaseFlaskApp):
                     "message": "UID is required"
                 }), 400
     
-            if self.db.collection("google_create_account").document(uid).get().exists:
-                main_collection = "google_create_account"
+            if self.db.collection(self.Customer_Account).document(uid).get().exists:
+                main_collection = self.Customer_Account
     
-            elif self.db.collection(self.Account_clients).document(uid).get().exists:
-                main_collection = self.Account_clients
+            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+                main_collection = self.Customer_Account
     
             else:
                 return jsonify({
@@ -1279,11 +1279,11 @@ class DentalClinicApp(BaseFlaskApp):
     def get_treatment_info(self, uid):
         try:
             # Find the patient
-            if self.db.collection("google_create_account").document(uid).get().exists:
-                user_ref = self.db.collection("google_create_account").document(uid)
+            if self.db.collection(self.Customer_Account).document(uid).get().exists:
+                user_ref = self.db.collection(self.Customer_Account).document(uid)
     
-            elif self.db.collection(self.Account_clients).document(uid).get().exists:
-                user_ref = self.db.collection(self.Account_clients).document(uid)
+            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+                user_ref = self.db.collection(self.Customer_Account).document(uid)
     
             else:
                 return jsonify({
@@ -1329,7 +1329,7 @@ class DentalClinicApp(BaseFlaskApp):
     def get_approve(self, uid):
         try:
             approve_docs = (
-                self.db.collection("google_create_account")
+                self.db.collection(self.Customer_Account)
                 .document(uid)
                 .collection("Approve")
                 .stream()
@@ -1344,7 +1344,7 @@ class DentalClinicApp(BaseFlaskApp):
     
             if not approve_list:
                 approve_docs = (
-                    self.db.collection(self.Account_clients)
+                    self.db.collection(self.Customer_Account)
                     .document(uid)
                     .collection("Approve")
                     .stream()
