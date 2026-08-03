@@ -6,7 +6,7 @@ from google.auth.transport import requests as google_requests
 from datetime import datetime, UTC
 import bleach
 from flask_mail import Mail, Message
-
+from flask import jsonify
 import sys
 import os
 import threading
@@ -765,93 +765,163 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
+
     def approve(self):
-    
+
         uid = request.form.get("user_id", "").strip()
         appointment_id = request.form.get("appointment_id", "").strip()
         action = request.form.get("action", "").strip().lower()
         dentist_name = bleach.clean(request.form.get("dentist_name", ""))
-    
+
         if not uid or not appointment_id:
             return "Missing user_id or appointment_id", 400
-    
+
         if action not in ("accept", "decline"):
             return "Invalid action", 400
-    
+
+
+        # FIND USER COLLECTION
+        main_collection = None
+
+        if self.db.collection("google_create_account").document(uid).get().exists:
+            main_collection = "google_create_account"
+
+        elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+            main_collection = self.Customer_Account
+
+        if not main_collection:
+            return "User not found", 404
+
+
+        user_ref = self.db.collection(main_collection).document(uid)
+
+
+        # GET EXISTING APPOINTMENT DATA BEFORE DELETE
+        appt_ref = (
+            user_ref
+            .collection(self.Appointment_cliets)
+            .document(appointment_id)
+        )
+
+        appt_doc = appt_ref.get()
+
+        if appt_doc.exists:
+            appointment_data = appt_doc.to_dict()
+        else:
+            appointment_data = {}
+
+
         data = {
             "status": action,
             "Patient_unq_id": appointment_id,
             "uid": uid,
             "DentistName": dentist_name,
-            "FirstName": request.form.get("firstname", ""),
-            "MiddleName": request.form.get("middlename", ""),
-            "LastName": request.form.get("lastname", ""),
-    
-            "HouseNo": request.form.get("houseno", ""),
-            "Street": request.form.get("street", ""),
-            "Brgy": request.form.get("brgy", ""),
-            "Municipality": request.form.get("municipality", ""),
-            "City": request.form.get("city", ""),
-    
-            "ContactNumber": request.form.get("contactnumber", ""),
-            "Nationality": request.form.get("nationality", ""),
-            "Religion": request.form.get("religion", ""),
-    
-            "Age": request.form.get("age", ""),
-            "Sex": request.form.get("sex", ""),
-            "Birthday": request.form.get("birthday", ""),
-    
-            "Occupation": request.form.get("occupation", ""),
-            "CivilStatus": request.form.get("civilstatus", ""),
-            "UrgencyLevel": request.form.get("UrgencyLevel", ""),
-            "Service": request.form.get("service", ""),
+
+            # KEEP APPOINTMENT DETAILS
+            "appointment_date": appointment_data.get("appointment_date", ""),
+            "Service": appointment_data.get("Service", ""),
+            "UrgencyLevel": appointment_data.get("UrgencyLevel", ""),
+
+            "FirstName": appointment_data.get("FirstName", ""),
+            "MiddleName": appointment_data.get("MiddleName", ""),
+            "LastName": appointment_data.get("LastName", ""),
+
+            "HouseNo": appointment_data.get("HouseNo", ""),
+            "Street": appointment_data.get("Street", ""),
+            "Brgy": appointment_data.get("Brgy", ""),
+            "Municipality": appointment_data.get("Municipality", ""),
+            "City": appointment_data.get("City", ""),
+
+            "ContactNumber": appointment_data.get("ContactNumber", ""),
+            "Nationality": appointment_data.get("Nationality", ""),
+            "Religion": appointment_data.get("Religion", ""),
+
+            "Age": appointment_data.get("Age", ""),
+            "Sex": appointment_data.get("Sex", ""),
+            "Birthday": appointment_data.get("Birthday", ""),
+
+            "Occupation": appointment_data.get("Occupation", ""),
+            "CivilStatus": appointment_data.get("CivilStatus", ""),
+
+            # MEDICAL HISTORY
+            "q1": appointment_data.get("q1", ""),
+            "q2": appointment_data.get("q2", ""),
+            "q3": appointment_data.get("q3", ""),
+            "q4": appointment_data.get("q4", ""),
+            "q5": appointment_data.get("q5", ""),
+            "q6": appointment_data.get("q6", ""),
+            "q7": appointment_data.get("q7", ""),
+            "q9": appointment_data.get("q9", ""),
+
+            "q2_spec": appointment_data.get("q2_spec", ""),
+            "q3_spec": appointment_data.get("q3_spec", ""),
+            "q4_spec": appointment_data.get("q4_spec", ""),
+            "q5_spec": appointment_data.get("q5_spec", ""),
+            "q7_spec": appointment_data.get("q7_spec", ""),
+            "q9_spec": appointment_data.get("q9_spec", ""),
+
+            "w_preg": appointment_data.get("w_preg", ""),
+            "w_nurse": appointment_data.get("w_nurse", ""),
+            "w_pill": appointment_data.get("w_pill", ""),
         }
-    
-        main_collection = None
-        if self.db.collection(self.Customer_Account).document(uid).get().exists:
-            main_collection = self.Customer_Account
-        elif self.db.collection(self.Customer_Account).document(uid).get().exists:
-            main_collection = self.Customer_Account
-    
-        if not main_collection:
-            return "User not found", 404
-    
-        user_ref = self.db.collection(main_collection).document(uid)
-    
+
+
         user_doc = user_ref.get()
-        patient_email = user_doc.to_dict().get("email") if user_doc.exists else None
+
+        patient_email = (
+            user_doc.to_dict().get("email")
+            if user_doc.exists
+            else None
+        )
+
         fullname = f"{data['FirstName']} {data['LastName']}"
-    
+
+
         try:
+
             if action == "accept":
-                approve_ref = user_ref.collection("Approve").document(appointment_id)
-                appt_ref = user_ref.collection(self.Appointment_cliets).document(appointment_id)
-    
+
+                approve_ref = (
+                    user_ref
+                    .collection("Approve")
+                    .document(appointment_id)
+                )
+
                 batch = self.db.batch()
+
+                # COPY APPOINTMENT TO APPROVE
                 batch.set(approve_ref, data)
+
+                # REMOVE FROM APPOINTMENTS
                 batch.delete(appt_ref)
+
                 batch.commit()
-    
+
+
             elif action == "decline":
-                appt_ref = user_ref.collection(self.Appointment_cliets).document(appointment_id)
-    
+
                 batch = self.db.batch()
+
+                # ONLY DELETE APPOINTMENT
                 batch.delete(appt_ref)
+
                 batch.commit()
-    
-            else:
-                return "Invalid action", 400
-    
+
+
             threading.Thread(
                 target=self.send_appointment_email,
                 args=(patient_email, fullname, action, data),
                 daemon=True
             ).start()
-    
+
+
             return f"Appointment {action}ed"
-    
+
+
         except Exception as e:
+
             print(f"{action.capitalize()} error: {e}")
+
             return f"Failed to {action} appointment: {e}", 500
     
     
@@ -1351,36 +1421,32 @@ class DentalClinicApp(BaseFlaskApp):
 
     def get_approve(self, uid):
         try:
-            approve_docs = (
+            print("Searching UID:", uid)
+
+            approve_list = []
+
+            docs = (
                 self.db.collection(self.Customer_Account)
                 .document(uid)
                 .collection("Approve")
                 .stream()
             )
-    
-            approve_list = []
-    
-            for doc in approve_docs:
+
+            for doc in docs:
+                print("Document ID:", doc.id)
+
                 data = doc.to_dict()
+                print(data)
+
                 data["id"] = doc.id
                 approve_list.append(data)
-    
-            if not approve_list:
-                approve_docs = (
-                    self.db.collection(self.Customer_Account)
-                    .document(uid)
-                    .collection("Approve")
-                    .stream()
-                )
-    
-                for doc in approve_docs:
-                    data = doc.to_dict()
-                    data["id"] = doc.id
-                    approve_list.append(data)
-    
+
+            print("Returned:", approve_list)
+
             return jsonify(approve_list)
-    
+
         except Exception as e:
+            print(e)
             return jsonify({"error": str(e)}), 500
     
     
