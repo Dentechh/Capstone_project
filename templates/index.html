@@ -490,10 +490,12 @@
             <button type="submit" id="loginBtn" class="sign-up-btn">
                 Login
             </button>
-
-            <button type="button" id="resetPasswordBtn" class="sign-up-btn">
-                Forgot Password?
-            </button>
+            <button
+    type="button"
+    class="sign-up-btn"
+    onclick="openAuthModal('forgotPasswordModal')">
+    Forgot Password?
+</button>
         </form>
 
         <div class="divider">OR</div>
@@ -509,6 +511,33 @@
                 Create an Account
             </a>
         </p>
+    </div>
+</div>
+
+
+
+<!-- Forgot Password Modal -->
+<div id="forgotPasswordModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('forgotPasswordModal')">&times;</span>
+
+        <h2>Forgot Password</h2>
+
+        <p>Enter your email address to receive a password reset link.</p>
+
+        <input
+            type="email"
+            id="resetEmail"
+            placeholder="Enter your email"
+            required
+        >
+
+        <button
+            type="button"
+            id="sendResetBtn"
+            class="sign-up-btn">
+            Send Reset Link
+        </button>
     </div>
 </div>
 
@@ -544,10 +573,10 @@ import { initializeApp } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-    getAuth,
-    createUserWithEmailAndPassword,
-    sendEmailVerification,
-    sendPasswordResetEmail
+getAuth,
+createUserWithEmailAndPassword,
+sendEmailVerification,
+sendPasswordResetEmail
 } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
