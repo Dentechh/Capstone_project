@@ -595,6 +595,51 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 
+// ===============================
+// FORGOT PASSWORD
+// ===============================
+
+const sendResetBtn = document.getElementById("sendResetBtn");
+
+sendResetBtn.addEventListener("click", async () => {
+
+    const email = document.getElementById("resetEmail").value.trim();
+
+    if (email === "") {
+        alert("Please enter your email.");
+        return;
+    }
+
+    try {
+
+        await sendPasswordResetEmail(auth, email);
+
+        alert("Password reset email has been sent. Please check your spam folder.");
+
+        document.getElementById("resetEmail").value = "";
+
+        closeAuthModal("forgotPasswordModal");
+
+    } catch (error) {
+
+        if (error.code === "auth/user-not-found") {
+            alert("No account found with this email.");
+        }
+        else if (error.code === "auth/invalid-email") {
+            alert("Invalid email address.");
+        }
+        else if (error.code === "auth/too-many-requests") {
+            alert("Too many requests. Please try again later.");
+        }
+        else {
+            alert(error.message);
+        }
+
+    }
+
+});
+
+
 
 // ======================
 // SIGN UP
