@@ -865,22 +865,22 @@ resetPasswordBtn.addEventListener("click", async () => {
     document.getElementById("closeModal").onclick = () => modal.style.display = "none";
     
 // Confirm Appointment Button - direct form submission
-     //const confirmBtn = document.getElementById("confirmAppointmentBtn");
-    //  if (confirmBtn) {
-      ///    confirmBtn.onclick = function() {
-           //   const signatureData = document.getElementById("signatureData").value;
-             // if (!signatureData || signatureData === "") {
-               //   alert("Please provide your signature.");
-                 // return;
-              //}
-              //const form = document.getElementById("appointmentForm");
-              //if (form.checkValidity()) {
-                //  form.submit();
-              //} else {
-               //   form.reportValidity();
-              //}
-         // };
-      //}
+    const confirmBtn = document.getElementById("confirmAppointmentBtn");
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            const signatureData = document.getElementById("signatureData").value;
+            if (!signatureData || signatureData === "") {
+                alert("Please provide your signature.");
+                return;
+            }
+            const form = document.getElementById("appointmentForm");
+            if (form.checkValidity()) {
+                form.submit();
+            } else {
+                form.reportValidity();
+            }
+        };
+    }
     
      // Close payment modal removed - no longer needed
     
