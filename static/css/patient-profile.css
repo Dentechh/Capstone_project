@@ -1,0 +1,648 @@
+/* =========================
+    PATIENT PROFILE SPECIFIC
+    ========================= */
+
+.btn-back {
+    color: var(--navy);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 15px;
+    border: 1px solid rgba(13,71,161,0.3);
+    border-radius: 10px;
+    display: inline-block;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-back:hover {
+    background: rgba(13,71,161,0.05);
+}
+
+.container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 50px 8%;
+}
+
+.profile-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 30px;
+    padding: 40px;
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    gap: 40px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    margin-top: -70px;
+}
+
+.profile-left { text-align: center; }
+.main-avatar {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 5px solid var(--gold);
+    margin-bottom: 15px;
+    object-fit: cover;
+}
+.patient-tag {
+    background: var(--gold);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: inline-block;
+    color: white;
+}
+
+.profile-right { flex: 1; }
+.profile-right h2 { font-size: 2.2rem; margin-bottom: 5px; color: var(--navy); }
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 30px;
+}
+.info-item label {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+    color: var(--text-secondary);
+}
+.info-item p {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text-primary);
+}
+
+.btn-edit-trigger {
+    margin-top: 20px;
+    background: var(--grad-gold);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-trigger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(13, 71, 161, 0.3);
+}
+
+/* =========================
+    MODAL STYLES
+    ========================= */
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+    width: 90%;
+    max-width: 900px;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    color: var(--navy);
+    margin-bottom: 20px;
+}
+
+.close {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--navy);
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.close:hover {
+    opacity: 1;
+}
+
+/* Light mode modal defaults */
+.modal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-primary);
+}
+
+.modal-content h2 {
+    color: var(--navy);
+}
+
+.close {
+    color: var(--navy);
+}
+
+/* Dark mode modal theme */
+body.dark-mode .modal {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+body.dark-mode .modal-content {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+body.dark-mode .modal-content h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .close {
+    color: #64b5f6;
+}
+
+body.dark-mode .close:hover {
+    opacity: 1;
+}
+
+/* Table styles inside modals */
+.table-container {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: var(--navy);
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
+}
+
+tr:hover {
+    background: rgba(13, 71, 161, 0.04);
+}
+
+/* Dark mode table styles */
+body.dark-mode th {
+    background: #1565c0;
+    color: #ffffff;
+}
+
+body.dark-mode td {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+body.dark-mode tr:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+body.dark-mode tr:nth-child(even):hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Payment table styles */
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.payment-table th {
+    background: var(--navy);
+    color: white;
+    padding: 10px;
+    text-align: center;
+}
+
+.payment-table td {
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: center;
+    color: var(--text-primary);
+}
+
+.payment-table tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Dark mode payment table */
+body.dark-mode .payment-table th {
+    background: #1565c0;
+}
+
+body.dark-mode .payment-table td {
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e0e0e0;
+}
+
+body.dark-mode .payment-table tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* GCash button */
+.gcash-btn {
+    background: var(--navy);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.3s ease;
+}
+
+.gcash-btn:hover {
+    background: var(--navy-dark);
+}
+
+/* Dark mode GCash button */
+body.dark-mode .gcash-btn {
+    background: #1565c0;
+    color: #ffffff;
+}
+
+body.dark-mode .gcash-btn:hover {
+    background: #0d47a1;
+}
+
+/* Paid/Unpaid status */
+.paid {
+    color: #4ade80;
+    font-weight: bold;
+}
+
+.unpaid {
+    color: #f87171;
+    font-weight: bold;
+}
+
+/* Modal form styles */
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-form input {
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.3s ease;
+}
+
+.modal-form input:focus {
+    border-color: var(--navy);
+}
+
+/* Dark mode modal form inputs */
+body.dark-mode .modal-form input {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .modal-form input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+body.dark-mode .modal-form input:focus {
+    border-color: #64b5f6;
+    background: rgba(255, 255, 255, 0.12);
+    color: #e0e0e0;
+}
+
+/* Mobile responsive modals */
+@media (max-width: 768px) {
+    .modal {
+        align-items: flex-start;
+        padding-top: 5%;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        width: 92%;
+        max-width: none;
+        margin: 0 auto 10% auto;
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.2rem;
+        margin-bottom: 12px;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+    th, td {
+        padding: 8px 6px;
+        font-size: 0.85rem;
+    }
+
+    .close {
+        font-size: 22px;
+        right: 8px;
+        top: 4px;
+    }
+
+    .payment-table th,
+    .payment-table td {
+        padding: 8px 4px;
+        font-size: 0.8rem;
+    }
+
+    .gcash-btn {
+        padding: 5px 8px;
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal {
+        padding-top: 2%;
+    }
+
+    .modal-content {
+        width: 96%;
+        padding: 12px;
+        border-radius: 10px;
+        margin: 0 auto 8% auto;
+    }
+
+    .modal-content h2 {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    table {
+        font-size: 0.75rem;
+    }
+
+    th, td {
+        padding: 6px 4px;
+        font-size: 0.75rem;
+    }
+
+    .close {
+        font-size: 20px;
+        right: 6px;
+        top: 2px;
+    }
+
+    .gcash-btn {
+        padding: 4px 6px;
+        font-size: 0.7rem;
+    }
+
+    .paid, .unpaid {
+        font-size: 0.75rem;
+    }
+}
+
+/* =========================
+    NAV GRID & CARDS
+    ========================= */
+
+.nav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 25px;
+    width: 100%;
+    max-width: 1000px;
+    margin: 30px auto;
+}
+
+.nav-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.nav-card img {
+    width: 45px;
+    margin: 0;
+    filter: invert(100%);
+}
+
+.nav-card span {
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: 600;
+    position: static;
+}
+
+body.dark-mode .nav-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .nav-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .nav-card span {
+    color: #e0e0e0;
+}
+
+body.dark-mode .nav-card img {
+    filter: invert(100%);
+}
+
+/* =========================
+    FLASH MESSAGES
+    ========================= */
+
+.flash-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: 90%;
+    max-width: 600px;
+    pointer-events: none;
+}
+
+.flash {
+    padding: 12px 45px 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    border: 1px solid;
+    font-weight: 500;
+    text-align: center;
+    position: relative;
+    pointer-events: auto;
+    animation: slideDown 0.3s ease-out;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.flash.success {
+    background: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.flash.error {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.flash-close-btn {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flash-close-btn:hover {
+    opacity: 1;
+}
+
+/* =========================
+    UPDATE MODAL SPECIFIC
+    ========================= */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+body.dark-mode .modal-overlay {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* =========================
+    MOBILE RESPONSIVE
+    ========================= */
+
+@media (max-width: 768px) {
+    .profile-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .nav-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .theme-toggle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .theme-icon {
+        width: 20px;
+        height: 20px;
+    }
+}
