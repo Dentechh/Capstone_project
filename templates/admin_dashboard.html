@@ -1660,7 +1660,7 @@ async function saveDentalRecord(uid) {
     if (result.success) {
   alert("Dental record saved successfully!");
 
-  window.location.href = "admin_dashboard";
+  closeChartModal();
 
 } else {
   alert("Error: " + result.message);

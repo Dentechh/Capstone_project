@@ -1364,21 +1364,6 @@ class DentalClinicApp(BaseFlaskApp):
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
     
-            # =========================
-            # DELETE APPROVED RECORD
-            # =========================
-            Patient_unq_id = request.form.get("Patient_unq_id")
-    
-            print("Received Patient_unq_id:", Patient_unq_id)
-    
-            if Patient_unq_id:
-                try:
-                    user_ref.collection("Approve").document(Patient_unq_id).delete()
-                    print("Deleted Approve document:", Patient_unq_id)
-    
-                except Exception as del_error:
-                    print("DELETE APPROVE ERROR:", del_error)
-    
             return jsonify({
                 "success": True,
                 "message": "Dental record saved successfully",
