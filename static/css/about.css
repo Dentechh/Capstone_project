@@ -199,7 +199,7 @@ body::before {
         .dropdown-menu a:last-child { border-bottom: none; color: #ff4d4d; }
         .dropdown-menu a:hover { background: #f8f9fa; }
 
-        .user-info-brief { color: var(--white); text-align: right; }
+        .user-info-brief { color: var(--navy); text-align: right; }
         .user-info-brief span { display: block; font-size: 23px; font-weight: 600; }
         .user-info-brief small { font-size: 12px; opacity: 0.9; }
 
