@@ -138,30 +138,30 @@
                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                </svg>
            </button>
-        <div class="profile-nav">
-            <div class="user-info-brief">
-                <span>{{ name }}</span>
-                <small>Patient Account</small>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="profile-img-container" id="profileDropdownTrigger">
-                    <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
-                
-                <div class="dropdown-menu" id="profileDropdown">
-                    <a href="/patient-profile">PROFILE</a>
-                    <a href="/logout">LOGOUT</a>
-                </div>
-            </div>
-        </div>
-            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-         {% endif %}
-         </nav>
+         <div class="profile-nav">
+             <div class="user-info-brief">
+                 <span>{{ name }}</span>
+                 <small>Patient Account</small>
+             </div>
+ 
+             <div class="profile-img-container" id="profileDropdownTrigger">
+                 <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
+             
+                 <div class="dropdown-menu" id="profileDropdown">
+                     <a href="/patient-profile">PROFILE</a>
+                     <a href="/logout">LOGOUT</a>
+                 </div>
+             </div>
+         </div>
+          {% endif %}
+ 
+              <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+              </button>
+          </div>
+          </nav>
     </header>
 
     <section class="service-hero">
