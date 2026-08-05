@@ -681,22 +681,38 @@ window.addEventListener("click", function(e) {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            const dropBtn = document.getElementById('servicesDropdownBtn');
-            const dropMenu = document.getElementById('servicesDropdownMenu');
+             const dropBtn = document.getElementById('servicesDropdownBtn');
+             const dropMenu = document.getElementById('servicesDropdownMenu');
 
-            dropBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                dropMenu.classList.toggle('show');
-                this.classList.toggle('active-link');
-            });
+             dropBtn.addEventListener('click', function(e) {
+                 e.stopPropagation();
+                 dropMenu.classList.toggle('show');
+                 this.classList.toggle('active-link');
+             });
 
-            window.addEventListener('click', function(e) {
-                if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
-                    dropMenu.classList.remove('show');
-                    dropBtn.classList.remove('active-link');
-                }
-            });
-        });
+             window.addEventListener('click', function(e) {
+                 if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                     dropMenu.classList.remove('show');
+                     dropBtn.classList.remove('active-link');
+                 }
+             });
+
+             const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+             const dropdownMenu = document.getElementById('profileDropdown');
+
+             if(dropdownTrigger && dropdownMenu) {
+                 dropdownTrigger.onclick = (e) => {
+                     e.stopPropagation();
+                     dropdownMenu.classList.toggle('show');
+                 };
+             }
+
+             window.addEventListener('click', function(e) {
+                 if (dropdownMenu && !dropdownMenu.contains(e.target) && !dropdownTrigger.contains(e.target)) {
+                     dropdownMenu.classList.remove('show');
+                 }
+             });
+         });
 
         // Hamburger menu toggle
         const hamburger = document.getElementById('hamburger');
