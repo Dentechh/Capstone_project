@@ -2694,6 +2694,7 @@ h3 {
         background: rgba(0,0,0,0.2);
         border-radius: 10px;
         padding: 4px;
+        z-index: 10000;
     }
 
     .dropdown-content.show {
@@ -2739,14 +2740,6 @@ h3 {
     }
     
     /* Hero Section - Stack vertically */
-    
-    /* Dropdown menu */
-    .dropdown-content {
-        position: static;
-        width: 100%;
-        max-width: 100%;
-        margin-top: 8px;
-    }
     
     /* Auth / Profile */
     .profile-nav {
