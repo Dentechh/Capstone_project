@@ -335,7 +335,7 @@
                 <thead>
                     <tr>
                         <th>Assigned Dentist</th>
-                        <th>Assigned UID</th>
+                        <th>Chart</th>
                         <th>Date</th>
                         <th>Procedure</th>
                         <th>Fee Paid</th>
@@ -352,6 +352,14 @@
         </div>
     </div>
 
+    <div id="chartViewModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close" onclick="closeChartView()">&times;</span>
+            <h2>Dental Chart</h2>
+            <p id="chartViewMessage" style="display:none; text-align:center; padding:20px;">No saved dental chart found for this patient.</p>
+            <img id="chartViewImage" style="display:none; max-width:100%; border-radius:8px;" />
+        </div>
+    </div>
 
 <script>
 function openVisitHistory(uid) {
@@ -411,7 +419,7 @@ function openVisitHistory(uid) {
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.dentist || "-"}</td>
-                        <td>${p.uid || "-"}</td>
+                        <td><button class="btn-action" onclick="viewSavedChart('${uid}')">View</button></td>
                         <td>${p.date || "-"}</td>
                         <td>${p.procedure || "-"}</td>
                         <td>₱${p.paid || 0}</td>
@@ -440,14 +448,48 @@ function closeVisitHistory() {
     document.getElementById("visitHistoryModal").style.display = "none";
 }
 
+async function viewSavedChart(uid) {
+    try {
+        const response = await fetch(`/get_patient/${uid}`);
+        const data = await response.json();
+
+        const modal = document.getElementById('chartViewModal');
+        const imgEl = document.getElementById('chartViewImage');
+        const msgEl = document.getElementById('chartViewMessage');
+
+        if (!data.latest_chart_image) {
+            if (msgEl) msgEl.style.display = 'block';
+            if (imgEl) imgEl.style.display = 'none';
+            modal.style.display = 'flex';
+            return;
+        }
+
+        if (msgEl) msgEl.style.display = 'none';
+        if (imgEl) {
+            imgEl.src = data.latest_chart_image;
+            imgEl.style.display = 'block';
+        }
+        modal.style.display = 'flex';
+    } catch (error) {
+        console.error('Error loading chart:', error);
+        alert('Failed to load saved chart');
+    }
+}
+
+function closeChartView() {
+    document.getElementById('chartViewModal').style.display = 'none';
+}
+
 window.addEventListener("click", function(e) {
-
     const modal = document.getElementById("visitHistoryModal");
-
     if (e.target === modal) {
         closeVisitHistory();
     }
 
+    const chartModal = document.getElementById("chartViewModal");
+    if (e.target === chartModal) {
+        closeChartView();
+    }
 });
 </script>
 

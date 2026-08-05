@@ -1135,7 +1135,26 @@ class DentalClinicApp(BaseFlaskApp):
                 })
     
         data["Done_procedure"] = visit_history
-    
+
+        latest_chart = {}
+        latest_chart_image = ""
+        try:
+            latest_query = (
+                doc_ref.collection("Done_procedure")
+                .order_by("updated_at", direction=firestore.Query.DESCENDING)
+                .limit(1)
+            )
+            latest_docs = list(latest_query.stream())
+            if latest_docs:
+                latest_data = latest_docs[0].to_dict()
+                latest_chart = latest_data.get("chart", {})
+                latest_chart_image = latest_data.get("chart_image", "")
+        except Exception as e:
+            print("Error getting latest chart:", e)
+
+        data["latest_chart"] = latest_chart
+        data["latest_chart_image"] = latest_chart_image
+
         return data
     
 
