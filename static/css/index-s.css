@@ -928,6 +928,19 @@
                 box-shadow: none;
                 border-top: 2px solid var(--navy);
             }
+
+            .dropdown-content a {
+                padding: 14px 24px;
+                border-bottom: 1px solid rgba(0,0,0,0.04);
+                color: inherit;
+                background-color: var(--white);
+            }
+
+            .dropdown-content a:hover {
+                background: linear-gradient(90deg, #f0f7ff 0%, #e3f2fd 100%);
+                color: var(--navy) !important;
+                padding-left: 28px;
+            }
             
             /* Compact header on tablet/mobile */
             header {
@@ -1084,7 +1097,6 @@
         margin-top: 8px;
         box-shadow: none;
         border-top: 2px solid var(--navy);
-        background: rgba(0,0,0,0.2);
         border-radius: 10px;
         padding: 4px;
         z-index: 10000;
@@ -1094,6 +1106,19 @@
         transform: none;
     }
 
+    .dropdown-content a {
+        padding: 14px 24px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        color: inherit;
+        background-color: var(--white);
+    }
+
+    .dropdown-content a:hover {
+        background: linear-gradient(90deg, #f0f7ff 0%, #e3f2fd 100%);
+        color: var(--navy) !important;
+        padding-left: 28px;
+    }
+    
     .dropdown-menu {
         top: 45px;
         min-width: 140px;
@@ -2105,11 +2130,22 @@ h3 {
             margin: 0 10px;
         }
 
-        .auth-card .footer-text a {
-            color: var(--gold-light);
-            font-weight: 600;
-            text-decoration: none;
-        }
+.auth-card .footer-text a {
+    color: var(--gold-light);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.forgot-password-link {
+    color: var(--navy);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+}
 
         @media (max-width: 768px) {
             .hero-content { flex-direction: column; align-items: center; text-align: center; }
@@ -2691,7 +2727,6 @@ h3 {
         margin-top: 8px;
         box-shadow: none;
         border-top: 2px solid var(--navy);
-        background: rgba(0,0,0,0.2);
         border-radius: 10px;
         padding: 4px;
         z-index: 10000;
@@ -2699,6 +2734,19 @@ h3 {
 
     .dropdown-content.show {
         transform: none;
+    }
+    
+    .dropdown-content a {
+        padding: 14px 24px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        color: inherit;
+        background-color: var(--white);
+    }
+
+    .dropdown-content a:hover {
+        background: linear-gradient(90deg, #f0f7ff 0%, #e3f2fd 100%);
+        color: var(--navy) !important;
+        padding-left: 28px;
     }
     
     .profile-nav {

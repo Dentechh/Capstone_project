@@ -1545,6 +1545,17 @@ footer,
     text-decoration: none;
 }
 
+.forgot-password-link {
+    color: var(--navy);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.forgot-password-link:hover {
+    text-decoration: underline;
+}
+
 /* Submit Button for Auth Modals */
 .sign-up-btn {
     background: var(--grad-gold);
