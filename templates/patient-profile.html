@@ -36,7 +36,7 @@
                 </div>
             </a>
 
-            <ul class="nav-links">
+            <ul class="nav-links" id="navLinks">
                 <li><a href="/" class="active">HOME</a></li>
                 <li><a href="/about">ABOUT</a></li>
                 <li class="dropdown">
@@ -115,9 +115,10 @@
                     <div class="profile-img-container" id="profileDropdownTrigger">
                         <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
                     
-                    <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/patient-profile">PROFILE</a>
-                        <a href="/logout">LOGOUT</a>
+                        <div class="dropdown-menu" id="profileDropdown">
+                            <a href="/patient-profile">PROFILE</a>
+                            <a href="/logout">LOGOUT</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,7 +140,7 @@
             <div class="profile-right">
                 <h2>{{ user.get('firstname', name) }}</h2>
                 <p style="opacity:0.8; font-weight: 300;">
-                    @{{ user.get('username', 'username') }} | Clinic Member
+                    {{ user.get('username', 'username') }} | Clinic Member
                 </p>
 
                 <div class="info-grid">
@@ -200,7 +201,7 @@
             <span class="close">&times;</span>
 
             <h2>My Schedule</h2>
-    <h2 style="display: none;">{{ user.get('uid', id) }}</h2>
+    <h2 style="display: none;">{{ user.get('uid', '') }}</h2>
             <div class="table-container">
                 <table>
                     <thead>
@@ -317,7 +318,7 @@
         </script>
 
     <!-- Medical Records -->
-    <a href="javascript:void(0);" class="nav-card" onclick="openVisitHistory('{{ user.get('uid', '') }}')">
+    <a href="javascript:void(0);" class="nav-card" data-uid="{{ user.get('uid', '') }}" onclick="openVisitHistory(this.dataset.uid)">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
         <span>Medical Records</span>
     </a>
@@ -582,8 +583,6 @@ window.addEventListener("click", function(e) {
 
     });
     </script>
-    </div>
-    </div>
 
     <script>function payGCash(amount, procedure){
         const uid = "{{ user.get('uid', '') }}";
@@ -766,8 +765,10 @@ window.addEventListener("click", function(e) {
             }, 5000 + (index * 1000)); // Stagger if multiple
         });
     });
-    </script>
-        
+</script>
+
+    </div>
+
     <footer class="main-footer">
         <div class="footer-grid">
             <div class="footer-brand">
@@ -808,5 +809,6 @@ window.addEventListener("click", function(e) {
             </div>
         </div>
     </footer>
+    </div>
     </body>
     </html>
