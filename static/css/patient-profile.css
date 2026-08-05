@@ -618,14 +618,8 @@ body.dark-mode .modal-overlay {
 }
 
 /* =========================
-    FOOTER OVERRIDES
+    MOBILE RESPONSIVE
     ========================= */
-
-.main-footer {
-    width: 100%;
-}
-
-@media (max-width: 768px) {
     .profile-card {
         flex-direction: column;
         align-items: center;
@@ -649,4 +643,3 @@ body.dark-mode .modal-overlay {
         width: 20px;
         height: 20px;
     }
-}
