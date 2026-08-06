@@ -1070,15 +1070,15 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def get_patient(self, uid):
-    
+
         # =========================
         # TRY GOOGLE ACCOUNT FIRST
         # =========================
         doc_ref = self.db.collection(self.Customer_Account).document(uid)
         doc = doc_ref.get()
-    
+
         account_type = "Google"
-    
+
         # =========================
         # TRY MANUAL ACCOUNT
         # =========================
@@ -1086,40 +1086,56 @@ class DentalClinicApp(BaseFlaskApp):
             doc_ref = self.db.collection(self.Customer_Account).document(uid)
             doc = doc_ref.get()
             account_type = "Manual"
-    
+
         if not doc.exists:
             return {"error": "Patient not found"}
-    
+
         # =========================
         # ACCOUNT INFORMATION
         # =========================
         data = doc.to_dict()
-    
+
         data["uid"] = doc.id
         data["account_type"] = account_type
-    
+
         first = data.get("firstname") or data.get("first_name") or ""
         last = data.get("lastname") or data.get("last_name") or ""
-    
+
         data["first_name"] = first
         data["last_name"] = last
         data["full_name"] = data.get("name") or f"{first} {last}".strip()
-    
+
         # =========================
         # LOAD DONE PROCEDURE
         # =========================
         visit_history = []
-    
-        done_docs = doc_ref.collection("Done_procedure").stream()
-    
+
+        done_docs = list(doc_ref.collection("Done_procedure").stream())
+
+        print("=" * 60)
+        print("PATIENT UID:", uid)
+        print("DONE_PROCEDURE DOCUMENTS FOUND:", len(done_docs))
+
         for done in done_docs:
-    
+
+            print("------------------------------------------------")
+            print("Document ID:", done.id)
+
             done_data = done.to_dict()
+            print("Document Data:", done_data)
+
             chart_image = done_data.get("chart_image", "")
-    
+
             procedures = done_data.get("procedures", [])
-    
+            print("Procedures:", procedures)
+
+            if not procedures:
+                print("WARNING: procedures array is empty!")
+
             for p in procedures:
+
+                print("Procedure:", p)
+
                 visit_history.append({
                     "dentist": p.get("dentist", ""),
                     "uid": p.get("uid", ""),
@@ -1129,29 +1145,41 @@ class DentalClinicApp(BaseFlaskApp):
                     "balance": p.get("balance", 0),
                     "tooth": p.get("tooth", ""),
                     "value": p.get("value", 0),
-                    "status": p.get("status", ""),   # <-- ADD THIS
-                    "next_appointment": p.get("next_appointment", ""),
                     "status": p.get("status", ""),
+                    "next_appointment": p.get("next_appointment", ""),
                     "medicine": p.get("medicine", ""),
                     "chart_image": chart_image
-      
                 })
-    
+
+        print("FINAL VISIT HISTORY:", visit_history)
+        print("=" * 60)
+
         data["Done_procedure"] = visit_history
 
+        # =========================
+        # LOAD LATEST CHART
+        # =========================
         latest_chart = {}
         latest_chart_image = ""
+
         try:
             latest_query = (
                 doc_ref.collection("Done_procedure")
                 .order_by("updated_at", direction=firestore.Query.DESCENDING)
                 .limit(1)
             )
+
             latest_docs = list(latest_query.stream())
+
             if latest_docs:
                 latest_data = latest_docs[0].to_dict()
+
                 latest_chart = latest_data.get("chart", {})
                 latest_chart_image = latest_data.get("chart_image", "")
+
+                print("Latest Chart Loaded")
+                print("Latest Chart Image Length:", len(latest_chart_image))
+
         except Exception as e:
             print("Error getting latest chart:", e)
 

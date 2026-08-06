@@ -38,6 +38,32 @@
     padding:20px;
     border-radius:10px;
 }
+.modal{
+    display:none;
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.6);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-content{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    max-height:90vh;
+    overflow:auto;
+}
+
+.close{
+    float:right;
+    font-size:30px;
+    cursor:pointer;
+}
 </style>
 
 
@@ -282,6 +308,7 @@ const content = document.getElementById("patientContent");
 const closeBtn = document.getElementById("closeModalBtn");
 
 document.querySelectorAll(".open-patient-modal").forEach(btn => {
+
     btn.addEventListener("click", function () {
 
         const uid = this.dataset.uid;
@@ -293,7 +320,6 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
         .then(res => res.json())
         .then(data => {
 
-            // Patient Information
             let html = `
                 <h3>${data.full_name}</h3>
                 <p><b>UID:</b> ${data.uid}</p>
@@ -306,25 +332,33 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
                 <h4>Procedures</h4>
             `;
 
-            const procedures = data.Done_procedure || [];
+            const procedures = Array.isArray(data.Done_procedure)
+                ? data.Done_procedure
+                : [];
+
+            // Save globally for View button
+            window.currentProcedures = procedures;
+
+            const history = document.getElementById("pd-visit-history");
 
             if (procedures.length === 0) {
 
-                html += `<p>No procedure records found.</p>`;
+                html += "<p>No procedure records found.</p>";
 
-                document.getElementById("pd-visit-history").innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align:center;">
-                            No visit history found.
-                        </td>
-                    </tr>
-                `;
+                if (history) {
+                    history.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align:center;">
+                                No visit history found.
+                            </td>
+                        </tr>
+                    `;
+                }
 
             } else {
 
-                // Modal Table
                 html += `
-                    <table style="width:100%; border-collapse:collapse;">
+                    <table style="width:100%;border-collapse:collapse;">
                         <thead>
                             <tr>
                                 <th>Assigned Dentist</th>
@@ -338,23 +372,30 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
                         <tbody>
                 `;
 
-                procedures.forEach(p => {
+                let historyHTML = "";
 
-                    html += `
+                procedures.forEach((p, index) => {
+
+                    const row = `
                         <tr>
-                            <td>${p.dentist}</td>
+                            <td>${p.dentist ?? ""}</td>
+
                             <td>
                                 <button class="btn-action"
-                                    onclick="viewSavedChart('${p.chart_image}')">
+                                    onclick="viewSavedChart(${index})">
                                     View
                                 </button>
                             </td>
-                            <td>${p.date}</td>
-                            <td>${p.procedure}</td>
-                            <td>₱${p.paid}</td>
-                            <td>${p.next_appointment}</td>
+
+                            <td>${p.date ?? ""}</td>
+                            <td>${p.procedure ?? ""}</td>
+                            <td>₱${p.paid ?? 0}</td>
+                            <td>${p.next_appointment ?? ""}</td>
                         </tr>
                     `;
+
+                    html += row;
+                    historyHTML += row;
 
                 });
 
@@ -363,59 +404,58 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
                     </table>
                 `;
 
-                // Visits History Table
-                let historyHTML = "";
-
-                procedures.forEach(p => {
-
-                    historyHTML += `
-                        <tr>
-                            <td>${p.dentist}</td>
-                            <td>
-                                <button class="btn-action"
-                                    onclick="viewSavedChart('${p.chart_image}')">
-                                    View
-                                </button>
-                            </td>
-                            <td>${p.date}</td>
-                            <td>${p.procedure}</td>
-                            <td>₱${p.paid}</td>
-                            <td>${p.next_appointment}</td>
-                        </tr>
-                    `;
-
-                });
-
-                document.getElementById("pd-visit-history").innerHTML = historyHTML;
-
+                if (history) {
+                    history.innerHTML = historyHTML;
+                }
             }
 
             content.innerHTML = html;
 
+        })
+        .catch(err => {
+
+            console.error(err);
+
+            content.innerHTML = `
+                <p style="color:red">
+                    Failed to load patient.
+                </p>
+            `;
         });
+
     });
+
 });
 
-closeBtn.onclick = () => modal.style.display = "none";
+if (closeBtn) {
+    closeBtn.onclick = () => {
+        modal.style.display = "none";
+    };
+}
 
-window.onclick = (e) => {
-    if (e.target === modal) modal.style.display = "none";
+window.onclick = function(e) {
+    if (e.target === modal) {
+        modal.style.display = "none";
+    }
 };
 
-function viewSavedChart(chartImage) {
 
-    if (!chartImage) {
-        alert("No saved dental chart found.");
-        return;
-    }
-
-    document.getElementById("savedChartImage").src =
-        "data:image/jpeg;base64," + chartImage;
-
-    document.getElementById("chartModal").style.display = "flex";
-}
 </script>
 
+
+<!-- Dental Chart Modal -->
+<div id="chartModal" class="modal">
+    <div class="modal-content">
+        <span onclick="closeChartModal()" class="close">&times;</span>
+
+        <h2>Saved Dental Chart</h2>
+
+        <img
+            id="savedChartImage"
+            style="max-width:100%;display:block;margin:auto;">
+
+    </div>
+</div>
 
 <div id="chartModal"
      style="display:none;
@@ -1165,17 +1205,19 @@ fetch(`/get_patient/${uid}`)
         return;
     }
 
-procedures.forEach(function(p){
+window.currentProcedures = procedures;
+
+procedures.forEach(function(p, index){
 
     history.innerHTML += `
         <tr>
             <td>${p.dentist || ""}</td>
             <td>
-    <button class="btn-action"
-        onclick="viewSavedChart('${p.chart_image}')">
-        View
-    </button>
-</td>
+                <button class="btn-action"
+                    onclick="viewSavedChart(${index})">
+                    View
+                </button>
+            </td>
             <td>${p.date || ""}</td>
             <td>${p.procedure || ""}</td>
             <td>₱${p.paid || 0}</td>
@@ -1184,7 +1226,6 @@ procedures.forEach(function(p){
     `;
 
 });
-
 });
 }
         function setCheckbox(id, value) {
@@ -1789,105 +1830,32 @@ window.addEventListener('click', function(e) {
 });
 
 // Dental Chart Modal
-async function viewSavedChart(uid) {
-    try {
-        const response = await fetch(`/get_patient/${uid}`);
-        const data = await response.json();
+function viewSavedChart(index) {
 
-        if (!data.latest_chart || Object.keys(data.latest_chart).length === 0) {
-            alert('No saved dental chart found for this patient.');
-            return;
-        }
-
-        const modal = document.getElementById('chartModal');
-        const modalChart = document.getElementById('modal-chart-content');
-        const chartSection = document.getElementById('section-chart');
-
-        if (!modal || !modalChart || !chartSection) return;
-
-        modalChart.innerHTML = chartSection.innerHTML;
-
-        Object.entries(data.latest_chart).forEach(([key, value]) => {
-            const toothId = key.replace('tooth_', '');
-            const tooth = modalChart.querySelector(`#tooth-${toothId}`);
-            if (!tooth) return;
-
-            const segments = tooth.querySelectorAll('.segment');
-            const markX = tooth.querySelector('.mark-x');
-            const markLine = tooth.querySelector('.mark-line');
-
-            segments.forEach(s => s.style.fill = '#ffffff');
-            if (markX) markX.style.display = 'none';
-            if (markLine) markLine.style.display = 'none';
-
-            if (value === 'caries') {
-                segments.forEach(s => s.style.fill = '#ff4d4d');
-            } else if (value === 'filling') {
-                segments.forEach(s => s.style.fill = '#156699');
-            } else if (value === 'crown') {
-                segments.forEach(s => s.style.fill = '#ff4d4d');
-            } else if (value === 'rootcanal') {
-                segments.forEach(s => s.style.fill = '#156699');
-            } else if (value === 'missing') {
-                segments.forEach(s => s.style.fill = '#000000');
-            } else if (value === 'extraction') {
-                if (markX) markX.style.display = 'block';
-            } else if (value === 'check') {
-                segments.forEach(s => s.style.fill = '#4CAF50');
-            }
-        });
-
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-
-        if (modal.requestFullscreen) {
-            modal.requestFullscreen().then(() => {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            }).catch(() => {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            });
-        } else if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-        }
-
-    } catch (error) {
-        console.error('Error loading chart:', error);
-        alert('Failed to load saved chart');
+    if (!window.currentProcedures || !window.currentProcedures[index]) {
+        alert("Procedure not found.");
+        return;
     }
-}
 
-function openChartModal() {
-    const modal = document.getElementById('chartModal');
-    const chartSection = document.getElementById('section-chart');
-    const modalChart = document.getElementById('modal-chart-content');
-    
-    if (modal && chartSection && modalChart) {
-        modalChart.innerHTML = chartSection.innerHTML;
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        
-        // Request fullscreen first (required for orientation lock on mobile)
-        if (modal.requestFullscreen) {
-            modal.requestFullscreen().then(() => {
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            }).catch(() => {
-                // Fullscreen denied, try orientation lock anyway
-                if (screen.orientation && screen.orientation.lock) {
-                    screen.orientation.lock('landscape').catch(() => {});
-                }
-            });
-        } else if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-        }
-    }
-}
+    const chartImage = window.currentProcedures[index].chart_image;
 
+    console.log(chartImage.substring(0, 50));
+
+    document.getElementById("modal-chart-content").innerHTML = `
+        <img
+            id="savedChartImage"
+            style="max-width:100%;height:auto;display:block;margin:auto;border:2px solid red;">
+    `;
+
+    const img = document.getElementById("savedChartImage");
+
+    img.onload = () => console.log("IMAGE LOADED");
+    img.onerror = () => console.log("IMAGE FAILED");
+
+    img.src = "data:image/jpeg;base64," + chartImage;
+
+    document.getElementById("chartModal").style.display = "flex";
+}
 function closeChartModal() {
     const modal = document.getElementById('chartModal');
     if (modal) {
@@ -1941,6 +1909,7 @@ window.addEventListener('keydown', function(e) {
             </div>
         </div>
         <div id="modal-chart-content" class="chart-modal-body">
+            
         </div>
     </div>
 </div>
