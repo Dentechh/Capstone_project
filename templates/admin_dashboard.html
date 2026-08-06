@@ -289,100 +289,110 @@ document.querySelectorAll(".open-patient-modal").forEach(btn => {
         modal.style.display = "flex";
         content.innerHTML = "Loading...";
 
-     fetch(`/get_patient/${uid}`)
-    .then(res => res.json())
-    .then(data => {
+        fetch(`/get_patient/${uid}`)
+        .then(res => res.json())
+        .then(data => {
 
-        // Patient Information
-        let html = `
-            <h3>${data.full_name}</h3>
-            <p><b>UID:</b> ${data.uid}</p>
-            <p><b>Sex:</b> ${data.sex ?? ""}</p>
-            <p><b>Age:</b> ${data.age ?? ""}</p>
-            <p><b>Contact:</b> ${data.contact ?? ""}</p>
-            <p><b>Service:</b> ${data.service ?? ""}</p>
+            // Patient Information
+            let html = `
+                <h3>${data.full_name}</h3>
+                <p><b>UID:</b> ${data.uid}</p>
+                <p><b>Sex:</b> ${data.sex ?? ""}</p>
+                <p><b>Age:</b> ${data.age ?? ""}</p>
+                <p><b>Contact:</b> ${data.contact ?? ""}</p>
+                <p><b>Service:</b> ${data.service ?? ""}</p>
 
-            <hr>
-            <h4>Procedures</h4>
-        `;
-
-        const procedures = data.Done_procedure || [];
-
-        if (procedures.length === 0) {
-
-            html += `<p>No procedure records found.</p>`;
-
-            document.getElementById("pd-visit-history").innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align:center;">
-                        No visit history found.
-                    </td>
-                </tr>
+                <hr>
+                <h4>Procedures</h4>
             `;
 
-        } else {
+            const procedures = data.Done_procedure || [];
 
-            // Modal Table
-            html += `
-                <table style="width:100%; border-collapse:collapse;">
-                    <thead>
+            if (procedures.length === 0) {
+
+                html += `<p>No procedure records found.</p>`;
+
+                document.getElementById("pd-visit-history").innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center;">
+                            No visit history found.
+                        </td>
+                    </tr>
+                `;
+
+            } else {
+
+                // Modal Table
+                html += `
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr>
+                                <th>Assigned Dentist</th>
+                                <th>Chart</th>
+                                <th>Visit Date</th>
+                                <th>Procedure</th>
+                                <th>Fee Paid</th>
+                                <th>Next Appointment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                procedures.forEach(p => {
+
+                    html += `
                         <tr>
-                            <th>Assigned Dentist</th>
-                            <th>Assigned UID</th>
-                            <th>Visit Date</th>
-                            <th>Procedure</th>
-                            <th>Fee Paid</th>
-                            <th>Next Appointment</th>
+                            <td>${p.dentist}</td>
+                            <td>
+                                <button class="btn-action"
+                                    onclick="viewSavedChart('${p.chart_image}')">
+                                    View
+                                </button>
+                            </td>
+                            <td>${p.date}</td>
+                            <td>${p.procedure}</td>
+                            <td>₱${p.paid}</td>
+                            <td>${p.next_appointment}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-            `;
+                    `;
 
-            procedures.forEach(p => {
+                });
 
                 html += `
-                    <tr>
-                        <td>${p.dentist}</td>
-                        <td>${p.uid}</td>
-                        <td>${p.date}</td>
-                        <td>${p.procedure}</td>
-                        <td>₱${p.paid}</td>
-                        <td>${p.next_appointment}</td>
-                    </tr>
+                        </tbody>
+                    </table>
                 `;
 
-            });
+                // Visits History Table
+                let historyHTML = "";
 
-            html += `
-                    </tbody>
-                </table>
-            `;
+                procedures.forEach(p => {
 
-            // Visits History Table
-            let historyHTML = "";
+                    historyHTML += `
+                        <tr>
+                            <td>${p.dentist}</td>
+                            <td>
+                                <button class="btn-action"
+                                    onclick="viewSavedChart('${p.chart_image}')">
+                                    View
+                                </button>
+                            </td>
+                            <td>${p.date}</td>
+                            <td>${p.procedure}</td>
+                            <td>₱${p.paid}</td>
+                            <td>${p.next_appointment}</td>
+                        </tr>
+                    `;
 
-            procedures.forEach(p => {
+                });
 
-                historyHTML += `
-                    <tr>
-                        <td>${p.dentist}</td>
-                        <td>${p.uid}</td>
-                        <td>${p.date}</td>
-                        <td>${p.procedure}</td>
-                        <td>₱${p.paid}</td>
-                        <td>${p.next_appointment}</td>
-                    </tr>
-                `;
+                document.getElementById("pd-visit-history").innerHTML = historyHTML;
 
-            });
+            }
 
-            document.getElementById("pd-visit-history").innerHTML = historyHTML;
+            content.innerHTML = html;
 
-        }
-
-        content.innerHTML = html;
-
-    });
+        });
     });
 });
 
@@ -391,7 +401,45 @@ closeBtn.onclick = () => modal.style.display = "none";
 window.onclick = (e) => {
     if (e.target === modal) modal.style.display = "none";
 };
+
+function viewSavedChart(chartImage) {
+
+    if (!chartImage) {
+        alert("No saved dental chart found.");
+        return;
+    }
+
+    document.getElementById("savedChartImage").src =
+        "data:image/jpeg;base64," + chartImage;
+
+    document.getElementById("chartModal").style.display = "flex";
+}
 </script>
+
+
+<div id="chartModal"
+     style="display:none;
+            position:fixed;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            background:rgba(0,0,0,.7);
+            justify-content:center;
+            align-items:center;
+            z-index:9999;">
+
+    <div style="background:white;padding:15px;border-radius:8px;max-width:90%;max-height:90%;">
+
+        <span
+            onclick="document.getElementById('chartModal').style.display='none'"
+            style="float:right;font-size:28px;cursor:pointer;">&times;</span>
+
+        <img id="savedChartImage"
+             style="max-width:100%;max-height:80vh;">
+    </div>
+
+</div>
 
 
 
@@ -646,7 +694,7 @@ window.onclick = (e) => {
     <thead>
         <tr>
             <th>Assigned Dentist</th>
-            <th>Assigned uid</th>
+                            <th>Chart</th>
             <th>Visit Date</th>
             <th>Procedure</th>
             <th>Fee Paid</th>
@@ -839,7 +887,7 @@ window.onclick = (e) => {
                             
                         </tbody>
                     </table>
-                    <button type="button" id="td-add-row-btn" style="margin-top:10px; padding:5px 12px; border:1px dashed gold; background:transparent; color:gold; border-radius:5px; cursor:pointer; font-size:13px;">+ Add Row</button>
+                    <button type="button" id="td-add-row-btn" class="btn-add-row">+ Add Row</button>
                     <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
                 </div>
             </div>
@@ -1062,6 +1110,7 @@ function openPatientDashboard(
     document.getElementById('td-history-uid').innerText = uid || 'Unknown';
     // 🧠 IMPORTANT: store correct patient record ID globally
     window.currentPatientId = Patient_unq_id;
+    window.currentPatientUid = uid;
 
     // Blood type - hardcoded
     document.getElementById('pd-blood').innerText = 'O+';
@@ -1121,7 +1170,12 @@ procedures.forEach(function(p){
     history.innerHTML += `
         <tr>
             <td>${p.dentist || ""}</td>
-            <td>${p.uid || ""}</td>
+            <td>
+    <button class="btn-action"
+        onclick="viewSavedChart('${p.chart_image}')">
+        View
+    </button>
+</td>
             <td>${p.date || ""}</td>
             <td>${p.procedure || ""}</td>
             <td>₱${p.paid || 0}</td>
@@ -1578,37 +1632,27 @@ async function saveDentalRecord(uid) {
       backgroundColor: '#ffffff'
     });
 
-    // =========================
-    // SAFE PROMISE WRAPPER FOR BLOB
-    // =========================
     const blob = await new Promise(resolve => {
       canvas.toBlob(resolve, "image/jpeg", 0.7);
     });
 
     const formData = new FormData();
 
-    // =========================
     // UID
-    // =========================
     formData.append("uid", uid);
 
-    // =========================
-    // PATIENT UNIQUE ID (FOR DELETE APPROVE RECORD)
-    // =========================
-    const patient_unq_id =
-    document.getElementById("td-Patient_unq_id")?.innerText?.trim();
+    // Patient Record ID
+    const patientUnqId = document
+        .getElementById("td-Patient_unq_id")
+        .textContent
+        .trim();
 
-    if (patient_unq_id) {
-    formData.append("Patient_unq_id", patient_unq_id);
-    }
-    // =========================
-    // IMAGE
-    // =========================
+    formData.append("Patient_unq_id", patientUnqId);
+
+    // Image
     formData.append("dental_chart_image", blob, "chart.jpg");
 
-    // =========================
-    // TOOTH DATA
-    // =========================
+    // Tooth Data
     document.querySelectorAll(".tooth-unit").forEach(tooth => {
 
       const id = tooth.id.replace("tooth-", "");
@@ -1626,9 +1670,7 @@ async function saveDentalRecord(uid) {
       formData.append(`tooth_${id}`, value);
     });
 
-    // =========================
-    // TREATMENT TABLE
-    // =========================
+    // Treatment Table
     document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
 
       formData.append("date[]", row.querySelector(".td-date")?.value || "");
@@ -1640,12 +1682,9 @@ async function saveDentalRecord(uid) {
       formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
       formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
       formData.append("medicine[]", row.querySelector(".td-medicine")?.value || "");
-    formData.append("status[]", row.querySelector(".td-status")?.value || "");
+      formData.append("status[]", row.querySelector(".td-status")?.value || "");
     });
 
-    // =========================
-    // SEND TO FLASK
-    // =========================
     const response = await fetch("/save_dental_record", {
       method: "POST",
       body: formData
@@ -1653,24 +1692,22 @@ async function saveDentalRecord(uid) {
 
     const result = await response.json();
 
-    console.log("STATUS:", response.status);
-    console.log("RESPONSE:", result);
+    console.log("UID:", uid);
+    console.log("Patient Record ID:", patientUnqId);
+    console.log(result);
 
     if (result.success) {
-  alert("Dental record saved successfully!");
-
-  window.location.href = "admin_dashboard";
-
-} else {
-  alert("Error: " + result.message);
-}
+      alert("Dental record saved successfully!");
+      location.reload();
+    } else {
+      alert("Error: " + result.message);
+    }
 
   } catch (error) {
-    console.error("SAVE ERROR:", error);
+    console.error(error);
     alert("Failed to save dental record.");
   }
 }
-
 
 // =========================
 // SINGLE CLEAN BUTTON HANDLER
@@ -1752,6 +1789,77 @@ window.addEventListener('click', function(e) {
 });
 
 // Dental Chart Modal
+async function viewSavedChart(uid) {
+    try {
+        const response = await fetch(`/get_patient/${uid}`);
+        const data = await response.json();
+
+        if (!data.latest_chart || Object.keys(data.latest_chart).length === 0) {
+            alert('No saved dental chart found for this patient.');
+            return;
+        }
+
+        const modal = document.getElementById('chartModal');
+        const modalChart = document.getElementById('modal-chart-content');
+        const chartSection = document.getElementById('section-chart');
+
+        if (!modal || !modalChart || !chartSection) return;
+
+        modalChart.innerHTML = chartSection.innerHTML;
+
+        Object.entries(data.latest_chart).forEach(([key, value]) => {
+            const toothId = key.replace('tooth_', '');
+            const tooth = modalChart.querySelector(`#tooth-${toothId}`);
+            if (!tooth) return;
+
+            const segments = tooth.querySelectorAll('.segment');
+            const markX = tooth.querySelector('.mark-x');
+            const markLine = tooth.querySelector('.mark-line');
+
+            segments.forEach(s => s.style.fill = '#ffffff');
+            if (markX) markX.style.display = 'none';
+            if (markLine) markLine.style.display = 'none';
+
+            if (value === 'caries') {
+                segments.forEach(s => s.style.fill = '#ff4d4d');
+            } else if (value === 'filling') {
+                segments.forEach(s => s.style.fill = '#156699');
+            } else if (value === 'crown') {
+                segments.forEach(s => s.style.fill = '#ff4d4d');
+            } else if (value === 'rootcanal') {
+                segments.forEach(s => s.style.fill = '#156699');
+            } else if (value === 'missing') {
+                segments.forEach(s => s.style.fill = '#000000');
+            } else if (value === 'extraction') {
+                if (markX) markX.style.display = 'block';
+            } else if (value === 'check') {
+                segments.forEach(s => s.style.fill = '#4CAF50');
+            }
+        });
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        if (modal.requestFullscreen) {
+            modal.requestFullscreen().then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            }).catch(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            });
+        } else if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+
+    } catch (error) {
+        console.error('Error loading chart:', error);
+        alert('Failed to load saved chart');
+    }
+}
+
 function openChartModal() {
     const modal = document.getElementById('chartModal');
     const chartSection = document.getElementById('section-chart');
@@ -1819,6 +1927,10 @@ window.addEventListener('keydown', function(e) {
         <div class="chart-modal-header">
             <h3>Dental Record Chart</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
+                <button id="modal-save-btn" onclick="saveDentalRecord(window.currentPatientUid || '')" style="background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-rounded" style="font-size: 18px;">save</span>
+                    Save Chart
+                </button>
                 <button id="modal-download-pdf-btn" onclick="downloadDentalChartPDF()" style="background: var(--gold); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
                     <span class="material-symbols-rounded" style="font-size: 18px;">download</span>
                     Download PDF

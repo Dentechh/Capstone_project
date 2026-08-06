@@ -55,8 +55,8 @@
             {% endif %}
         </ul>
 
-        {% if name == "Guest" or not name %}
-        <div class="nav-actions">
+<div class="nav-actions">
+
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
@@ -73,58 +73,37 @@
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                 </svg>
             </button>
+
+            {% if name == "Guest" or not name %}
             <div class="auth-buttons">
                 <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
                 <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
             </div>
-            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-        {% else %}
+            {% else %}
 
-        <div class="nav-actions">
-           <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-               <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
-                   <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-               </svg>
-               <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                   <circle cx="12" cy="12" r="5"></circle>
-                   <line x1="12" y1="1" x2="12" y2="3"></line>
-                   <line x1="12" y1="21" x2="12" y2="23"></line>
-                   <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                   <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                   <line x1="1" y1="12" x2="3" y2="12"></line>
-                   <line x1="21" y1="12" x2="23" y2="12"></line>
-                   <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                   <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-               </svg>
-           </button>
-        <div class="profile-nav">
-            <div class="user-info-brief">   
-                <span>{{ name }}</span>
-                <small>Patient Account</small>
-            </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="profile-nav">
+                <div class="user-info-brief">
+                    <span>{{ name }}</span>
+                    <small>Patient Account</small>
+                </div>
+
                 <div class="profile-img-container" id="profileDropdownTrigger">
                     <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
-                    
+                
                     <div class="dropdown-menu" id="profileDropdown">
                         <a href="/patient-profile">PROFILE</a>
                         <a href="/logout">LOGOUT</a>
                     </div>
                 </div>
             </div>
-        </div>
+            {% endif %}
+
             <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
                 <span></span>
                 <span></span>
                 <span></span>
             </button>
-        </div>
-         {% endif %}
+          </div>
     </nav>
 </header>
 
@@ -290,6 +269,10 @@
             <button type="submit" id="loginBtn"  class="sign-up-btn">Login</button>
         </form>
 
+        <p style="text-align: center; margin-top: 10px;">
+            <a href="javascript:void(0)" class="forgot-password-link" onclick="openAuthModal('forgotPasswordModal')">Forgot Password?</a>
+        </p>
+
         <div class="divider">OR</div>
         
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
@@ -300,6 +283,17 @@
             Don't have an account yet? 
             <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
         </p>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="forgotPasswordModal" class="modal">
+    <div class="modal-content auth-card">
+        <span class="close-btn" onclick="closeAuthModal('forgotPasswordModal')">&times;</span>
+        <h2>Forgot Password</h2>
+        <p>Enter your email address to receive a password reset link.</p>
+        <input type="email" id="resetEmail" placeholder="Enter your email" required>
+        <button type="button" id="sendResetBtn" class="sign-up-btn">Send Reset Link</button>
     </div>
 </div>
 
@@ -333,7 +327,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/fireba
 
 import {
   getAuth,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -369,6 +364,29 @@ document.getElementById("signupBtn").addEventListener("click", () => {
       });
 
 });
+
+const sendResetBtn = document.getElementById("sendResetBtn");
+if (sendResetBtn) {
+    sendResetBtn.addEventListener("click", async () => {
+        const email = document.getElementById("resetEmail").value.trim();
+        if (email === "") {
+            alert("Please enter your email.");
+            return;
+        }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            alert("Password reset email has been sent. Please check your spam folder.");
+            document.getElementById("resetEmail").value = "";
+            closeAuthModal("forgotPasswordModal");
+        } catch (error) {
+            if (error.code === "auth/user-not-found") {
+                alert("No account found with this email.");
+            } else {
+                alert(error.message);
+            }
+        }
+    });
+}
 </script>
     
     <script>

@@ -490,13 +490,11 @@
             <button type="submit" id="loginBtn" class="sign-up-btn">
                 Login
             </button>
-            <button
-    type="button"
-    class="sign-up-btn"
-    onclick="openAuthModal('forgotPasswordModal')">
-    Forgot Password?
-</button>
         </form>
+
+        <p style="text-align: center; margin-top: 10px;">
+            <a href="javascript:void(0)" class="forgot-password-link" onclick="openAuthModal('forgotPasswordModal')">Forgot Password?</a>
+        </p>
 
         <div class="divider">OR</div>
 
@@ -867,22 +865,22 @@ resetPasswordBtn.addEventListener("click", async () => {
     document.getElementById("closeModal").onclick = () => modal.style.display = "none";
     
 // Confirm Appointment Button - direct form submission
-     //const confirmBtn = document.getElementById("confirmAppointmentBtn");
-    //  if (confirmBtn) {
-      ///    confirmBtn.onclick = function() {
-           //   const signatureData = document.getElementById("signatureData").value;
-             // if (!signatureData || signatureData === "") {
-               //   alert("Please provide your signature.");
-                 // return;
-              //}
-              //const form = document.getElementById("appointmentForm");
-              //if (form.checkValidity()) {
-                //  form.submit();
-              //} else {
-               //   form.reportValidity();
-              //}
-         // };
-      //}
+    const confirmBtn = document.getElementById("confirmAppointmentBtn");
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            const signatureData = document.getElementById("signatureData").value;
+            if (!signatureData || signatureData === "") {
+                alert("Please provide your signature.");
+                return;
+            }
+            const form = document.getElementById("appointmentForm");
+            if (form.checkValidity()) {
+                form.submit();
+            } else {
+                form.reportValidity();
+            }
+        };
+    }
     
      // Close payment modal removed - no longer needed
     

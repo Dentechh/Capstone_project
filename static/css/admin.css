@@ -344,16 +344,7 @@ body.dark-mode .p-info{
 body.dark-mode .patient-profile-header {
     background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
     color: #e0e0e0;
-    height: 70px; 
-    font-size: 24px; 
-    background:var(--grad-navy);
-    color: white; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    border-radius: 50%; 
-    font-weight: bold;
-
+    border-radius: 12px;
 }
 /* DASHBOARD COMPONENTS */
 .metric-cards {
@@ -663,7 +654,7 @@ body.dark-mode .appointment-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.04);
 }
 .treatment-section {
-    margin-top: 400px;
+    margin-top: 20px;
     margin-bottom: 50px;
     background: var(--white);
     border-radius: 12px;
@@ -753,6 +744,23 @@ body.dark-mode .treatment-table input:focus {
     color: #ffffff;
     border: 1px solid #ef4444;
     margin-left: 5px;
+}
+
+.btn-add-row {
+    margin-top: 10px;
+    padding: 6px 14px;
+    border: 1px solid var(--navy);
+    background: var(--navy);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+body.dark-mode .btn-add-row {
+    background: var(--gold-light);
+    border-color: var(--gold-light);
+    color: #fff;
 }
 
 /* Status Badge */
