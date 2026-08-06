@@ -1267,9 +1267,6 @@ class DentalClinicApp(BaseFlaskApp):
             if self.db.collection(self.Customer_Account).document(uid).get().exists:
                 main_collection = self.Customer_Account
 
-            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
-                main_collection = self.Customer_Account
-
             else:
                 return jsonify({
                     "success": False,
@@ -1359,6 +1356,21 @@ class DentalClinicApp(BaseFlaskApp):
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
 
+            # =========================
+            # DELETE FROM APPROVE
+            # =========================
+            patient_unq_id = request.form.get("Patient_unq_id")
+
+            if patient_unq_id:
+                approve_docs = (
+                    self.db.collection("Approve")
+                    .where("Patient_unq_id", "==", patient_unq_id)
+                    .stream()
+                )
+
+                for doc in approve_docs:
+                    doc.reference.delete()
+
             return jsonify({
                 "success": True,
                 "message": "Dental record saved successfully"
@@ -1370,7 +1382,6 @@ class DentalClinicApp(BaseFlaskApp):
                 "success": False,
                 "message": str(e)
             }), 500
-
 
     
     
