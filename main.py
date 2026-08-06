@@ -1252,60 +1252,55 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
+
     def save_dental_record(self):
-    
+
         try:
             uid = request.form.get("uid")
-    
+
             if not uid:
                 return jsonify({
                     "success": False,
                     "message": "UID is required"
                 }), 400
-    
+
             if self.db.collection(self.Customer_Account).document(uid).get().exists:
                 main_collection = self.Customer_Account
-    
+
             elif self.db.collection(self.Customer_Account).document(uid).get().exists:
                 main_collection = self.Customer_Account
-    
+
             else:
                 return jsonify({
                     "success": False,
                     "message": "User not found"
                 }), 404
-    
+
             user_ref = self.db.collection(main_collection).document(uid)
-    
+
             # =========================
             # DENTAL CHART JSON
             # =========================
             dental_chart = {}
-    
+
             for key in request.form:
                 if key.startswith("tooth_"):
                     dental_chart[key] = request.form.get(key)
-    
-            image_url = ""
-    
+
+            # =========================
+            # IMAGE TO BASE64
+            # =========================
+            image_base64 = ""
+
             image_file = request.files.get("dental_chart_image")
-    
+
             if image_file:
                 try:
-                    save_folder = os.path.join("static", "dental_charts")
-                    os.makedirs(save_folder, exist_ok=True)
-    
-                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                    filename = f"{uid}_{timestamp}.jpg"
-                    filepath = os.path.join(save_folder, filename)
-    
-                    image_file.save(filepath)
-    
-                    image_url = f"/static/dental_charts/{filename}"
-    
+                    image_bytes = image_file.read()
+                    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
                 except Exception as img_error:
-                    print("IMAGE SAVE ERROR:", img_error)
-    
+                    print("IMAGE ENCODE ERROR:", img_error)
+
             # =========================
             # TREATMENT TABLE
             # =========================
@@ -1319,7 +1314,7 @@ class DentalClinicApp(BaseFlaskApp):
             next_appts = request.form.getlist("next_appointment[]")
             medicines = request.form.getlist("medicine[]")
             statuses = request.form.getlist("status[]")
-    
+
             length = min(
                 len(dates),
                 len(teeth),
@@ -1332,14 +1327,14 @@ class DentalClinicApp(BaseFlaskApp):
                 len(medicines),
                 len(statuses)
             )
-    
+
             done_procedures = []
-    
+
             for i in range(length):
-    
+
                 if not procedures[i] and not teeth[i]:
                     continue
-    
+
                 done_procedures.append({
                     "date": dates[i],
                     "tooth": teeth[i],
@@ -1352,30 +1347,31 @@ class DentalClinicApp(BaseFlaskApp):
                     "medicine": medicines[i],
                     "status": statuses[i]
                 })
-    
+
             # =========================
             # SAVE TO FIRESTORE
             # =========================
             user_ref.collection("Done_procedure").add({
                 "uid": uid,
                 "chart": dental_chart,
-                "chart_image": image_url,
+                "chart_image": image_base64,
                 "procedures": done_procedures,
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
-    
+
             return jsonify({
                 "success": True,
-                "message": "Dental record saved successfully",
-                "chart_image": image_url
+                "message": "Dental record saved successfully"
             })
-    
+
         except Exception as e:
             print("ERROR:", e)
             return jsonify({
                 "success": False,
                 "message": str(e)
             }), 500
+
+
     
     
     
