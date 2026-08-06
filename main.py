@@ -1266,7 +1266,6 @@ class DentalClinicApp(BaseFlaskApp):
 
             if self.db.collection(self.Customer_Account).document(uid).get().exists:
                 main_collection = self.Customer_Account
-
             else:
                 return jsonify({
                     "success": False,
@@ -1274,6 +1273,11 @@ class DentalClinicApp(BaseFlaskApp):
                 }), 404
 
             user_ref = self.db.collection(main_collection).document(uid)
+
+            # =========================
+            # GET PATIENT UNIQUE ID
+            # =========================
+            patient_unq_id = request.form.get("Patient_unq_id")
 
             # =========================
             # DENTAL CHART JSON
@@ -1346,10 +1350,11 @@ class DentalClinicApp(BaseFlaskApp):
                 })
 
             # =========================
-            # SAVE TO FIRESTORE
+            # SAVE TO DONE_PROCEDURE
             # =========================
             user_ref.collection("Done_procedure").add({
                 "uid": uid,
+                "Patient_unq_id": patient_unq_id,
                 "chart": dental_chart,
                 "chart_image": image_base64,
                 "procedures": done_procedures,
@@ -1357,19 +1362,25 @@ class DentalClinicApp(BaseFlaskApp):
             })
 
             # =========================
-            # DELETE FROM APPROVE
+            # DELETE FROM APPROVE SUBCOLLECTION
             # =========================
-            patient_unq_id = request.form.get("Patient_unq_id")
-
             if patient_unq_id:
+
                 approve_docs = (
-                    self.db.collection("Approve")
+                    user_ref.collection("Approve")
                     .where("Patient_unq_id", "==", patient_unq_id)
                     .stream()
                 )
 
+                deleted = False
+
                 for doc in approve_docs:
+                    print("Deleting Approve document:", doc.id)
                     doc.reference.delete()
+                    deleted = True
+
+                if not deleted:
+                    print("No matching Approve document found.")
 
             return jsonify({
                 "success": True,
@@ -1382,8 +1393,6 @@ class DentalClinicApp(BaseFlaskApp):
                 "success": False,
                 "message": str(e)
             }), 500
-
-    
     
     
 

@@ -1579,37 +1579,27 @@ async function saveDentalRecord(uid) {
       backgroundColor: '#ffffff'
     });
 
-    // =========================
-    // SAFE PROMISE WRAPPER FOR BLOB
-    // =========================
     const blob = await new Promise(resolve => {
       canvas.toBlob(resolve, "image/jpeg", 0.7);
     });
 
     const formData = new FormData();
 
-    // =========================
     // UID
-    // =========================
     formData.append("uid", uid);
 
-    // =========================
-    // PATIENT UNIQUE ID (FOR DELETE APPROVE RECORD)
-    // =========================
-    const patient_unq_id =
-    document.getElementById("td-Patient_unq_id")?.innerText?.trim();
+    // Patient Record ID
+    const patientUnqId = document
+        .getElementById("td-Patient_unq_id")
+        .textContent
+        .trim();
 
-    if (patient_unq_id) {
-    formData.append("Patient_unq_id", patient_unq_id);
-    }
-    // =========================
-    // IMAGE
-    // =========================
+    formData.append("Patient_unq_id", patientUnqId);
+
+    // Image
     formData.append("dental_chart_image", blob, "chart.jpg");
 
-    // =========================
-    // TOOTH DATA
-    // =========================
+    // Tooth Data
     document.querySelectorAll(".tooth-unit").forEach(tooth => {
 
       const id = tooth.id.replace("tooth-", "");
@@ -1627,9 +1617,7 @@ async function saveDentalRecord(uid) {
       formData.append(`tooth_${id}`, value);
     });
 
-    // =========================
-    // TREATMENT TABLE
-    // =========================
+    // Treatment Table
     document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
 
       formData.append("date[]", row.querySelector(".td-date")?.value || "");
@@ -1641,12 +1629,9 @@ async function saveDentalRecord(uid) {
       formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
       formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
       formData.append("medicine[]", row.querySelector(".td-medicine")?.value || "");
-    formData.append("status[]", row.querySelector(".td-status")?.value || "");
+      formData.append("status[]", row.querySelector(".td-status")?.value || "");
     });
 
-    // =========================
-    // SEND TO FLASK
-    // =========================
     const response = await fetch("/save_dental_record", {
       method: "POST",
       body: formData
@@ -1654,24 +1639,22 @@ async function saveDentalRecord(uid) {
 
     const result = await response.json();
 
-    console.log("STATUS:", response.status);
-    console.log("RESPONSE:", result);
+    console.log("UID:", uid);
+    console.log("Patient Record ID:", patientUnqId);
+    console.log(result);
 
-if (result.success) {
-    alert("Dental record saved successfully!");
-    location.reload();
-
-
-} else {
-  alert("Error: " + result.message);
-}
+    if (result.success) {
+      alert("Dental record saved successfully!");
+      location.reload();
+    } else {
+      alert("Error: " + result.message);
+    }
 
   } catch (error) {
-    console.error("SAVE ERROR:", error);
+    console.error(error);
     alert("Failed to save dental record.");
   }
 }
-
 
 // =========================
 // SINGLE CLEAN BUTTON HANDLER
