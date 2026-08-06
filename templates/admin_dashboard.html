@@ -1657,10 +1657,10 @@ async function saveDentalRecord(uid) {
     console.log("STATUS:", response.status);
     console.log("RESPONSE:", result);
 
-    if (result.success) {
-  alert("Dental record saved successfully!");
+if (result.success) {
+    alert("Dental record saved successfully!");
+    location.reload();
 
-  closeChartModal();
 
 } else {
   alert("Error: " + result.message);
