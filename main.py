@@ -1115,6 +1115,7 @@ class DentalClinicApp(BaseFlaskApp):
         for done in done_docs:
     
             done_data = done.to_dict()
+            chart_image = done_data.get("chart_image", "")
     
             procedures = done_data.get("procedures", [])
     
@@ -1131,7 +1132,9 @@ class DentalClinicApp(BaseFlaskApp):
                     "status": p.get("status", ""),   # <-- ADD THIS
                     "next_appointment": p.get("next_appointment", ""),
                     "status": p.get("status", ""),
-                    "medicine": p.get("medicine", "")
+                    "medicine": p.get("medicine", ""),
+                    "chart_image": chart_image
+      
                 })
     
         data["Done_procedure"] = visit_history
