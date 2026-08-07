@@ -632,9 +632,15 @@ window.onclick = function(e) {
                 <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
                     
                     <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 1500;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 1500;">-</span></div>
-                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 1500;">-</span></div>
-                </div>
+<div class="pd-stat" style="display: none;">
+    <label style="display: block; font-size: 15px; text-transform: uppercase;">Age</label>
+    <span id="pd-age" style="font-weight: 1500;">-</span>
+</div>
+
+<div class="pd-stat" style="display: none;">
+    <label style="display: block; font-size: 15px; text-transform: uppercase;">Blood Type</label>
+    <span id="pd-blood" style="font-weight: 1500;">-</span>
+</div>                </div>
             </div>
 
             <div id="pd-details" style="display:none;">
@@ -709,7 +715,7 @@ window.onclick = function(e) {
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
                         <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
-                             <li id="q1-check">Q1 (Heart disease): <span>-</span></li>
+                             <li id="q1-check">Q1 ( Are you in good health): <span>-</span></li>
                              <li id="q2-check">Q2 (HBP): <span>-</span></li>
                              <li id="q3-check">Q3 (Diabetes): <span>-</span></li>
                              <li id="q4-check">Q4 (Jaundice/Hepatitis): <span>-</span></li>
@@ -1102,6 +1108,7 @@ async function downloadDentalChartPDF() {
 
 function openPatientDashboard(
     name,
+    lastname,
     uid,
     birthday,
     sex,
@@ -1127,13 +1134,15 @@ function openPatientDashboard(
     w_pill
 ) {
 
-    document.getElementById('pd-name').innerText = name || 'Unknown';
-    document.getElementById('pd-id').innerText = 'Patient ID: ' + (uid || 'N/A');
+    document.getElementById('pd-name').innerText = 
+    (name || 'Unknown') + " " + (lastname || '');
+    document.getElementById('pd-id').innerText = 'Account No: ' + (uid || 'N/A');
 
     document.getElementById('pd-gender').innerText = sex || 'Female';
     document.getElementById('pd-age').innerText = age || 'N/A';
 
-    document.getElementById('pd-disp-fullname').innerText = name || 'Unknown';
+    document.getElementById('pd-disp-fullname').innerText =
+    (name || 'Unknown') + " " + (lastname || '');
     document.getElementById('pd-disp-middlename').innerText = middlename || 'Unknown';
     document.getElementById('pd-disp-birthday').innerText = birthday || 'Unknown';
 
@@ -1228,7 +1237,11 @@ procedures.forEach(function(p, index){
 });
 });
 }
-        function setCheckbox(id, value) {
+        
+
+
+
+function setCheckbox(id, value) {
             var el = document.getElementById(id);
             if (el) {
                 var span = el.querySelector('span');
@@ -1260,6 +1273,7 @@ procedures.forEach(function(p, index){
                     openPatientDashboard(
                 
                 this.getAttribute('data-name'),
+                this.getAttribute('data-lastname'),
                 this.getAttribute('data-uid'),
                 this.getAttribute('data-birthday'),
                 this.getAttribute('data-sex'),

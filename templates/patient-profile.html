@@ -335,7 +335,6 @@
                 <thead>
                     <tr>
                         <th>Assigned Dentist</th>
-                        <th>Chart</th>
                         <th>Date</th>
                         <th>Procedure</th>
                         <th>Fee Paid</th>
@@ -419,7 +418,6 @@ function openVisitHistory(uid) {
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.dentist || "-"}</td>
-                        <td><button class="btn-action" onclick="viewSavedChart('${uid}')">View</button></td>
                         <td>${p.date || "-"}</td>
                         <td>${p.procedure || "-"}</td>
                         <td>₱${p.paid || 0}</td>
@@ -667,10 +665,6 @@ window.addEventListener("click", function(e) {
             <input type="text" name="new_name" value="{{ user.get('firstname', '') }} {{ user.get('lastname', '') }}" placeholder="Enter your full name" required>
         </div>
 
-        <div class="info-item">
-            <label>Username</label>
-            <input type="text" name="new_username" value="{{ user.get('username', '') }}" required>
-        </div>
 
         <div class="info-item">
             <label>Phone Number</label>

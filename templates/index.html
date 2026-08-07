@@ -214,11 +214,12 @@
         <button data-msg="Appointments">Appointments</button>
         <button data-msg="Treatments">Treatments</button>
     </div>
+    <!--
     <div class="chatbot-input">
         <input type="text" id="chat-input" placeholder="Ask a question...">
         <button id="send-btn">Send</button>
     </div>
-</div>
+</div>-->
 
 
 
@@ -253,7 +254,7 @@
                     <p>Patient Signature:</p>
                     <div class="signature-row">
                         <div class="signature-draw">
-                            <canvas id="signaturePad" width="300" height="80"></canvas>
+                            <canvas id="signaturePad" width="300" height="80"></canvas >
                             <button type="button" onclick="clearSignature()" class="clear-btn">Clear</button>
                         </div>
                         <div class="signature-upload">
@@ -384,6 +385,8 @@
                                 name="appointment_date"
                                 required>
                         </div>
+
+                        
 
                     </div>
                 </div> <!-- This closes the personal-info-grid div -->
@@ -838,7 +841,29 @@ resetPasswordBtn.addEventListener("click", async () => {
         btn.onclick = () => {
             const msg = btn.getAttribute('data-msg');
             addMsg('user', msg);
-            setTimeout(() => addMsg('bot', `I'd be happy to help with ${msg}! What specific info do you need?`), 600);
+            setTimeout(() => addMsg('bot', `Dental Consultation
+            
+Oral Prophylaxis (Cleaning)
+
+Tooth Restoration (Pasta)
+
+Tooth Extraction (Cabot)
+
+Dentures (Pustiso)
+
+Crowns and Bridges
+
+Teeth Whitening
+
+Fluoride Treatment
+
+Pit and Fissure Sealant
+
+Wisdom Teeth Removal
+
+Root Canal Treatment
+
+Periapical Xray`), 600);
         }
     });
 
