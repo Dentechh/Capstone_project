@@ -2564,34 +2564,172 @@ body.dark-mode .datetime-text {
         top: 0;
         width: 100%;
         height: 100%;
+        height: 100dvh;
         background-color: rgba(0,0,0,0.95);
-        align-items: center;
-        justify-content: center;
+        align-items: flex-start;
+        justify-content: flex-start;
         padding: 0;
     }
     
     .chart-modal-content {
         width: 100%;
         height: 100%;
+        height: 100dvh;
         max-width: none;
         border-radius: 0;
         border: none;
+        display: flex;
+        flex-direction: column;
     }
     
     .chart-modal-header {
-        padding: 10px 15px;
+        padding: 8px 12px;
+        min-height: 40px;
+        flex-shrink: 0;
     }
     
     .chart-modal-header h3 {
-        font-size: 16px;
+        font-size: 14px;
     }
     
     .chart-modal-body {
-        padding: 10px;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: auto;
+        padding: 8px;
+        -webkit-overflow-scrolling: touch;
     }
-    
+
+    .chart-container {
+        padding: 8px;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .action-palette {
+        padding: 8px 12px;
+        gap: 6px;
+        border-radius: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tool {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+        border-radius: 8px;
+        white-space: nowrap;
+    }
+
+    .palette-title {
+        font-size: 11px;
+        margin-right: 8px;
+    }
+
+    .material-symbols-rounded {
+        font-size: 16px;
+    }
+
+    .chart-title {
+        font-size: 13px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .dental-chart {
+        padding: 10px 8px;
+        border-radius: 12px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 0;
+    }
+
+    .odontogram-container {
+        padding: 8px 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 0;
+    }
+
+    .unified-grid,
+    .unified-grid.wide,
+    .teeth-row.wide,
+    .permanent-block {
+        width: 400px;
+        margin: 0 auto;
+        min-width: 400px;
+        flex-shrink: 0;
+    }
+
+    .grid-box {
+        width: 30px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+
+    .grid-box input[type="text"].grid-input {
+        font-size: 11px;
+    }
+
+    .grid-box input[type="checkbox"].grid-checkbox {
+        width: 14px;
+        height: 14px;
+    }
+
+    .tooth-unit {
+        width: 30px;
+        flex-shrink: 0;
+    }
+
+    .tooth-svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .tooth-label {
+        font-size: 11px;
+    }
+
+    .section-label {
+        font-size: 10px;
+        margin: 2px;
+        text-align: center;
+    }
+
+    .label-inline {
+        font-size: 10px;
+        width: 60px;
+        flex-shrink: 0;
+    }
+
+    .status-row-wrapper {
+        gap: 8px;
+        margin: 8px 0;
+    }
+
+    .label-side.rotated {
+        font-size: 10px;
+        left: -16px;
+    }
+
+    .axis-h,
+    .axis-h-mid {
+        margin: 8px 0;
+    }
+
     .chart-modal-close .material-symbols-rounded {
         font-size: 20px;
+    }
+
+    #modal-download-pdf-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+        gap: 4px;
+    }
+
+    #modal-download-pdf-btn .material-symbols-rounded {
+        font-size: 16px;
     }
 }
 
@@ -2604,6 +2742,7 @@ body.dark-mode .datetime-text {
 
     .chart-modal-content {
         height: 100vh;
+        height: 100dvh;
         width: 100%;
         max-width: none;
         border-radius: 0;
@@ -2611,18 +2750,21 @@ body.dark-mode .datetime-text {
     }
 
     .chart-modal-header {
-        padding: 4px 10px;
-        min-height: 36px;
+        padding: 3px 8px;
+        min-height: 32px;
+        flex-shrink: 0;
     }
 
     .chart-modal-header h3 {
-        font-size: 11px;
+        font-size: 10px;
     }
 
     .chart-modal-body {
+        flex: 1;
         padding: 2px;
         overflow-y: auto;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .chart-container {
@@ -2632,39 +2774,39 @@ body.dark-mode .datetime-text {
     }
 
     .action-palette {
-        padding: 4px 8px;
+        padding: 3px 6px;
         gap: 2px;
-        border-radius: 8px;
+        border-radius: 6px;
         flex-wrap: wrap;
         justify-content: center;
     }
 
     .tool {
-        padding: 2px 5px;
-        font-size: 9px;
+        padding: 2px 4px;
+        font-size: 8px;
         gap: 1px;
-        border-radius: 4px;
+        border-radius: 3px;
         white-space: nowrap;
     }
 
     .palette-title {
-        font-size: 8px;
-        margin-right: 4px;
+        font-size: 7px;
+        margin-right: 3px;
     }
 
     .material-symbols-rounded {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .chart-title {
-        font-size: 10px;
-        margin-bottom: 4px;
+        font-size: 9px;
+        margin-bottom: 2px;
         text-align: center;
     }
 
     .dental-chart {
-        padding: 4px 2px;
-        border-radius: 6px;
+        padding: 3px 2px;
+        border-radius: 4px;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         min-width: 0;
@@ -2681,78 +2823,80 @@ body.dark-mode .datetime-text {
     .unified-grid.wide,
     .teeth-row.wide,
     .permanent-block {
-        width: 320px;
+        width: 300px;
         margin: 0 auto;
-        min-width: 320px;
+        min-width: 300px;
         flex-shrink: 0;
     }
 
     .grid-box {
-        width: 22px;
-        height: 16px;
+        width: 20px;
+        height: 14px;
         flex-shrink: 0;
     }
 
     .grid-box input[type="text"].grid-input {
-        font-size: 9px;
+        font-size: 8px;
     }
 
     .grid-box input[type="checkbox"].grid-checkbox {
-        width: 12px;
-        height: 12px;
+        width: 10px;
+        height: 10px;
     }
 
     .tooth-unit {
-        width: 22px;
+        width: 20px;
         flex-shrink: 0;
     }
 
     .tooth-svg {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
     }
 
     .tooth-label {
-        font-size: 8px;
+        font-size: 7px;
     }
 
     .section-label {
-        font-size: 8px;
+        font-size: 7px;
         margin: 1px;
+        text-align: center;
     }
 
     .label-inline {
-        font-size: 8px;
-        width: 45px;
+        font-size: 7px;
+        width: 40px;
+        flex-shrink: 0;
     }
 
     .status-row-wrapper {
-        gap: 4px;
-        margin: 4px 0;
+        gap: 3px;
+        margin: 3px 0;
     }
 
     .label-side.rotated {
-        font-size: 8px;
-        left: -10px;
+        font-size: 7px;
+        left: -8px;
     }
 
     .axis-h,
     .axis-h-mid {
-        margin: 4px 0;
+        margin: 3px 0;
     }
 
     .chart-modal-close .material-symbols-rounded {
-        font-size: 16px;
+        font-size: 14px;
     }
 
     #modal-download-pdf-btn {
-        font-size: 9px;
-        padding: 4px 6px;
+        font-size: 8px;
+        padding: 3px 5px;
         gap: 2px;
     }
 
     #modal-download-pdf-btn .material-symbols-rounded {
-        font-size: 12px;
+        font-size: 11px;
     }
 }
 
