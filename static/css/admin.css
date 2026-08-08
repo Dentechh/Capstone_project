@@ -2596,140 +2596,143 @@ body.dark-mode .datetime-text {
 }
 
 /* Phone Landscape - Chart Modal */
-@media (max-width: 768px) and (orientation: landscape) {
+@media (orientation: landscape) and (max-height: 500px) {
     .chart-modal-overlay {
         padding: 0;
+        align-items: flex-start;
     }
 
     .chart-modal-content {
         height: 100vh;
+        width: 100%;
+        max-width: none;
+        border-radius: 0;
+        border: none;
     }
 
     .chart-modal-header {
-        padding: 6px 12px;
-        min-height: 44px;
+        padding: 4px 10px;
+        min-height: 36px;
     }
 
     .chart-modal-header h3 {
-        font-size: 13px;
+        font-size: 11px;
     }
 
     .chart-modal-body {
-        padding: 4px;
+        padding: 2px;
         overflow-y: auto;
         overflow-x: hidden;
     }
 
     .chart-container {
-        padding: 4px;
-        gap: 6px;
+        padding: 2px;
+        gap: 4px;
     }
 
     .action-palette {
-        padding: 6px 10px;
-        gap: 3px;
-        border-radius: 10px;
+        padding: 4px 8px;
+        gap: 2px;
+        border-radius: 8px;
     }
 
     .tool {
-        padding: 3px 7px;
-        font-size: 10px;
-        gap: 2px;
-        border-radius: 6px;
+        padding: 2px 5px;
+        font-size: 9px;
+        gap: 1px;
+        border-radius: 4px;
     }
 
     .palette-title {
-        font-size: 9px;
-        margin-right: 6px;
+        font-size: 8px;
+        margin-right: 4px;
     }
 
     .material-symbols-rounded {
-        font-size: 15px;
+        font-size: 13px;
     }
 
     .chart-title {
-        font-size: 11px;
-        margin-bottom: 8px;
+        font-size: 10px;
+        margin-bottom: 4px;
     }
 
     .dental-chart {
-        padding: 8px 4px;
-        border-radius: 10px;
+        padding: 4px 2px;
+        border-radius: 6px;
     }
 
     .odontogram-container {
-        padding: 4px 0;
+        padding: 2px 0;
     }
 
     .unified-grid,
     .unified-grid.wide,
     .teeth-row.wide,
     .permanent-block {
-        width: 360px;
+        width: 320px;
         margin: 0 auto;
     }
 
     .grid-box {
-        width: 26px;
-        height: 19px;
+        width: 22px;
+        height: 16px;
     }
 
     .grid-box input[type="text"].grid-input {
-        font-size: 10px;
+        font-size: 9px;
     }
 
     .grid-box input[type="checkbox"].grid-checkbox {
-        width: 14px;
-        height: 14px;
+        width: 12px;
+        height: 12px;
     }
 
     .tooth-unit {
-        width: 26px;
+        width: 22px;
     }
 
     .tooth-svg {
-        width: 22px;
-        height: 22px;
+        width: 18px;
+        height: 18px;
     }
 
     .tooth-label {
-        font-size: 9px;
+        font-size: 8px;
     }
 
     .section-label {
-        font-size: 9px;
-        margin: 2px;
+        font-size: 8px;
+        margin: 1px;
     }
 
     .label-inline {
-        font-size: 9px;
-        width: 55px;
+        font-size: 8px;
+        width: 45px;
     }
 
     .label-side.rotated {
-        font-size: 9px;
-        left: -12px;
+        font-size: 8px;
+        left: -10px;
     }
 
     .axis-h,
     .axis-h-mid {
-        margin: 6px 0;
+        margin: 4px 0;
     }
 
     .chart-modal-close .material-symbols-rounded {
-        font-size: 18px;
+        font-size: 16px;
     }
 
-    #modal-save-btn,
     #modal-download-pdf-btn {
-        font-size: 10px;
-        padding: 5px 8px;
-        gap: 3px;
+        font-size: 9px;
+        padding: 4px 6px;
+        gap: 2px;
     }
 
-    #modal-save-btn .material-symbols-rounded,
     #modal-download-pdf-btn .material-symbols-rounded {
-        font-size: 14px;
+        font-size: 12px;
     }
 }
 
