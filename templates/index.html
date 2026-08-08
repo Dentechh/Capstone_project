@@ -214,12 +214,11 @@
         <button data-msg="Appointments">Appointments</button>
         <button data-msg="Treatments">Treatments</button>
     </div>
-    <!--
     <div class="chatbot-input">
         <input type="text" id="chat-input" placeholder="Ask a question...">
         <button id="send-btn">Send</button>
     </div>
-</div>-->
+</div>
 
 
 
@@ -254,7 +253,7 @@
                     <p>Patient Signature:</p>
                     <div class="signature-row">
                         <div class="signature-draw">
-                            <canvas id="signaturePad" width="300" height="80"></canvas >
+                            <canvas id="signaturePad" width="300" height="80"></canvas>
                             <button type="button" onclick="clearSignature()" class="clear-btn">Clear</button>
                         </div>
                         <div class="signature-upload">
@@ -386,8 +385,6 @@
                                 required>
                         </div>
 
-                        
-
                     </div>
                 </div> <!-- This closes the personal-info-grid div -->
 
@@ -514,6 +511,8 @@
         </p>
     </div>
 </div>
+
+
 
 <!-- Forgot Password Modal -->
 <div id="forgotPasswordModal" class="modal">
@@ -705,6 +704,51 @@ signupForm.addEventListener("submit", async (e) => {
 
 
 
+// ======================
+// FORGOT PASSWORD
+// ======================
+
+const resetPasswordBtn = document.getElementById("resetPasswordBtn");
+
+resetPasswordBtn.addEventListener("click", async () => {
+
+    const email = document.getElementById("loginEmail").value.trim();
+
+    if (email === "") {
+        alert("Please enter your email first.");
+        return;
+    }
+
+    try {
+
+        await sendPasswordResetEmail(auth, email);
+
+        alert("Password reset email has been sent. Please check your inbox.");
+
+    } catch (error) {
+
+        switch (error.code) {
+
+            case "auth/user-not-found":
+                alert("No account found with this email.");
+                break;
+
+            case "auth/invalid-email":
+                alert("Invalid email address.");
+                break;
+
+            case "auth/too-many-requests":
+                alert("Too many requests. Please try again later.");
+                break;
+
+            default:
+                alert(error.message);
+
+        }
+
+    }
+
+});
 
 </script>
 
@@ -794,29 +838,7 @@ signupForm.addEventListener("submit", async (e) => {
         btn.onclick = () => {
             const msg = btn.getAttribute('data-msg');
             addMsg('user', msg);
-            setTimeout(() => addMsg('bot', `Dental Consultation
-            
-Oral Prophylaxis (Cleaning)
-
-Tooth Restoration (Pasta)
-
-Tooth Extraction (Cabot)
-
-Dentures (Pustiso)
-
-Crowns and Bridges
-
-Teeth Whitening
-
-Fluoride Treatment
-
-Pit and Fissure Sealant
-
-Wisdom Teeth Removal
-
-Root Canal Treatment
-
-Periapical Xray`), 600);
+            setTimeout(() => addMsg('bot', `I'd be happy to help with ${msg}! What specific info do you need?`), 600);
         }
     });
 
