@@ -1822,9 +1822,17 @@ function openChartModal() {
     modalContent.innerHTML = '';
     modalContent.appendChild(chartSection);
     modal.style.display = 'flex';
+    window._chartInModal = true;
 }
 
 function viewSavedChart(index) {
+    if (window._chartInModal && window._chartSectionRef && window._chartOriginalParent) {
+        window._chartOriginalParent.insertBefore(window._chartSectionRef, window._chartOriginalNextSibling);
+        window._chartInModal = false;
+        window._chartSectionRef = null;
+        window._chartOriginalParent = null;
+        window._chartOriginalNextSibling = null;
+    }
 
     if (!window.currentProcedures || !window.currentProcedures[index]) {
         alert("Procedure not found.");
@@ -1832,8 +1840,6 @@ function viewSavedChart(index) {
     }
 
     const chartImage = window.currentProcedures[index].chart_image;
-
-    console.log(chartImage.substring(0, 50));
 
     document.getElementById("modal-chart-content").innerHTML = `
         <img
@@ -1850,14 +1856,16 @@ function viewSavedChart(index) {
 
     document.getElementById("chartModal").style.display = "flex";
 }
+
 function closeChartModal() {
     const modal = document.getElementById('chartModal');
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = '';
 
-        if (window._chartSectionRef && window._chartOriginalParent) {
+        if (window._chartInModal && window._chartSectionRef && window._chartOriginalParent) {
             window._chartOriginalParent.insertBefore(window._chartSectionRef, window._chartOriginalNextSibling);
+            window._chartInModal = false;
             window._chartSectionRef = null;
             window._chartOriginalParent = null;
             window._chartOriginalNextSibling = null;
