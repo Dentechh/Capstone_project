@@ -2763,4 +2763,14 @@ body.dark-mode .datetime-text {
     .sidebar-footer {
         display: flex !important;
     }
+    
+    #open-chart-btn {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #open-chart-btn {
+        display: inline-flex !important;
+    }
 }

@@ -443,43 +443,7 @@ window.onclick = function(e) {
 </script>
 
 
-<!-- Dental Chart Modal -->
-<div id="chartModal" class="modal">
-    <div class="modal-content">
-        <span onclick="closeChartModal()" class="close">&times;</span>
 
-        <h2>Saved Dental Chart</h2>
-
-        <img
-            id="savedChartImage"
-            style="max-width:100%;display:block;margin:auto;">
-
-    </div>
-</div>
-
-<div id="chartModal"
-     style="display:none;
-            position:fixed;
-            left:0;
-            top:0;
-            width:100%;
-            height:100%;
-            background:rgba(0,0,0,.7);
-            justify-content:center;
-            align-items:center;
-            z-index:9999;">
-
-    <div style="background:white;padding:15px;border-radius:8px;max-width:90%;max-height:90%;">
-
-        <span
-            onclick="document.getElementById('chartModal').style.display='none'"
-            style="float:right;font-size:28px;cursor:pointer;">&times;</span>
-
-        <img id="savedChartImage"
-             style="max-width:100%;max-height:80vh;">
-    </div>
-
-</div>
 
 
 
@@ -1844,6 +1808,22 @@ window.addEventListener('click', function(e) {
 });
 
 // Dental Chart Modal
+function openChartModal() {
+    var chartSection = document.getElementById('section-chart');
+    var modalContent = document.getElementById('modal-chart-content');
+    var modal = document.getElementById('chartModal');
+
+    if (!chartSection || !modalContent || !modal) return;
+
+    window._chartSectionRef = chartSection;
+    window._chartOriginalParent = chartSection.parentNode;
+    window._chartOriginalNextSibling = chartSection.nextSibling;
+
+    modalContent.innerHTML = '';
+    modalContent.appendChild(chartSection);
+    modal.style.display = 'flex';
+}
+
 function viewSavedChart(index) {
 
     if (!window.currentProcedures || !window.currentProcedures[index]) {
@@ -1875,11 +1855,18 @@ function closeChartModal() {
     if (modal) {
         modal.style.display = 'none';
         document.body.style.overflow = '';
-        
+
+        if (window._chartSectionRef && window._chartOriginalParent) {
+            window._chartOriginalParent.insertBefore(window._chartSectionRef, window._chartOriginalNextSibling);
+            window._chartSectionRef = null;
+            window._chartOriginalParent = null;
+            window._chartOriginalNextSibling = null;
+        }
+
         if (screen.orientation && screen.orientation.unlock) {
             screen.orientation.unlock();
         }
-        
+
         if (document.exitFullscreen) {
             document.exitFullscreen().catch(() => {});
         }
