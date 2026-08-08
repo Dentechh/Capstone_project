@@ -1821,6 +1821,7 @@ function openLiveChartModal() {
 
     modalContent.innerHTML = '';
     modalContent.appendChild(chartSection);
+    chartSection.style.display = 'block';
     modal.style.display = 'flex';
     window._chartInModal = true;
 
@@ -1861,6 +1862,7 @@ function closeLiveChartModal() {
 
         if (window._chartInModal && window._chartSectionRef && window._chartOriginalParent) {
             window._chartOriginalParent.insertBefore(window._chartSectionRef, window._chartOriginalNextSibling);
+            window._chartSectionRef.style.display = '';
             window._chartInModal = false;
             window._chartSectionRef = null;
             window._chartOriginalParent = null;
