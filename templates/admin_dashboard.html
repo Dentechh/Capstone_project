@@ -1825,11 +1825,26 @@ function openLiveChartModal() {
     modal.style.display = 'flex';
     window._chartInModal = true;
 
-    if (screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(() => {});
-    }
+    // Force landscape on mobile — request fullscreen first, then lock orientation
+    const tryLockLandscape = () => {
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+    };
+
+    const onFullscreenEnter = () => {
+        tryLockLandscape();
+    };
+
+    document.addEventListener('fullscreenchange', onFullscreenEnter, { once: true });
+    document.addEventListener('webkitfullscreenchange', onFullscreenEnter, { once: true });
+
     if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {});
+    } else if (document.documentElement.webkitRequestFullscreen) {
+        document.documentElement.webkitRequestFullscreen();
+    } else {
+        tryLockLandscape();
     }
 }
 
