@@ -515,8 +515,6 @@
     </div>
 </div>
 
-
-
 <!-- Forgot Password Modal -->
 <div id="forgotPasswordModal" class="modal">
     <div class="modal-content auth-card">
@@ -707,51 +705,6 @@ signupForm.addEventListener("submit", async (e) => {
 
 
 
-// ======================
-// FORGOT PASSWORD
-// ======================
-
-const resetPasswordBtn = document.getElementById("resetPasswordBtn");
-
-resetPasswordBtn.addEventListener("click", async () => {
-
-    const email = document.getElementById("loginEmail").value.trim();
-
-    if (email === "") {
-        alert("Please enter your email first.");
-        return;
-    }
-
-    try {
-
-        await sendPasswordResetEmail(auth, email);
-
-        alert("Password reset email has been sent. Please check your inbox.");
-
-    } catch (error) {
-
-        switch (error.code) {
-
-            case "auth/user-not-found":
-                alert("No account found with this email.");
-                break;
-
-            case "auth/invalid-email":
-                alert("Invalid email address.");
-                break;
-
-            case "auth/too-many-requests":
-                alert("Too many requests. Please try again later.");
-                break;
-
-            default:
-                alert(error.message);
-
-        }
-
-    }
-
-});
 
 </script>
 
