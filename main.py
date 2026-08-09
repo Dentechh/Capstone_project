@@ -1,4 +1,4 @@
-﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, session
+﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, session, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from google.oauth2 import id_token
@@ -325,8 +325,18 @@ class DentalClinicApp(BaseFlaskApp):
         uid = session.get('uid', '')
         name = session.get('name', 'Guest')
         email = session.get('email', '')
+        profile_pic = ''
     
-        return render_template("index.html",uid=uid,name=name,email=email)
+        if uid and email:
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            if user_query:
+                profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            else:
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                if user_query:
+                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+    
+        return render_template("index.html", uid=uid, name=name, email=email, profile_pic=profile_pic)
     
     
     
@@ -335,7 +345,18 @@ class DentalClinicApp(BaseFlaskApp):
         uid = session.get ('uid', '')
         name = session.get('name', 'Guest')
         email = session.get('email', '')
-        return render_template("google_index.html",uid = uid, name=name, email=email)
+        profile_pic = ''
+    
+        if uid and email:
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            if user_query:
+                profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            else:
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                if user_query:
+                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+    
+        return render_template("google_index.html", uid = uid, name=name, email=email, profile_pic=profile_pic)
     
     
 
@@ -354,7 +375,10 @@ class DentalClinicApp(BaseFlaskApp):
         )
 
         if resp.status_code != 200:
-            flash("Incorrect email or password.", "error")
+            error_msg = "Incorrect email or password."
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": error_msg}), 401
+            flash(error_msg, "error")
             return redirect(url_for("index"))
 
         data = resp.json()
@@ -371,7 +395,10 @@ class DentalClinicApp(BaseFlaskApp):
         )
 
         if lookup_resp.status_code != 200:
-            flash("Unable to verify your account.", "error")
+            error_msg = "Unable to verify your account."
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": error_msg}), 401
+            flash(error_msg, "error")
             return redirect(url_for("index"))
 
         lookup_data = lookup_resp.json()
@@ -379,7 +406,10 @@ class DentalClinicApp(BaseFlaskApp):
         verified = lookup_data["users"][0]["emailVerified"]
 
         if not verified:
-            flash("Please verify your email first.", "error")
+            error_msg = "Please verify your email first."
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({"success": False, "message": error_msg}), 401
+            flash(error_msg, "error")
             return redirect(url_for("index"))
 
         uid = lookup_data["users"][0]["localId"]
@@ -391,6 +421,9 @@ class DentalClinicApp(BaseFlaskApp):
         session["name"] = user_data.get("firstname", "")
         session["email"] = email
         session["uid"] = uid
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({"success": True, "redirect": url_for("index")})
 
         flash(f"Welcome back, {user_data.get('firstname', '')}!", "success")
         return redirect(url_for("index"))
@@ -504,7 +537,19 @@ class DentalClinicApp(BaseFlaskApp):
     def about_customer(self):
         name = session.get('name', 'Guest')
         email = session.get('email', '')
-        return render_template("about.html", name=name, email=email)
+        profile_pic = ''
+        uid = session.get('uid', '')
+    
+        if uid and email:
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            if user_query:
+                profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            else:
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                if user_query:
+                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+    
+        return render_template("about.html", name=name, email=email, profile_pic=profile_pic)
     
     
     
@@ -1055,6 +1100,14 @@ class DentalClinicApp(BaseFlaskApp):
             )
         )
 
+        urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
+        for appt in appointment_list:
+            level = appt.get("UrgencyLevel", "Normal")
+            if level in urgency_counts:
+                urgency_counts[level] += 1
+
+        recent_approve = approve_list[:3]
+
         # =========================
         # RENDER TEMPLATE
         # =========================
@@ -1067,6 +1120,8 @@ class DentalClinicApp(BaseFlaskApp):
             pending_count=pending_count,
             approved_count=approved_count,
             total_patients=total_patients,
+            urgency_counts=urgency_counts,
+            recent_approve=recent_approve,
         )
         
     
@@ -1309,25 +1364,102 @@ class DentalClinicApp(BaseFlaskApp):
             flash("Failed to update profile. Please try again.", "error")
             return redirect(request.referrer)
         
+
+    def upload_profile_pic(self):
+        try:
+            uid = session.get('uid', '')
+            
+            if not uid:
+                return jsonify({"success": False, "message": "Not authenticated"}), 401
+            
+            if 'profile_pic' not in request.files:
+                return jsonify({"success": False, "message": "No file uploaded"}), 400
+            
+            file = request.files['profile_pic']
+            
+            if file.filename == '':
+                return jsonify({"success": False, "message": "No file selected"}), 400
+            
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+            filename = file.filename
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+            
+            if ext not in allowed_extensions:
+                return jsonify({"success": False, "message": "Invalid file type. Please upload PNG, JPG, or GIF."}), 400
+            
+            save_folder = os.path.join("static", "profile_pics")
+            os.makedirs(save_folder, exist_ok=True)
+            
+            new_filename = f"{uid}.{ext}"
+            filepath = os.path.join(save_folder, new_filename)
+            
+            for old_file in os.listdir(save_folder):
+                if old_file.startswith(uid + "."):
+                    old_path = os.path.join(save_folder, old_file)
+                    if old_path != filepath:
+                        os.remove(old_path)
+            
+            file.save(filepath)
+            
+            profile_pic_url = f"/static/profile_pics/{new_filename}"
+            user_ref = self.db.collection(self.Customer_Account).document(uid)
+            
+            if user_ref.get().exists:
+                user_ref.update({"profile_pic": profile_pic_url})
+            else:
+                return jsonify({"success": False, "message": "User not found"}), 404
+            
+            return jsonify({
+                "success": True,
+                "message": "Profile picture updated successfully",
+                "profile_pic_url": profile_pic_url
+            })
+            
+        except Exception as e:
+            print(f"Upload profile pic error: {e}")
+            return jsonify({"success": False, "message": str(e)}), 500
+        
     
 
     def service_detail(self, service_id):
         name = session.get('name', 'Guest')
         email = session.get('email', '')
         uid = session.get('uid', '')
+        profile_pic = ''
 
         service = self.SERVICES_DATA.get(service_id)
         
         if not service:
             abort(404)
+
+        if uid and email:
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            if user_query:
+                profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            else:
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                if user_query:
+                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
             
-        return render_template('service.html', service=service, name=name, email=email, uid=uid)
+        return render_template('service.html', service=service, name=name, email=email, uid=uid, profile_pic=profile_pic)
     
 
     def dental_location(self):
         name = session.get('name', 'Guest')
         email = session.get('email', '')
-        return render_template("location.html",name=name, email=email)
+        uid = session.get('uid', '')
+        profile_pic = ''
+
+        if uid and email:
+            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            if user_query:
+                profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            else:
+                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                if user_query:
+                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+            
+        return render_template("location.html",name=name, email=email, profile_pic=profile_pic)
     
 
     def prac(self):
@@ -1837,6 +1969,7 @@ class DentalClinicApp(BaseFlaskApp):
         """Polymorphism: Register all routes"""
         self.app.route("/payment-success")(self.payment_success)
         self.app.route("/update-profile", methods=["POST"])(self.update_profile)
+        self.app.route("/upload_profile_pic", methods=["POST"])(self.upload_profile_pic)
         self.app.route("/payment-cancel")(self.payment_cancel)
         self.app.route("/webhook/paymongo", methods=["POST"])(self.paymongo_webhook)
         self.app.route("/create_gcash_payment", methods=["POST"])(self.create_gcash_payment)

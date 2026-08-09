@@ -70,7 +70,7 @@
                         <line x1="12" y1="1" x2="12" y2="3"></line>
                         <line x1="12" y1="21" x2="12" y2="23"></line>
                         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="4.22"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
                         <line x1="1" y1="12" x2="3" y2="12"></line>
                         <line x1="21" y1="12" x2="23" y2="12"></line>
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
@@ -92,7 +92,7 @@
                         <line x1="12" y1="1" x2="12" y2="3"></line>
                         <line x1="12" y1="21" x2="12" y2="23"></line>
                         <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="4.22"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
                         <line x1="1" y1="12" x2="3" y2="12"></line>
                         <line x1="21" y1="12" x2="23" y2="12"></line>
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
@@ -107,7 +107,7 @@
                     </div>
 
                     <div class="profile-img-container" id="profileDropdownTrigger">
-                        <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
+                        <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img" id="navProfilePic">
                     
                         <div class="dropdown-menu" id="profileDropdown">
                             <a href="/patient-profile">PROFILE</a>
@@ -131,10 +131,12 @@
         <a href="/" class="btn-back">← Back to Home</a>
 
             <div class="profile-card">
-                <div class="profile-left">
-                    <img src="https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200" class="main-avatar" alt="User">
-                    <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto; width: 120px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
-                </div>
+            <div class="profile-left">
+                <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User">
+                <label for="profilePicInput" class="btn-edit-trigger" style="margin-top: 10px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem; cursor: pointer;">UPDATE AVATAR</label>
+                <input type="file" id="profilePicInput" accept="image/png, image/jpeg, image/gif" style="display: none;">
+                <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 8px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
+            </div>
 
                 <div class="profile-right">
                     <h2>{{ user.get('firstname', name) }} {% if user.get('lastname') %}{{ user.get('lastname') }}{% endif %}</h2>
@@ -732,6 +734,34 @@ function closeChartView() {
             modal.classList.remove("show");
         }
 
+        document.getElementById('profilePicInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('profile_pic', file);
+
+            fetch('/upload_profile_pic', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const newSrc = data.profile_pic_url + '?t=' + new Date().getTime();
+                    document.getElementById('profileAvatar').src = newSrc;
+                    document.getElementById('navProfilePic').src = newSrc;
+                    alert('Profile picture updated successfully!');
+                } else {
+                    alert(data.message || 'Failed to upload profile picture');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Failed to upload profile picture');
+            });
+        });
+
         function validatePasswords() {
             const pass = document.getElementById('new_password');
             const confirm = document.getElementById('confirm_password');
@@ -862,9 +892,18 @@ function closeChartView() {
             <div class="footer-contact">
                 <h4>CONTACT US</h4>
                 <ul>
-                    <li><span></span> 231 Lopez Jaena St, Molo, Iloilo City</li>
-                    <li><span>📞</span> 0962 687 6076</li>
-                    <li><span>✉️</span> capizondadental@gmail.com</li>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        231 Lopez Jaena St, Molo, Iloilo City
+                    </li>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.94 19.94 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.94 19.94 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        0962 687 6076
+                    </li>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        capizondadental@gmail.com
+                    </li>
                 </ul>
             </div>
             

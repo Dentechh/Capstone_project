@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 
 </head>
@@ -141,7 +142,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                     <div class="metric-data">
-                        <h3>{{ approved_count }}</h3>
+                        <h3 data-target="{{ approved_count }}">0</h3>
                         <p>Approved Patients</p>
                     </div>
                     <div class="metric-bg-icon">&#128101;</div>
@@ -151,7 +152,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     </div>
                     <div class="metric-data">
-                        <h3>{{ pending_count }}</h3>
+                        <h3 data-target="{{ pending_count }}">0</h3>
                         <p>Pending Requests</p>
                     </div>
                     <div class="metric-bg-icon">&#9203;</div>
@@ -161,10 +162,83 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                     <div class="metric-data">
-                        <h3>{{ total_patients }}</h3>
+                        <h3 data-target="{{ total_patients }}">0</h3>
                         <p>Total Patients</p>
                     </div>
                     <div class="metric-bg-icon">&#128197;</div>
+                </div>
+            </div>
+
+            <!-- Mini Stats Row -->
+            <div class="mini-stats-row">
+                <div class="mini-stat-card emergency">
+                    <div class="mini-stat-icon">🚨</div>
+                    <div class="mini-stat-data">
+                        <h3 data-target="{{ urgency_counts.Emergency | default(0) }}">0</h3>
+                        <p>Emergency</p>
+                    </div>
+                </div>
+                <div class="mini-stat-card urgent">
+                    <div class="mini-stat-icon">⚡</div>
+                    <div class="mini-stat-data">
+                        <h3 data-target="{{ urgency_counts.Urgent | default(0) }}">0</h3>
+                        <p>Urgent</p>
+                    </div>
+                </div>
+                <div class="mini-stat-card normal">
+                    <div class="mini-stat-icon">📋</div>
+                    <div class="mini-stat-data">
+                        <h3 data-target="{{ urgency_counts.Normal | default(0) }}">0</h3>
+                        <p>Normal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="dashboard-charts">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Patient Status</h3>
+                        <p>Approved vs Pending distribution</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="statusDonut"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Appointment Urgency</h3>
+                        <p>Breakdown by urgency level</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="urgencyBar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Approved Patients -->
+            <div class="recent-activity">
+                <div class="recent-header">
+                    <h3>Recent Approved Patients</h3>
+                    <a href="javascript:void(0)" onclick="showSection('WeeklyClients')" class="view-all">View All &rarr;</a>
+                </div>
+                <div class="recent-list">
+                    {% if recent_approve %}
+                        {% for patient in recent_approve %}
+                        <div class="recent-item">
+                            <div class="recent-avatar">{{ patient.FirstName[0]|default('?') }}</div>
+                            <div class="recent-info">
+                                <strong>{{ patient.FirstName }}</strong>
+                                <span>Account No: {{ patient.uid }}</span>
+                            </div>
+                            <div class="recent-meta">
+                                <span class="recent-date">{{ patient.accepted_at|default('N/A') }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="text-align:center; color:#546e7a;">No approved patients yet.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -558,7 +632,7 @@ window.onclick = function(e) {
                         <div class="p-info">
                             <strong>NAME: {{ appointment.FirstName }}</strong>
                               
-                            <small style="opacity: 0.6;">UID: {{ appointment.uid }}</small>
+                            <small style="opacity: 0.6;">Account No: {{ appointment.uid }}</small>
                         </div>
                     </div>
                     <p class="accepted-at">Accepted: <strong>{{ appointment.accepted_at|default('N/A') }}</strong></p>
@@ -588,6 +662,12 @@ window.onclick = function(e) {
                         data-q6="{{ appointment.get('q6', 'N') }}"
                         data-q7="{{ appointment.get('q7', 'N') }}"
                         data-q9="{{ appointment.get('q9', 'N') }}"
+                        data-q2_spec="{{ appointment.get('q2_spec', '')|e }}"
+                        data-q3_spec="{{ appointment.get('q3_spec', '')|e }}"
+                        data-q4_spec="{{ appointment.get('q4_spec', '')|e }}"
+                        data-q5_spec="{{ appointment.get('q5_spec', '')|e }}"
+                        data-q7_spec="{{ appointment.get('q7_spec', '')|e }}"
+                        data-q9_spec="{{ appointment.get('q9_spec', '')|e }}"
                         data-w-preg="{{ appointment.get('w_preg', 'N') }}"
                         data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
                         data-w-pill="{{ appointment.get('w_pill', 'N') }}">
@@ -777,16 +857,16 @@ window.onclick = function(e) {
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
-                        <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
-                             <li id="q1-check">Q1 (In Good Health): <span>-</span></li>
-                             <li id="q2-check">Q2 (Under Medical Treatment): <span>-</span></li>
-                             <li id="q3-check">Q3 (Serious Illness / Surgical Operation): <span>-</span></li>
-                             <li id="q4-check">Q4 (Have been hospitalized before): <span>-</span></li>
-                             <li id="q5-check">Q5 (Taking any medication): <span>-</span></li>
-                             <li id="q6-check">Q6 (Using Tobacco Products): <span>-</span></li>
-                             <li id="q7-check">Q7 (Have any Allergy): <span>-</span></li>
-                             <li id="q9-check">Q9 (Others): <span>-</span></li>
-                         </ul>
+                         <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                              <li id="q1-check">Q1 (In Good Health): <span>-</span></li>
+                              <li id="q2-check">Q2 (Under Medical Treatment): <span>-</span> <span id="q2-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                              <li id="q3-check">Q3 (Serious Illness / Surgical Operation): <span>-</span> <span id="q3-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                              <li id="q4-check">Q4 (Have been hospitalized before): <span>-</span> <span id="q4-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                              <li id="q5-check">Q5 (Taking any medication): <span>-</span> <span id="q5-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                              <li id="q6-check">Q6 (Using Tobacco Products): <span>-</span></li>
+                              <li id="q7-check">Q7 (Have any Allergy): <span>-</span> <span id="q7-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                              <li id="q9-check">Q9 (Medical Conditon): <span>-</span> <span id="q9-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                          </ul>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Women's Health:</strong></p>
                         <ul id="pd-womens" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
@@ -798,7 +878,7 @@ window.onclick = function(e) {
                 </div>
 
                 <div class="content-panel">
-                     <div class="panel-header"><h3>Visits History <p id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
+                     <div class="panel-header"><h3>Visits History <p  id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
                      <table class="appointment-table">
     <thead>
         <tr>
@@ -1045,6 +1125,15 @@ document.addEventListener("input", function(e) {
         <!-- Patient Dental Chart -->
     </main>
 
+<script id="dashboard-data" type="application/json">
+    {
+        "approvedCount": {{ approved_count | default(0) }},
+        "pendingCount": {{ pending_count | default(0) }},
+        "totalPatients": {{ total_patients | default(0) }},
+        "urgencyCounts": {{ urgency_counts | default({}) | tojson }}
+    }
+</script>
+
 <script>
 async function downloadDentalChartPDF() {
     const { jsPDF } = window.jspdf;
@@ -1187,6 +1276,12 @@ function openPatientDashboard(
     q6,
     q7,
     q9,
+    q2_spec,
+    q3_spec,
+    q4_spec,
+    q5_spec,
+    q7_spec,
+    q9_spec,
     w_preg,
     w_nurse,
     w_pill
@@ -1231,6 +1326,13 @@ function openPatientDashboard(
     setCheckbox('q6-check', q6);
     setCheckbox('q7-check', q7);
     setCheckbox('q9-check', q9);
+
+    setSpec('q2-spec', q2_spec);
+    setSpec('q3-spec', q3_spec);
+    setSpec('q4-spec', q4_spec);
+    setSpec('q5-spec', q5_spec);
+    setSpec('q7-spec', q7_spec);
+    setSpec('q9-spec', q9_spec);
 
     // Women's Health
     setCheckbox('w-preg-check', w_preg);
@@ -1308,6 +1410,13 @@ function setCheckbox(id, value) {
                     span.innerText = yes ? 'Yes' : 'No';
                     span.style.color = yes ? '#4CAF50' : '#ff4d4d';
                 }
+            }
+        }
+
+        function setSpec(id, value) {
+            var el = document.getElementById(id);
+            if (el) {
+                el.innerText = value ? '(' + value + ')' : '';
             }
         }
 
@@ -1443,6 +1552,12 @@ function setCheckbox(id, value) {
                 this.getAttribute('data-q6'),
                 this.getAttribute('data-q7'),
                 this.getAttribute('data-q9'),
+                this.getAttribute('data-q2_spec'),
+                this.getAttribute('data-q3_spec'),
+                this.getAttribute('data-q4_spec'),
+                this.getAttribute('data-q5_spec'),
+                this.getAttribute('data-q7_spec'),
+                this.getAttribute('data-q9_spec'),
                 this.getAttribute('data-w-preg'),
                 this.getAttribute('data-w-nurse'),
                 this.getAttribute('data-w-pill')
@@ -2379,6 +2494,134 @@ window.addEventListener('keydown', function(e) {
             closeLiveChartModal();
         }
     }
+});
+
+// =========================================
+// DASHBOARD ANIMATIONS & CHARTS
+// =========================================
+
+// Count-up animation for metric and mini-stat numbers
+function animateCounters() {
+    document.querySelectorAll('[data-target]').forEach(el => {
+        const target = parseInt(el.getAttribute('data-target'));
+        if (isNaN(target)) return;
+        const duration = 1500;
+        const startTime = performance.now();
+
+        function update(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(eased * target);
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                el.textContent = target;
+            }
+        }
+        requestAnimationFrame(update);
+    });
+}
+
+// Initialize dashboard charts
+function initDashboardCharts() {
+    let dashboardData = {};
+    try {
+        const raw = document.getElementById('dashboard-data');
+        if (raw) dashboardData = JSON.parse(raw.textContent || '{}');
+    } catch (e) {
+        console.warn('Dashboard data parse failed', e);
+    }
+    const approvedCount = typeof dashboardData.approvedCount === 'number' ? dashboardData.approvedCount : 0;
+    const pendingCount = typeof dashboardData.pendingCount === 'number' ? dashboardData.pendingCount : 0;
+    const otherCount = Math.max(0, (typeof dashboardData.totalPatients === 'number' ? dashboardData.totalPatients : 0) - approvedCount);
+    const urgencyCounts = (typeof dashboardData.urgencyCounts === 'object' && dashboardData.urgencyCounts !== null) ? dashboardData.urgencyCounts : {};
+
+    // Donut Chart - Patient Status
+    const donutCtx = document.getElementById('statusDonut');
+    if (donutCtx) {
+        new Chart(donutCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Approved', 'Pending', 'Registered'],
+                datasets: [{
+                    data: [approvedCount, pendingCount, otherCount],
+                    backgroundColor: ['#0d47a1', '#1565c0', '#90caf9'],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                animation: {
+                    animateRotate: true,
+                    duration: 1500
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                            color: '#546e7a'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Bar Chart - Urgency Levels
+    const barCtx = document.getElementById('urgencyBar');
+    if (barCtx) {
+        new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Emergency', 'Urgent', 'Normal'],
+                datasets: [{
+                    label: 'Appointments',
+                    data: [urgencyCounts.Emergency || 0, urgencyCounts.Urgent || 0, urgencyCounts.Normal || 0],
+                    backgroundColor: ['#0d47a1', '#1565c0', '#90caf9'],
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: { family: 'Kumbh Sans', size: 12 }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: {
+                        ticks: {
+                            font: { family: 'Kumbh Sans', size: 12, weight: '600' }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                },
+                animation: {
+                    duration: 1500
+                }
+            }
+        });
+    }
+}
+
+// Run animations and charts when page loads
+window.addEventListener('load', function() {
+    animateCounters();
+    initDashboardCharts();
 });
 </script>
 </main>

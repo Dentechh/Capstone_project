@@ -397,6 +397,44 @@ body.dark-mode .gcash-btn:hover {
     font-weight: 700;
 }
 
+/* Sync payment status button */
+.sync-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background: #f5f5f5;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-left: 6px;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.sync-btn:hover {
+    background: #0d47a1;
+    color: #fff;
+    border-color: #0d47a1;
+    transform: rotate(180deg);
+}
+
+body.dark-mode .sync-btn {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .sync-btn:hover {
+    background: #64b5f6;
+    border-color: #64b5f6;
+    color: #000;
+}
+
 /* Modal form styles */
 .modal-form {
     display: flex;

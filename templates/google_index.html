@@ -19,18 +19,34 @@
         <div class="flash-box flash-{{ category }}">{{ message }}</div>
       {% endfor %}
     </div>
-    <script>
-        setTimeout(() => {
-            const fc = document.getElementById('flash-container');
-            if(fc) {
-                fc.style.transition = "opacity 0.5s ease";
-                fc.style.opacity = "0";
-                setTimeout(() => fc.remove(), 500);
-            }
-        }, 4000);
-    </script>
   {% endif %}
 {% endwith %}
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.transition = "opacity 0.3s ease";
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 300);
+        }, 3500);
+    }
+
+    setTimeout(() => {
+        const fc = document.getElementById('flash-container');
+        if(fc) {
+            fc.style.transition = "opacity 0.5s ease";
+            fc.style.opacity = "0";
+            setTimeout(() => fc.remove(), 500);
+        }
+    }, 4000);
+</script>
 
 
     <div id="g_id_onload"
@@ -58,7 +74,7 @@
                     <a href="/services/consultation">Dental Consultation</a>
                     <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
                     <a href="/services/pasta">Tooth Restoration (Pasta)</a>
-                    <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                    <a href="/services/extraction">Tooth Extraction (Gabot)</a>
                     <a href="/services/dentures">Dentures (Pustiso)</a>
                     <a href="/services/crowns-bridges">Crowns and Bridges</a>
                     <a href="/services/whitening">Teeth Whitening</a>
@@ -109,7 +125,7 @@
                 </div>
 
                 <div class="profile-img-container" id="profileDropdownTrigger">
-                    <img src="https://ui-avatars.com/api/?name={{ name }}" alt="Profile" class="profile-img">
+                    <img src="{% if profile_pic %}{{ profile_pic }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img">
                 
                     <div class="dropdown-menu" id="profileDropdown">
                         <a href="/patient-profile">PROFILE</a>
@@ -147,16 +163,6 @@
             <a href="#" class="btn-appointment" id="openAppointment">Book an Appointment</a>
         </div>
     </div>
-    
-    <!-- Login Prompt Modal for non-logged in users -->
-    <div id="loginPromptModal" class="modal" style="display: none;">
-        <div class="modal-content auth-card" style="max-width: 400px;">
-            <span class="close-btn" onclick="closeAuthModal('loginPromptModal')">&times;</span>
-            <h2>Login Required</h2>
-            <p style="margin: 20px 0; text-align: center;">You need to login first to book an appointment.</p>
-            <button onclick="closeAuthModal('loginPromptModal'); openAuthModal('loginModal');" class="sign-up-btn" style="width: 100%;">Go to Login</button>
-        </div>
-    </div>
 </main>
 
 <footer class="main-footer">
@@ -172,9 +178,18 @@
         <div class="footer-contact">
             <h4>CONTACT US</h4>
             <ul>
-                <li><span>📍</span> 231 Lopez Jaena St, Molo, Iloilo City</li>
-                <li><span>📞</span> 0962 687 6076</li>
-                <li><span>✉️</span> capizondadental@gmail.com</li>
+                <li>
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                    231 Lopez Jaena St, Molo, Iloilo City
+                </li>
+                <li>
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.94 19.94 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.94 19.94 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    0962 687 6076
+                </li>
+                <li>
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    capizondadental@gmail.com
+                </li>
             </ul>
         </div>
 
@@ -354,7 +369,6 @@
                     <select name="Urgency_Level" required>
                         <option value="" disabled selected>Urgency Level</option>
                         <option value="Normal">Normal</option>
-                        <option value="Urgent">Urgent</option>
                         <option value="Emergency">Emergency</option>
                     </select>
                     
@@ -511,24 +525,73 @@
 
 <div id="loginModal" class="modal">
     <div class="modal-content auth-card">
-        <span class="close-btn" onclick="closeAuthModal('loginModal')">&times;</span>
+            <button class="close" onclick="closeAuthModal('loginModal')" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
 
         <h2>Welcome Back</h2>
 
-        <form action="/login" method="POST">
+        <form action="/login" method="POST" id="loginForm">
+            <div class="login-error" id="loginError"></div>
             <input type="email" id="loginEmail" name="email" placeholder="Email" required>
-            <input type="password" name="Password" placeholder="Password" required>
+            <div class="password-wrapper">
+                <input type="password" name="Password" placeholder="Password" required>
+                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                </button>
+            </div>
 
             <button type="submit" id="loginBtn" class="sign-up-btn">
                 Login
             </button>
-            <button
-    type="button"
-    class="sign-up-btn"
-    onclick="openAuthModal('forgotPasswordModal')">
-    Forgot Password?
-</button>
         </form>
+
+        <script>
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const errorDiv = document.getElementById('loginError');
+                errorDiv.style.display = 'none';
+                errorDiv.textContent = '';
+
+                const formData = new FormData(this);
+                fetch('/login', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = data.redirect || '/';
+                    } else {
+                        errorDiv.textContent = data.message || 'Login failed. Please try again.';
+                        errorDiv.style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    errorDiv.textContent = 'Something went wrong. Please try again.';
+                    errorDiv.style.display = 'block';
+                });
+            });
+        </script>
+
+        <p style="text-align: center; margin-top: 10px;">
+            <a href="javascript:void(0)" class="forgot-password-link" onclick="openAuthModal('forgotPasswordModal')">Forgot Password?</a>
+        </p>
 
         <div class="divider">OR</div>
 
@@ -551,7 +614,12 @@
 <!-- Forgot Password Modal -->
 <div id="forgotPasswordModal" class="modal">
     <div class="modal-content auth-card">
-        <span class="close-btn" onclick="closeAuthModal('forgotPasswordModal')">&times;</span>
+            <button class="close" onclick="closeAuthModal('forgotPasswordModal')" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
 
         <h2>Forgot Password</h2>
 
@@ -575,7 +643,12 @@
 
 <div id="registerModal" class="modal">
     <div class="modal-content auth-card">
-        <span class="close-btn" onclick="closeAuthModal('registerModal')">&times;</span>
+            <button class="close" onclick="closeAuthModal('registerModal')" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
         <h2>Create Account</h2>
         <form id="signupForm">
 
@@ -586,9 +659,37 @@
 
     <input type="email" id="email" name="UserName" placeholder="Email" required>
 
-    <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
+    <div class="password-wrapper">
+        <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
+        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+        </button>
+    </div>
 
-    <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
+    <div class="password-wrapper">
+        <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
+        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+        </button>
+    </div>
 
     <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
 
@@ -845,6 +946,25 @@ resetPasswordBtn.addEventListener("click", async () => {
         document.getElementById(modalId).style.display = "none";
     }
 
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', () => {
+            const wrapper = button.closest('.password-wrapper');
+            const input = wrapper.querySelector('input');
+            const eyeIcon = button.querySelector('.eye-icon');
+            const eyeOffIcon = button.querySelector('.eye-off-icon');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.style.display = 'none';
+                eyeOffIcon.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeIcon.style.display = 'block';
+                eyeOffIcon.style.display = 'none';
+            }
+        });
+    });
+
 // Global click listener to close modals/dropdowns if clicking outside
      // 1. Dropdown Toggle Logic
      const dropdownTrigger = document.getElementById('profileDropdownTrigger');
@@ -1021,16 +1141,16 @@ resetPasswordBtn.addEventListener("click", async () => {
       renderQuickReplies();
 
      // 4. Appointment Modal Logic
-    const modal = document.getElementById("appointmentModal");
-    const paymentModal = document.getElementById("paymentModal");
-    const loginPromptModal = document.getElementById("loginPromptModal");
-    
-    document.getElementById("openAppointment").onclick = (e) => { 
+     const modal = document.getElementById("appointmentModal");
+     const paymentModal = document.getElementById("paymentModal");
+     
+     document.getElementById("openAppointment").onclick = (e) => { 
         e.preventDefault(); 
         // Check if user is logged in (name is not "Guest")
         const userName = "{{ name }}";
         if (userName === "Guest" || !userName) {
-            loginPromptModal.style.display = "flex";
+            showToast("Please login first to book an appointment.", "error");
+            openAuthModal('loginModal');
         } else {
             modal.style.display = "flex"; 
         }
@@ -1059,19 +1179,12 @@ resetPasswordBtn.addEventListener("click", async () => {
     
 // Global click listener to close modals/dropdowns (excluding appointment modal)
        window.addEventListener('click', (e) => { 
-           if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
-           
-           const loginM = document.getElementById('loginModal');
-           if(e.target == loginM) loginM.style.display = "none";
-           
-           const regM = document.getElementById('registerModal');
-           if(e.target == regM) regM.style.display = "none";
            
            // Close chat if clicking outside
            if(!windowChat.contains(e.target) && !launcher.contains(e.target)) {
                windowChat.style.display = 'none';
            }
-   
+    
             // Close dropdown if clicking outside
             if(dropdownMenu && !dropdownTrigger.contains(e.target)) {
                 dropdownMenu.classList.remove('show');

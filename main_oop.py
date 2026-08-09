@@ -919,6 +919,14 @@ def adminDashboard():
     urgency_order = {"Emergency": 0, "Urgent": 1, "Normal": 2}
     appointment_list.sort(key=lambda x: urgency_order.get(x.get("UrgencyLevel", ""), 99))
 
+    urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
+    for appt in appointment_list:
+        level = appt.get("UrgencyLevel", "Normal")
+        if level in urgency_counts:
+            urgency_counts[level] += 1
+
+    recent_approve = approve_list[:3]
+
     # =========================
     # SEND ALL TO TEMPLATE
     # =========================
@@ -930,6 +938,8 @@ def adminDashboard():
         pending_count=pending_count,
         approved_count=approved_count,
         total_patients=total_patients,
+        urgency_counts=urgency_counts,
+        recent_approve=recent_approve,
     )
 
 
