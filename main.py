@@ -863,6 +863,8 @@ class DentalClinicApp(BaseFlaskApp):
             "w_preg": appointment_data.get("w_preg", ""),
             "w_nurse": appointment_data.get("w_nurse", ""),
             "w_pill": appointment_data.get("w_pill", ""),
+
+            "accepted_at": datetime.now(UTC).isoformat(),
         }
 
 
@@ -1208,7 +1210,7 @@ class DentalClinicApp(BaseFlaskApp):
                     flash("Unable to get email from Google account.", "error")
                     return redirect(url_for("adminLogin"))
                 
-                # Save/update admin in "Admin" collection
+                
                 self.db.collection("Admin").document(uid).set({
                     "uid": uid,
                     "email": email,
@@ -1241,7 +1243,72 @@ class DentalClinicApp(BaseFlaskApp):
             return redirect(url_for("adminDashboard"))
         
         return render_template("admin_login.html")
-    
+
+    def update_profile(self):
+        try:
+            uid = request.form.get("uid", "").strip()
+            new_firstname = request.form.get("new_firstname", "").strip()
+            new_lastname = request.form.get("new_lastname", "").strip()
+            new_phone = request.form.get("new_phone", "").strip()
+
+            if not uid:
+                flash("Unable to identify your account.", "error")
+                return redirect(request.referrer)
+
+            if not new_firstname:
+                flash("First name is required.", "error")
+                return redirect(request.referrer)
+
+            # Find account using UID
+            accounts = self.db.collection("Customer_Account").where(
+                "uid", "==", uid
+            ).limit(1).stream()
+
+            account_doc = None
+
+            for doc in accounts:
+                account_doc = doc
+                break
+
+            if account_doc is None:
+                flash("Account not found.", "error")
+                return redirect(request.referrer)
+
+            # Get existing account data
+            account_data = account_doc.to_dict()
+
+            # Check account provider
+            provider = account_data.get("provider", "")
+
+            if provider == "google":
+                # Google accounts: update name and also store first/last name
+                full_name = f"{new_firstname} {new_lastname}".strip()
+                account_doc.reference.update({
+                    "name": full_name,
+                    "firstname": new_firstname,
+                    "lastname": new_lastname,
+                    "contact_number": new_phone
+                })
+                session["name"] = full_name
+
+            else:
+                # Password accounts: update firstname + lastname
+                account_doc.reference.update({
+                    "firstname": new_firstname,
+                    "lastname": new_lastname,
+                    "contact_number": new_phone
+                })
+                session["name"] = f"{new_firstname} {new_lastname}".strip()
+
+            flash("Profile updated successfully!", "success")
+
+            return redirect(url_for("p_profile"))
+
+        except Exception as e:
+            print(f"Update profile error: {e}")
+            flash("Failed to update profile. Please try again.", "error")
+            return redirect(request.referrer)
+        
     
 
     def service_detail(self, service_id):
@@ -1570,48 +1637,167 @@ class DentalClinicApp(BaseFlaskApp):
 
     def get_treatment_info(self, uid):
         try:
-            # Find the patient
-            if self.db.collection(self.Customer_Account).document(uid).get().exists:
-                user_ref = self.db.collection(self.Customer_Account).document(uid)
-            else:
+
+            # ==========================================
+            # CLEAN UID
+            # ==========================================
+
+            if not uid:
                 return jsonify({
                     "success": False,
-                    "message": "Patient not found"
+                    "message": "UID is required"
+                }), 400
+
+            uid = str(uid).strip()
+
+            uid = uid.replace("Account No:", "").strip()
+            uid = uid.replace("Patient ID:", "").strip()
+
+            print("====================================")
+            print("GET TREATMENT INFO")
+            print("UID:", uid)
+            print("====================================")
+
+            # ==========================================
+            # FIND PATIENT
+            # ==========================================
+
+            user_ref = self.db.collection(
+                self.Customer_Account
+            ).document(uid)
+
+            user_doc = user_ref.get()
+
+            if not user_doc.exists:
+
+                print("PATIENT NOT FOUND:", uid)
+
+                return jsonify({
+                    "success": False,
+                    "message": f"Patient not found for UID: {uid}"
                 }), 404
-    
+
+            # ==========================================
+            # GET DONE PROCEDURES
+            # ==========================================
+
             procedures = []
-    
-            # Read all Done_procedure documents
-            for doc in user_ref.collection("Done_procedure").stream():
-    
+
+            done_docs = list(
+                user_ref
+                .collection("Done_procedure")
+                .stream()
+            )
+
+            print(
+                "DONE_PROCEDURE DOCUMENTS:",
+                len(done_docs)
+            )
+
+            # ==========================================
+            # LOOP DONE_PROCEDURE
+            # ==========================================
+
+            for doc in done_docs:
+
                 data = doc.to_dict()
-    
-                for p in data.get("procedures", []):
+
+                print(
+                    "DONE DOCUMENT:",
+                    doc.id
+                )
+
+                # Get chart image stored in the
+                # Done_procedure document
+                chart_image = data.get(
+                    "chart_image",
+                    ""
+                )
+
+                procedure_list = data.get(
+                    "procedures",
+                    []
+                )
+
+                # ======================================
+                # LOOP PROCEDURES
+                # ======================================
+
+                for p in procedure_list:
+
                     procedures.append({
-                        "dentist": p.get("dentist", ""),
-                        "medicine": p.get("medicine", ""),
-                        "date": p.get("date", ""),
-                        "procedure": p.get("procedure", ""),
-                        "paid": p.get("paid", 0),
-                        "next_appointment": p.get("next_appointment", ""),
-                        "status": p.get("status", ""),
-                        "balance": p.get("balance", 0),
-                        "value": p.get("value", 0),
-                        "tooth": p.get("tooth", "")
+
+                        "dentist":
+                            p.get("dentist", ""),
+
+                        "medicine":
+                            p.get("medicine", ""),
+
+                        "date":
+                            p.get("date", ""),
+
+                        "procedure":
+                            p.get("procedure", ""),
+
+                        "paid":
+                            p.get("paid", 0),
+
+                        "next_appointment":
+                            p.get(
+                                "next_appointment",
+                                ""
+                            ),
+
+                        "status":
+                            p.get("status", ""),
+
+                        "balance":
+                            p.get("balance", 0),
+
+                        "value":
+                            p.get("value", 0),
+
+                        "tooth":
+                            p.get("tooth", ""),
+
+                        # IMPORTANT
+                        # Send the image with every procedure
+                        "chart_image":
+                            chart_image
+
                     })
-    
+
+            print(
+                "TOTAL PROCEDURES:",
+                len(procedures)
+            )
+
+            # ==========================================
+            # RESPONSE
+            # ==========================================
+
             return jsonify({
+
                 "success": True,
+
                 "procedures": procedures
+
             })
-    
+
         except Exception as e:
-            print("ERROR in get_treatment_info:", e)
+
+            print(
+                "ERROR in get_treatment_info:",
+                e
+            )
+
             return jsonify({
+
                 "success": False,
+
                 "message": str(e)
+
             }), 500
-    
     
 
     def get_approve(self, uid):
@@ -1650,6 +1836,7 @@ class DentalClinicApp(BaseFlaskApp):
     def _register_routes(self):
         """Polymorphism: Register all routes"""
         self.app.route("/payment-success")(self.payment_success)
+        self.app.route("/update-profile", methods=["POST"])(self.update_profile)
         self.app.route("/payment-cancel")(self.payment_cancel)
         self.app.route("/webhook/paymongo", methods=["POST"])(self.paymongo_webhook)
         self.app.route("/create_gcash_payment", methods=["POST"])(self.create_gcash_payment)

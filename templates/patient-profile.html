@@ -130,65 +130,57 @@
         <!-- Back to Home Button -->
         <a href="/" class="btn-back">← Back to Home</a>
 
-        <div class="profile-card">
-            <div class="profile-left">
-                <img src="https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200" class="main-avatar" alt="User">
-                <br>
-                <span class="patient-tag">PATIENT ID: #1024</span>
-            </div>
-
-            <div class="profile-right">
-                <h2>{{ user.get('firstname', name) }}</h2>
-                <p style="opacity:0.8; font-weight: 300;">
-                    {{ user.get('username', 'username') }} | Clinic Member
-                </p>
-
-                <div class="info-grid">
-                    <div class="info-item">
-                        <label>Full Name</label>
-                        <p>{{ user.get('firstname', name) }}</p>
-                    </div>
-
-                    <div class="info-item">
-                        <label>Username</label>
-                        <p>{{ user.get('username', 'Not set') }}</p>
-                    </div>
-
-                    <div class="info-item">
-                        <label>Phone Number</label>
-                        <p>{{ user.get('contact_number', 'Not set') }}</p>
-                    </div>
-
-                    <div class="info-item">
-                        <label>Email Address</label>
-                        <p>{{ user.get('email', 'N/A') }}</p>
-                    </div>
-
-                    <div class="info-item">
-                        <label>Account Type</label>
-                        <p>{{ user.get('provider', 'Manual').capitalize() }} Account</p>
-                    </div>
+            <div class="profile-card">
+                <div class="profile-left">
+                    <img src="https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200" class="main-avatar" alt="User">
+                    <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 15px; display: block; margin-left: auto; margin-right: auto; width: 120px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
                 </div>
 
-                <button onclick="openUpdateModal()" class="btn-edit-trigger">
-                    Update Profile
-                </button>
+                <div class="profile-right">
+                    <h2>{{ user.get('firstname', name) }} {% if user.get('lastname') %}{{ user.get('lastname') }}{% endif %}</h2>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>First Name</label>
+                            <p>{{ user.get('firstname', name) }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Last Name</label>
+                            <p>{{ user.get('lastname', 'Not set') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Phone Number</label>
+                            <p>{{ user.get('contact_number', 'Not set') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Email Address</label>
+                            <p>{{ user.get('email', 'N/A') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                        
+                        
+                        </div>
+                    </div>
+
+                </div>
             </div>
-        </div>
 
         <!-- =========================
             NAVIGATION BUTTONS
-        
+        ========================== -->
 
         <div class="nav-grid">
 
-          
+                <!-- Notifications Card
                 <a href="https://mail.google.com/mail/u/0/#inbox" class="nav-card">
                     <img src="https://img.icons8.com/ios-filled/50/ffffff/appointment-reminders.png" alt="Notifications">
                     <span>Notifications</span>
                 </a>
-
-        ========================== -->
+                -->
 
                 <!-- My Schedule Card -->
     <a href="#" class="nav-card" id="scheduleBtn">
@@ -200,52 +192,60 @@
     <!-- Schedule Modal -->
         <div id="scheduleModal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-
-            <h2>My Schedule</h2>
-    <h2 style="display: none;">{{ user.get('uid', '') }}</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date and Time</th>
-                            <th>Services</th>
-                            <th>Dentist</th>
-    
-                        </tr>
-                    </thead>
-                    <tbody id="scheduleTableBody"> </tbody>
-                </table>
+            <div class="modal-header">
+                <h2>My Schedule</h2>
+                <button class="close" onclick="closeScheduleModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h2 style="display: none;">{{ user.get('uid', '') }}</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date and Time</th>
+                                <th>Services</th>
+                                <th>Dentist</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody"> </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
 
- <script>
+  <script>
         const scheduleBtn = document.getElementById("scheduleBtn");
         const scheduleModal = document.getElementById("scheduleModal");
         const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
 
-        scheduleBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-
-            scheduleModal.style.display = "block";
+        function openScheduleModal() {
+            scheduleModal.style.display = "flex";
+            scheduleModal.classList.add("show");
 
             const uid = "{{ user.get('uid', '') }}";
             console.log("UID:", uid);
 
             loadApprove(uid);
-        });
+        }
 
-        scheduleCloseBtn.addEventListener("click", () => {
+        function closeScheduleModal() {
             scheduleModal.style.display = "none";
+            scheduleModal.classList.remove("show");
+        }
+
+        scheduleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openScheduleModal();
         });
 
-        window.addEventListener("click", (e) => {
-            if (e.target === scheduleModal) {
-                scheduleModal.style.display = "none";
-            }
-        });
+        scheduleCloseBtn.addEventListener("click", closeScheduleModal);
 
         function loadApprove(uid) {
 
@@ -327,12 +327,17 @@
 
     <div id="visitHistoryModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
-
-            <span class="close" onclick="closeVisitHistory()">&times;</span>
-
-            <h2>Medical Records</h2>
-
-            <table class="payment-table">
+            <div class="modal-header">
+                <h2>Medical Records</h2>
+                <button class="close" onclick="closeVisitHistory()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="payment-table">
 
                 <thead>
                     <tr>
@@ -352,20 +357,32 @@
 
         </div>
     </div>
+    </div>
 
     <div id="chartViewModal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
-            <span class="close" onclick="closeChartView()">&times;</span>
-            <h2>Dental Chart</h2>
-            <p id="chartViewMessage" style="display:none; text-align:center; padding:20px;">No saved dental chart found for this patient.</p>
-            <img id="chartViewImage" style="display:none; max-width:100%; border-radius:8px;" />
+            <div class="modal-header">
+                <h2>Dental Chart</h2>
+                <button class="close" onclick="closeChartView()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="chartViewMessage" style="display:none; text-align:center; padding:20px;">No saved dental chart found for this patient.</p>
+                <img id="chartViewImage" style="display:none; max-width:100%; border-radius:8px;" />
+            </div>
         </div>
     </div>
 
 <script>
 function openVisitHistory(uid) {
 
-    document.getElementById("visitHistoryModal").style.display = "block";
+    const visitModal = document.getElementById("visitHistoryModal");
+    visitModal.style.display = "flex";
+    visitModal.classList.add("show");
 
     const tbody = document.getElementById("visitHistoryBody");
 
@@ -445,7 +462,9 @@ function openVisitHistory(uid) {
 }
 
 function closeVisitHistory() {
-    document.getElementById("visitHistoryModal").style.display = "none";
+    const modal = document.getElementById("visitHistoryModal");
+    modal.style.display = "none";
+    modal.classList.remove("show");
 }
 
 async function viewSavedChart(uid) {
@@ -461,6 +480,7 @@ async function viewSavedChart(uid) {
             if (msgEl) msgEl.style.display = 'block';
             if (imgEl) imgEl.style.display = 'none';
             modal.style.display = 'flex';
+            modal.classList.add("show");
             return;
         }
 
@@ -470,6 +490,7 @@ async function viewSavedChart(uid) {
             imgEl.style.display = 'block';
         }
         modal.style.display = 'flex';
+        modal.classList.add("show");
     } catch (error) {
         console.error('Error loading chart:', error);
         alert('Failed to load saved chart');
@@ -477,20 +498,10 @@ async function viewSavedChart(uid) {
 }
 
 function closeChartView() {
-    document.getElementById('chartViewModal').style.display = 'none';
+    const modal = document.getElementById('chartViewModal');
+    modal.style.display = 'none';
+    modal.classList.remove("show");
 }
-
-window.addEventListener("click", function(e) {
-    const modal = document.getElementById("visitHistoryModal");
-    if (e.target === modal) {
-        closeVisitHistory();
-    }
-
-    const chartModal = document.getElementById("chartViewModal");
-    if (e.target === chartModal) {
-        closeChartView();
-    }
-});
 </script>
 
     <!-- Payments Card -->
@@ -503,11 +514,17 @@ window.addEventListener("click", function(e) {
     <!-- Payment Modal -->
     <div id="paymentModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
-            <span class="close" onclick="closePaymentModal()">&times;</span>
-
-            <h2>Payments</h2>
-
-            <table style="width:100%; border-collapse:collapse;">
+            <div class="modal-header">
+                <h2>Payments</h2>
+                <button class="close" onclick="closePaymentModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="payment-table">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -529,11 +546,14 @@ window.addEventListener("click", function(e) {
 
         </div>
     </div>
+    </div>
 
     <script>
     function openPaymentModal() {
 
-        document.getElementById("paymentModal").style.display = "block";
+        const paymentModal = document.getElementById("paymentModal");
+        paymentModal.style.display = "flex";
+        paymentModal.classList.add("show");
 
         const body = document.getElementById("paymentTableBody");
 
@@ -612,18 +632,10 @@ window.addEventListener("click", function(e) {
     }
 
     function closePaymentModal() {
-        document.getElementById("paymentModal").style.display = "none";
-    }
-
-    window.addEventListener("click", function(event) {
-
         const modal = document.getElementById("paymentModal");
-
-        if (event.target === modal) {
-            closePaymentModal();
-        }
-
-    });
+        modal.style.display = "none";
+        modal.classList.remove("show");
+    }
     </script>
 
     <script>function payGCash(amount, procedure){
@@ -653,59 +665,72 @@ window.addEventListener("click", function(e) {
 
     }</script>
 
-    <div class="modal" id="updateModal">
-        <div class="modal-content">
-            <h3 style="margin-bottom: 20px; font-size: 1.5rem; text-align: center;">Edit Profile</h3>
-
-    <form class="modal-form" action="/update-profile" method="POST" onsubmit="return validatePasswords()">
-
-        <input type="hidden" name="current_username" value="{{ user.get('username', '') }}">
-
-        <!-- ✅ EXACTLY MATCHES PROFILE DISPLAY -->
-        <div class="info-item">
-            <label>Full Name</label>
-            <input type="text" name="new_name" value="{{ user.get('firstname', '') }} {{ user.get('lastname', '') }}" placeholder="Enter your full name" required>
-        </div>
-
-
-        <div class="info-item">
-            <label>Phone Number</label>
-            <input type="text" name="new_phone" value="{{ user.get('contact_number', '') }}" placeholder="+63 9XX XXX XXXX">
-        </div>
-
-        <div class="info-item">
-            <label>Email Address</label>
-            <input type="email" name="new_email" value="{{ user.get('email', '') }}" {% if user.get('provider') == 'google' %}readonly title="Managed by Google Account"{% endif %}>
-        </div>
-
-        {% if user.get('provider') != 'google' %}
-        <hr style="opacity: 0.2; margin: 10px 0;">
-        
-        <div class="info-item">
-            <label>New Password</label>
-            <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
-        </div>
-
-        <div class="info-item">
-            <label>Confirm New Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm your new password">
-        </div>
-        {% endif %}
-
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button type="submit" class="btn-edit-trigger" style="flex:1;">Save Changes</button>
-            <button type="button" onclick="closeUpdateModal()" class="btn-back" style="margin:0; flex:1; text-align:center;">Cancel</button>
-        </div>
-
-    </form>
-        </div>
     </div>
+
+<div class="modal" id="updateModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>EDIT PROFILE</h2>
+            <button class="close" onclick="closeUpdateModal()" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" action="/update-profile" method="POST">
+
+    <input type="hidden"
+           name="uid"
+           value="{{ user.get('uid', '') }}">
+
+    <div class="info-item">
+        <label>First Name</label>
+        <input type="text"
+               name="new_firstname"
+               value="{% if user.get('provider') == 'google' %}{{ user.get('name', '').split()[0] }}{% else %}{{ user.get('firstname', '') }}{% endif %}"
+               placeholder="Enter your first name"
+               required>
+    </div>
+
+    <div class="info-item">
+        <label>Last Name</label>
+        <input type="text"
+               name="new_lastname"
+               value="{% if user.get('provider') == 'google' %}{% set name_parts = user.get('name', '').split() %}{% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}{% else %}{{ user.get('lastname', '') }}{% endif %}"
+               placeholder="Enter your last name">
+    </div>
+
+    <div class="info-item">
+        <label>Phone Number</label>
+        <input type="text"
+               name="new_phone"
+               value="{{ user.get('contact_number', '') }}"
+               placeholder="+63 9XX XXX XXXX">
+    </div>
+
+    <div class="modal-actions">
+        <button type="submit" class="btn-primary">Save Changes</button>
+        <button type="button" onclick="closeUpdateModal()" class="btn-secondary">Cancel</button>
+    </div>
+
+</form>
+    </div>
+</div>
+</div>
+
 
     <script>
         const modal = document.getElementById('updateModal');
-        function openUpdateModal() { modal.style.display = 'flex'; }
-        function closeUpdateModal() { modal.style.display = 'none'; }
-        window.onclick = function(e) { if (e.target == modal) closeUpdateModal(); }
+        function openUpdateModal() { 
+            modal.style.display = 'flex'; 
+            modal.classList.add("show");
+        }
+        function closeUpdateModal() { 
+            modal.style.display = 'none'; 
+            modal.classList.remove("show");
+        }
 
         function validatePasswords() {
             const pass = document.getElementById('new_password');

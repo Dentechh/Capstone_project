@@ -717,6 +717,8 @@ def approve():
         "CivilStatus": request.form.get("civilstatus", ""),
         "UrgencyLevel": request.form.get("UrgencyLevel", ""),
         "Service": request.form.get("service", ""),
+
+        "accepted_at": datetime.now(UTC).isoformat(),
     }
 
     main_collection = None

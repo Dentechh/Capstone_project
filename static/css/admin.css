@@ -810,7 +810,66 @@ body.dark-mode .badge.declined {
     border-color: rgba(220, 53, 69, 0.4);
 }
 
-.search-input { width: 100%; padding: 15px 25px; background: var(--dark-form); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; color: white; margin-bottom: 20px; outline: none; }
+.search-input { 
+    width: 100%; 
+    padding: 15px 25px; 
+    background: #ffffff; 
+    border: 1px solid rgba(0,0,0,0.15); 
+    border-radius: 15px; 
+    color: #1a1a1a; 
+    margin-bottom: 20px; 
+    outline: none; 
+    transition: all 0.3s ease;
+}
+
+body.dark-mode .search-input { 
+    background: rgba(20, 25, 35, 0.8); 
+    border-color: rgba(255,255,255,0.2); 
+    color: #e0e0e0; 
+    transition: all 0.3s ease;
+}
+
+.filter-bar { 
+    display: flex; 
+    gap: 12px; 
+    margin-bottom: 16px; 
+    align-items: center; 
+    flex-wrap: wrap; 
+}
+
+.filter-search { 
+    flex: 1; 
+    min-width: 200px; 
+}
+
+.filter-btn { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    padding: 10px 16px; 
+    font-size: 14px; 
+    white-space: nowrap; 
+    background: #f3f4f6; 
+    color: #1f2937; 
+    border: 1px solid rgba(0,0,0,0.1); 
+}
+
+body.dark-mode .filter-btn { 
+    background: rgba(255, 255, 255, 0.08); 
+    color: #e0e0e0; 
+    border-color: rgba(255,255,255,0.15); 
+}
+
+.patient-card .accepted-at {
+    font-size: 14px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+    color: #444;
+}
+
+body.dark-mode .patient-card .accepted-at {
+    color: #b0bec5;
+}
 
 /* Light mode text visibility - only applied when NOT dark mode */
 body:not(.dark-mode) {
@@ -1709,13 +1768,6 @@ body.dark-mode .action-btn:hover {
     color: #000;
 }
 
-body.dark-mode .search-input {
-    background: rgba(20, 25, 35, 0.8);
-    border-color: rgba(255,255,255,0.2);
-    color: #e0e0e0;
-    transition: all 0.3s ease;
-}
-
 body.dark-mode .appointment-table th {
     color: #a0aec0;
     border-bottom-color: rgba(255,255,255,0.1);
@@ -2514,6 +2566,23 @@ body.dark-mode .datetime-text {
         font-size: 14px;
     }
     
+    /* Filter Bar - Mobile */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-search {
+        min-width: 100%;
+    }
+    
+    .filter-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+        font-size: 13px;
+    }
+    
     /* Schedule */
     .schedule-item {
         flex-direction: column;
@@ -2952,6 +3021,26 @@ body.dark-mode .datetime-text {
     
     .content-panel {
         padding: 12px;
+    }
+    
+    /* Filter Bar - Small Mobile */
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .filter-search {
+        min-width: 100%;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+    
+    .filter-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px;
+        font-size: 13px;
     }
     
     .appointment-table th,

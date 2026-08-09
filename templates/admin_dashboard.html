@@ -99,7 +99,7 @@
            <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
            <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
-            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Weekly Patient</a>
+            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Approved Patients</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
         </nav>
         <div class="sidebar-footer">
@@ -172,12 +172,18 @@
 
 <div id="section-mypatients" class="content-section">
                 <section class="content-panel">
-                <table class="appointment-table">
+                <div class="filter-bar">
+                    <input type="text" id="myPatientSearch" placeholder="Search patients..." class="search-input filter-search" onkeyup="filterMyPatients()">
+                    <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn" onclick="sortMyPatients()">
+                        A-Z
+                    </button>
+                </div>
+                <table class="appointment-table" id="myPatientsTable">
 
         <thead>
             <tr>
                 <th>Name</th>
-                 <th>Account Number</th>
+                 <th>Mobile Number</th>
                  <th>Action</th>
             </tr>
         </thead>
@@ -188,7 +194,7 @@
         <tr>
 
             <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
-             <td>{{ appointment.uid}}</td>
+             <td>{{ appointment.contact_number}}</td>
 
 
 
@@ -224,27 +230,33 @@
             <span onclick="closeCheckInfoModal()" style="font-size:28px;cursor:pointer;">&times;</span>
         </div>
 
-        <table class="treatment-table" style="width:100%;">
-            <thead>
-                <tr>
-                    <th>Assigned Dentist</th>
-                    <th>Medicine</th>
-                    <th>Visit Date</th>
-                    <th>Procedure</th>
-                    <th>Fee Paid</th>
-                    <th>Next Appointment</th>
-                </tr>
-            </thead>
+<table class="treatment-table" style="width:100%;">
+    <thead>
+        <tr>
+            <th>Assigned Dentist</th>
+            <th>Medicine</th>
+            <th>Visit Date</th>
+            <th>Procedure</th>
+            <th>Fee Paid</th>
+            <th>Next Appointment</th>
+            <th>Chart</th>
+        </tr>
+    </thead>
 
-            <tbody id="checkInfoBody">
-
-            </tbody>
-        </table>
+    <tbody id="checkInfoBody">
+        <tr>
+            <td colspan="7" style="text-align:center;">
+                No treatment information found.
+            </td>
+        </tr>
+    </tbody>
+</table>
     </div>
 </div>
 
 <script>
 async function openCheckInfoModal(uid) {
+
     const tbody = document.getElementById("checkInfoBody");
     const modal = document.getElementById("checkInfoModal");
 
@@ -253,51 +265,130 @@ async function openCheckInfoModal(uid) {
         return;
     }
 
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>';
+    // Clean UID
+    uid = String(uid)
+        .replace("Account No:", "")
+        .replace("Patient ID:", "")
+        .trim();
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="7" style="text-align:center;">
+                Loading...
+            </td>
+        </tr>
+    `;
+
     modal.style.display = "flex";
 
     try {
-        const response = await fetch("/get_treatment_info/" + uid);
+
+        const response = await fetch(
+            "/get_treatment_info/" + encodeURIComponent(uid)
+        );
+
         const result = await response.json();
+
+        console.log("Treatment Info:", result);
 
         tbody.innerHTML = "";
 
-        if (result.success && result.procedures && result.procedures.length > 0) {
-            result.procedures.forEach(item => {
+        if (
+            result.success &&
+            Array.isArray(result.procedures) &&
+            result.procedures.length > 0
+        ) {
+
+            // IMPORTANT:
+            // Save the procedures globally so the View button
+            // can access the correct chart image.
+            window.currentProcedures = result.procedures;
+
+            result.procedures.forEach((item, index) => {
+
                 tbody.innerHTML += `
                     <tr>
-                        <td>${item.dentist || "-"}</td>
-                        <td>${item.medicine || "-"}</td>
-                        <td>${item.date || "-"}</td>
-                        <td>${item.procedure || "-"}</td>
-                        <td>₱${item.paid || 0}</td>
-                        <td>${item.next_appointment || "-"}</td>
+
+                        <td>
+                            ${item.dentist || "-"}
+                        </td>
+
+                        <td>
+                            ${item.medicine || "-"}
+                        </td>
+
+                        <td>
+                            ${item.date || "-"}
+                        </td>
+
+                        <td>
+                            ${item.procedure || "-"}
+                        </td>
+
+                        <td>
+                            ₱${item.paid || 0}
+                        </td>
+
+                        <td>
+                            ${item.next_appointment || "-"}
+                        </td>
+
+                        <td>
+
+                            <button
+                                type="button"
+                                class="btn-action"
+                                onclick="openChartViewModal(${index})">
+
+                                View
+
+                            </button>
+
+                        </td>
+
                     </tr>
                 `;
             });
+
         } else {
+
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align:center;">
+                    <td colspan="7" style="text-align:center;">
                         No treatment history found.
                     </td>
                 </tr>
             `;
         }
+
     } catch (error) {
-        console.error("Error loading treatment info:", error);
+
+        console.error(
+            "Error loading treatment info:",
+            error
+        );
+
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align:center; color: #ef4444;">
-                    Failed to load treatment data. Please try again.
+                <td colspan="7"
+                    style="text-align:center;color:#ef4444;">
+
+                    Failed to load treatment data.
+                    Please try again.
+
                 </td>
             </tr>
         `;
     }
 }
 
+
 function closeCheckInfoModal() {
-    document.getElementById("checkInfoModal").style.display = "none";
+
+    document.getElementById(
+        "checkInfoModal"
+    ).style.display = "none";
+
 }
 </script>
 
@@ -449,20 +540,28 @@ window.onclick = function(e) {
 
 
   
-                <div id="section-WeeklyClients" class="content-section">
-            <div class="patient-card-grid">
+        <div id="section-WeeklyClients" class="content-section">
+            <div class="filter-bar">
+                <input type="text" id="weeklyClientSearch" placeholder="Search approved patients..." class="search-input filter-search" onkeyup="filterWeeklyClients()">
+                <button type="button" id="sortWeeklyClientsBtn" class="btn-action filter-btn" onclick="sortWeeklyClients()">
+                    A-Z
+                </button>
+                <button type="button" id="sortWeeklyClientsDateBtn" class="btn-action filter-btn" onclick="sortWeeklyClientsByDate()">
+                    Newest
+                </button>
+            </div>
+            <div class="patient-card-grid" id="weeklyClientsGrid">
 
-
-                
                 {% for appointment in Approve %}
-                <div class="patient-card">
+                <div class="patient-card" data-name="{{ appointment.FirstName }}" data-accepted-at="{{ appointment.accepted_at }}">
                     <div class="p-card-header">
                         <div class="p-info">
                             <strong>NAME: {{ appointment.FirstName }}</strong>
-                             
+                              
                             <small style="opacity: 0.6;">UID: {{ appointment.uid }}</small>
                         </div>
                     </div>
+                    <p class="accepted-at">Accepted: <strong>{{ appointment.accepted_at|default('N/A') }}</strong></p>
                     <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>{{ appointment.DentistName|default('Not Assigned') }}</strong></p>
                      <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
                         data-name="{{ appointment.FirstName }}"
@@ -1225,6 +1324,97 @@ function setCheckbox(id, value) {
             }
         }
 
+        function filterMyPatients() {
+            var input = document.getElementById('myPatientSearch').value.toUpperCase();
+            var table = document.getElementById('myPatientsTable');
+            var tbody = table.querySelector('tbody');
+            var rows = tbody.querySelectorAll('tr');
+            var visibleRows = [];
+            rows.forEach(function(row) {
+                var nameCell = row.querySelector('td');
+                if (nameCell) {
+                    var textValue = nameCell.textContent || nameCell.innerText;
+                    if (textValue.toUpperCase().indexOf(input) > -1) {
+                        row.style.display = '';
+                        visibleRows.push(row);
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function sortMyPatients() {
+            var table = document.getElementById('myPatientsTable');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var sortBtn = document.getElementById('sortMyPatientsBtn');
+            var isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
+            sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
+            sortBtn.textContent = isAsc ? 'A-Z' : 'Z-A';
+            rows.sort(function(a, b) {
+                var aName = a.querySelector('td')?.textContent?.toLowerCase() || '';
+                var bName = b.querySelector('td')?.textContent?.toLowerCase() || '';
+                if (aName < bName) return isAsc ? -1 : 1;
+                if (aName > bName) return isAsc ? 1 : -1;
+                return 0;
+            });
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        }
+
+        function filterWeeklyClients() {
+            var input = document.getElementById('weeklyClientSearch').value.toUpperCase();
+            var grid = document.getElementById('weeklyClientsGrid');
+            var cards = grid.querySelectorAll('.patient-card');
+            cards.forEach(function(card) {
+                var name = card.getAttribute('data-name') || '';
+                var text = card.textContent || '';
+                card.style.display = text.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+            });
+        }
+
+        function sortWeeklyClients() {
+            var grid = document.getElementById('weeklyClientsGrid');
+            var cards = Array.from(grid.querySelectorAll('.patient-card'));
+            var sortBtn = document.getElementById('sortWeeklyClientsBtn');
+            var isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
+            sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
+            sortBtn.textContent = isAsc ? 'A-Z' : 'Z-A';
+            cards.sort(function(a, b) {
+                var aName = (a.getAttribute('data-name') || '').toLowerCase();
+                var bName = (b.getAttribute('data-name') || '').toLowerCase();
+                if (aName < bName) return isAsc ? -1 : 1;
+                if (aName > bName) return isAsc ? 1 : -1;
+                return 0;
+            });
+            cards.forEach(function(card) {
+                grid.appendChild(card);
+            });
+        }
+
+        function sortWeeklyClientsByDate() {
+            var grid = document.getElementById('weeklyClientsGrid');
+            var cards = Array.from(grid.querySelectorAll('.patient-card'));
+            var sortBtn = document.getElementById('sortWeeklyClientsDateBtn');
+            var isNewest = sortBtn.getAttribute('data-sort') !== 'asc';
+            sortBtn.setAttribute('data-sort', isNewest ? 'asc' : 'desc');
+            sortBtn.textContent = isNewest ? 'Newest' : 'Oldest';
+            cards.sort(function(a, b) {
+                var aDate = new Date(a.getAttribute('data-accepted-at') || '');
+                var bDate = new Date(b.getAttribute('data-accepted-at') || '');
+                if (isNewest) {
+                    return bDate - aDate;
+                } else {
+                    return aDate - bDate;
+                }
+            });
+            cards.forEach(function(card) {
+                grid.appendChild(card);
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var buttons = document.querySelectorAll('.check-profile-btn');
             buttons.forEach(function(btn) {
@@ -1526,32 +1716,46 @@ function addTreatmentRow() {
                 formData.append('action', action);
                 
                 // Send the data to the /approve endpoint using fetch
-                fetch('/approve', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => {
-                    if (response.ok) {
-                        if (action === 'accept') {
-                            alert('Appointment accepted successfully!');
-                            if (rowElement) {
-                                rowElement.remove();
-                            }
-                            showSection('mypatients');
-                        } else {
-                            alert('Appointment declined successfully!');
-                            if (rowElement) {
-                                rowElement.remove();
-                            }
-                        }
-                    } else {
-                        throw new Error('Failed to ' + action + ' appointment');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to ' + action + ' appointment. Please try again.');
-                });
+         fetch('/approve', {
+    method: 'POST',
+    body: formData
+})
+.then(response => {
+    if (response.ok) {
+
+        if (action === 'accept') {
+            alert('Appointment accepted successfully!');
+
+            if (rowElement) {
+                rowElement.remove();
+            }
+
+            showSection('mypatients');
+
+        } else {
+            alert('Appointment declined successfully!');
+
+            if (rowElement) {
+                rowElement.remove();
+            }
+        }
+
+        // Reload the page after the action is completed
+        location.reload();
+
+    } else {
+        throw new Error('Failed to ' + action + ' appointment');
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+
+    alert(
+        'Failed to ' +
+        action +
+        ' appointment. Please try again.'
+    );
+});
             }
 
            // Show section based on hash on page load

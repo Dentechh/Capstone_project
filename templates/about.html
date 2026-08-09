@@ -296,6 +296,7 @@
             <a href="#">Terms of Service</a>
         </div>
     </div>
+    
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
@@ -543,74 +544,38 @@ if (sendResetBtn) {
 }
     </script>
 
-    <div class="chatbot-launcher" id="chatLauncher" title="Chatbot Test" style="position: fixed !important; bottom: 30px !important; right: 30px !important; width: 60px !important; height: 60px !important; background: #ff0000 !important; border: 5px solid lime !important; border-radius: 50% !important; z-index: 999999 !important; display: flex !important; align-items: center !important; justify-content: center !important;" aria-label="Open chat">
-        <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="chat-pulse"></span>
-    </div>
 
-    <!-- TEST: Simple red fixed div -->
-    <div id="testRedDiv" style="position: fixed !important; bottom: 30px !important; right: 30px !important; width: 60px !important; height: 60px !important; background: red !important; z-index: 9999999 !important; display: flex !important; align-items: center !important; justify-content: center !important; color: white !important; font-weight: bold !important; font-size: 12px !important;">TEST</div>
+<div class="chatbot-launcher" id="chatLauncher" aria-label="Open chat">
+    <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="chat-pulse"></span>
+</div>
 
-    <div class="chatbot-window" id="chatWindow">
-        <div class="chatbot-header">
-            <div class="header-info">
-                <div class="header-avatar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
-                </div>
-                <div class="header-text">
-                    <span class="header-title">Capizonda Assistant</span>
-                    <span class="header-sub">Usually replies instantly</span>
-                </div>
+<div class="chatbot-window" id="chatWindow">
+    <div class="chatbot-header">
+        <div class="header-info">
+            <div class="header-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
             </div>
-            <button class="chat-close" id="chatClose" aria-label="Close chat">&times;</button>
-        </div>
-        <div class="chatbot-messages" id="chat-box">
-            <div class="message bot">
-                <div class="bubble">Hello! 👋 I'm your dental assistant. Ask me anything about our services, pricing, or the clinic!</div>
+            <div class="header-text">
+                <span class="header-title">Capizonda Assistant</span>
+                <span class="header-sub">Usually replies instantly</span>
             </div>
         </div>
-        <div class="chatbot-quick" id="chatQuick"></div>
-        <div class="chatbot-typing" id="chatTyping" style="display:none;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <button class="chat-close" id="chatClose" aria-label="Close chat">&times;</button>
     </div>
+    <div class="chatbot-messages" id="chat-box">
+        <div class="message bot">
+            <div class="bubble">Hello! 👋 I'm your dental assistant. Ask me anything about our services, pricing, or the clinic!</div>
+        </div>
+    </div>
+    <div class="chatbot-quick" id="chatQuick"></div>
+    <div class="chatbot-typing" id="chatTyping" style="display:none;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+</div>
 
 <script>
     (function() {
-        console.log('Chatbot script running...');
         const launcher = document.getElementById('chatLauncher');
-        console.log('Launcher element:', launcher);
         const windowChat = document.getElementById('chatWindow');
-        console.log('Window element:', windowChat);
-
-        if (launcher) {
-            const rect = launcher.getBoundingClientRect();
-            console.log('Launcher rect:', rect);
-            const styles = window.getComputedStyle(launcher);
-            console.log('Launcher display:', styles.display);
-            console.log('Launcher visibility:', styles.visibility);
-            console.log('Launcher opacity:', styles.opacity);
-            console.log('Launcher position:', styles.position);
-            console.log('Launcher zIndex:', styles.zIndex);
-            console.log('Launcher width:', styles.width);
-            console.log('Launcher height:', styles.height);
-        }
-
-        setTimeout(() => {
-            if (launcher) {
-                const rect = launcher.getBoundingClientRect();
-                console.log('Launcher rect after 2s:', rect);
-                console.log('Launcher in DOM after 2s:', document.body.contains(launcher));
-                console.log('Launcher parent:', launcher.parentElement.tagName, launcher.parentElement.className);
-                console.log('Launcher offsetParent:', launcher.offsetParent ? launcher.offsetParent.tagName : 'null');
-            }
-            
-            const testDiv = document.getElementById('testRedDiv');
-            if (testDiv) {
-                const testRect = testDiv.getBoundingClientRect();
-                console.log('TEST RED DIV rect:', testRect);
-                console.log('TEST RED DIV in DOM:', document.body.contains(testDiv));
-                console.log('TEST RED DIV parent:', testDiv.parentElement.tagName, testDiv.parentElement.className);
-            }
-        }, 2000);
         const chatClose = document.getElementById('chatClose');
         const chatBox = document.getElementById('chat-box');
         const chatQuick = document.getElementById('chatQuick');
