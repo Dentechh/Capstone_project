@@ -346,20 +346,33 @@
              color: #000000;
          }
 
-         body.dark-mode #signaturePad {
-             background: #1e1e1e !important;
-             border-color: #444 !important;
-         }
+          body.dark-mode #signaturePad {
+              background: #ffffff !important;
+              border-color: #555 !important;
+          }
 
-         body.dark-mode span{
-            color: white;
-         }
+          body.dark-mode .signature-section > p {
+              color: #e0e0e0;
+          }
 
-         body.dark-mode #signatureUpload {
-             background: #2d2d2d;
-             border-color: #444;
-             color: #e0e0e0;
-         }
+          body.dark-mode .signature-draw {
+              color: #e0e0e0;
+          }
+
+           body.dark-mode .signature-draw canvas {
+               border-color: #555;
+           }
+
+           body.dark-mode .clear-btn {
+              background: #444;
+              color: #e0e0e0;
+              border: 1px solid #555;
+          }
+
+          body.dark-mode .clear-btn:hover {
+              background: #555;
+              color: #ffffff;
+          }
 
          /* Smooth theme transition for all elements */
          body,
@@ -1616,21 +1629,70 @@
 
 .appointment-modal-content{
     background-color: #ffffff;
-    padding: 50px;
+    padding: 0;
     border-radius: 15px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     color: #000000;
     border-top: 8px solid #0d47a1;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     height: 92vh;
     max-width: 1600px;
     overflow: hidden;
 }
 
+.appointment-modal-content .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 30px;
+    border-bottom: 1px solid #dee2e6;
+    flex-shrink: 0;
+    background: #ffffff;
+}
+
+.appointment-modal-content .modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #0d47a1;
+    font-weight: 700;
+}
+
+.appointment-modal-content .modal-header .close {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f5f5f5;
+    color: #0d47a1;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+    line-height: 1;
+    padding: 0;
+}
+
+.appointment-modal-content .modal-header .close:hover {
+    background: #0d47a1;
+    color: #ffffff;
+    border-color: #0d47a1;
+    transform: rotate(90deg);
+}
+
+.appointment-modal-content .modal-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
 .appointment-modal-content .consent-sidebar {
     flex: 1;
-    padding: 40px;
+    padding: 30px;
     border-right: 1px solid #dee2e6;
     overflow-y: auto;
     background: #ffffff;
@@ -1639,7 +1701,7 @@
 
 .appointment-modal-content .form-container {
     flex: 1.5;
-    padding: 40px;
+    padding: 30px;
     overflow-y: auto;
     background: white;
 }
@@ -1661,12 +1723,54 @@ body.dark-mode .appointment-modal-content .form-container {
     color: #e0e0e0;
 }
 
+body.dark-mode .appointment-modal-content .modal-header {
+    background: #121212;
+    border-bottom-color: #333333;
+}
+
+body.dark-mode .appointment-modal-content .modal-header h2 {
+    color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .modal-header .close {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+body.dark-mode .appointment-modal-content .modal-header .close:hover {
+    background: #64b5f6;
+    border-color: #64b5f6;
+    color: #000;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar {
+    background: #000000;
+    color: #e0e0e0;
+    border-right-color: #333333;
+}
+
 body.dark-mode .appointment-modal-content .form-container h2 {
     color: #64b5f6;
 }
 
 body.dark-mode .appointment-modal-content .consent-sidebar h3 {
     color: #64b5f6;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar .signature-section > p {
+    color: #e0e0e0;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar .sig-btn.clear-btn {
+    background: #444;
+    color: #e0e0e0;
+    border-color: #555;
+}
+
+body.dark-mode .appointment-modal-content .consent-sidebar .sig-btn.clear-btn:hover {
+    background: #555;
+    color: #ffffff;
 }
 
 body.dark-mode .personal-info-grid label,
@@ -1690,6 +1794,7 @@ body.dark-mode .personal-info-grid select::placeholder {
 
 body.dark-mode .personal-info-grid input:focus,
 body.dark-mode .personal-info-grid select:focus,
+body.dark-mode .personal-info-grid input[type="date"]:focus,
 body.dark-mode .service-schedule-section select:focus,
 body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
     border-color: #64b5f6;
@@ -1731,23 +1836,55 @@ body.dark-mode .service-schedule-section input[type="datetime-local"]:focus {
 }
 
 .clear-btn {
-    margin-top: 5px;
-    padding: 4px 10px;
-    font-size: 0.7rem;
-    background: #ccc;
-    border: none;
-    border-radius: 4px;
+    margin-top: 8px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #e0e0e0;
+    border: 1px solid #bbb;
+    border-radius: 6px;
     cursor: pointer;
+    transition: all 0.2s;
 }
 
-.signature-upload {
+.clear-btn:hover {
+    background: #d0d0d0;
+    border-color: #999;
+}
+
+/* Signature button row */
+.btn-row {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    border-left: 1px solid #ccc;
-    gap: 5px;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.sig-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 38px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 38px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    border: 1px solid transparent;
+    box-sizing: border-box;
+    white-space: nowrap;
+}
+
+.clear-btn.sig-btn {
+    background: #e0e0e0;
+    border-color: #bbb;
+    color: #333;
+}
+
+.clear-btn.sig-btn:hover {
+    background: #d0d0d0;
+    border-color: #999;
 }
 
 /* Form Layout */
@@ -1915,6 +2052,21 @@ body.dark-mode .women-question span{
         color: #64b5f6 !important;
     }
 
+    body.dark-mode .appointment-modal-content .consent-sidebar .signature-section > p {
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar .sig-btn.clear-btn {
+        background: #444 !important;
+        color: #e0e0e0 !important;
+        border-color: #555 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .consent-sidebar .sig-btn.clear-btn:hover {
+        background: #555 !important;
+        color: #ffffff !important;
+    }
+
     body.dark-mode .personal-info-grid label,
     body.dark-mode .service-schedule-section label {
         color: #e0e0e0 !important;
@@ -1998,7 +2150,7 @@ body.dark-mode .women-question span{
         height: 60px !important;
     }
     
-    .appointment-modal .clear-btn,
+    .appointment-modal .sig-btn,
     .appointment-modal .women-options label,
     .appointment-modal .consent-checkbox label,
     .appointment-modal .question-row span,
@@ -2026,18 +2178,56 @@ body.dark-mode .women-question span{
     font-size: 16px;
 }
 
-/* Appointment Modal - Form Styles */
-.form-container .close-btn {
-    float: right;
-    cursor: pointer;
-    font-size: 24px;
-    color: #999;
-    transition: color 0.3s;
+/* Birthday field - label above input */
+.birthday-field {
+    grid-column: span 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.form-container .close-btn:hover {
+.birthday-field label {
+    font-size: 12px;
+    font-weight: 600;
     color: #0d47a1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
+
+.birthday-field input[type="date"] {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Kumbh Sans', sans-serif;
+    background-color: #f1f8ff;
+    width: 100%;
+    box-sizing: border-box;
+    color: #333;
+}
+
+.personal-info-grid input[type="date"]:focus {
+    border-color: #0d47a1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(13, 71, 161, 0.15);
+}
+
+body.dark-mode .birthday-field label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .birthday-field input[type="date"] {
+    background-color: #1e1e1e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .personal-info-grid input[type="date"]:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 2px rgba(100, 181, 246, 0.2);
+}
+
+/* Appointment Modal - Form Styles */
 
 .form-container h2 {
     color: #64b5f6;
@@ -2093,6 +2283,77 @@ body.dark-mode .women-question span{
     grid-column: 1 / -1;
 }
 
+/* Schedule pair - stacked cards like urgency/civil status */
+.schedule-pair {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.schedule-card {
+    position: relative;
+}
+
+.schedule-card label {
+    display: block;
+    color: #0d47a1;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+}
+
+.schedule-card input,
+.schedule-card select {
+    width: 100%;
+    padding: 14px 44px 14px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background: #f1f8ff;
+    font-size: 15px;
+    font-family: 'Kumbh Sans', sans-serif;
+    cursor: pointer;
+    box-sizing: border-box;
+    appearance: auto;
+}
+
+.schedule-card .card-icon {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    font-size: 20px;
+    pointer-events: none;
+}
+
+.schedule-card input:focus,
+.schedule-card select:focus {
+    border-color: #0d47a1;
+    box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.1);
+    outline: none;
+}
+
+body.dark-mode .schedule-card label {
+    color: #e0e0e0;
+}
+
+body.dark-mode .schedule-card input,
+body.dark-mode .schedule-card select {
+    background: #1e1e1e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+body.dark-mode .schedule-card input:focus,
+body.dark-mode .schedule-card select:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.15);
+}
+
+body.dark-mode .schedule-card .card-icon {
+    color: #e0e0e0;
+}
+
 /* Service and Schedule sections */
 .service-schedule-section {
     grid-column: 1 / -1;
@@ -2116,6 +2377,14 @@ body.dark-mode .women-question span{
     border: 1px solid #ddd;
     background: #f8f9fa;
     font-size: 14px;
+}
+
+.service-schedule-section > div {
+    width: 100%;
+}
+
+.service-schedule-section .schedule-pair {
+    grid-column: 1 / -1;
 }
 
 /* Medical History Questions */
@@ -3349,8 +3618,9 @@ h3 {
     }
     
     .close-btn {
-        font-size: 24px;
-        padding: 5px 10px;
+        font-size: 22px;
+        top: 10px;
+        right: 12px;
     }
     
     /* Form Grid - Single column */
@@ -3378,6 +3648,28 @@ h3 {
     
     .personal-info-grid [style*="width: 50%"] {
         width: 100% !important;
+    }
+    
+    /* Schedule Pair - Mobile adjustments */
+    .schedule-pair {
+        gap: 8px !important;
+    }
+    
+    .schedule-card label {
+        font-size: 11px !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .schedule-card input,
+    .schedule-card select {
+        padding: 12px 40px 12px 12px !important;
+        font-size: 14px !important;
+    }
+    
+    .schedule-card .card-icon {
+        right: 12px !important;
+        bottom: 12px !important;
+        font-size: 16px !important;
     }
     
     /* Medical History */
@@ -3677,11 +3969,31 @@ h3 {
         overflow: hidden !important;
     }
 
+    /* Modal Header - stays fixed at top */
+    .appointment-modal-content .modal-header {
+        padding: 15px 20px !important;
+    }
+
+    .appointment-modal-content .modal-header h2 {
+        font-size: 1.1rem !important;
+    }
+
+    .appointment-modal-content .modal-header .close {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 18px !important;
+    }
+
+    /* Modal Body - stacks vertically on mobile */
+    .appointment-modal-content .modal-body {
+        flex-direction: column !important;
+    }
+
     /* Consent Sidebar - Top Section */
     .consent-sidebar {
         flex: 0 0 auto !important;
         width: 100% !important;
-        max-height: 45vh !important;
+        max-height: 40vh !important;
         overflow-y: auto !important;
         border-right: none !important;
         border-bottom: 2px solid #dee2e6 !important;
@@ -3725,6 +4037,54 @@ h3 {
     .personal-info-grid input,
     .personal-info-grid select {
         width: 100% !important;
+    }
+    
+    /* Match Civil Status width for Service section on mobile */
+    .service-schedule-section,
+    .service-schedule-section > div,
+    .service-schedule-section select {
+        width: 100% !important;
+    }
+    
+    /* Signature Section - Mobile */
+    .signature-row {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .btn-row {
+        flex-direction: row !important;
+    }
+    
+    .sig-btn {
+        padding: 10px 12px !important;
+        font-size: 0.8rem !important;
+    }
+    
+    .signature-draw canvas {
+        max-width: 100% !important;
+    }
+
+    /* Dark mode - Mobile modal header */
+    body.dark-mode .appointment-modal-content .modal-header {
+        background: #121212 !important;
+        border-bottom-color: #333 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .modal-header h2 {
+        color: #64b5f6 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .modal-header .close {
+        background: #2d2d2d !important;
+        border-color: #444 !important;
+        color: #e0e0e0 !important;
+    }
+
+    body.dark-mode .appointment-modal-content .modal-header .close:hover {
+        background: #64b5f6 !important;
+        border-color: #64b5f6 !important;
+        color: #000 !important;
     }
 }
 

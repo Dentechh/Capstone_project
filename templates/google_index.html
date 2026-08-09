@@ -231,9 +231,19 @@
 
 <div id="appointmentModal" class="modal">
     <div class="appointment-modal-content" id="appointmentModalContent">
-        <div class="consent-sidebar">
-            <h3>Informed Consent</h3>
-            <div class="consent-body" >
+        <div class="modal-header">
+            <h2>Book Appointment</h2>
+            <button class="close" onclick="document.getElementById('appointmentModal').style.display='none'" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="consent-sidebar">
+                <h3>Informed Consent</h3>
+                <div class="consent-body" >
                 <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits & cost have been fully explained. These treatment include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics & surgical cases.</p>
 
                 <p><strong>DRUGS & MEDICATIONS:</strong> I understand that antibiotics, analgesics, & other medications can cause allergic reactions like redness & swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
@@ -261,12 +271,9 @@
                     <div class="signature-row">
                         <div class="signature-draw">
                             <canvas id="signaturePad" width="300" height="80"></canvas>
-                            <button type="button" onclick="clearSignature()" class="clear-btn">Clear</button>
-                        </div>
-                        <div class="signature-upload">
-                            <span>OR</span>
-                            <input type="file" name="signatureUpload" id="signatureUpload" accept="image/png,image/jpeg" onchange="handleSignatureUpload(this)">
-                            <span>Upload PNG image</span>
+                            <div class="btn-row">
+                                <button type="button" onclick="clearSignature()" class="sig-btn clear-btn">Clear</button>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="signature" id="signatureData">
@@ -274,8 +281,7 @@
             </div>
         </div>
 
-<div class="form-container">
-            <span class="close-btn" id="closeModal">&times;</span>
+        <div class="form-container">
             <h2>Patient Information </h2>
 
             <form action="/google_booked_customer" id="appointmentForm" method="POST">
@@ -323,8 +329,10 @@
                         </select>
                     </div>
                     <input type="tel" placeholder="Contact Number" name="Contact_number" required>
-                    <label style="grid-column: span 1; font-size: 13px; font-weight: 600; color: #0d47a1; text-transform: uppercase; letter-spacing: 0.5px;">Birthday</label>
-                    <input type="date" name="Birthday" placeholder="Birthday" required>
+                    <div class="birthday-field">
+                        <label for="birthday">Birthday</label>
+                        <input type="date" id="birthday" name="Birthday" required>
+                    </div>
                     
                     
                     <select name="Occupation" required>
@@ -383,14 +391,30 @@
                         </div>
 
                         <!-- SELECT SCHEDULE -->
-                        <div>
-                            <label for="schedule">Select Schedule:</label>
-
-                            <input type="datetime-local"
-                                id="schedule"
-                                name="appointment_date"
-                                required>
+                        <div class="schedule-pair">
+                            <div class="schedule-card">
+                                <label for="scheduleDate">Date</label>
+                                <input type="text" id="scheduleDate" placeholder="Choose date" required readonly>
+                                <span class="card-icon">📆</span>
+                            </div>
+                            <div class="schedule-card">
+                                <label for="scheduleTime">Time</label>
+                                <select id="scheduleTime" required>
+                                    <option value="" disabled selected>Select time</option>
+                                    <option value="09:00">9:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="13:00">1:00 PM</option>
+                                    <option value="14:00">2:00 PM</option>
+                                    <option value="15:00">3:00 PM</option>
+                                    <option value="16:00">4:00 PM</option>
+                                    <option value="17:00">5:00 PM</option>
+                                </select>
+                                <span class="card-icon">🕐</span>
+                            </div>
                         </div>
+                        <input type="hidden" name="appointment_date" id="appointmentDateHidden">
 
                     </div>
                 </div> <!-- This closes the personal-info-grid div -->
@@ -480,6 +504,7 @@
 
                 <button type="submit" id="confirmAppointmentBtn" class="submit-btn">Confirm Appointment</button>
             </form>
+        </div>
         </div>
     </div>
 </div>
@@ -1010,7 +1035,6 @@ resetPasswordBtn.addEventListener("click", async () => {
             modal.style.display = "flex"; 
         }
     };
-    document.getElementById("closeModal").onclick = () => modal.style.display = "none";
     
 // Confirm Appointment Button - direct form submission
     const confirmBtn = document.getElementById("confirmAppointmentBtn");
@@ -1033,9 +1057,8 @@ resetPasswordBtn.addEventListener("click", async () => {
     
      // Close payment modal removed - no longer needed
     
-// Global click listener to close modals/dropdowns if clicking outside
+// Global click listener to close modals/dropdowns (excluding appointment modal)
        window.addEventListener('click', (e) => { 
-           if(e.target == modal) modal.style.display = "none";
            if(e.target == loginPromptModal) loginPromptModal.style.display = "none";
            
            const loginM = document.getElementById('loginModal');
@@ -1056,16 +1079,33 @@ resetPasswordBtn.addEventListener("click", async () => {
        });
 
     // Calendar Initialization
-    flatpickr("#schedule", {
+    flatpickr("#scheduleDate", {
         minDate: "today",
-        enableTime: true,
-        dateFormat: "F j, Y h:i K",
-        time_24hr: false,
+        dateFormat: "Y-m-d",
         disable: [
             "2026-03-25", "2026-03-26",
             function(date) { return (date.getDay() === 0); }
-        ]
+        ],
+        onChange: combineDateTime
     });
+
+    function combineDateTime() {
+        const dateInput = document.getElementById("scheduleDate");
+        const timeInput = document.getElementById("scheduleTime");
+        const hiddenInput = document.getElementById("appointmentDateHidden");
+        if (dateInput && timeInput && hiddenInput) {
+            const dateVal = dateInput.value;
+            const timeVal = timeInput.value;
+            if (dateVal && timeVal) {
+                hiddenInput.value = dateVal + " " + timeVal;
+            }
+        }
+    }
+
+    const scheduleTime = document.getElementById("scheduleTime");
+    if (scheduleTime) {
+        scheduleTime.addEventListener("change", combineDateTime);
+    }
 
         document.addEventListener('DOMContentLoaded', function() {
         const dropBtn = document.getElementById('servicesDropdownBtn');
@@ -1170,18 +1210,6 @@ resetPasswordBtn.addEventListener("click", async () => {
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.getElementById('signatureData').value = '';
-        }
-        document.getElementById('signatureUpload').value = '';
-    }
-
-    function handleSignatureUpload(input) {
-        if(input.files && input.files[0]) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('signatureData').value = e.target.result;
-            };
-            reader.readAsDataURL(file);
         }
     }
 
