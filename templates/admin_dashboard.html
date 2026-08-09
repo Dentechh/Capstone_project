@@ -832,70 +832,65 @@ window.onclick = function(e) {
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                               <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                               <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            
-                            </tr>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            </tr>
-                            <tr>
-                                <td><input type="date" class="td-date" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" /></td>
-                                <td><input type="text" class="td-procedure" placeholder="Procedure..." /></td>
-                                <td><input type="text" class="td-dentist" placeholder="Dentist name..." /></td>
-                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" /></td>
-                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-                                <td><input type="date" class="td-next-appt" style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-                            
-       
-                            </tr>
-<tr>
-                            <td>
-    <select class="td-status" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;box-sizing:border-box;">
-        <option value="Not Paid">Not Paid</option>
-        <option value="Paid">Paid</option>
-    </select>
+
+<tbody>
+    <tr>
+        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
     </tr>
-</td>
-                            
-                        </tbody>
+
+    <tr>
+        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+    </tr>
+
+    <tr>
+        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+    </tr>
+
+    <tr>
+        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+    </tr>
+
+    <tr>
+        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+    </tr>
+</tbody>
+
+
                     </table>
                     <button type="button" id="td-add-row-btn" class="btn-add-row">+ Add Row</button>
                     <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
@@ -1641,91 +1636,344 @@ function addTreatmentRow() {
 
 async function saveDentalRecord(uid) {
 
-  try {
+    try {
 
-    const chartSection = document.querySelector('.dental-chart');
+        // =====================================================
+        // CLEAN UID
+        // =====================================================
 
-    const canvas = await html2canvas(chartSection, {
-      scale: 1,
-      useCORS: true,
-      backgroundColor: '#ffffff'
-    });
+        if (!uid) {
+            alert("Patient UID is missing.");
+            return;
+        }
 
-    const blob = await new Promise(resolve => {
-      canvas.toBlob(resolve, "image/jpeg", 0.7);
-    });
+        uid = String(uid)
+            .replace("Account No:", "")
+            .replace("Patient ID:", "")
+            .trim();
 
-    const formData = new FormData();
+        console.log("====================================");
+        console.log("FINAL UID BEING SENT:", uid);
+        console.log("====================================");
 
-    // UID
-    formData.append("uid", uid);
 
-    // Patient Record ID
-    const patientUnqId = document
-        .getElementById("td-Patient_unq_id")
-        .textContent
-        .trim();
+        // =====================================================
+        // GET DENTAL CHART
+        // =====================================================
 
-    formData.append("Patient_unq_id", patientUnqId);
+        const chartSection = document.querySelector(".dental-chart");
 
-    // Image
-    formData.append("dental_chart_image", blob, "chart.jpg");
+        if (!chartSection) {
+            alert("Dental chart not found.");
+            return;
+        }
 
-    // Tooth Data
-    document.querySelectorAll(".tooth-unit").forEach(tooth => {
 
-      const id = tooth.id.replace("tooth-", "");
+        // =====================================================
+        // CREATE IMAGE
+        // =====================================================
 
-      let value = "healthy";
+        const canvas = await html2canvas(chartSection, {
+            scale: 1,
+            useCORS: true,
+            backgroundColor: "#ffffff"
+        });
 
-      if (tooth.classList.contains("caries")) value = "caries";
-      else if (tooth.classList.contains("filling")) value = "filling";
-      else if (tooth.classList.contains("crown")) value = "crown";
-      else if (tooth.classList.contains("rootcanal")) value = "rootcanal";
-      else if (tooth.classList.contains("missing")) value = "missing";
-      else if (tooth.classList.contains("extraction")) value = "extraction";
-      else if (tooth.classList.contains("check")) value = "check";
 
-      formData.append(`tooth_${id}`, value);
-    });
+        // =====================================================
+        // CONVERT CANVAS TO IMAGE
+        // =====================================================
 
-    // Treatment Table
-    document.querySelectorAll("#td-treatment-table tbody tr").forEach(row => {
+        const blob = await new Promise(resolve => {
+            canvas.toBlob(
+                resolve,
+                "image/jpeg",
+                0.7
+            );
+        });
 
-      formData.append("date[]", row.querySelector(".td-date")?.value || "");
-      formData.append("tooth[]", row.querySelector(".td-tooth")?.value || "");
-      formData.append("procedure[]", row.querySelector(".td-procedure")?.value || "");
-      formData.append("dentist[]", row.querySelector(".td-dentist")?.value || "");
-      formData.append("value[]", row.querySelector(".td-value")?.value || "");
-      formData.append("paid[]", row.querySelector(".td-paid")?.value || "");
-      formData.append("balance[]", row.querySelector(".td-balance")?.value || "");
-      formData.append("next_appointment[]", row.querySelector(".td-next-appt")?.value || "");
-      formData.append("medicine[]", row.querySelector(".td-medicine")?.value || "");
-      formData.append("status[]", row.querySelector(".td-status")?.value || "");
-    });
 
-    const response = await fetch("/save_dental_record", {
-      method: "POST",
-      body: formData
-    });
+        if (!blob) {
+            alert("Failed to create dental chart image.");
+            return;
+        }
 
-    const result = await response.json();
 
-    console.log("UID:", uid);
-    console.log("Patient Record ID:", patientUnqId);
-    console.log(result);
+        // =====================================================
+        // FORM DATA
+        // =====================================================
 
-    if (result.success) {
-      alert("Dental record saved successfully!");
-      location.reload();
-    } else {
-      alert("Error: " + result.message);
+        const formData = new FormData();
+
+
+        // =====================================================
+        // UID
+        // =====================================================
+
+        formData.append("uid", uid);
+
+
+        // =====================================================
+        // PATIENT UNIQUE ID
+        // =====================================================
+
+        const patientElement =
+            document.getElementById("td-Patient_unq_id");
+
+        const patientUnqId =
+            patientElement
+                ? patientElement.textContent.trim()
+                : "";
+
+
+        console.log(
+            "PATIENT UNIQUE ID:",
+            patientUnqId
+        );
+
+
+        if (!patientUnqId || patientUnqId === "-") {
+
+            alert(
+                "Patient Record ID is missing."
+            );
+
+            return;
+        }
+
+
+        formData.append(
+            "Patient_unq_id",
+            patientUnqId
+        );
+
+
+        // =====================================================
+        // DENTAL CHART IMAGE
+        // =====================================================
+
+        formData.append(
+            "dental_chart_image",
+            blob,
+            "chart.jpg"
+        );
+
+
+        // =====================================================
+        // TOOTH DATA
+        // =====================================================
+
+        document
+            .querySelectorAll(".tooth-unit")
+            .forEach(tooth => {
+
+                const id =
+                    tooth.id.replace(
+                        "tooth-",
+                        ""
+                    );
+
+                let value = "healthy";
+
+
+                if (
+                    tooth.classList.contains("caries")
+                ) {
+                    value = "caries";
+                }
+
+                else if (
+                    tooth.classList.contains("filling")
+                ) {
+                    value = "filling";
+                }
+
+                else if (
+                    tooth.classList.contains("crown")
+                ) {
+                    value = "crown";
+                }
+
+                else if (
+                    tooth.classList.contains("rootcanal")
+                ) {
+                    value = "rootcanal";
+                }
+
+                else if (
+                    tooth.classList.contains("missing")
+                ) {
+                    value = "missing";
+                }
+
+                else if (
+                    tooth.classList.contains("extraction")
+                ) {
+                    value = "extraction";
+                }
+
+                else if (
+                    tooth.classList.contains("check")
+                ) {
+                    value = "check";
+                }
+
+
+                formData.append(
+                    `tooth_${id}`,
+                    value
+                );
+
+            });
+
+
+        // =====================================================
+        // TREATMENT TABLE
+        // =====================================================
+
+        document
+            .querySelectorAll(
+                "#td-treatment-table tbody tr"
+            )
+            .forEach(row => {
+
+                formData.append(
+                    "date[]",
+                    row.querySelector(".td-date")?.value || ""
+                );
+
+                formData.append(
+                    "tooth[]",
+                    row.querySelector(".td-tooth")?.value || ""
+                );
+
+                formData.append(
+                    "procedure[]",
+                    row.querySelector(".td-procedure")?.value || ""
+                );
+
+                formData.append(
+                    "dentist[]",
+                    row.querySelector(".td-dentist")?.value || ""
+                );
+
+                formData.append(
+                    "value[]",
+                    row.querySelector(".td-value")?.value || ""
+                );
+
+                formData.append(
+                    "paid[]",
+                    row.querySelector(".td-paid")?.value || ""
+                );
+
+                formData.append(
+                    "balance[]",
+                    row.querySelector(".td-balance")?.value || ""
+                );
+
+                formData.append(
+                    "next_appointment[]",
+                    row.querySelector(".td-next-appt")?.value || ""
+                );
+
+                formData.append(
+                    "medicine[]",
+                    row.querySelector(".td-medicine")?.value || ""
+                );
+
+                formData.append(
+                    "status[]",
+                    row.querySelector(".td-status")?.value || ""
+                );
+
+            });
+
+
+        // =====================================================
+        // DEBUG
+        // =====================================================
+
+        console.log("====================================");
+        console.log("SENDING DENTAL RECORD");
+        console.log("UID:", uid);
+        console.log("Patient_unq_id:", patientUnqId);
+        console.log("====================================");
+
+
+        // =====================================================
+        // SEND TO FLASK
+        // =====================================================
+
+        const response = await fetch(
+            "/save_dental_record",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+
+        // =====================================================
+        // GET RESPONSE
+        // =====================================================
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "SERVER STATUS:",
+            response.status
+        );
+
+        console.log(
+            "SERVER RESPONSE:",
+            result
+        );
+
+
+        // =====================================================
+        // SUCCESS
+        // =====================================================
+
+        if (result.success) {
+
+            alert(
+                "Dental record saved successfully!"
+            );
+
+            location.reload();
+
+        }
+
+        else {
+
+            alert(
+                "Error: " +
+                (
+                    result.message ||
+                    "Unknown error"
+                )
+            );
+
+        }
+
     }
 
-  } catch (error) {
-    console.error(error);
-    alert("Failed to save dental record.");
-  }
+    catch (error) {
+
+        console.error(
+            "SAVE DENTAL RECORD ERROR:",
+            error
+        );
+
+        alert(
+            "Failed to save dental record."
+        );
+
+    }
+
 }
 
 // =========================

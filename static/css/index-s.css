@@ -1353,7 +1353,7 @@
              align-items: center;
              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
              cursor: pointer;
-             z-index: 1001;
+             z-index: 99999;
              transition: transform 0.3s ease, box-shadow 0.3s ease;
          }
          .chatbot-launcher:hover {
@@ -1389,7 +1389,7 @@
              backdrop-filter: blur(10px);
              border-radius: 20px;
              box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-             z-index: 1000;
+             z-index: 99998;
              overflow: hidden;
              display: none;
              flex-direction: column;

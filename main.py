@@ -1283,11 +1283,19 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
-
     def save_dental_record(self):
 
         try:
-            uid = request.form.get("uid")
+
+            # =====================================================
+            # GET UID
+            # =====================================================
+            uid = request.form.get("uid", "").strip()
+
+            print("====================================")
+            print("RECEIVED UID:", repr(uid))
+            print("CUSTOMER ACCOUNT:", self.Customer_Account)
+            print("====================================")
 
             if not uid:
                 return jsonify({
@@ -1295,47 +1303,91 @@ class DentalClinicApp(BaseFlaskApp):
                     "message": "UID is required"
                 }), 400
 
-            if self.db.collection(self.Customer_Account).document(uid).get().exists:
-                main_collection = self.Customer_Account
-            else:
+            # =====================================================
+            # FIND CUSTOMER ACCOUNT
+            # =====================================================
+            user_ref = (
+                self.db
+                .collection(self.Customer_Account)
+                .document(uid)
+            )
+
+            user_doc = user_ref.get()
+
+            print("LOOKING FOR DOCUMENT:", uid)
+            print("DOCUMENT EXISTS:", user_doc.exists)
+
+            if not user_doc.exists:
                 return jsonify({
                     "success": False,
-                    "message": "User not found"
+                    "message": f"User not found for UID: {uid}"
                 }), 404
 
-            user_ref = self.db.collection(main_collection).document(uid)
+            # =====================================================
+            # GET PATIENT UNIQUE ID 
+            # =====================================================
+            patient_unq_id = request.form.get(
+                "Patient_unq_id",
+                ""
+            ).strip()
 
-            # =========================
-            # GET PATIENT UNIQUE ID
-            # =========================
-            patient_unq_id = request.form.get("Patient_unq_id")
+            print("PATIENT UNIQUE ID:", repr(patient_unq_id))
 
-            # =========================
+            # =====================================================
             # DENTAL CHART JSON
-            # =========================
+            # =====================================================
             dental_chart = {}
 
             for key in request.form:
+
                 if key.startswith("tooth_"):
+
                     dental_chart[key] = request.form.get(key)
 
-            # =========================
+            # =====================================================
             # IMAGE TO BASE64
-            # =========================
+            # =====================================================
             image_base64 = ""
 
-            image_file = request.files.get("dental_chart_image")
+            image_file = request.files.get(
+                "dental_chart_image"
+            )
 
             if image_file:
-                try:
-                    image_bytes = image_file.read()
-                    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-                except Exception as img_error:
-                    print("IMAGE ENCODE ERROR:", img_error)
 
-            # =========================
+                try:
+
+                    image_bytes = image_file.read()
+
+                    if image_bytes:
+
+                        image_base64 = base64.b64encode(
+                            image_bytes
+                        ).decode("utf-8")
+
+                        print(
+                            "CHART IMAGE SAVED. BASE64 LENGTH:",
+                            len(image_base64)
+                        )
+
+                    else:
+
+                        print("WARNING: Image file is empty.")
+
+                except Exception as img_error:
+
+                    print(
+                        "IMAGE ENCODE ERROR:",
+                        img_error
+                    )
+
+            else:
+
+                print("WARNING: No dental chart image received.")
+
+            # =====================================================
             # TREATMENT TABLE
-            # =========================
+            # =====================================================
             dates = request.form.getlist("date[]")
             teeth = request.form.getlist("tooth[]")
             procedures = request.form.getlist("procedure[]")
@@ -1343,10 +1395,19 @@ class DentalClinicApp(BaseFlaskApp):
             values = request.form.getlist("value[]")
             paids = request.form.getlist("paid[]")
             balances = request.form.getlist("balance[]")
-            next_appts = request.form.getlist("next_appointment[]")
-            medicines = request.form.getlist("medicine[]")
-            statuses = request.form.getlist("status[]")
+            next_appts = request.form.getlist(
+                "next_appointment[]"
+            )
+            medicines = request.form.getlist(
+                "medicine[]"
+            )
+            statuses = request.form.getlist(
+                "status[]"
+            )
 
+            # =====================================================
+            # DETERMINE NUMBER OF ROWS
+            # =====================================================
             length = min(
                 len(dates),
                 len(teeth),
@@ -1360,69 +1421,149 @@ class DentalClinicApp(BaseFlaskApp):
                 len(statuses)
             )
 
+            print("TREATMENT ROW COUNT:", length)
+
+            # =====================================================
+            # BUILD DONE PROCEDURES
+            # =====================================================
             done_procedures = []
 
             for i in range(length):
 
+                # Skip completely empty rows
                 if not procedures[i] and not teeth[i]:
                     continue
 
                 done_procedures.append({
+
                     "date": dates[i],
+
                     "tooth": teeth[i],
+
                     "procedure": procedures[i],
+
                     "dentist": dentists[i],
-                    "value": self.safe_float(values[i]),
-                    "paid": self.safe_float(paids[i]),
-                    "balance": self.safe_float(balances[i]),
+
+                    "value": self.safe_float(
+                        values[i]
+                    ),
+
+                    "paid": self.safe_float(
+                        paids[i]
+                    ),
+
+                    "balance": self.safe_float(
+                        balances[i]
+                    ),
+
                     "next_appointment": next_appts[i],
+
                     "medicine": medicines[i],
+
                     "status": statuses[i]
                 })
 
-            # =========================
+            # =====================================================
             # SAVE TO DONE_PROCEDURE
-            # =========================
-            user_ref.collection("Done_procedure").add({
+            # =====================================================
+            done_ref = user_ref.collection(
+                "Done_procedure"
+            )
+
+            done_ref.add({
+
                 "uid": uid,
+
                 "Patient_unq_id": patient_unq_id,
+
                 "chart": dental_chart,
+
                 "chart_image": image_base64,
+
                 "procedures": done_procedures,
-                "updated_at": firestore.SERVER_TIMESTAMP
+
+                "updated_at":
+                    firestore.SERVER_TIMESTAMP
             })
 
-            # =========================
-            # DELETE FROM APPROVE SUBCOLLECTION
-            # =========================
+            print("DONE_PROCEDURE SAVED SUCCESSFULLY.")
+
+            # =====================================================
+            # DELETE MATCHING APPROVE RECORD
+            # =====================================================
             if patient_unq_id:
 
+                print(
+                    "SEARCHING APPROVE RECORD:",
+                    patient_unq_id
+                )
+
                 approve_docs = (
-                    user_ref.collection("Approve")
-                    .where("Patient_unq_id", "==", patient_unq_id)
+                    user_ref
+                    .collection("Approve")
+                    .where(
+                        "Patient_unq_id",
+                        "==",
+                        patient_unq_id
+                    )
                     .stream()
                 )
 
                 deleted = False
 
                 for doc in approve_docs:
-                    print("Deleting Approve document:", doc.id)
+
+                    print(
+                        "Deleting Approve document:",
+                        doc.id
+                    )
+
                     doc.reference.delete()
+
                     deleted = True
 
-                if not deleted:
-                    print("No matching Approve document found.")
+                if deleted:
 
+                    print(
+                        "APPROVE RECORD DELETED."
+                    )
+
+                else:
+
+                    print(
+                        "No matching Approve document found."
+                    )
+
+            # =====================================================
+            # SUCCESS
+            # =====================================================
             return jsonify({
+
                 "success": True,
-                "message": "Dental record saved successfully"
+
+                "message":
+                    "Dental record saved successfully",
+
+                "uid": uid,
+
+                "Patient_unq_id":
+                    patient_unq_id
+
             })
 
         except Exception as e:
-            print("ERROR:", e)
+
+            print(
+                "SAVE DENTAL RECORD ERROR:",
+                str(e)
+            )
+
             return jsonify({
+
                 "success": False,
+
                 "message": str(e)
+
             }), 500
     
     

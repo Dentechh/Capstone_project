@@ -449,5 +449,194 @@ function handleCredentialResponse(response) {
 }
     </script>
 
+    <div class="chatbot-launcher" id="chatLauncher" aria-label="Open chat">
+        <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="chat-pulse"></span>
+    </div>
+
+    <div class="chatbot-window" id="chatWindow">
+        <div class="chatbot-header">
+            <div class="header-info">
+                <div class="header-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </div>
+                <div class="header-text">
+                    <span class="header-title">Capizonda Assistant</span>
+                    <span class="header-sub">Usually replies instantly</span>
+                </div>
+            </div>
+            <button class="chat-close" id="chatClose" aria-label="Close chat">&times;</button>
+        </div>
+        <div class="chatbot-messages" id="chat-box">
+            <div class="message bot">
+                <div class="bubble">Hello! 👋 I'm your dental assistant. Ask me anything about our services, pricing, or the clinic!</div>
+            </div>
+        </div>
+        <div class="chatbot-quick" id="chatQuick"></div>
+        <div class="chatbot-typing" id="chatTyping" style="display:none;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    </div>
+
+<script>
+    (function() {
+        const launcher = document.getElementById('chatLauncher');
+        const windowChat = document.getElementById('chatWindow');
+        const chatClose = document.getElementById('chatClose');
+        const chatBox = document.getElementById('chat-box');
+        const chatQuick = document.getElementById('chatQuick');
+        const chatTyping = document.getElementById('chatTyping');
+
+        const toggleChat = () => {
+            const isOpen = windowChat.style.display === 'flex';
+            windowChat.style.display = isOpen ? 'none' : 'flex';
+            if (!isOpen) renderQuickReplies();
+        };
+        launcher.onclick = toggleChat;
+        if(chatClose) chatClose.onclick = toggleChat;
+        windowChat.onclick = (e) => e.stopPropagation();
+
+        const faqData = [
+            { q: "What are braces?", a: "Braces are dental devices used to straighten teeth and correct problems with tooth alignment and bite." },
+            { q: "How much are braces?", a: "The cost depends on the type of braces, the complexity of the case, and the dental clinic. The dentist can give an exact estimate after an assessment." },
+            { q: "How long do I need to wear braces?", a: "It usually takes around 1–3 years, depending on the patient's teeth and treatment needs." },
+            { q: "What is a dental crown?", a: "A dental crown is a cap placed over a damaged or weakened tooth to restore its shape, strength, and function." },
+            { q: "How much is a dental crown?", a: "The price depends on the type of crown and the material used." },
+            { q: "What is tooth extraction?", a: "Tooth extraction is a procedure where a dentist removes a tooth from its socket." },
+            { q: "How much is tooth extraction?", a: "The cost depends on whether the extraction is simple or complicated and may vary between dental clinics." },
+            { q: "What is dental cleaning or oral prophylaxis?", a: "Dental cleaning, also called oral prophylaxis, is a procedure that removes plaque, tartar, and stains from the teeth." },
+            { q: "How often should I have dental cleaning?", a: "Dental cleaning is commonly recommended every six months, although some patients may need it more frequently depending on their oral health." },
+            { q: "How often should I visit the dentist for a check-up?", a: "It is generally recommended to visit the dentist twice a year, or every six months, for regular check-ups and preventive care." },
+            { q: "What is a dental filling?", a: "A dental filling is used to repair a tooth that has been damaged by tooth decay or a cavity." },
+            { q: "How much is a dental filling?", a: "The cost depends on the filling material, the size of the cavity, and the tooth being treated." },
+            { q: "What is a root canal?", a: "A root canal is a procedure that removes infected or damaged tissue from inside a tooth and seals the tooth to prevent further infection." },
+            { q: "How much is a root canal?", a: "The cost depends on the tooth being treated and the complexity of the procedure." },
+            { q: "When should I bring my baby to the dentist for the first time?", a: "A child should ideally have their first dental visit when the first baby tooth erupts or by their first birthday, whichever comes first." },
+            { q: "Why should I bring my baby to the dentist early?", a: "An early dental visit helps the dentist check the baby's developing teeth, identify potential problems, and teach parents proper oral care." },
+            { q: "What is teeth whitening?", a: "Teeth whitening is a cosmetic procedure that lightens the color of the teeth and helps reduce certain stains and discoloration." },
+            { q: "How much is teeth whitening?", a: "The cost depends on the whitening method and the dental clinic." },
+            { q: "What is a dental implant?", a: "A dental implant is a replacement for a missing tooth root that can support a dental crown or other restoration." },
+            { q: "How much is a dental implant?", a: "The cost varies depending on the implant, crown, materials, and whether additional procedures are required." },
+            { q: "What is the name of the dentist?", a: "Dr. Julix Dionne Capizonda, DMD" },
+            { q: "What is the educational background of the dentist?", a: "He graduated in Iloilo Doctor's College. He obtained a degree in Dental Medicine." },
+            { q: "Where the clinic is located?", a: "It located in 231 Lopez Jaena st. Molo Baluarte, West habog-habog, Iloilo City, 5000." }
+        ];
+
+        const categories = [
+            { name: "Braces", items: [0, 1, 2] },
+            { name: "Crowns & Extractions", items: [3, 4, 5, 6] },
+            { name: "Cleanings & Check-ups", items: [7, 8, 9] },
+            { name: "Fillings & Root Canal", items: [10, 11, 12, 13] },
+            { name: "Kids Dentistry", items: [14, 15] },
+            { name: "Whitening & Implants", items: [16, 17, 18, 19] },
+            { name: "Dentist Info", items: [20, 21, 22] }
+        ];
+
+        let currentCategory = null;
+
+        function addMsg(sender, html) {
+            const d = document.createElement('div');
+            d.className = `message ${sender}`;
+            d.innerHTML = `<div class="bubble">${html}</div>`;
+            chatBox.appendChild(d);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTyping() {
+            chatTyping.style.display = 'flex';
+            chatBox.appendChild(chatTyping);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function hideTyping() {
+            chatTyping.style.display = 'none';
+        }
+
+        function getAnswer(input) {
+            const text = input.toLowerCase();
+            const direct = faqData.find(item => text.includes(item.q.toLowerCase().slice(0, 10)) || item.q.toLowerCase().includes(text));
+            if (direct) return direct.a;
+
+            const keywords = {
+                "brace": 0, "braces": 0, "align": 0, "straighten": 0,
+                "crown": 3, "cap": 3, "bridge": 3,
+                "extract": 5, "removal": 5, "pull": 5, "cabot": 5,
+                "clean": 7, "prophylaxis": 7, "tartar": 7, "plaque": 7,
+                "check-up": 9, "checkup": 9, "check up": 9, "visit": 9, "twice": 9,
+                "filling": 10, "cavity": 10, "pasta": 10,
+                "root canal": 12, "rct": 12,
+                "baby": 14, "child": 14, "kid": 14, "first visit": 14, "toddler": 14,
+                "whiten": 16, "whitening": 16, "stain": 16,
+                "implant": 18, "missing tooth": 18, "tooth replacement": 18,
+                "dentist name": 20, "dr": 20, "doctor": 20,
+                "education": 21, "graduated": 21, "college": 21, "school": 21,
+                "location": 22, "address": 22, "where": 22, "clinic located": 22, "lopez": 22
+            };
+
+            for (const [key, idx] of Object.entries(keywords)) {
+                if (text.includes(key)) return faqData[idx].a;
+            }
+
+            return null;
+        }
+
+        function handleSend(text) {
+            if (!text.trim()) return;
+            addMsg('user', text);
+            chatQuick.innerHTML = '';
+            chatQuick.style.display = 'none';
+            currentCategory = null;
+
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                const answer = getAnswer(text);
+                if (answer) {
+                    addMsg('bot', answer);
+                } else {
+                    addMsg('bot', "I'm not sure about that. 😅 Please pick a category below or rephrase your question.");
+                    renderQuickReplies();
+                }
+            }, 800);
+        }
+
+        function renderQuickReplies() {
+            chatQuick.innerHTML = '';
+            if (currentCategory !== null) {
+                const cat = categories[currentCategory];
+                cat.items.forEach(idx => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quick-chip';
+                    btn.textContent = faqData[idx].q;
+                    btn.onclick = () => {
+                        addMsg('user', faqData[idx].q);
+                        showTyping();
+                        setTimeout(() => {
+                            hideTyping();
+                            addMsg('bot', faqData[idx].a);
+                            renderQuickReplies();
+                        }, 600);
+                    };
+                    chatQuick.appendChild(btn);
+                });
+                const back = document.createElement('button');
+                back.className = 'quick-chip back-chip';
+                back.textContent = '← Back';
+                back.onclick = () => { currentCategory = null; renderQuickReplies(); };
+                chatQuick.appendChild(back);
+            } else {
+                categories.forEach((cat, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quick-chip';
+                    btn.textContent = cat.name;
+                    btn.onclick = () => { currentCategory = idx; renderQuickReplies(); };
+                    chatQuick.appendChild(btn);
+                });
+            }
+            chatQuick.style.display = 'flex';
+        }
+
+        renderQuickReplies();
+    })();
+</script>
+
 </body>
 </html>
