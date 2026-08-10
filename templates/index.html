@@ -827,7 +827,7 @@ signupForm.addEventListener("submit", async (e) => {
             throw new Error(await response.text());
         }
 
-        alert("Verification email sent. Please check your email.");
+        alert("Verification email sent. Please check your spam folder.");
         window.location.href = "/";
 
     } catch (error) {

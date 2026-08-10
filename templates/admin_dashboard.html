@@ -329,13 +329,7 @@
                         <p>Emergency</p>
                     </div>
                 </div>
-                <div class="mini-stat-card urgent">
-                    <div class="mini-stat-icon">⚡</div>
-                    <div class="mini-stat-data">
-                        <h3 data-target="{{ urgency_counts.Urgent | default(0) }}">0</h3>
-                        <p>Urgent</p>
-                    </div>
-                </div>
+              
                 <div class="mini-stat-card normal">
                     <div class="mini-stat-icon">📋</div>
                     <div class="mini-stat-data">
@@ -1001,10 +995,7 @@ window.onclick = function(e) {
                                 <label>Service</label>
                                 <p id="pd-disp-service">-</p>
                             </div>
-                            <div class="info-group">
-                                <label>Patient ID</label>
-                                <p id="pd-disp-Patient_unq_id">-</p>
-                            </div>
+                         <div class="info-group" style="display: none;"> <label>Patient ID</label> <p id="pd-disp-Patient_unq_id">-</p> </div>
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
@@ -2860,10 +2851,10 @@ function initDashboardCharts() {
         new Chart(barCtx, {
             type: 'bar',
             data: {
-                labels: ['Emergency', 'Urgent', 'Normal'],
+                labels: ['Emergency',  'Normal'],
                 datasets: [{
                     label: 'Appointments',
-                    data: [urgencyCounts.Emergency || 0, urgencyCounts.Urgent || 0, urgencyCounts.Normal || 0],
+                    data: [urgencyCounts.Emergency ||  0, urgencyCounts.Normal || 0],
                     backgroundColor: ['#0d47a1', '#1565c0', '#90caf9'],
                     borderRadius: 8,
                     borderSkipped: false
