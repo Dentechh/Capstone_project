@@ -596,6 +596,8 @@ function closeChartView() {
                 <td>${p.procedure || "-"}</td>
                 <td>₱${p.paid || 0}</td>
                 <td>₱${p.balance || 0}</td>
+                 <td>${p.date || "-"}</td>
+                
                 <td>
 
                     ${
@@ -640,32 +642,89 @@ function closeChartView() {
     }
     </script>
 
-    <script>function payGCash(amount, procedure){
+    <script>
+
+async function payGCash(amount, procedure) {
+
+    try {
+
         const uid = "{{ user.get('uid', '') }}";
 
-        fetch("/create_gcash_payment",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                amount: amount,
-                procedure: procedure,
-                uid: uid
-            })
-        })
-        .then(res=>res.json())
-        .then(data=>{
+        if (!uid) {
+            alert("Patient UID is missing.");
+            return;
+        }
 
-            if(data.checkout_url){
-                window.location.href = data.checkout_url;
-            }else{
-                alert(data.error || "Unable to create payment.");
+        const numericAmount = parseFloat(amount);
+
+        if (
+            isNaN(numericAmount) ||
+            numericAmount <= 0
+        ) {
+            alert("Invalid payment amount.");
+            return;
+        }
+
+        const response = await fetch(
+            "/create_gcash_payment",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    amount: numericAmount,
+
+                    procedure: procedure,
+
+                    uid: uid
+
+                })
             }
+        );
 
-        });
+        const result =
+            await response.json();
 
-    }</script>
+        console.log(
+            "PayMongo Response:",
+            result
+        );
+
+        if (result.checkout_url) {
+
+            window.location.href =
+                result.checkout_url;
+
+        } else {
+
+            console.error(
+                "PayMongo Error:",
+                result
+            );
+
+            alert(
+                result.error ||
+                "Unable to create payment."
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Payment Error:",
+        error
+        );
+
+        alert(
+            "Something went wrong while creating the payment."
+        );
+    }
+}
+    </script>
 
     </div>
 

@@ -19,6 +19,157 @@
 
 
 <style>
+.chart-view-modal-overlay {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0, 0, 0, 0.75);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 99999;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
+/* MODAL */
+.chart-view-modal-content {
+    position: relative;
+
+    width: 90vw;
+    height: 90vh;
+
+    max-width: 1200px;
+    max-height: 900px;
+
+    background: #fff;
+
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+
+/* HEADER */
+.chart-view-modal-header {
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 15px 20px;
+
+    border-bottom: 1px solid #ddd;
+
+    background: #fff;
+}
+
+
+/* CLOSE BUTTON */
+.chart-modal-close {
+    border: none;
+    background: transparent;
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px;
+}
+
+
+/* IMAGE AREA */
+.chart-view-modal-body {
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: auto;
+
+    padding: 20px;
+
+    background: #f5f5f5;
+
+    box-sizing: border-box;
+}
+
+
+/* IMAGE */
+#viewSavedChartImage {
+    display: block;
+
+    width: auto;
+    height: auto;
+
+    max-width: 90%;
+    max-height: 80%;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+
+    margin: auto;
+}
+
+
+/* TABLET */
+@media (max-width: 768px) {
+
+    .chart-view-modal-overlay {
+        padding: 10px;
+    }
+
+    .chart-view-modal-content {
+        width: 95vw;
+        height: 90vh;
+    }
+
+    .chart-view-modal-body {
+        padding: 15px;
+    }
+
+    #viewSavedChartImage {
+        max-width: 90%;
+        max-height: 75%;
+    }
+}
+
+
+/* MOBILE */
+@media (max-width: 480px) {
+
+    .chart-view-modal-overlay {
+        padding: 5px;
+    }
+
+    .chart-view-modal-content {
+        width: 100%;
+        height: 95vh;
+        border-radius: 8px;
+    }
+
+    .chart-view-modal-body {
+        padding: 10px;
+    }
+
+    #viewSavedChartImage {
+        max-width: 95%;
+        max-height: 75%;
+    }
+}
 .modal-overlay {
     display:none;
     position:fixed;
@@ -1160,19 +1311,58 @@ async function downloadDentalChartPDF() {
     chartSection.parentElement.insertBefore(loadingMsg, chartSection);
 
     try {
-        const canvas = await html2canvas(chartSection, {
-            scale: 2,                    // Crisp/sharp output
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff',
-            scrollX: 0,
-            scrollY: 0,
-            // KEY: capture full element height, not just viewport
-            windowWidth: chartSection.scrollWidth,
-            windowHeight: chartSection.scrollHeight,
-            width: chartSection.scrollWidth,
-            height: chartSection.scrollHeight,
+        const tempContainer = document.createElement("div");
+        tempContainer.style.cssText =
+            "position:fixed;left:-9999px;top:-9999px;width:" +
+            chartSection.scrollWidth +
+            "px;z-index:-1;";
+        document.body.appendChild(tempContainer);
+
+        const cleanClone = chartSection.cloneNode(true);
+        tempContainer.appendChild(cleanClone);
+
+        const clonedChart = cleanClone.querySelector(".dental-chart");
+        const clonedPalette = cleanClone.querySelector(".action-palette");
+
+        if (clonedChart) {
+            clonedChart.style.backdropFilter = "none";
+            clonedChart.style.webkitBackdropFilter = "none";
+            clonedChart.style.filter = "none";
+        }
+
+        if (clonedPalette) {
+            clonedPalette.style.backdropFilter = "none";
+            clonedPalette.style.webkitBackdropFilter = "none";
+            clonedPalette.style.filter = "none";
+        }
+
+        cleanClone.querySelectorAll("*").forEach((el) => {
+            el.style.backdropFilter = "none";
+            el.style.webkitBackdropFilter = "none";
+            if (el.style.filter && el.style.filter.includes("blur")) {
+                el.style.filter = "none";
+            }
         });
+
+        let canvas;
+        try {
+            canvas = await html2canvas(cleanClone, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: chartSection.scrollWidth,
+                windowHeight: chartSection.scrollHeight,
+                width: chartSection.scrollWidth,
+                height: chartSection.scrollHeight,
+                ignoreElements: (el) => el.classList.contains("action-palette"),
+                logging: false,
+            });
+        } finally {
+            document.body.removeChild(tempContainer);
+        }
 
         const imgData = canvas.toDataURL('image/png');
 
@@ -1989,16 +2179,51 @@ async function saveDentalRecord(uid) {
             return;
         }
 
+        const tempContainer = document.createElement("div");
+        tempContainer.style.cssText =
+            "position:fixed;left:-9999px;top:-9999px;width:" +
+            chartSection.scrollWidth +
+            "px;z-index:-1;";
+        document.body.appendChild(tempContainer);
 
-        // =====================================================
-        // CREATE IMAGE
-        // =====================================================
+        const cleanClone = chartSection.cloneNode(true);
+        tempContainer.appendChild(cleanClone);
 
-        const canvas = await html2canvas(chartSection, {
-            scale: 1,
-            useCORS: true,
-            backgroundColor: "#ffffff"
+        const clonedChart = cleanClone.querySelector(".dental-chart");
+        const clonedPalette = cleanClone.querySelector(".action-palette");
+
+        if (clonedChart) {
+            clonedChart.style.backdropFilter = "none";
+            clonedChart.style.webkitBackdropFilter = "none";
+            clonedChart.style.filter = "none";
+        }
+
+        if (clonedPalette) {
+            clonedPalette.style.backdropFilter = "none";
+            clonedPalette.style.webkitBackdropFilter = "none";
+            clonedPalette.style.filter = "none";
+        }
+
+        cleanClone.querySelectorAll("*").forEach((el) => {
+            el.style.backdropFilter = "none";
+            el.style.webkitBackdropFilter = "none";
+            if (el.style.filter && el.style.filter.includes("blur")) {
+                el.style.filter = "none";
+            }
         });
+
+        let canvas;
+        try {
+            canvas = await html2canvas(cleanClone, {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: "#ffffff",
+                ignoreElements: (el) => el.classList.contains("action-palette"),
+                logging: false,
+            });
+        } finally {
+            document.body.removeChild(tempContainer);
+        }
 
 
         // =====================================================
@@ -2706,18 +2931,27 @@ window.addEventListener('load', function() {
 <!-- Saved Chart View Modal -->
 <div id="chartViewModal" class="chart-view-modal-overlay" style="display: none;">
     <div class="chart-view-modal-content">
+
         <div class="chart-view-modal-header">
             <h3>Saved Dental Chart</h3>
-            <button class="chart-modal-close" onclick="closeChartViewModal()" title="Close">
+
+            <button
+                class="chart-modal-close"
+                onclick="closeChartViewModal()"
+                title="Close">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </div>
+
         <div class="chart-view-modal-body">
-            <img id="viewSavedChartImage" style="max-width: 100%; height: auto; display: block; margin: auto; border-radius: 8px;" />
+            <img
+                id="viewSavedChartImage"
+                alt="Saved Dental Chart"
+            >
         </div>
+
     </div>
 </div>
-
 <!-- Logout Confirmation Modal -->
 <div id="logoutModal" class="modal" style="display: none;">
     <div class="modal-content auth-card" style="max-width: 400px;">

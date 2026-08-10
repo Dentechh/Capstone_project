@@ -147,77 +147,324 @@ class DentalClinicApp(BaseFlaskApp):
         if db is None:
             raise RuntimeError("Firebase is not initialized. Check dentech_key.json")
     
+    def update_payment_status(self,patient_uid,procedure):
 
-    def update_payment_status(self, patient_uid, procedure):
         try:
-            patient_collection = None
-            if self.db.collection(self.Customer_Account).document(patient_uid).get().exists:
-                patient_collection = self.Customer_Account
-            elif self.db.collection(self.Customer_Account).document(patient_uid).get().exists:
-                patient_collection = self.Customer_Account
-    
-            if patient_collection:
-                user_ref = self.db.collection(patient_collection).document(patient_uid)
-                done_procedures = user_ref.collection("Done_procedure").stream()
-    
-                updated = False
-                for proc_doc in done_procedures:
-                    if updated:
-                        break
-    
-                    proc_data = proc_doc.to_dict()
-                    procedures = proc_data.get("procedures", [])
-    
-                    for p in procedures:
-                        if p.get("procedure") == procedure and p.get("status") != "Paid":
-                            p["status"] = "Paid"
-                            p["paid"] = p.get("balance", p.get("paid", 0))
-                            p["balance"] = 0
-                            proc_doc.reference.update({"procedures": procedures})
-                            updated = True
-                            break
-    
+
+            print("========================================")
+            print("UPDATING PAYMENT STATUS")
+            print("PATIENT UID:", patient_uid)
+            print("PROCEDURE:", procedure)
+            print("========================================")
+
+            # =====================================================
+            # FIND PATIENT
+            # =====================================================
+
+            user_ref = (
+                self.db
+                .collection(
+                    self.Customer_Account
+                )
+                .document(
+                    patient_uid
+                )
+            )
+
+            user_doc = user_ref.get()
+
+            if not user_doc.exists:
+
+                print(
+                    "PATIENT NOT FOUND:",
+                    patient_uid
+                )
+
+                return False
+
+            # =====================================================
+            # GET DONE PROCEDURES
+            # =====================================================
+
+            done_procedures = (
+                user_ref
+                .collection(
+                    "Done_procedure"
+                )
+                .stream()
+            )
+
+            # =====================================================
+            # SEARCH PROCEDURES
+            # =====================================================
+
+            for proc_doc in done_procedures:
+
+                proc_data = (
+                    proc_doc.to_dict()
+                )
+
+                procedures = (
+                    proc_data.get(
+                        "procedures",
+                        []
+                    )
+                )
+
+                for index, p in enumerate(
+                    procedures
+                ):
+
+                    current_procedure = str(
+                        p.get(
+                            "procedure",
+                            ""
+                        )
+                    ).strip()
+
+                    current_status = str(
+                        p.get(
+                            "status",
+                            ""
+                        )
+                    ).strip()
+
+                    print(
+                        "CHECKING PROCEDURE:",
+                        current_procedure
+                    )
+
+                    print(
+                        "CURRENT STATUS:",
+                        current_status
+                    )
+
+                    # =================================================
+                    # MATCH PROCEDURE
+                    # =================================================
+
+                    if (
+                        current_procedure
+                        == str(procedure).strip()
+                    ):
+
+                        # Already paid
+                        if current_status.lower() == "paid":
+
+                            print(
+                                "PROCEDURE IS ALREADY PAID."
+                            )
+
+                            return True
+
+                        # =================================================
+                        # GET PROCEDURE VALUE
+                        # =================================================
+
+                        value = self.safe_float(
+                            p.get(
+                                "value",
+                                0
+                            )
+                        )
+
+                        # =================================================
+                        # CHANGE PAYMENT STATUS
+                        # =================================================
+
+                        procedures[index][
+                            "status"
+                        ] = "Paid"
+
+                        procedures[index][
+                            "paid"
+                        ] = value
+
+                        procedures[index][
+                            "balance"
+                        ] = 0
+
+                        # =================================================
+                        # SAVE TO FIRESTORE
+                        # =================================================
+
+                        proc_doc.reference.update({
+
+                            "procedures":
+                                procedures,
+
+                            "updated_at":
+                                firestore.SERVER_TIMESTAMP
+
+                        })
+
+                        print(
+                            "========================================"
+                        )
+
+                        print(
+                            "PAYMENT UPDATED SUCCESSFULLY"
+                        )
+
+                        print(
+                            "PROCEDURE:",
+                            current_procedure
+                        )
+
+                        print(
+                            "STATUS: Paid"
+                        )
+
+                        print(
+                            "PAID:",
+                            value
+                        )
+
+                        print(
+                            "BALANCE: 0"
+                        )
+
+                        print(
+                            "========================================"
+                        )
+
+                        return True
+
+            print(
+                "NO MATCHING PROCEDURE FOUND."
+            )
+
+            return False
+
         except Exception as e:
-            print(f"Error updating payment status: {e}")
-    
-    
+
+            print(
+                "ERROR UPDATING PAYMENT STATUS:",
+                str(e)
+            )
+
+            return False
 
     def payment_success(self):
-        checkout_session_id = request.args.get("checkout_session_id")
-        patient_uid = request.args.get("uid", "")
-        procedure = request.args.get("procedure", "")
-    
+
+        checkout_session_id = request.args.get(
+            "checkout_session_id"
+        )
+
+        patient_uid = request.args.get(
+            "uid",
+            ""
+        )
+
+        procedure = request.args.get(
+            "procedure",
+            ""
+        )
+
+        print("========================================")
+        print("PAYMENT SUCCESS")
+        print("CHECKOUT SESSION:", checkout_session_id)
+        print("PATIENT UID:", patient_uid)
+        print("PROCEDURE:", procedure)
+        print("========================================")
+
         if checkout_session_id:
+
             try:
-                auth = base64.b64encode(f"{self.pay_mongo_secret_key}:".encode()).decode()
+
+                # PayMongo authentication
+                auth = base64.b64encode(
+                    f"{self.pay_mongo_secret_key}:".encode()
+                ).decode()
+
                 headers = {
                     "accept": "application/json",
                     "authorization": f"Basic {auth}"
                 }
-    
+
+                # Get PayMongo checkout session
                 r = requests.get(
-                    f"https://api.paymongo.com/v1/checkout_sessions/{checkout_session_id}",
+                    (
+                        "https://api.paymongo.com/v1/"
+                        f"checkout_sessions/"
+                        f"{checkout_session_id}"
+                    ),
                     headers=headers,
                     timeout=30
                 )
-    
+
                 result = r.json()
-                session_data = result.get("data", {}).get("attributes", {})
-                payment_status = session_data.get("payment_status", "")
-    
-                if payment_status == "paid":
-                    self.update_payment_status(patient_uid, procedure)
-                    flash("Payment successful! Your appointment is now confirmed.", "success")
+
+                # Get payment status
+                session_data = (
+                    result
+                    .get("data", {})
+                    .get("attributes", {})
+                )
+
+                payment_status = (
+                    session_data.get(
+                        "payment_status",
+                        ""
+                    )
+                )
+
+                print(
+                    "PAYMENT STATUS:",
+                    payment_status
+                )
+
+                # Payment successful
+                if (
+                    payment_status == "paid"
+                    and patient_uid
+                    and procedure
+                ):
+
+                    updated = self.update_payment_status(
+                        patient_uid,
+                        procedure
+                    )
+
+                    if updated:
+
+                        flash(
+                            "Payment successful! "
+                            "Your payment status is now Paid.",
+                            "success"
+                        )
+
+                    else:
+
+                        flash(
+                            "Payment was successful, "
+                            "but the dental record "
+                            "could not be updated.",
+                            "warning"
+                        )
+
                 else:
-                    flash("Payment received and is being processed. Your status will update shortly.", "info")
-    
+
+                    flash(
+                        "Payment is still being processed.",
+                        "info"
+                    )
+
             except Exception as e:
-                print(f"Error verifying payment: {e}")
-                flash("Could not verify payment status. Please contact support.", "error")
-    
-        return redirect(url_for("index"))
-    
-    
+
+                print(
+                    "ERROR VERIFYING PAYMENT:",
+                    str(e)
+                )
+
+                flash(
+                    "Could not verify payment status.",
+                    "error"
+                )
+
+        return redirect(
+            url_for("index")
+        )
 
     def payment_cancel(self):
         flash("Payment was cancelled or expired.", "error")
@@ -226,65 +473,294 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def paymongo_webhook(self):
+
         try:
+
             event = request.json
-            attributes = event.get("data", {}).get("attributes", {})
-            event_type = attributes.get("type", "")
-    
-            if event_type == "checkout.session.completed":
-                session_attrs = attributes.get("data", {}).get("attributes", {})
-                metadata = session_attrs.get("metadata", {})
-                patient_uid = metadata.get("patient_uid", "")
-                procedure = metadata.get("procedure", "")
-                payment_status = session_attrs.get("payment_status", "")
-    
-                if payment_status == "paid" and patient_uid and procedure:
-                    self.update_payment_status(patient_uid, procedure)
-    
+
+            print("========================================")
+            print("PAYMONGO WEBHOOK RECEIVED")
+            print("EVENT:")
+            print(event)
+            print("========================================")
+
+            attributes = (
+                event
+                .get("data", {})
+                .get("attributes", {})
+            )
+
+            event_type = attributes.get(
+                "type",
+                ""
+            )
+
+            print("EVENT TYPE:", event_type)
+
+            # =====================================================
+            # PAYMENT SUCCESS
+            # =====================================================
+
+            if event_type == "checkout_session.payment.paid":
+
+                checkout_data = (
+                    attributes.get(
+                        "data",
+                        {}
+                    )
+                )
+
+                checkout_attributes = (
+                    checkout_data.get(
+                        "attributes",
+                        {}
+                    )
+                )
+
+                # =================================================
+                # GET METADATA
+                # =================================================
+
+                metadata = (
+                    checkout_attributes.get(
+                        "metadata",
+                        {}
+                    )
+                )
+
+                patient_uid = str(
+                    metadata.get(
+                        "patient_uid",
+                        ""
+                    )
+                ).strip()
+
+                procedure = str(
+                    metadata.get(
+                        "procedure",
+                        ""
+                    )
+                ).strip()
+
+                print(
+                    "PATIENT UID:",
+                    patient_uid
+                )
+
+                print(
+                    "PROCEDURE:",
+                    procedure
+                )
+
+                # =================================================
+                # GET PAYMENT STATUS
+                # =================================================
+
+                payments = (
+                    checkout_attributes.get(
+                        "payments",
+                        []
+                    )
+                )
+
+                payment_status = ""
+
+                if payments:
+
+                    payment_attributes = (
+                        payments[0]
+                        .get(
+                            "attributes",
+                            {}
+                        )
+                    )
+
+                    payment_status = (
+                        payment_attributes.get(
+                            "status",
+                            ""
+                        )
+                    )
+
+                print(
+                    "PAYMENT STATUS:",
+                    payment_status
+                )
+
+                # =================================================
+                # UPDATE FIRESTORE
+                # =================================================
+
+                if (
+                    payment_status == "paid"
+                    and patient_uid
+                    and procedure
+                ):
+
+                    print(
+                        "PAYMENT CONFIRMED."
+                    )
+
+                    print(
+                        "UPDATING FIRESTORE..."
+                    )
+
+                    self.update_payment_status(
+                        patient_uid,
+                        procedure
+                    )
+
+                    print(
+                        "FIRESTORE PAYMENT STATUS UPDATED."
+                    )
+
+                else:
+
+                    print(
+                        "PAYMENT NOT UPDATED."
+                    )
+
+                    print(
+                        "Missing or invalid payment information."
+                    )
+
+            else:
+
+                print(
+                    "IGNORED EVENT:",
+                    event_type
+                )
+
         except Exception as e:
-            print(f"Webhook error: {e}")
-    
+
+            print(
+                "WEBHOOK ERROR:",
+                str(e)
+            )
+
         return "", 200
-    
-    
 
     def create_gcash_payment(self):
         try:
+
             data = request.json
-            amount = int(float(data.get("amount", 0)) * 100)
-            procedure = data.get("procedure", "")
-            patient_uid = data.get("uid", "")
-    
-            patient_email = session.get("email", "patient@example.com")
-            patient_name = session.get("name", "Dental Patient")
-    
-            base_url = request.host_url.rstrip('/')
-            success_url = f"{base_url}/payment-success?uid={patient_uid}&procedure={procedure}"
-            cancel_url = f"{base_url}/payment-cancel"
-    
-            auth = base64.b64encode(f"{self.pay_mongo_secret_key}:".encode()).decode()
+
+            amount = int(
+                float(
+                    data.get("amount", 0)
+                ) * 100
+            )
+
+            procedure = data.get(
+                "procedure",
+                ""
+            )
+
+            patient_uid = data.get(
+                "uid",
+                ""
+            )
+
+            print("========================================")
+            print("CREATING GCASH PAYMENT")
+            print("PATIENT UID:", patient_uid)
+            print("PROCEDURE:", procedure)
+            print("AMOUNT:", amount / 100)
+            print("========================================")
+
+            # =====================================================
+            # VALIDATION
+            # =====================================================
+
+            if not patient_uid:
+                return {
+                    "error": "Patient UID is required"
+                }
+
+            if not procedure:
+                return {
+                    "error": "Procedure is required"
+                }
+
+            if amount <= 0:
+                return {
+                    "error": "Invalid payment amount"
+                }
+
+            # =====================================================
+            # PATIENT INFORMATION
+            # =====================================================
+
+            patient_email = session.get(
+                "email",
+                "patient@example.com"
+            )
+
+            patient_name = session.get(
+                "name",
+                "Dental Patient"
+            )
+
+            # =====================================================
+            # PAYMENT URL
+            # =====================================================
+
+            base_url = request.host_url.rstrip("/")
+
+            success_url = (
+                f"{base_url}/payment-success"
+                f"?uid={patient_uid}"
+                f"&procedure={procedure}"
+            )
+
+            cancel_url = (
+                f"{base_url}/payment-cancel"
+            )
+
+            # =====================================================
+            # PAYMONGO AUTHENTICATION
+            # =====================================================
+
+            auth = base64.b64encode(
+                f"{self.pay_mongo_secret_key}:".encode()
+            ).decode()
+
             headers = {
                 "accept": "application/json",
                 "content-type": "application/json",
                 "authorization": f"Basic {auth}"
             }
-    
+
+            # =====================================================
+            # PAYMONGO DATA
+            # =====================================================
+
             payload = {
                 "data": {
                     "attributes": {
+
                         "billing": {
                             "name": patient_name,
                             "email": patient_email
                         },
-                        "line_items": [{
-                            "currency": "PHP",
-                            "amount": amount,
-                            "name": procedure,
-                            "quantity": 1
-                        }],
-                        "payment_method_types": ["gcash"],
+
+                        "line_items": [
+                            {
+                                "currency": "PHP",
+                                "amount": amount,
+                                "name": procedure,
+                                "quantity": 1
+                            }
+                        ],
+
+                        "payment_method_types": [
+                            "gcash"
+                        ],
+
                         "success_url": success_url,
+
                         "cancel_url": cancel_url,
+
                         "metadata": {
                             "patient_uid": patient_uid,
                             "procedure": procedure
@@ -292,29 +768,64 @@ class DentalClinicApp(BaseFlaskApp):
                     }
                 }
             }
-    
+
+            # =====================================================
+            # CREATE PAYMONGO CHECKOUT
+            # =====================================================
+
             r = requests.post(
                 "https://api.paymongo.com/v1/checkout_sessions",
                 headers=headers,
                 json=payload,
                 timeout=30
             )
-    
+
             result = r.json()
-    
+
+            print("PAYMONGO RESPONSE:")
+            print(result)
+
+            # =====================================================
+            # SUCCESS
+            # =====================================================
+
             if "data" in result:
+
+                checkout_url = (
+                    result["data"]
+                    ["attributes"]
+                    ["checkout_url"]
+                )
+
                 return {
-                    "checkout_url": result["data"]["attributes"]["checkout_url"]
+                    "checkout_url": checkout_url
                 }
-            else:
-                return {
-                    "error": result.get("error", {}).get("message", "Failed to create payment session")
-                }
-    
+
+            # =====================================================
+            # PAYMONGO ERROR
+            # =====================================================
+
+            return {
+                "error": (
+                    result
+                    .get("error", {})
+                    .get(
+                        "message",
+                        "Failed to create payment session"
+                    )
+                )
+            }
+
         except Exception as e:
-            return {"error": str(e)}
-    
-    
+
+            print(
+                "CREATE GCASH PAYMENT ERROR:",
+                str(e)
+            )
+
+            return {
+                "error": str(e)
+            }
 
     def refresh_session(self):
         session.permanent = True
