@@ -49,7 +49,7 @@ A modern web-based dental clinic management system for patients and staff.
 
 ## Troubleshooting & Common Issues
 
-This guide helps users and admins resolve common problems. Each screenshot should include arrows pointing to the UI elements described below.
+This guide helps users resolve common problems. Each screenshot should include arrows pointing to the UI elements described below.
 
 ### Patient Issues
 
