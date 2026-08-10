@@ -64,7 +64,7 @@ This guide helps users and admins resolve common problems. Each screenshot shoul
 3. Clear browser cache and cookies, then retry.
 4. Check that your email is verified (look for the verification email).
 
- ![1](static/img/screenshots/troubleshoot_login.png) 
+    ![1](static/img/screenshots/troubleshoot_login.png) 
 
 
 #### 2. Appointment booking not saving
@@ -78,14 +78,7 @@ This guide helps users and admins resolve common problems. Each screenshot shoul
 3. Refresh the page and check "My Appointments".
 4. Contact the clinic if the issue persists.
 
-> **Screenshot:** `static/img/screenshots/troubleshoot_booking.png`
->
-> **Arrow labels:**
-> - `A` → Points to the **"Book Appointment"** button
-> - `B` → Points to the **date/time picker** field
-> - `C` → Points to the **service selection dropdown**
-> - `D` → Points to the **medical history form** (scrollable section)
-> - `E` → Points to the **"Submit"** button
+    ![2](static/img/screenshots/troubleshoot_booking.png)
 
 #### 3. Payment not reflecting
 
