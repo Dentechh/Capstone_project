@@ -148,7 +148,7 @@ class DentalClinicApp(BaseFlaskApp):
         if db is None:
             raise RuntimeError("Firebase is not initialized. Check dentech_key.json")
     
-    def update_payment_status(self,patient_uid,procedure):
+    def update_payment_status(self, patient_uid, procedure):
 
         try:
 
@@ -158,70 +158,113 @@ class DentalClinicApp(BaseFlaskApp):
             print("PROCEDURE:", procedure)
             print("========================================")
 
-            # =====================================================
+            # -----------------------------------------------------
             # FIND PATIENT
-            # =====================================================
+            # -----------------------------------------------------
 
             user_ref = (
                 self.db
-                .collection(
-                    self.Customer_Account
-                )
-                .document(
-                    patient_uid
-                )
+                .collection(self.Customer_Account)
+                .document(str(patient_uid))
             )
 
             user_doc = user_ref.get()
 
+            print("PATIENT DOCUMENT PATH:", user_ref.path)
+            print("PATIENT EXISTS:", user_doc.exists)
+
             if not user_doc.exists:
 
-                print(
-                    "PATIENT NOT FOUND:",
-                    patient_uid
-                )
+                print("❌ PATIENT NOT FOUND")
+                print("UID:", patient_uid)
 
                 return False
 
-            # =====================================================
+            # -----------------------------------------------------
             # GET DONE PROCEDURES
-            # =====================================================
+            # -----------------------------------------------------
 
-            done_procedures = (
-                user_ref
-                .collection(
-                    "Done_procedure"
-                )
-                .stream()
+            done_ref = user_ref.collection("Done_procedure")
+
+            done_procedures = list(
+                done_ref.stream()
             )
 
-            # =====================================================
+            print(
+                "DONE PROCEDURE DOCUMENT COUNT:",
+                len(done_procedures)
+            )
+
+            if not done_procedures:
+
+                print("❌ NO Done_procedure DOCUMENTS FOUND")
+
+                return False
+
+            # -----------------------------------------------------
             # SEARCH PROCEDURES
-            # =====================================================
+            # -----------------------------------------------------
+
+            target_procedure = str(
+                procedure
+            ).strip().lower()
+
+            print(
+                "TARGET PROCEDURE:",
+                repr(target_procedure)
+            )
 
             for proc_doc in done_procedures:
 
-                proc_data = (
-                    proc_doc.to_dict()
+                proc_data = proc_doc.to_dict()
+
+                print("----------------------------------------")
+                print(
+                    "DOCUMENT:",
+                    proc_doc.id
                 )
 
-                procedures = (
-                    proc_data.get(
-                        "procedures",
-                        []
-                    )
+                print(
+                    "DOCUMENT DATA:",
+                    proc_data
                 )
 
-                for index, p in enumerate(
+                procedures = proc_data.get(
+                    "procedures",
+                    []
+                )
+
+                print(
+                    "PROCEDURES:",
                     procedures
-                ):
+                )
+
+                # Make sure procedures is a list
+                if not isinstance(procedures, list):
+
+                    print(
+                        "❌ 'procedures' is not a list"
+                    )
+
+                    continue
+
+                for index, p in enumerate(procedures):
+
+                    if not isinstance(p, dict):
+
+                        print(
+                            "❌ PROCEDURE ITEM IS NOT A DICT:",
+                            p
+                        )
+
+                        continue
 
                     current_procedure = str(
                         p.get(
                             "procedure",
                             ""
                         )
-                    ).strip()
+                    ).strip().lower()
 
                     current_status = str(
                         p.get(
@@ -230,37 +273,47 @@ class DentalClinicApp(BaseFlaskApp):
                         )
                     ).strip()
 
+                    print("----------------------------------------")
                     print(
-                        "CHECKING PROCEDURE:",
-                        current_procedure
+                        "INDEX:",
+                        index
+                    )
+
+                    print(
+                        "STORED PROCEDURE:",
+                        repr(current_procedure)
+                    )
+
+                    print(
+                        "PAYMENT PROCEDURE:",
+                        repr(target_procedure)
                     )
 
                     print(
                         "CURRENT STATUS:",
-                        current_status
+                        repr(current_status)
                     )
 
-                    # =================================================
-                    # MATCH PROCEDURE
-                    # =================================================
+                    # -------------------------------------------------
+                    # MATCH
+                    # -------------------------------------------------
 
-                    if (
-                        current_procedure
-                        == str(procedure).strip()
-                    ):
+                    if current_procedure == target_procedure:
+
+                        print("✅ PROCEDURE MATCH FOUND")
 
                         # Already paid
                         if current_status.lower() == "paid":
 
                             print(
-                                "PROCEDURE IS ALREADY PAID."
+                                "PROCEDURE IS ALREADY PAID"
                             )
 
                             return True
 
-                        # =================================================
-                        # GET PROCEDURE VALUE
-                        # =================================================
+                        # -------------------------------------------------
+                        # GET VALUE
+                        # -------------------------------------------------
 
                         value = self.safe_float(
                             p.get(
@@ -269,98 +322,78 @@ class DentalClinicApp(BaseFlaskApp):
                             )
                         )
 
-                        # =================================================
-                        # CHANGE PAYMENT STATUS
-                        # =================================================
+                        print(
+                            "PROCEDURE VALUE:",
+                            value
+                        )
 
-                        procedures[index][
-                            "status"
-                        ] = "Paid"
+                        # -------------------------------------------------
+                        # UPDATE PROCEDURE
+                        # -------------------------------------------------
 
-                        procedures[index][
-                            "paid"
-                        ] = value
+                        procedures[index]["status"] = "Paid"
 
-                        procedures[index][
-                            "balance"
-                        ] = 0
+                        procedures[index]["paid"] = value
 
-                        # =================================================
-                        # SAVE TO FIRESTORE
-                        # =================================================
+                        procedures[index]["balance"] = 0
+
+                        # -------------------------------------------------
+                        # SAVE FIRESTORE
+                        # -------------------------------------------------
+
+                        print(
+                            "SAVING TO FIRESTORE..."
+                        )
 
                         proc_doc.reference.update({
 
-                            "procedures":
-                                procedures,
+                            "procedures": procedures,
 
                             "updated_at":
                                 firestore.SERVER_TIMESTAMP
 
                         })
 
-                        print(
-                            "========================================"
-                        )
-
-                        print(
-                            "PAYMENT UPDATED SUCCESSFULLY"
-                        )
-
-                        print(
-                            "PROCEDURE:",
-                            current_procedure
-                        )
-
-                        print(
-                            "STATUS: Paid"
-                        )
-
-                        print(
-                            "PAID:",
-                            value
-                        )
-
-                        print(
-                            "BALANCE: 0"
-                        )
-
-                        print(
-                            "========================================"
-                        )
+                        print("========================================")
+                        print("✅ PAYMENT UPDATED SUCCESSFULLY")
+                        print("DOCUMENT:", proc_doc.id)
+                        print("PROCEDURE:", current_procedure)
+                        print("STATUS: Paid")
+                        print("PAID:", value)
+                        print("BALANCE: 0")
+                        print("========================================")
 
                         return True
 
-            print(
-                "NO MATCHING PROCEDURE FOUND."
-            )
+            # -----------------------------------------------------
+            # NO MATCH
+            # -----------------------------------------------------
+
+            print("========================================")
+            print("❌ NO MATCHING PROCEDURE FOUND")
+            print("PATIENT:", patient_uid)
+            print("PROCEDURE:", procedure)
+            print("========================================")
 
             return False
 
         except Exception as e:
 
-            print(
-                "ERROR UPDATING PAYMENT STATUS:",
-                str(e)
-            )
+            print("========================================")
+            print("❌ ERROR UPDATING PAYMENT STATUS")
+            print("ERROR:", str(e))
+            print("========================================")
 
             return False
 
+        
     def payment_success(self):
 
-        checkout_session_id = request.args.get(
-            "checkout_session_id"
-        )
+        checkout_session_id = request.args.get("checkout_session_id", "").strip()
 
-        patient_uid = request.args.get(
-            "uid",
-            ""
-        )
+        patient_uid = request.args.get("uid", "").strip()
 
-        procedure = request.args.get(
-            "procedure",
-            ""
-        )
+        procedure = request.args.get("procedure", "").strip()
 
         print("========================================")
         print("PAYMENT SUCCESS")
@@ -369,103 +402,167 @@ class DentalClinicApp(BaseFlaskApp):
         print("PROCEDURE:", procedure)
         print("========================================")
 
-        if checkout_session_id:
+        # ---------------------------------------------------------
+        # CHECK REQUIRED DATA
+        # ---------------------------------------------------------
 
-            try:
+        if not checkout_session_id:
 
-                # PayMongo authentication
-                auth = base64.b64encode(
-                    f"{self.pay_mongo_secret_key}:".encode()
-                ).decode()
+            print("ERROR: NO CHECKOUT SESSION ID RECEIVED")
 
-                headers = {
-                    "accept": "application/json",
-                    "authorization": f"Basic {auth}"
-                }
+            flash(
+                "Payment could not be verified because the PayMongo "
+                "checkout session ID was not received.",
+                "error"
+            )
 
-                # Get PayMongo checkout session
-                r = requests.get(
-                    (
-                        "https://api.paymongo.com/v1/"
-                        f"checkout_sessions/"
-                        f"{checkout_session_id}"
-                    ),
-                    headers=headers,
-                    timeout=30
+            return redirect(url_for("index"))
+
+        if not patient_uid or not procedure:
+
+            print("ERROR: MISSING PATIENT UID OR PROCEDURE")
+
+            flash(
+                "Missing payment information.",
+                "error"
+            )
+
+            return redirect(url_for("index"))
+
+        try:
+
+            # -----------------------------------------------------
+            # PAYMONGO AUTHENTICATION
+            # -----------------------------------------------------
+
+            auth = base64.b64encode(
+                f"{self.pay_mongo_secret_key}:".encode()
+            ).decode()
+
+            headers = {
+                "Accept": "application/json",
+                "Authorization": f"Basic {auth}"
+            }
+
+            # -----------------------------------------------------
+            # GET CHECKOUT SESSION
+            # -----------------------------------------------------
+
+            url = (
+                "https://api.paymongo.com/v1/"
+                f"checkout_sessions/{checkout_session_id}"
+            )
+
+            response = requests.get(
+                url,
+                headers=headers,
+                timeout=30
+            )
+
+            print("PAYMONGO RESPONSE STATUS:", response.status_code)
+            print("PAYMONGO RESPONSE:", response.text)
+
+            if response.status_code != 200:
+
+                print("ERROR: PAYMONGO SESSION RETRIEVAL FAILED")
+
+                flash(
+                    "Unable to verify payment with PayMongo.",
+                    "error"
                 )
 
-                result = r.json()
+                return redirect(url_for("index"))
 
-                # Get payment status
-                session_data = (
-                    result
-                    .get("data", {})
-                    .get("attributes", {})
+            result = response.json()
+
+            session_data = (
+                result
+                .get("data", {})
+                .get("attributes", {})
+            )
+
+            # -----------------------------------------------------
+            # GET PAYMENT STATUS
+            # -----------------------------------------------------
+
+            payment_status = str(
+                session_data.get(
+                    "payment_status",
+                    ""
+                )
+            ).lower().strip()
+
+            print("========================================")
+            print("PAYMENT STATUS:", payment_status)
+            print("PATIENT UID:", patient_uid)
+            print("PROCEDURE:", procedure)
+            print("========================================")
+
+            # -----------------------------------------------------
+            # PAYMENT PAID
+            # -----------------------------------------------------
+
+            if payment_status == "paid":
+
+                print("PAYMENT CONFIRMED AS PAID")
+
+                updated = self.update_payment_status(
+                    patient_uid,
+                    procedure
                 )
 
-                payment_status = (
-                    session_data.get(
-                        "payment_status",
-                        ""
+                if updated:
+
+                    print("FIRESTORE STATUS UPDATED TO PAID")
+
+                    flash(
+                        "Payment successful! "
+                        "Your payment status is now Paid.",
+                        "success"
                     )
-                )
-
-                print(
-                    "PAYMENT STATUS:",
-                    payment_status
-                )
-
-                # Payment successful
-                if (
-                    payment_status == "paid"
-                    and patient_uid
-                    and procedure
-                ):
-
-                    updated = self.update_payment_status(
-                        patient_uid,
-                        procedure
-                    )
-
-                    if updated:
-
-                        flash(
-                            "Payment successful! "
-                            "Your payment status is now Paid.",
-                            "success"
-                        )
-
-                    else:
-
-                        flash(
-                            "Payment was successful, "
-                            "but the dental record "
-                            "could not be updated.",
-                            "warning"
-                        )
 
                 else:
 
-                    flash(
-                        "Payment is still being processed.",
-                        "info"
+                    print(
+                        "PAYMENT WAS PAID BUT FIRESTORE "
+                        "RECORD WAS NOT UPDATED"
                     )
 
-            except Exception as e:
+                    flash(
+                        "Payment was successful, but the "
+                        "dental record could not be updated.",
+                        "warning"
+                    )
+
+            else:
 
                 print(
-                    "ERROR VERIFYING PAYMENT:",
-                    str(e)
+                    "PAYMENT NOT CONFIRMED. STATUS:",
+                    payment_status
                 )
 
                 flash(
-                    "Could not verify payment status.",
-                    "error"
+                    "Payment is not yet confirmed by PayMongo.",
+                    "info"
                 )
+
+        except Exception as e:
+
+            print("========================================")
+            print("ERROR VERIFYING PAYMENT")
+            print(str(e))
+            print("========================================")
+
+            flash(
+                "Could not verify payment status.",
+                "error"
+            )
 
         return redirect(
             url_for("index")
         )
+
+
 
     def payment_cancel(self):
         flash("Payment was cancelled or expired.", "error")
