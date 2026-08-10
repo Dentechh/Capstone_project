@@ -2702,6 +2702,8 @@ body.dark-mode .datetime-text {
     
     #section-patientdashboard .panel-header h3 {
         font-size: 18px;
+        margin: 20px;
+       
     }
     
     #section-patientdashboard .panel-header p {
@@ -3426,6 +3428,262 @@ body.dark-mode .datetime-text {
 
     #modal-download-pdf-btn .material-symbols-rounded {
         font-size: 11px;
+    }
+}
+
+/* Portrait Mobile - keep inline chart hidden, use modal via Open Dental Chart button */
+@media (max-width: 768px) and (orientation: portrait) {
+    #section-patientdashboard.active-section #section-chart {
+        display: none !important;
+    }
+
+    #section-chart .chart-container {
+        padding: 8px;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    #section-chart .action-palette {
+        padding: 8px 12px;
+        gap: 6px;
+        border-radius: 12px;
+    }
+
+    #section-chart .tool {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+        border-radius: 8px;
+    }
+
+    #section-chart .palette-title {
+        font-size: 11px;
+        margin-right: 8px;
+    }
+
+    #section-chart .material-symbols-rounded {
+        font-size: 16px;
+    }
+
+    #section-chart .dental-chart {
+        padding: 10px 8px;
+        border-radius: 15px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #section-chart .chart-title {
+        font-size: 12px;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+
+    #section-chart .odontogram-container {
+        padding: 8px 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 520px;
+    }
+
+    #section-chart .unified-grid {
+        grid-template-rows: repeat(2, 22px);
+        width: auto;
+        min-width: 160px;
+    }
+
+    #section-chart .unified-grid.wide {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .teeth-row.wide {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .permanent-block {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .grid-box {
+        width: 22px;
+        height: 16px;
+        border-width: 0.7px;
+        flex-shrink: 0;
+    }
+
+    #section-chart .tooth-unit {
+        width: 24px;
+        flex-shrink: 0;
+    }
+
+    #section-chart .tooth-svg {
+        width: 18px;
+        height: 18px;
+        box-shadow: none;
+        border-radius: 30px;
+    }
+
+    #section-chart .tooth-label {
+        font-size: 9px;
+        margin-bottom: 1px;
+    }
+
+    #section-chart .section-label {
+        font-size: 9px;
+        margin: 2px 0;
+    }
+
+    #section-chart .label-inline {
+        font-size: 9px;
+        width: 50px;
+    }
+
+    #section-chart .status-row-wrapper {
+        gap: 6px;
+        margin: 4px 0;
+    }
+
+    #section-chart .label-side.rotated {
+        font-size: 9px;
+        left: -8px;
+    }
+
+    #section-chart .axis-h,
+    #section-chart .axis-h-mid {
+        margin: 4px 0;
+    }
+
+    #section-chart .reverse-layout .tooth-label {
+        margin-top: 2px;
+        margin-bottom: 0;
+    }
+}
+
+/* Phone Landscape - Inline Dental Chart Scrollable */
+@media (orientation: landscape) and (max-width: 960px) {
+    #section-chart .chart-container {
+        padding: 8px;
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    #section-chart .action-palette {
+        padding: 8px 12px;
+        gap: 6px;
+        border-radius: 12px;
+    }
+
+    #section-chart .tool {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 4px;
+        border-radius: 8px;
+    }
+
+    #section-chart .palette-title {
+        font-size: 11px;
+        margin-right: 8px;
+    }
+
+    #section-chart .material-symbols-rounded {
+        font-size: 16px;
+    }
+
+    #section-chart .dental-chart {
+        padding: 10px 8px;
+        border-radius: 15px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #section-chart .chart-title {
+        font-size: 12px;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
+    }
+
+    #section-chart .odontogram-container {
+        padding: 8px 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 520px;
+    }
+
+    #section-chart .unified-grid {
+        grid-template-rows: repeat(2, 22px);
+        width: auto;
+        min-width: 160px;
+    }
+
+    #section-chart .unified-grid.wide {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .teeth-row.wide {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .permanent-block {
+        width: auto;
+        min-width: 380px;
+    }
+
+    #section-chart .grid-box {
+        width: 22px;
+        height: 16px;
+        border-width: 0.7px;
+        flex-shrink: 0;
+    }
+
+    #section-chart .tooth-unit {
+        width: 24px;
+        flex-shrink: 0;
+    }
+
+    #section-chart .tooth-svg {
+        width: 18px;
+        height: 18px;
+        box-shadow: none;
+        border-radius: 30px;
+    }
+
+    #section-chart .tooth-label {
+        font-size: 9px;
+        margin-bottom: 1px;
+    }
+
+    #section-chart .section-label {
+        font-size: 9px;
+        margin: 2px 0;
+    }
+
+    #section-chart .label-inline {
+        font-size: 9px;
+        width: 50px;
+    }
+
+    #section-chart .status-row-wrapper {
+        gap: 6px;
+        margin: 4px 0;
+    }
+
+    #section-chart .label-side.rotated {
+        font-size: 9px;
+        left: -8px;
+    }
+
+    #section-chart .axis-h,
+    #section-chart .axis-h-mid {
+        margin: 4px 0;
+    }
+
+    #section-chart .reverse-layout .tooth-label {
+        margin-top: 2px;
+        margin-bottom: 0;
     }
 }
 

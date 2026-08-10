@@ -878,7 +878,7 @@ window.onclick = function(e) {
                 </div>
 
                 <div class="content-panel">
-                     <div class="panel-header"><h3>Visits History <p  id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
+                     <div class="panel-header"><h3>Visit History <p hidden id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
                      <table class="appointment-table">
     <thead>
         <tr>
@@ -990,11 +990,10 @@ window.onclick = function(e) {
             <div id="td-treatment-section" class="treatment-section" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h3  style="margin:0;">Treatment Notes </h3>
-         <p hidden>
+          <p hidden>
     Patient Record ID:
     <span id="td-Patient_unq_id">-</span>
 </p>
-                        <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size:14px; padding:6px 18px;">Save</button>
                     </div>
                     <table class="treatment-table" id="td-treatment-table">
                         <thead>
@@ -1074,6 +1073,10 @@ window.onclick = function(e) {
                     <button type="button" id="td-add-row-btn" class="btn-add-row">+ Add Row</button>
                     <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
                 </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size: 18px; padding: 14px 32px; border-radius: 10px; width: 100%; max-width: 400px;">SUBMIT INFORMATION</button>
+            </div>
             </div>
 
   <script>
@@ -1570,7 +1573,6 @@ function setCheckbox(id, value) {
 
             var saveBtn = document.getElementById('td-save-btn');
             var addBtn  = document.getElementById('td-add-row-btn');
-            if (saveBtn) saveBtn.addEventListener('click', saveTreatmentNotes);
             if (addBtn)  addBtn.addEventListener('click', addTreatmentRow);
 
             initUnifiedGrid('grid-upper', 10, 'checkbox', 'input');
@@ -2233,12 +2235,40 @@ async function saveDentalRecord(uid) {
         );
 
 
+        if (!response.ok) {
+
+            const text = await response.text();
+
+            throw new Error(
+                "Server returned status " +
+                response.status +
+                ": " +
+                text.slice(0, 200)
+            );
+
+        }
+
+
         // =====================================================
         // GET RESPONSE
         // =====================================================
 
-        const result =
-            await response.json();
+        let result;
+
+        try {
+
+            result = await response.json();
+
+        } catch (jsonError) {
+
+            const text = await response.text();
+
+            throw new Error(
+                "Invalid server response: " +
+                text.slice(0, 200)
+            );
+
+        }
 
 
         console.log(
@@ -2288,7 +2318,12 @@ async function saveDentalRecord(uid) {
         );
 
         alert(
-            "Failed to save dental record."
+            "Failed to save dental record: " +
+            (
+                error.message ||
+                error.toString() ||
+                "Unknown error"
+            )
         );
 
     }
@@ -2305,6 +2340,27 @@ document.getElementById("td-save-btn").addEventListener("click", () => {
 
   if (!uid) {
     alert("No patient selected!");
+    return;
+  }
+
+  const rows = document.querySelectorAll("#td-treatment-table tbody tr");
+  let hasValidNote = false;
+
+  rows.forEach(row => {
+    const date = row.querySelector(".td-date")?.value.trim() || "";
+    const procedure = row.querySelector(".td-procedure")?.value.trim() || "";
+    const dentist = row.querySelector(".td-dentist")?.value.trim() || "";
+    const valueOfWork = row.querySelector(".td-value")?.value.trim() || "";
+    const amountPaid = row.querySelector(".td-paid")?.value.trim() || "";
+    const nextAppt = row.querySelector(".td-next-appt")?.value.trim() || "";
+
+    if (date || procedure || dentist || valueOfWork || amountPaid || nextAppt) {
+      hasValidNote = true;
+    }
+  });
+
+  if (!hasValidNote) {
+    alert("Please fill in at least one treatment note before submitting.");
     return;
   }
 

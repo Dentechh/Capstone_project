@@ -62,7 +62,7 @@
 }
 
 .profile-right { flex: 1; text-align: left; }
-.profile-right h2 { font-size: 2.2rem; margin-bottom: 5px; color: var(--navy); }
+.profile-right h2 { font-size: 2.2rem; margin-bottom: 5px; color: var(--gold); }
 
 .info-grid {
     display: grid;
@@ -775,4 +775,137 @@ body.dark-mode .nav-card img {
 
 body.dark-mode .modal-overlay {
     background: rgba(0, 0, 0, 0.9);
+}
+
+/* =========================
+   MOBILE RESPONSIVENESS
+   ========================= */
+
+@media (max-width: 768px) {
+    .container {
+        padding: 30px 5%;
+    }
+
+    .profile-card {
+        flex-direction: column;
+        gap: 25px;
+        padding: 30px 20px;
+        margin-top: 20px;
+        border-radius: 20px;
+    }
+
+    .btn-back {
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+
+    .profile-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .profile-right {
+        text-align: center;
+    }
+
+    .profile-right h2 {
+        font-size: 1.6rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .info-item {
+        text-align: center;
+    }
+
+    .info-item p {
+        text-align: center;
+    }
+
+    .btn-edit-trigger {
+        width: 100%;
+        max-width: 220px;
+    }
+
+    .nav-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 0 10px;
+    }
+
+    .nav-card {
+        padding: 25px 20px;
+    }
+
+    .nav-card span {
+        font-size: 16px;
+    }
+
+    .nav-card img {
+        width: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px 4%;
+    }
+
+    .profile-card {
+        padding: 25px 15px;
+        gap: 20px;
+        margin-top: 15px;
+        border-radius: 16px;
+    }
+
+    .main-avatar {
+        width: 85px;
+        height: 85px;
+    }
+
+    .profile-right h2 {
+        font-size: 1.4rem;
+    }
+
+    .info-item label {
+        font-size: 0.65rem;
+    }
+
+    .info-item p {
+        font-size: 1rem;
+    }
+
+    .btn-edit-trigger {
+        max-width: 200px;
+        font-size: 0.8rem;
+        padding: 8px 16px;
+    }
+
+    .nav-card {
+        padding: 20px 15px;
+        border-radius: 16px;
+    }
+
+    .nav-card span {
+        font-size: 15px;
+    }
+
+    .nav-card img {
+        width: 36px;
+    }
+
+    .btn-back {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
 }
