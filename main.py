@@ -1702,6 +1702,9 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def p_profile(self):
+        if not session.get('uid'):
+            return redirect(url_for("index"))
+        
         name = session.get('name')
         email = session.get('email')
         user_data = {}
