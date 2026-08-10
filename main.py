@@ -476,13 +476,18 @@ class DentalClinicApp(BaseFlaskApp):
 
         try:
 
-            event = request.json
-
             print("========================================")
             print("PAYMONGO WEBHOOK RECEIVED")
-            print("EVENT:")
-            print(event)
             print("========================================")
+
+            event = request.json
+
+            print("FULL WEBHOOK DATA:")
+            print(event)
+
+            # ============================================
+            # GET EVENT ATTRIBUTES
+            # ============================================
 
             attributes = (
                 event
@@ -497,35 +502,29 @@ class DentalClinicApp(BaseFlaskApp):
 
             print("EVENT TYPE:", event_type)
 
-            # =====================================================
-            # PAYMENT SUCCESS
-            # =====================================================
+            # ============================================
+            # PAYMONGO SUCCESSFUL PAYMENT
+            # ============================================
 
             if event_type == "checkout_session.payment.paid":
 
-                checkout_data = (
-                    attributes.get(
-                        "data",
-                        {}
-                    )
+                session_data = (
+                    attributes
+                    .get("data", {})
                 )
 
-                checkout_attributes = (
-                    checkout_data.get(
-                        "attributes",
-                        {}
-                    )
+                session_attrs = (
+                    session_data
+                    .get("attributes", {})
                 )
 
-                # =================================================
+                # ========================================
                 # GET METADATA
-                # =================================================
+                # ========================================
 
                 metadata = (
-                    checkout_attributes.get(
-                        "metadata",
-                        {}
-                    )
+                    session_attrs
+                    .get("metadata", {})
                 )
 
                 patient_uid = str(
@@ -542,104 +541,81 @@ class DentalClinicApp(BaseFlaskApp):
                     )
                 ).strip()
 
-                print(
-                    "PATIENT UID:",
-                    patient_uid
-                )
+                print("========================================")
+                print("PAYMENT SUCCESSFUL")
+                print("PATIENT UID:", patient_uid)
+                print("PROCEDURE:", procedure)
+                print("========================================")
 
-                print(
-                    "PROCEDURE:",
+                # ========================================
+                # VALIDATE DATA
+                # ========================================
+
+                if not patient_uid:
+
+                    print(
+                        "ERROR: PATIENT UID IS MISSING"
+                    )
+
+                    return "", 200
+
+                if not procedure:
+
+                    print(
+                        "ERROR: PROCEDURE IS MISSING"
+                    )
+
+                    return "", 200
+
+                # ========================================
+                # UPDATE FIRESTORE
+                # ========================================
+
+                updated = self.update_payment_status(
+                    patient_uid,
                     procedure
                 )
 
-                # =================================================
-                # GET PAYMENT STATUS
-                # =================================================
+                if updated:
 
-                payments = (
-                    checkout_attributes.get(
-                        "payments",
-                        []
-                    )
-                )
-
-                payment_status = ""
-
-                if payments:
-
-                    payment_attributes = (
-                        payments[0]
-                        .get(
-                            "attributes",
-                            {}
-                        )
-                    )
-
-                    payment_status = (
-                        payment_attributes.get(
-                            "status",
-                            ""
-                        )
-                    )
-
-                print(
-                    "PAYMENT STATUS:",
-                    payment_status
-                )
-
-                # =================================================
-                # UPDATE FIRESTORE
-                # =================================================
-
-                if (
-                    payment_status == "paid"
-                    and patient_uid
-                    and procedure
-                ):
-
-                    print(
-                        "PAYMENT CONFIRMED."
-                    )
-
-                    print(
-                        "UPDATING FIRESTORE..."
-                    )
-
-                    self.update_payment_status(
-                        patient_uid,
-                        procedure
-                    )
-
-                    print(
-                        "FIRESTORE PAYMENT STATUS UPDATED."
-                    )
+                    print("========================================")
+                    print("FIRESTORE PAYMENT UPDATE SUCCESSFUL")
+                    print("PATIENT UID:", patient_uid)
+                    print("PROCEDURE:", procedure)
+                    print("STATUS: Paid")
+                    print("BALANCE: 0")
+                    print("========================================")
 
                 else:
 
-                    print(
-                        "PAYMENT NOT UPDATED."
-                    )
-
-                    print(
-                        "Missing or invalid payment information."
-                    )
+                    print("========================================")
+                    print("FIRESTORE UPDATE FAILED")
+                    print("NO MATCHING UNPAID PROCEDURE FOUND")
+                    print("PATIENT UID:", patient_uid)
+                    print("PROCEDURE:", procedure)
+                    print("========================================")
 
             else:
 
                 print(
-                    "IGNORED EVENT:",
+                    "IGNORED WEBHOOK EVENT:",
                     event_type
                 )
 
         except Exception as e:
 
-            print(
-                "WEBHOOK ERROR:",
-                str(e)
-            )
+            print("========================================")
+            print("PAYMONGO WEBHOOK ERROR")
+            print(str(e))
+            print("========================================")
 
+        # Always tell PayMongo we received the webhook
         return "", 200
 
+
+
+
+    
     def create_gcash_payment(self):
         try:
 
