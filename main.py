@@ -389,11 +389,49 @@ class DentalClinicApp(BaseFlaskApp):
         
     def payment_success(self):
 
-        checkout_session_id = request.args.get("checkout_session_id", "").strip()
+        # =========================================================
+        # GET DATA FROM URL
+        # =========================================================
 
-        patient_uid = request.args.get("uid", "").strip()
+        checkout_session_id = request.args.get(
+            "checkout_session_id",
+            ""
+        ).strip()
 
-        procedure = request.args.get("procedure", "").strip()
+        patient_uid = request.args.get(
+            "uid",
+            ""
+        ).strip()
+
+        procedure = request.args.get(
+            "procedure",
+            ""
+        ).strip()
+
+        # =========================================================
+        # FALLBACK TO FLASK SESSION
+        # =========================================================
+
+        if not checkout_session_id:
+
+            checkout_session_id = session.get(
+                "paymongo_checkout_session_id",
+                ""
+            )
+
+        if not patient_uid:
+
+            patient_uid = session.get(
+                "paymongo_patient_uid",
+                ""
+            )
+
+        if not procedure:
+
+            procedure = session.get(
+                "paymongo_procedure",
+                ""
+            )
 
         print("========================================")
         print("PAYMENT SUCCESS")
@@ -402,78 +440,94 @@ class DentalClinicApp(BaseFlaskApp):
         print("PROCEDURE:", procedure)
         print("========================================")
 
-        # ---------------------------------------------------------
+        # =========================================================
         # CHECK REQUIRED DATA
-        # ---------------------------------------------------------
+        # =========================================================
 
         if not checkout_session_id:
 
-            print("ERROR: NO CHECKOUT SESSION ID RECEIVED")
+            print(
+                "ERROR: CHECKOUT SESSION ID NOT FOUND"
+            )
 
             flash(
-                "Payment could not be verified because the PayMongo "
-                "checkout session ID was not received.",
+                "Payment could not be verified because "
+                "the PayMongo checkout session was not found.",
                 "error"
             )
 
-            return redirect(url_for("index"))
+            return redirect(
+                url_for("index")
+            )
 
         if not patient_uid or not procedure:
 
-            print("ERROR: MISSING PATIENT UID OR PROCEDURE")
+            print(
+                "ERROR: PATIENT UID OR PROCEDURE MISSING"
+            )
 
             flash(
-                "Missing payment information.",
+                "Payment information is incomplete.",
                 "error"
             )
 
-            return redirect(url_for("index"))
+            return redirect(
+                url_for("index")
+            )
 
         try:
 
-            # -----------------------------------------------------
+            # =====================================================
             # PAYMONGO AUTHENTICATION
-            # -----------------------------------------------------
+            # =====================================================
 
             auth = base64.b64encode(
                 f"{self.pay_mongo_secret_key}:".encode()
             ).decode()
 
             headers = {
-                "Accept": "application/json",
-                "Authorization": f"Basic {auth}"
+                "accept": "application/json",
+                "authorization": f"Basic {auth}"
             }
 
-            # -----------------------------------------------------
+            # =====================================================
             # GET CHECKOUT SESSION
-            # -----------------------------------------------------
+            # =====================================================
 
             url = (
                 "https://api.paymongo.com/v1/"
-                f"checkout_sessions/{checkout_session_id}"
+                f"checkout_sessions/"
+                f"{checkout_session_id}"
             )
 
-            response = requests.get(
+            r = requests.get(
                 url,
                 headers=headers,
                 timeout=30
             )
 
-            print("PAYMONGO RESPONSE STATUS:", response.status_code)
-            print("PAYMONGO RESPONSE:", response.text)
+            print(
+                "PAYMONGO HTTP STATUS:",
+                r.status_code
+            )
 
-            if response.status_code != 200:
+            print(
+                "PAYMONGO RESPONSE:",
+                r.text
+            )
 
-                print("ERROR: PAYMONGO SESSION RETRIEVAL FAILED")
+            if r.status_code != 200:
 
                 flash(
                     "Unable to verify payment with PayMongo.",
                     "error"
                 )
 
-                return redirect(url_for("index"))
+                return redirect(
+                    url_for("index")
+                )
 
-            result = response.json()
+            result = r.json()
 
             session_data = (
                 result
@@ -481,30 +535,60 @@ class DentalClinicApp(BaseFlaskApp):
                 .get("attributes", {})
             )
 
-            # -----------------------------------------------------
-            # GET PAYMENT STATUS
-            # -----------------------------------------------------
+            # =====================================================
+            # CHECK PAYMENTS
+            # =====================================================
 
-            payment_status = str(
-                session_data.get(
-                    "payment_status",
-                    ""
+            payments = session_data.get(
+                "payments",
+                []
+            )
+
+            payment_paid = False
+
+            for payment in payments:
+
+                payment_attributes = (
+                    payment.get(
+                        "attributes",
+                        {}
+                    )
                 )
-            ).lower().strip()
 
-            print("========================================")
-            print("PAYMENT STATUS:", payment_status)
-            print("PATIENT UID:", patient_uid)
-            print("PROCEDURE:", procedure)
-            print("========================================")
+                payment_status = str(
+                    payment_attributes.get(
+                        "status",
+                        ""
+                    )
+                ).lower().strip()
 
-            # -----------------------------------------------------
-            # PAYMENT PAID
-            # -----------------------------------------------------
+                print(
+                    "PAYMENT ID:",
+                    payment.get("id")
+                )
 
-            if payment_status == "paid":
+                print(
+                    "PAYMENT STATUS:",
+                    payment_status
+                )
 
+                if payment_status == "paid":
+
+                    payment_paid = True
+
+                    break
+
+            # =====================================================
+            # PAYMENT SUCCESSFUL
+            # =====================================================
+
+            if payment_paid:
+
+                print("========================================")
                 print("PAYMENT CONFIRMED AS PAID")
+                print("PATIENT UID:", patient_uid)
+                print("PROCEDURE:", procedure)
+                print("========================================")
 
                 updated = self.update_payment_status(
                     patient_uid,
@@ -513,7 +597,9 @@ class DentalClinicApp(BaseFlaskApp):
 
                 if updated:
 
-                    print("FIRESTORE STATUS UPDATED TO PAID")
+                    print(
+                        "FIRESTORE PAYMENT STATUS UPDATED"
+                    )
 
                     flash(
                         "Payment successful! "
@@ -521,35 +607,50 @@ class DentalClinicApp(BaseFlaskApp):
                         "success"
                     )
 
+                    # Clear temporary payment session data
+                    session.pop(
+                        "paymongo_checkout_session_id",
+                        None
+                    )
+
+                    session.pop(
+                        "paymongo_patient_uid",
+                        None
+                    )
+
+                    session.pop(
+                        "paymongo_procedure",
+                        None
+                    )
+
                 else:
 
                     print(
                         "PAYMENT WAS PAID BUT FIRESTORE "
-                        "RECORD WAS NOT UPDATED"
+                        "UPDATE FAILED"
                     )
 
                     flash(
-                        "Payment was successful, but the "
-                        "dental record could not be updated.",
+                        "Payment was successful, but "
+                        "the dental record could not be updated.",
                         "warning"
                     )
 
             else:
 
                 print(
-                    "PAYMENT NOT CONFIRMED. STATUS:",
-                    payment_status
+                    "PAYMENT NOT CONFIRMED AS PAID"
                 )
 
                 flash(
-                    "Payment is not yet confirmed by PayMongo.",
+                    "PayMongo has not confirmed the payment yet.",
                     "info"
                 )
 
         except Exception as e:
 
             print("========================================")
-            print("ERROR VERIFYING PAYMENT")
+            print("ERROR VERIFYING PAYMENT:")
             print(str(e))
             print("========================================")
 
@@ -561,7 +662,6 @@ class DentalClinicApp(BaseFlaskApp):
         return redirect(
             url_for("index")
         )
-
 
 
     def payment_cancel(self):
@@ -720,20 +820,16 @@ class DentalClinicApp(BaseFlaskApp):
             data = request.json
 
             amount = int(
-                float(
-                    data.get("amount", 0)
-                ) * 100
+                float(data.get("amount", 0)) * 100
             )
 
-            procedure = data.get(
-                "procedure",
-                ""
-            )
+            procedure = str(
+                data.get("procedure", "")
+            ).strip()
 
-            patient_uid = data.get(
-                "uid",
-                ""
-            )
+            patient_uid = str(
+                data.get("uid", "")
+            ).strip()
 
             print("========================================")
             print("CREATING GCASH PAYMENT")
@@ -747,19 +843,13 @@ class DentalClinicApp(BaseFlaskApp):
             # =====================================================
 
             if not patient_uid:
-                return {
-                    "error": "Patient UID is required"
-                }
+                return {"error": "Patient UID is required"}
 
             if not procedure:
-                return {
-                    "error": "Procedure is required"
-                }
+                return {"error": "Procedure is required"}
 
             if amount <= 0:
-                return {
-                    "error": "Invalid payment amount"
-                }
+                return {"error": "Invalid payment amount"}
 
             # =====================================================
             # PATIENT INFORMATION
@@ -856,51 +946,99 @@ class DentalClinicApp(BaseFlaskApp):
 
             result = r.json()
 
+            print("PAYMONGO HTTP STATUS:", r.status_code)
             print("PAYMONGO RESPONSE:")
             print(result)
 
             # =====================================================
-            # SUCCESS
+            # CHECK RESPONSE
             # =====================================================
 
-            if "data" in result:
-
-                checkout_url = (
-                    result["data"]
-                    ["attributes"]
-                    ["checkout_url"]
-                )
+            if r.status_code not in (200, 201):
 
                 return {
-                    "checkout_url": checkout_url
+                    "error": (
+                        result
+                        .get("errors", [{}])[0]
+                        .get(
+                            "detail",
+                            "Failed to create payment session"
+                        )
+                    )
+                }
+
+            if "data" not in result:
+
+                return {
+                    "error": "PayMongo did not return a checkout session"
                 }
 
             # =====================================================
-            # PAYMONGO ERROR
+            # GET CHECKOUT SESSION ID
+            # =====================================================
+
+            checkout_session_id = result["data"].get("id")
+
+            checkout_url = (
+                result["data"]
+                .get("attributes", {})
+                .get("checkout_url")
+            )
+
+            print("========================================")
+            print("CHECKOUT SESSION CREATED")
+            print("CHECKOUT SESSION ID:", checkout_session_id)
+            print("CHECKOUT URL:", checkout_url)
+            print("========================================")
+
+            if not checkout_session_id:
+                return {
+                    "error": "Checkout session ID was not returned"
+                }
+
+            if not checkout_url:
+                return {
+                    "error": "Checkout URL was not returned"
+                }
+
+            # =====================================================
+            # SAVE CHECKOUT SESSION ID
+            # =====================================================
+
+            session["paymongo_checkout_session_id"] = (
+                checkout_session_id
+            )
+
+            session["paymongo_patient_uid"] = patient_uid
+
+            session["paymongo_procedure"] = procedure
+
+            session.modified = True
+
+            print(
+                "PAYMONGO SESSION ID SAVED:",
+                checkout_session_id
+            )
+
+            # =====================================================
+            # RETURN CHECKOUT URL
             # =====================================================
 
             return {
-                "error": (
-                    result
-                    .get("error", {})
-                    .get(
-                        "message",
-                        "Failed to create payment session"
-                    )
-                )
+                "checkout_url": checkout_url,
+                "checkout_session_id": checkout_session_id
             }
 
         except Exception as e:
 
-            print(
-                "CREATE GCASH PAYMENT ERROR:",
-                str(e)
-            )
+            print("========================================")
+            print("CREATE GCASH PAYMENT ERROR:")
+            print(str(e))
+            print("========================================")
 
             return {
                 "error": str(e)
             }
-
     def refresh_session(self):
         session.permanent = True
         session.modified = True
