@@ -80,64 +80,6 @@ This guide helps users and admins resolve common problems. Each screenshot shoul
 
     ![2](static/img/screenshots/troubleshoot_booking.png)
 
-#### 3. Payment not reflecting
-
-**Problem:** GCash payment completed but status still shows "Pending".
-
-**Solution:**
-
-1. Take a screenshot of your GCash payment confirmation.
-2. Wait 5–10 minutes for the system to update.
-3. Refresh the Payments page.
-4. Contact support with your payment reference number if it still shows pending.
-
-> **Screenshot:** `static/img/screenshots/troubleshoot_payment.png`
->
-> **Arrow labels:**
-> - `A` → Points to the **Payments** menu item
-> - `B` → Points to the **payment status badge** (Pending / Paid)
-> - `C` → Points to the **"Pay Now"** / **GCash** button
-> - `D` → Points to the **reference number** field
-
-### Admin / Staff Issues
-
-#### 4. Appointment requests not appearing
-
-**Problem:** New patient appointments are missing from the admin dashboard.
-
-**Solution:**
-
-1. Confirm you are logged in with an **admin** or **staff** account.
-2. Check the Dashboard tab for the latest requests.
-3. Refresh the page (F5) or clear cache.
-4. Verify the clinic schedule is not blocking new bookings.
-
-> **Screenshot:** `static/img/screenshots/troubleshoot_dashboard.png`
->
-> **Arrow labels:**
-> - `A` → Points to the **Dashboard** link in the admin sidebar
-> - `B` → Points to the **Appointment Requests** card/list
-> - `C` → Points to the **Approve** and **Decline** action buttons
-> - `D` → Points to the **staff role badge** (top-right or sidebar)
-
-#### 5. PDF export failing
-
-**Problem:** "Export PDF" button does not download the dental chart.
-
-**Solution:**
-
-1. Ensure pop-ups are allowed for this site.
-2. Verify the patient has a complete dental chart.
-3. Try a different browser (Chrome/Firefox recommended).
-4. Check browser console (F12 → Console) for errors.
-
-> **Screenshot:** `static/img/screenshots/troubleshoot_pdf.png`
->
-> **Arrow labels:**
-> - `A` → Points to the **Patient Records** section
-> - `B` → Points to the **dental chart / tooth diagram**
-> - `C` → Points to the **"Export PDF"** button
-> - `D` → Points to the **download notification / pop-up blocker icon**
 
 ## Contact
 
