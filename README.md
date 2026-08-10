@@ -65,11 +65,7 @@ This guide helps users and admins resolve common problems. Each screenshot shoul
 4. Check that your email is verified (look for the verification email).
 
 > **Screenshot:** `static/img/screenshots/troubleshoot_login.png`
->
-> **Arrow labels:**
-> - `A` → Points to the **Login** button on the homepage navbar
-> - `B` → Points to the **"Forgot Password?"** link below the login form
-> - `C` → Points to the **Google Sign-In** button
+
 
 #### 2. Appointment booking not saving
 
