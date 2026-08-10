@@ -131,6 +131,7 @@ class DentalClinicApp(BaseFlaskApp):
     def _setup_paymongo(self):
         self.pay_mongo_secret_key = "sk_test_CYiQMSXw2cHHhtF564gZ3mMx"
         self.pay_mongo_public_key = "pk_test_m4rG4iv4L9S5MC8d4dxq39ko"
+        self.PAYMONGO_WEBHOOK_SECRET="whsk_SDS3prtXoFa8MCg5FPh9wfEc"
 
     def _setup_session(self):
         @self.app.before_request
