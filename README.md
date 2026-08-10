@@ -2,6 +2,17 @@
 
 A modern web-based dental clinic management system for patients and staff.
 
+## Built With
+
+| Category | Technology |
+|----------|------------|
+| Backend | [Flask](https://flask.palletsprojects.com/) (Python) |
+| Database & Auth | [Firebase Firestore](https://firebase.google.com/docs/firestore) & [Firebase Authentication](https://firebase.google.com/docs/auth) |
+| Payments | [PayMongo](https://paymongo.com/) (GCash integration) |
+| Email | [Flask-Mail](https://flask-mail.readthedocs.io/) |
+| Frontend | HTML5, CSS3, JavaScript (with Dark/Light mode) |
+| Deployment | [Gunicorn](https://docs.gunicorn.org/) via [Heroku](https://www.heroku.com/) (see `Procfile`) |
+
 ## What You Can Do
 
 ### For Patients
@@ -32,10 +43,89 @@ A modern web-based dental clinic management system for patients and staff.
 
 ## Getting Started
 
-1. Visit the website
-2. Register a new account or sign in with Google
-3. Book your first appointment
-4. View your profile and medical records
+### Prerequisites
+
+- Python 3.9+
+- A [Firebase project](https://console.firebase.google.com/) with a service account key
+- A [PayMongo](https://dashboard.paymongo.com/) account (test mode is sufficient)
+- A Google Cloud OAuth client ID
+- A Gmail account for sending verification emails
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/<your-username>/Capstone_project.git
+   cd Capstone_project
+   ```
+
+2. Create and activate a virtual environment:
+
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # macOS / Linux
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. Add your environment variables to a `.env` file (see [Configuration](#configuration) below).
+
+5. Place your Firebase service account key as `dentech_key.json` in the project root.
+
+6. Run the application:
+
+   ```bash
+   python main.py
+   ```
+
+   The server starts on `http://127.0.0.1:5000`.
+
+### Configuration
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+SECRET_KEY=your-random-secret-key
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+MAIL_USERNAME=your-gmail-address@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+```
+
+| Variable | Description |
+|----------|-------------|
+| `SECRET_KEY` | Flask session signing key (falls back to a random value if unset) |
+| `GOOGLE_CLIENT_ID` | OAuth 2.0 client ID for Google Sign-In |
+| `MAIL_USERNAME` | Gmail address used as the sender for verification emails |
+| `MAIL_PASSWORD` | App password for the Gmail account |
+
+### Deployment
+
+This project is configured for Heroku. A `Procfile` is included:
+
+```
+web: gunicorn main:app
+```
+
+After setting up the Heroku CLI and adding the remote:
+
+```bash
+heroku config:set SECRET_KEY=...
+heroku config:set GOOGLE_CLIENT_ID=...
+heroku config:set MAIL_USERNAME=...
+heroku config:set MAIL_PASSWORD=...
+heroku addons:create papertrail
+git push heroku main
+```
+
+> `dentech_key.json` and `.env` are in `.gitignore`. On Heroku, set sensitive values via `heroku config:set` and upload the Firebase key to the server or use a config var.
 
 ## Screenshots
 
@@ -86,3 +176,49 @@ This guide helps users resolve common problems. Each screenshot should include a
 - **Address:** 231 Lopez Jaena St, Molo, Iloilo City
 - **Phone:** 0962 687 6076
 - **Email:** capizondadental@gmail.com
+
+## Project Structure
+
+```
+Capstone_project/
+├── main.py                     # Main Flask application (OOP-based)
+├── main_oop.py                 # OOP exercise variant
+├── requirements.txt            # Python dependencies
+├── Procfile                    # Heroku deployment entry point
+├── dentech_key.json            # Firebase service account key (gitignored)
+├── .env                        # Environment variables (gitignored)
+├── templates/                  # HTML templates
+│   ├── index.html
+│   ├── google_index.html
+│   ├── about.html
+│   ├── admin_dashboard.html
+│   ├── admin_login.html
+│   ├── location.html
+│   ├── service.html
+│   ├── patient-profile.html
+│   ├── medical_records.html
+│   └── prac.html
+├── payment.html                # Standalone payment page
+├── static/
+│   ├── css/                    # Stylesheets (index-s.css, admin.css, about.css, ...)
+│   └── img/                    # Images and screenshots
+├── Document/
+│   └── DENTECH-DOCUMENTATION.pdf
+└── archive/                    # Legacy/archived files
+```
+
+## Contributing
+
+Contributions are welcome! To contribute:
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/your-feature`).
+3. Make your changes.
+4. Run lint / format checks if available.
+5. Open a Pull Request with a clear description of the changes.
+
+Please keep code readable, follow existing style, and never commit secrets or keys.
+
+## License
+
+This project is part of a capstone academic project. See the clinic's [documentation](Document/DENTECH-DOCUMENTATION.pdf) for full details. No separate license file is currently provided; contact the maintainers before using this code as a dependency.
