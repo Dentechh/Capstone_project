@@ -64,7 +64,7 @@ This guide helps users and admins resolve common problems. Each screenshot shoul
 3. Clear browser cache and cookies, then retry.
 4. Check that your email is verified (look for the verification email).
 
-| ![1](static/img/screenshots/troubleshoot_login.png) |
+ ![1](static/img/screenshots/troubleshoot_login.png) 
 
 
 #### 2. Appointment booking not saving
