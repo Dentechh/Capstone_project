@@ -130,7 +130,7 @@ class DentalClinicApp(BaseFlaskApp):
 
     def _setup_paymongo(self):
         self.pay_mongo_secret_key = "sk_live_FsYAsKA47Wg6HzcSzbxWWYwW"
-        self.pay_mongo_public_key = "sk_live_FsYAsKA47Wg6HzcSzbxWWYwW"
+        self.pay_mongo_public_key = "pk_live_ZaZrhPCe8d6fz7n5dZXNEebc"
         self.PAYMONGO_WEBHOOK_SECRET="whsk_SDS3prtXoFa8MCg5FPh9wfEc"
 
     def _setup_session(self):
@@ -918,7 +918,7 @@ class DentalClinicApp(BaseFlaskApp):
                         ],
 
                         "payment_method_types": [
-                            "gcash"
+                            "QRPh"
                         ],
 
                         "success_url": success_url,
