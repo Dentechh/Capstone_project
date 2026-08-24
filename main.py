@@ -918,7 +918,7 @@ class DentalClinicApp(BaseFlaskApp):
                         ],
 
                         "payment_method_types": [
-                            "QRPh"
+                            "qrph"
                         ],
 
                         "success_url": success_url,
