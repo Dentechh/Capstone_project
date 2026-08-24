@@ -129,8 +129,8 @@ class DentalClinicApp(BaseFlaskApp):
             print("⚠️  GOOGLE_CLIENT_ID is missing; Google login will be disabled until it's set in .env")
 
     def _setup_paymongo(self):
-        self.pay_mongo_secret_key = "sk_test_CYiQMSXw2cHHhtF564gZ3mMx"
-        self.pay_mongo_public_key = "pk_test_m4rG4iv4L9S5MC8d4dxq39ko"
+        self.pay_mongo_secret_key = "sk_live_FsYAsKA47Wg6HzcSzbxWWYwW"
+        self.pay_mongo_public_key = "sk_live_FsYAsKA47Wg6HzcSzbxWWYwW"
         self.PAYMONGO_WEBHOOK_SECRET="whsk_SDS3prtXoFa8MCg5FPh9wfEc"
 
     def _setup_session(self):
