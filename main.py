@@ -139,6 +139,19 @@ class DentalClinicApp(BaseFlaskApp):
             session.permanent = True
             session.modified = True
 
+        @self.app.before_request
+        def check_admin_session_timeout():
+            if session.get('admin_logged_in'):
+                last_activity = session.get('admin_last_activity')
+                if last_activity:
+                    last_active = datetime.fromisoformat(last_activity)
+                    if datetime.now(UTC) - last_active > timedelta(minutes=10):
+                        session.clear()
+                        flash("Admin session expired. Please log in again.", "error")
+                        return redirect(url_for("adminLogin"))
+                session['admin_last_activity'] = datetime.now(UTC).isoformat()
+                session.modified = True
+
     def _register_routes(self):
         """Polymorphism: Register all routes"""
         pass
@@ -1733,6 +1746,8 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def adminDashboard(self):
+        if not session.get('admin_logged_in'):
+            return redirect(url_for("adminLogin"))
 
         # =========================
         # APPOINTMENTS COLLECTION
@@ -2006,6 +2021,7 @@ class DentalClinicApp(BaseFlaskApp):
                 session['admin_email'] = email
                 session['admin_name'] = name
                 session['admin_uid'] = uid
+                session['admin_last_activity'] = datetime.now(UTC).isoformat()
                 
                 flash(f"Welcome back, Dr. {name}!", "success")
                 return redirect(url_for("adminDashboard"))
