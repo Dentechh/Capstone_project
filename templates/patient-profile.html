@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -13,6 +13,181 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}">
     </head>
     <body>
+
+    <style>
+    /* ---------- Toast notifications (replaces default window.alert()) ---------- */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 380px;
+        width: calc(100% - 40px);
+        pointer-events: none;
+    }
+
+    .toast {
+        pointer-events: auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+        border-left: 4px solid #607d8b;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: #263238;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        margin-top: 1px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .toast-message {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .toast-close {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        font-size: 18px;
+        line-height: 1;
+        color: #90a4ae;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .toast-close:hover {
+        color: #37474f;
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(0,0,0,0.14);
+        width: 100%;
+        transform-origin: left;
+        animation-name: toast-progress-shrink;
+        animation-timing-function: linear;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes toast-progress-shrink {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+
+    .toast.success { border-left-color: #16a34a; }
+    .toast.success .toast-icon { background: #16a34a; }
+    .toast.error { border-left-color: #ef4444; }
+    .toast.error .toast-icon { background: #ef4444; }
+    .toast.warning { border-left-color: #f59e0b; }
+    .toast.warning .toast-icon { background: #f59e0b; }
+    </style>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+    (function() {
+        var icons = { success: '\u2713', error: '\u2715', warning: '!' };
+
+        function classifyToast(message) {
+            var m = String(message == null ? '' : message).trim();
+            if (/successfully/i.test(m) || m === 'Blocked slot saved.') return 'success';
+            if (/fail|error|not found|unauthorized|invalid|unavailable|missing|could not/i.test(m)) return 'error';
+            if (/^please\b/i.test(m) || /select/i.test(m) || /do not match/i.test(m)) return 'warning';
+            return 'error';
+        }
+
+        window.showToast = function(message, type, duration) {
+            type = type || classifyToast(message);
+            duration = duration || 4500;
+
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            var icon = document.createElement('div');
+            icon.className = 'toast-icon';
+            icon.textContent = icons[type] || icons.error;
+
+            var msg = document.createElement('div');
+            msg.className = 'toast-message';
+            msg.textContent = message;
+
+            var closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.type = 'button';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.innerHTML = '&times;';
+
+            var progress = document.createElement('div');
+            progress.className = 'toast-progress';
+            progress.style.animationDuration = duration + 'ms';
+
+            toast.appendChild(icon);
+            toast.appendChild(msg);
+            toast.appendChild(closeBtn);
+            toast.appendChild(progress);
+            container.appendChild(toast);
+
+            requestAnimationFrame(function() {
+                toast.classList.add('show');
+            });
+
+            var removed = false;
+            function remove() {
+                if (removed) return;
+                removed = true;
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(function() { toast.remove(); }, 250);
+            }
+
+            var timer = setTimeout(remove, duration);
+            closeBtn.addEventListener('click', function() {
+                clearTimeout(timer);
+                remove();
+            });
+        };
+    })();
+    </script>
 
     <!-- Flash Messages Display - Fixed Position with Close Button -->
     <div class="flash-container" id="flashContainer">
@@ -208,7 +383,7 @@ function handleCredentialResponse(response) {
 
         } else {
 
-            alert(
+            showToast(
                 data.message ||
                 "Google login failed."
             );
@@ -223,7 +398,7 @@ function handleCredentialResponse(response) {
             error
         );
 
-        alert(
+        showToast(
             "Google login failed. Please try again."
         );
 
@@ -334,10 +509,10 @@ function handleCredentialResponse(response) {
                 </a>
                 -->
 
-                <!-- My Schedule Card -->
+                <!-- My next Schedule Card -->
     <a href="#" class="nav-card" id="scheduleBtn">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
-        <span>My Schedule</span>
+        <span>My Next Schedule</span>
         
     </a>
 
@@ -345,7 +520,7 @@ function handleCredentialResponse(response) {
         <div id="scheduleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>My Schedule</h2>
+                <h2>My Next Schedule</h2>
                 <button class="close" onclick="closeScheduleModal()" aria-label="Close">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -471,16 +646,16 @@ function handleCredentialResponse(response) {
         }
         </script>
 
-    <!-- Medical Records -->
+    <!-- Dental Records -->
     <a href="javascript:void(0);" class="nav-card" data-uid="{{ user.get('uid', '') }}" onclick="openVisitHistory(this.dataset.uid)">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
-        <span>Medical Records</span>
+        <span>Dental Records</span>
     </a>
 
     <div id="visitHistoryModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
             <div class="modal-header">
-                <h2>Medical Records</h2>
+                <h2>Dental Records</h2>
                 <button class="close" onclick="closeVisitHistory()" aria-label="Close">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -489,14 +664,15 @@ function handleCredentialResponse(response) {
                 </button>
             </div>
             <div class="modal-body">
-                <table class="payment-table">
+            <table class="payment-table">
 
                 <thead>
                     <tr>
                         <th>Assigned Dentist</th>
+                        <th>Medicine</th>
                         <th>Date</th>
                         <th>Procedure</th>
-                        <th>Fee Paid</th>
+                        <th>Chart</th>
                         <th>Next Appointment</th>
                     </tr>
                 </thead>
@@ -530,6 +706,7 @@ function handleCredentialResponse(response) {
     </div>
 
 <script>
+
 function openVisitHistory(uid) {
 
     const visitModal = document.getElementById("visitHistoryModal");
@@ -546,32 +723,23 @@ function openVisitHistory(uid) {
         </tr>
     `;
 
-    console.log("Opening Visit History");
-    console.log("UID:", uid);
-
     fetch(`/get_patient/${uid}`)
         .then(response => {
-
-            console.log("Status:", response.status);
-
             if (!response.ok) {
                 throw new Error("Server returned " + response.status);
             }
-
             return response.json();
         })
         .then(data => {
-
-            console.log("Patient Data:", data);
 
             tbody.innerHTML = "";
 
             const procedures = data.Done_procedure || [];
 
-            console.log("Procedures:", procedures);
+            // store for the Chart "View" buttons
+            window.patientProcedures = procedures;
 
             if (procedures.length === 0) {
-
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" style="text-align:center;">
@@ -582,16 +750,19 @@ function openVisitHistory(uid) {
                 return;
             }
 
-            procedures.forEach(p => {
-
-                console.log("Procedure:", p);
-
+            procedures.forEach((p, index) => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.dentist || "-"}</td>
+                        <td>${p.medicine || "-"}</td>
                         <td>${p.date || "-"}</td>
                         <td>${p.procedure || "-"}</td>
-                        <td>₱${p.paid || 0}</td>
+                        <td>
+                            ${p.chart_image
+                                ? `<button class="btn-action" onclick="viewPatientChart(${index})">View</button>`
+                                : "-"
+                            }
+                        </td>
                         <td>${p.next_appointment || "-"}</td>
                     </tr>
                 `;
@@ -599,9 +770,7 @@ function openVisitHistory(uid) {
 
         })
         .catch(error => {
-
             console.error("Fetch Error:", error);
-
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align:center;color:red;">
@@ -613,10 +782,31 @@ function openVisitHistory(uid) {
 
 }
 
+
 function closeVisitHistory() {
     const modal = document.getElementById("visitHistoryModal");
     modal.style.display = "none";
     modal.classList.remove("show");
+}
+
+function viewPatientChart(index) {
+    const item = window.patientProcedures && window.patientProcedures[index];
+    if (!item || !item.chart_image) {
+        showToast("No saved dental chart found for this record.");
+        return;
+    }
+
+    const modal = document.getElementById('chartViewModal');
+    const imgEl = document.getElementById('chartViewImage');
+    const msgEl = document.getElementById('chartViewMessage');
+
+    if (msgEl) msgEl.style.display = 'none';
+    if (imgEl) {
+        imgEl.src = "data:image/jpeg;base64," + item.chart_image;
+        imgEl.style.display = 'block';
+    }
+    modal.style.display = 'flex';
+    modal.classList.add("show");
 }
 
 async function viewSavedChart(uid) {
@@ -645,7 +835,7 @@ async function viewSavedChart(uid) {
         modal.classList.add("show");
     } catch (error) {
         console.error('Error loading chart:', error);
-        alert('Failed to load saved chart');
+        showToast('Failed to load saved chart');
     }
 }
 
@@ -681,15 +871,17 @@ function closeChartView() {
                     <tr>
                         <th>Date</th>
                         <th>Procedure</th>
-                        <th>Amount Paid</th>
+                        <th>Value</th>
+                        <th>Fee Paid</th>
                         <th>Balance</th>
                         <th>Status</th>
+                        <th>Pay</th>
                     </tr>
                 </thead>
 
                 <tbody id="paymentTableBody">
                     <tr>
-                        <td colspan="4" style="text-align:center;">
+                        <td colspan="7" style="text-align:center;">
                             Loading...
                         </td>
                     </tr>
@@ -701,8 +893,8 @@ function closeChartView() {
     </div>
 
     <script>
+        
     function openPaymentModal() {
-
         const paymentModal = document.getElementById("paymentModal");
         paymentModal.style.display = "flex";
         paymentModal.classList.add("show");
@@ -711,7 +903,7 @@ function closeChartView() {
 
         body.innerHTML = `
             <tr>
-                <td colspan="4" style="text-align:center;">
+                <td colspan="7" style="text-align:center;">
                     Loading...
                 </td>
             </tr>
@@ -728,7 +920,7 @@ function closeChartView() {
             if (procedures.length === 0) {
                 body.innerHTML = `
                     <tr>
-                        <td colspan="4" style="text-align:center;">
+                        <td colspan="7" style="text-align:center;">
                             No payment records found.
                         </td>
                     </tr>
@@ -736,43 +928,44 @@ function closeChartView() {
                 return;
             }
 
-    procedures.forEach(p => {
+            procedures.forEach(p => {
 
-        const status = p.status || "Unpaid";
+                const status = p.status || "Not Paid";
+                const isPaid = status.toLowerCase() === "paid";
 
-        body.innerHTML += `
-            <tr>
-                <td>${p.date || "-"}</td>
-                <td>${p.procedure || "-"}</td>
-                <td>₱${p.paid || 0}</td>
-                <td>₱${p.balance || 0}</td>
-                
-                <td>
+                body.innerHTML += `
+                    <tr>
+                        <td>${p.date || "-"}</td>
+                        <td>${p.procedure || "-"}</td>
+                        <td>₱${p.value || 0}</td>
+                        <td>₱${p.paid || 0}</td>
+                        <td>₱${p.balance || 0}</td>
+                        <td>
+                            ${isPaid
+                                ? `<span class="paid">Paid</span>`
+                                : `<span class="unpaid">${status}</span>`
+                            }
+                        </td>
+                        <td>
+                            ${isPaid
+                                ? `-`
+                                : `<button class="gcash-btn"
+                                        onclick="payGCash('${p.balance}','${p.procedure}')">
+                                        Pay with GCash
+                                    </button>`
+                            }
+                        </td>
+                    </tr>
+                `;
 
-                    ${
-                        status === "Paid"
-                        ? `<span class="paid">Paid</span>`
-                        : `
-                            <span class="unpaid">${status}</span><br><br>
-                        <button class="gcash-btn"
-        onclick="payGCash('${p.balance}','${p.procedure}')">
-        Pay with GCash
-    </button>
-                        `
-                    }
-
-                </td>
-            </tr>
-        `;
-
-    });
+            });
 
         })
         .catch(err => {
 
             body.innerHTML = `
                 <tr>
-                    <td colspan="4" style="text-align:center;color:red;">
+                    <td colspan="7" style="text-align:center;color:red;">
                         Failed to load payment records.
                     </td>
                 </tr>
@@ -800,7 +993,7 @@ async function payGCash(amount, procedure) {
         const uid = "{{ user.get('uid', '') }}";
 
         if (!uid) {
-            alert("Patient UID is missing.");
+            showToast("Patient UID is missing.");
             return;
         }
 
@@ -810,7 +1003,7 @@ async function payGCash(amount, procedure) {
             isNaN(numericAmount) ||
             numericAmount <= 0
         ) {
-            alert("Invalid payment amount.");
+            showToast("Invalid payment amount.");
             return;
         }
 
@@ -855,7 +1048,7 @@ async function payGCash(amount, procedure) {
                 result
             );
 
-            alert(
+            showToast(
                 result.error ||
                 "Unable to create payment."
             );
@@ -868,7 +1061,7 @@ async function payGCash(amount, procedure) {
         error
         );
 
-        alert(
+        showToast(
             "Something went wrong while creating the payment."
         );
     }
@@ -959,14 +1152,14 @@ async function payGCash(amount, procedure) {
                     const newSrc = data.profile_pic_url + '?t=' + new Date().getTime();
                     document.getElementById('profileAvatar').src = newSrc;
                     document.getElementById('navProfilePic').src = newSrc;
-                    alert('Profile picture updated successfully!');
+                    showToast('Profile picture updated successfully!');
                 } else {
-                    alert(data.message || 'Failed to upload profile picture');
+                    showToast(data.message || 'Failed to upload profile picture');
                 }
             })
             .catch(err => {
                 console.error(err);
-                alert('Failed to upload profile picture');
+                showToast('Failed to upload profile picture');
             });
         });
 
@@ -975,7 +1168,7 @@ async function payGCash(amount, procedure) {
             const confirm = document.getElementById('confirm_password');
             
             if (pass && pass.value !== "" && pass.value !== confirm.value) {
-                alert("Passwords do not match!");
+                showToast("Passwords do not match!");
                 return false;
             }
             return true;
@@ -1049,7 +1242,7 @@ async function payGCash(amount, procedure) {
         let confirm = document.getElementById("confirm_password").value;
 
         if (pass !== confirm) {
-            alert("Passwords do not match!");
+            showToast("Passwords do not match!");
             return false;
         }
         return true;
@@ -1322,8 +1515,108 @@ async function payGCash(amount, procedure) {
         }
 
         renderQuickReplies();
+    
     })();
 </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch data for the patient profile
+        fetch('/get_patient_profile_data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderSchedule(data.schedule);
+                    renderDentalRecords(data.procedures);
+                    renderPayments(data.procedures);
+                }
+            })
+            .catch(err => console.error('Error loading profile data:', err));
+
+        function renderSchedule(schedule) {
+            const tbody = document.querySelector('#scheduleTable tbody'); // Make sure your table has id="scheduleTable" or select the correct tbody
+            // Fallback selector if no ID: document.querySelectorAll('table')[0].querySelector('tbody');
+            const tbodyEl = document.querySelector('.table-responsive table tbody') || document.querySelector('table tbody');
+            
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (schedule.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="4" class="text-center">No upcoming or past appointments.</td></tr>';
+                return;
+            }
+
+            schedule.forEach(appt => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${appt.appointment_date || 'N/A'}</td>
+                    <td>${appt.Service || 'N/A'}</td>
+                    <td>${appt.DentistName || 'Not Assigned'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+
+        function renderDentalRecords(procedures) {
+            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[1] || document.querySelectorAll('table tbody')[1];
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (procedures.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No dental records found.</td></tr>';
+                return;
+            }
+
+            procedures.forEach(proc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${proc.dentist || 'N/A'}</td>
+                    <td>${proc.medicine || '-'}</td>
+                    <td>${proc.date || 'N/A'}</td>
+                    <td>${proc.procedure || 'N/A'}</td>
+                    <td><a href="#" onclick="viewChart('${proc.chart_image || ''}')">View Chart</a></td>
+                    <td>${proc.next_appointment || '-'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+
+        function renderPayments(procedures) {
+            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[2] || document.querySelectorAll('table tbody')[2];
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (procedures.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No payment records found.</td></tr>';
+                return;
+            }
+
+            procedures.forEach(proc => {
+                const tr = document.createElement('tr');
+                const statusClass = proc.status === 'Paid' ? 'text-success' : 'text-warning';
+                tr.innerHTML = `
+                    <td>${proc.date || 'N/A'}</td>
+                    <td>${proc.procedure || 'N/A'}</td>
+                    <td>₱${proc.value || 0}</td>
+                    <td>₱${proc.paid || 0}</td>
+                    <td>₱${proc.balance || 0}</td>
+                    <td class="${statusClass}">${proc.status || 'Pending'}</td>
+                    <td>${proc.status !== 'Paid' ? '<button class="btn btn-sm btn-primary">Pay Now</button>' : '-'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+    });
+
+    function viewChart(base64Image) {
+        if (!base64Image) {
+            showToast("No chart image available for this record.");
+            return;
+        }
+        const win = window.open();
+        win.document.write('<img src="data:image/png;base64,' + base64Image + '" style="max-width:100%;"/>');
+    }
+    </script>
 
 </body>
     </html>

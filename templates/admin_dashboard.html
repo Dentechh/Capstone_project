@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light">
     <title>Capizonda | Admin Panel</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,6 +14,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
 </head>
@@ -211,15 +215,340 @@
     overflow:auto;
 }
 
+#checkInfoModal .modal-content{
+    width: 97% !important;
+    max-width: 1600px !important;
+}
+
+#checkInfoModal table.treatment-table{
+    table-layout: fixed;
+    width: 100%;
+    font-size: 13px;
+}
+
+#checkInfoModal table.treatment-table th,
+#checkInfoModal table.treatment-table td{
+    white-space: normal;
+    word-break: break-word;
+    padding: 6px 8px;
+    text-align: center;
+}
+
+#checkInfoModal table.treatment-table input,
+#checkInfoModal table.treatment-table select{
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    padding: 4px 6px;
+}
+
 .close{
     float:right;
     font-size:30px;
     cursor:pointer;
 }
+
+.financial-period-btn.active {
+    background: var(--navy, #0d47a1);
+    color: #fff;
+}
+
+.income-trend-card {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.95);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+    margin-top: 4px;
+}
+
+.income-trend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.income-trend-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #0d47a1;
+}
+
+.income-trend-header p {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: #607d8b;
+}
+
+.period-btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.period-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    background: #f5f7fa;
+    color: #37474f;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.period-btn:hover {
+    background: #e3ecfa;
+}
+
+.period-btn.active {
+    background: var(--navy, #0d47a1);
+    color: #fff;
+    border-color: var(--navy, #0d47a1);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.status-badge.blocked {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+/* ---------- Toast notifications (replaces default window.alert()) ---------- */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 380px;
+    width: calc(100% - 40px);
+    pointer-events: none;
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+    border-left: 4px solid #607d8b;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #263238;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast.hide {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.toast-message {
+    flex: 1;
+    word-break: break-word;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: #90a4ae;
+    cursor: pointer;
+    padding: 0;
+}
+
+.toast-close:hover {
+    color: #37474f;
+}
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(0,0,0,0.14);
+    width: 100%;
+    transform-origin: left;
+    animation-name: toast-progress-shrink;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes toast-progress-shrink {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}
+
+.toast.success { border-left-color: #16a34a; }
+.toast.success .toast-icon { background: #16a34a; }
+.toast.error { border-left-color: #ef4444; }
+.toast.error .toast-icon { background: #ef4444; }
+.toast.warning { border-left-color: #f59e0b; }
+.toast.warning .toast-icon { background: #f59e0b; }
+
+body.dark-mode .toast {
+    background: #1e293b;
+    color: #e2e8f0;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+}
+body.dark-mode .toast-close { color: #64748b; }
+body.dark-mode .toast-close:hover { color: #cbd5e1; }
+
+.proc-period-btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.proc-period-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #cfd8dc;
+    background: #f5f7fa;
+    color: #37474f;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.proc-period-btn:hover {
+    background: #e3ecfa;
+}
+
+.proc-period-btn.active {
+    background: var(--navy, #0d47a1);
+    color: #fff;
+    border-color: var(--navy, #0d47a1);
+}
+
+.income-chart-wrapper {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
 </style>
 
 
 <body class="dashboard-body">
+
+<div class="toast-container" id="toastContainer"></div>
+<script>
+(function() {
+    var icons = { success: '\u2713', error: '\u2715', warning: '!' };
+
+    function classifyToast(message) {
+        var m = String(message == null ? '' : message).trim();
+        if (/successfully/i.test(m) || m === 'Blocked slot saved.') return 'success';
+        if (/fail|error|not found|unauthorized|invalid|unavailable|missing|could not/i.test(m)) return 'error';
+        if (/^please\b/i.test(m) || /select/i.test(m) || /do not match/i.test(m)) return 'warning';
+        return 'error';
+    }
+
+    window.showToast = function(message, type, duration) {
+        type = type || classifyToast(message);
+        duration = duration || 4500;
+
+        var container = document.getElementById('toastContainer');
+        if (!container) return;
+
+        var toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+
+        var icon = document.createElement('div');
+        icon.className = 'toast-icon';
+        icon.textContent = icons[type] || icons.error;
+
+        var msg = document.createElement('div');
+        msg.className = 'toast-message';
+        msg.textContent = message;
+
+        var closeBtn = document.createElement('button');
+        closeBtn.className = 'toast-close';
+        closeBtn.type = 'button';
+        closeBtn.setAttribute('aria-label', 'Close');
+        closeBtn.innerHTML = '&times;';
+
+        var progress = document.createElement('div');
+        progress.className = 'toast-progress';
+        progress.style.animationDuration = duration + 'ms';
+
+        toast.appendChild(icon);
+        toast.appendChild(msg);
+        toast.appendChild(closeBtn);
+        toast.appendChild(progress);
+        container.appendChild(toast);
+
+        requestAnimationFrame(function() {
+            toast.classList.add('show');
+        });
+
+        var removed = false;
+        function remove() {
+            if (removed) return;
+            removed = true;
+            toast.classList.remove('show');
+            toast.classList.add('hide');
+            setTimeout(function() { toast.remove(); }, 250);
+        }
+
+        var timer = setTimeout(remove, duration);
+        closeBtn.addEventListener('click', function() {
+            clearTimeout(timer);
+            remove();
+        });
+    };
+})();
+</script>
 
     <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -247,12 +576,15 @@
         </div>
         <nav class="sidebar-nav">
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="javascript:void(0)" id="nav-financialreports" class="nav-item" onclick="showSection('financialreports')">Financial Reports</a>
+            <a href="javascript:void(0)" id="nav-doctorscalendar" class="nav-item" onclick="showSection('doctorscalendar')">Doctors Calendar</a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
-           <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
-           <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
+            <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
+            <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
             <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Approved Patients</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
+            <a href="javascript:void(0)" id="nav-usermanagement" class="nav-item" onclick="showSection('usermanagement')">User Management</a>
         </nav>
         <div class="sidebar-footer">
             <a href="/logoutadmin" class="nav-item logout">Logout</a>
@@ -323,13 +655,13 @@
             <!-- Mini Stats Row -->
             <div class="mini-stats-row">
                 <div class="mini-stat-card emergency">
-                    <div class="mini-stat-icon">🚨</div>    
+                    <div class="mini-stat-icon">🚨</div>
                     <div class="mini-stat-data">
                         <h3 data-target="{{ urgency_counts.Emergency | default(0) }}">0</h3>
                         <p>Emergency</p>
                     </div>
                 </div>
-              
+
                 <div class="mini-stat-card normal">
                     <div class="mini-stat-icon">📋</div>
                     <div class="mini-stat-data">
@@ -357,6 +689,36 @@
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="urgencyBar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD THIS BUTTON GROUP HERE -->
+            <div class="proc-period-btn-group">
+                <button class="proc-period-btn active" data-period="overall" onclick="loadProcedureCharts('overall')">Overall</button>
+                <button class="proc-period-btn" data-period="today" onclick="loadProcedureCharts('today')">Today</button>
+                <button class="proc-period-btn" data-period="weekly" onclick="loadProcedureCharts('weekly')">Weekly</button>
+                <button class="proc-period-btn" data-period="monthly" onclick="loadProcedureCharts('monthly')">Monthly</button>
+                <button class="proc-period-btn" data-period="yearly" onclick="loadProcedureCharts('yearly')">Yearly</button>
+            </div>
+
+            <div class="dashboard-charts" style="margin-top:24px;">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Procedures Performed</h3>
+                        <p>Count of each procedure across all patients</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="procedureCountChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Revenue by Procedure</h3>
+                        <p>Total amount paid, grouped by procedure</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="procedureRevenueChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -389,61 +751,605 @@
         </div>
 
 
-<div id="section-mypatients" class="content-section">
-                <section class="content-panel">
-                <div class="filter-bar">
-                    <input type="text" id="myPatientSearch" placeholder="Search patients..." class="search-input filter-search" onkeyup="filterMyPatients()">
-                    <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn" onclick="sortMyPatients()">
-                        A-Z
-                    </button>
+                <div id="section-financialreports" class="content-section">
+                    <div class="metric-cards">
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                            </div>
+                            <div class="metric-data">
+                                <h3>₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
+                                <p>Total Income Collected</p>
+                            </div>
+                            <div class="metric-bg-icon">💰</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="metric-data">
+                                <h3>₱{{ "{:,.2f}".format(total_outstanding|default(0)) }}</h3>
+                                <p>Outstanding Balance</p>
+                            </div>
+                            <div class="metric-bg-icon">📄</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+                            </div>
+                            <div class="metric-data">
+                                <h3>{{ unpaid_procedures|default(0) }}</h3>
+                                <p>Unpaid Procedures</p>
+                            </div>
+                            <div class="metric-bg-icon">🧾</div>
+                        </div>
+                    </div>
+
+                    <div class="income-trend-card">
+                        <div class="income-trend-header">
+                            <div>
+                                <h3>Income Trend</h3>
+                                <p>Revenue collected over time</p>
+                            </div>
+                            <div class="period-btn-group">
+                                <button class="period-btn" data-period="today" onclick="loadFinancialChart('today')">Today</button>
+                                <button class="period-btn active" data-period="weekly" onclick="loadFinancialChart('weekly')">Weekly</button>
+                                <button class="period-btn" data-period="monthly" onclick="loadFinancialChart('monthly')">Monthly</button>
+                                <button class="period-btn" data-period="yearly" onclick="loadFinancialChart('yearly')">Yearly</button>
+                                <button class="period-btn" data-period="overall" onclick="loadFinancialChart('overall')">Overall</button>
+                            </div>
+                        </div>
+
+                        <div class="income-chart-wrapper">
+                            <canvas id="incomeChart"></canvas>
+                        </div>
+
+                        <p style="text-align:center; color:#546e7a; margin-top:20px; font-size:13px;">
+                            Per-procedure payment breakdowns are available in each patient's "CHECK INFO" view under My Patients.
+                        </p>
+                    </div>
                 </div>
-                <table class="appointment-table" id="myPatientsTable">
-
-        <thead>
-            <tr>
-                <th>Name</th>
-                 <th>Mobile Number</th>
-                 <th>Action</th>
-            </tr>
-        </thead>
-
-        <tbody>
-
-        {% for appointment in accounts %}
-        <tr>
-
-            <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
-             <td>{{ appointment.contact_number}}</td>
 
 
+                <div id="section-mypatients" class="content-section">
+                    <section class="content-panel">
+                        <div class="filter-bar">
+                            <input type="text" id="myPatientSearch" placeholder="Search patients..." class="search-input filter-search" onkeyup="filterMyPatients()">
+                            <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn" onclick="sortMyPatients()">A-Z</button>
+                            <button type="button" id="sortMyPatientsDateBtn" class="btn-action filter-btn" onclick="sortMyPatientsByDate()">Newest</button>
+                        </div>
+                        <div id="myPatientsCursor" data-cursor="{{ my_patients_next_cursor or '' }}" style="display:none;"></div>
+                        <table class="appointment-table" id="myPatientsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Mobile Number</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in my_patients %}
+                                <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
+                                    <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
+                                    <td>{{ appointment.contact_number }}</td>
+                                    <td>
+                                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                            <button
+                                                type="button"
+                                                class="btn-action accept"
+                                                onclick="openCheckInfoModal('{{ appointment.patient_id }}')">
+                                                CHECK INFO
+                                            </button>
 
-            
+                                            <button
+                                                type="button"
+                                                class="btn-action edit-patient-btn"
+                                                style="background:#f5a623;color:#1a1a1a;"
+                                                data-uid="{{ appointment.uid }}"
+                                                data-patient-id="{{ appointment.patient_id }}"
+                                                data-firstname="{{ appointment.get('firstname', appointment.get('first_name', '')) }}"
+                                                data-middlename="{{ appointment.get('middlename', appointment.get('middle_name', '')) }}"
+                                                data-lastname="{{ appointment.get('lastname', appointment.get('last_name', '')) }}"
+                                                data-contact="{{ appointment.get('contact_number', '') }}"
+                                                data-email="{{ appointment.get('email', '') }}">
+                                                EDIT
+                                            </button>
 
-            
+                                            <button
+                                                type="button"
+                                                class="btn-action delete-patient-btn"
+                                                style="background:#ef4444;color:#fff;"
+                                                data-uid="{{ appointment.uid }}"
+                                                data-patient-id="{{ appointment.patient_id }}"
+                                                data-name="{{ appointment.full_name or appointment.FirstName or 'this patient' }}">
+                                                DELETE
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div style="text-align:center; margin-top:16px;">
+                            <button type="button" id="myPatientsLoadMoreBtn" class="btn-action filter-btn"
+                                {% if not my_patients_next_cursor %}style="display:none;"{% endif %}>
+                                Load More
+                            </button>
+                        </div>
+                    </section>
+                </div>
 
-        
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('myPatientsLoadMoreBtn');
+    const cursorHolder = document.getElementById('myPatientsCursor');
+    const tbody = document.querySelector('#myPatientsTable tbody');
 
-            <td>
-<button
-    type="button"
-    class="btn-action accept"
-    style="width:100%;"
-    onclick="openCheckInfoModal('{{ appointment.uid }}')">
-    CHECK INFO
-</button>
-            </td>
+    if (!loadMoreBtn || !cursorHolder || !tbody) return;
 
-        </tr>
-        {% endfor %}
+    loadMoreBtn.addEventListener('click', function() {
+        const cursor = cursorHolder.getAttribute('data-cursor') || '';
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = 'Loading...';
 
-        </tbody>
+        fetch('/admin/my_patients_page?cursor=' + encodeURIComponent(cursor))
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success) {
+                    showToast(result.message || 'Failed to load more patients.');
+                    return;
+                }
 
-    </table>
+                result.rows.forEach(function(p) {
+                    const tr = document.createElement('tr');
+                    tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
+                    tr.innerHTML = `
+                        <td>${p.full_name || ''}</td>
+                        <td>${p.contact_number || ''}</td>
+                        <td>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">CHECK INFO</button>
+                                <button type="button" class="btn-action edit-patient-btn" style="background:#f5a623;color:#1a1a1a;"
+                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}"
+                                    data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
+                                    data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}">EDIT</button>
+                                <button type="button" class="btn-action delete-patient-btn" style="background:#ef4444;color:#fff;"
+                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">DELETE</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
 
+                if (result.next_cursor) {
+                    cursorHolder.setAttribute('data-cursor', result.next_cursor);
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = 'Load More';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(function(err) {
+                console.error('Load more patients error:', err);
+                showToast('Failed to load more patients. Please try again.');
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Load More';
+            });
+    });
+});
+</script>
+
+<div id="section-usermanagement" class="content-section">
+                    <section class="content-panel">
+                        <div class="filter-bar">
+                            <input type="text" id="userMgmtSearch" placeholder="Search accounts..." class="search-input filter-search" onkeyup="filterUserManagement()">
+                        </div>
+                        <div id="userMgmtCursor" data-cursor="{{ manageable_accounts_next_cursor or '' }}" style="display:none;"></div>
+                        <table class="appointment-table" id="userManagementTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Mobile Number</th>
+                                    <th>Google Account</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in manageable_accounts %}
+                                {% set is_disabled = account.get('disabled', False) %}
+                                <tr{% if is_disabled %} style="opacity:0.6;"{% endif %}>
+                                    <td>
+                                        {{ account.full_name or account.first_name or '' }}
+                                        {% if is_disabled %}<span class="status-badge blocked">Blocked</span>{% endif %}
+                                    </td>
+                                    <td>{{ account.contact_number or '-' }}</td>
+                                    <td>{{ account.email or '-' }}</td>
+                                    <td>
+                                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                            <button
+                                                type="button"
+                                                class="btn-action edit-patient-btn"
+                                                style="background:#f5a623;color:#1a1a1a;"
+                                                data-uid="{{ account.uid }}"
+                                                data-patient-id="{{ account.patient_id }}"
+                                                data-firstname="{{ account.get('firstname', account.get('first_name', '')) }}"
+                                                data-middlename="{{ account.get('middlename', account.get('middle_name', '')) }}"
+                                                data-lastname="{{ account.get('lastname', account.get('last_name', '')) }}"
+                                                data-contact="{{ account.get('contact_number', '') }}"
+                                                data-email="{{ account.get('email', '') }}">
+                                                EDIT
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="btn-action block-user-btn"
+                                                style="background:{{ '#16a34a' if is_disabled else '#6b7280' }};color:#fff;"
+                                                data-uid="{{ account.uid }}"
+                                                data-name="{{ account.full_name or account.first_name or 'this account' }}"
+                                                data-disabled="{{ 'true' if is_disabled else 'false' }}">
+                                                {{ 'UNBLOCK' if is_disabled else 'BLOCK' }}
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                class="btn-action delete-patient-btn"
+                                                style="background:#ef4444;color:#fff;"
+                                                data-uid="{{ account.uid }}"
+                                                data-patient-id="{{ account.patient_id }}"
+                                                data-name="{{ account.full_name or account.first_name or 'this account' }}">
+                                                DELETE
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <div style="text-align:center; margin-top:16px;">
+                            <button type="button" id="userMgmtLoadMoreBtn" class="btn-action filter-btn"
+                                {% if not manageable_accounts_next_cursor %}style="display:none;"{% endif %}>
+                                Load More
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('userMgmtLoadMoreBtn');
+    const cursorHolder = document.getElementById('userMgmtCursor');
+    const tbody = document.querySelector('#userManagementTable tbody');
+
+    if (!loadMoreBtn || !cursorHolder || !tbody) return;
+
+    loadMoreBtn.addEventListener('click', function() {
+        const cursor = cursorHolder.getAttribute('data-cursor') || '';
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.textContent = 'Loading...';
+
+        fetch('/admin/manageable_accounts_page?cursor=' + encodeURIComponent(cursor))
+            .then(res => res.json())
+            .then(result => {
+                if (!result.success) {
+                    showToast(result.message || 'Failed to load more accounts.');
+                    return;
+                }
+
+                result.rows.forEach(function(a) {
+                    const tr = document.createElement('tr');
+                    const isDisabled = !!a.disabled;
+                    if (isDisabled) tr.style.opacity = '0.6';
+                    tr.innerHTML = `
+                        <td>${a.full_name || ''}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
+                        <td>${a.contact_number || '-'}</td>
+                        <td>${a.email || '-'}</td>
+                        <td>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                <button type="button" class="btn-action edit-patient-btn" style="background:#f5a623;color:#1a1a1a;"
+                                    data-uid="${a.uid}" data-patient-id="${a.patient_id}"
+                                    data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
+                                    data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}">EDIT</button>
+                                <button type="button" class="btn-action block-user-btn" style="background:${isDisabled ? '#16a34a' : '#6b7280'};color:#fff;"
+                                    data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}">${isDisabled ? 'UNBLOCK' : 'BLOCK'}</button>
+                                <button type="button" class="btn-action delete-patient-btn" style="background:#ef4444;color:#fff;"
+                                    data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${a.full_name}">DELETE</button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                if (result.next_cursor) {
+                    cursorHolder.setAttribute('data-cursor', result.next_cursor);
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.textContent = 'Load More';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            })
+            .catch(function(err) {
+                console.error('Load more accounts error:', err);
+                showToast('Failed to load more accounts. Please try again.');
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Load More';
+            });
+    });
+});
+</script>
+
+                <div id="editPatientModal" class="modal" style="display:none;">
+    <div class="modal-content" style="width:90%;max-width:500px; background:#fff !important;">
+
+        <div style="display:flex !important; justify-content:space-between !important; align-items:center !important; margin-bottom:15px !important;">
+            <h2 style="display:block !important; visibility:visible !important; color:#1a1a1a !important; font-size:20px !important; margin:0 !important;">Edit Patient</h2>
+            <span onclick="closeEditPatientModal()" style="display:block !important; visibility:visible !important; color:#1a1a1a !important; font-size:28px !important; cursor:pointer !important; line-height:1 !important;">&times;</span>
+        </div>
+
+        <form id="editPatientForm">
+            <input type="hidden" id="editPatientUid" name="uid">
+            <input type="hidden" id="editPatientPatientId" name="patient_id">
+
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">First Name</label>
+            <input type="text" id="editFirstName" name="first_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;" required>
+
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Middle Name</label>
+            <input type="text" id="editMiddleName" name="middle_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Last Name</label>
+            <input type="text" id="editLastName" name="last_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;" required>
+
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Contact Number</label>
+            <input type="text" id="editContactNumber" name="contact_number" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Email</label>
+            <input type="email" id="editEmail" name="email" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+
+            <button type="submit" class="btn-action accept" style="width:100%;margin-top:20px;padding:12px;">SAVE CHANGES</button>
+        </form>
+    </div>
 </div>
 
+<script>
+function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email) {
+    document.getElementById('editPatientUid').value = uid || '';
+    document.getElementById('editPatientPatientId').value = patientId || '';
+    document.getElementById('editFirstName').value = firstname || '';
+    document.getElementById('editMiddleName').value = middlename || '';
+    document.getElementById('editLastName').value = lastname || '';
+    document.getElementById('editContactNumber').value = contact || '';
+    document.getElementById('editEmail').value = email || '';
+    document.getElementById('editPatientModal').style.display = 'flex';
+}
+
+function closeEditPatientModal() {
+    document.getElementById('editPatientModal').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    document.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('.edit-patient-btn');
+        if (editBtn) {
+            openEditPatientModal(
+                editBtn.getAttribute('data-uid'),
+                editBtn.getAttribute('data-patient-id'),
+                editBtn.getAttribute('data-firstname'),
+                editBtn.getAttribute('data-middlename'),
+                editBtn.getAttribute('data-lastname'),
+                editBtn.getAttribute('data-contact'),
+                editBtn.getAttribute('data-email')
+            );
+            return;
+        }
+
+        const blockBtn = e.target.closest('.block-user-btn');
+        if (blockBtn) {
+            const uid = blockBtn.getAttribute('data-uid');
+            const name = blockBtn.getAttribute('data-name') || 'this account';
+            const isCurrentlyDisabled = blockBtn.getAttribute('data-disabled') === 'true';
+            const nextDisabled = !isCurrentlyDisabled;
+
+            const confirmMsg = nextDisabled
+                ? 'Block ' + name + '? They will not be able to log in until you unblock them.'
+                : 'Unblock ' + name + '? They will be able to log in again.';
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('uid', uid);
+            formData.append('disabled', nextDisabled ? 'true' : 'false');
+
+            fetch('/admin/toggle_user_block', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    blockBtn.setAttribute('data-disabled', result.disabled ? 'true' : 'false');
+                    blockBtn.textContent = result.disabled ? 'UNBLOCK' : 'BLOCK';
+                    blockBtn.style.background = result.disabled ? '#16a34a' : '#6b7280';
+
+                    const row = blockBtn.closest('tr');
+                    row.style.opacity = result.disabled ? '0.6' : '1';
+
+                    const nameCell = row.querySelector('td');
+                    const existingBadge = nameCell.querySelector('.status-badge');
+                    if (result.disabled && !existingBadge) {
+                        nameCell.insertAdjacentHTML('beforeend', ' <span class="status-badge blocked">Blocked</span>');
+                    } else if (!result.disabled && existingBadge) {
+                        existingBadge.remove();
+                    }
+                } else {
+                    showToast(result.message || 'Failed to update account status.');
+                }
+            })
+            .catch(function(err) {
+                console.error('Toggle block error:', err);
+                showToast('Failed to update account status. Please try again.');
+            });
+            return;
+        }
+
+        const delBtn = e.target.closest('.delete-patient-btn');
+        if (delBtn) {
+            const uid = delBtn.getAttribute('data-uid');
+            const patientId = delBtn.getAttribute('data-patient-id');
+            const name = delBtn.getAttribute('data-name') || 'this patient';
+
+            if (!confirm('Are you sure you want to permanently delete ' + name + '? This cannot be undone.')) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('uid', uid);
+            formData.append('patient_id', patientId);
+
+            fetch('/admin/delete_patient', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    delBtn.closest('tr').remove();
+                    if (result.message && result.message !== 'Patient deleted successfully') {
+                        showToast(result.message);
+                    }
+                } else {
+                    showToast(result.message || 'Failed to delete patient.');
+                }
+            })
+            .catch(function(err) {
+                console.error('Delete patient error:', err);
+                showToast('Failed to delete patient. Please try again.');
+            });
+        }
+    });
+
+    const editPatientForm = document.getElementById('editPatientForm');
+    if (editPatientForm) {
+        editPatientForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(editPatientForm);
+
+            fetch('/admin/update_patient', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    showToast('Patient updated successfully.');
+                    location.reload();
+                } else {
+                    showToast(result.message || 'Failed to update patient.');
+                }
+            })
+            .catch(function(err) {
+                console.error('Update patient error:', err);
+                showToast('Failed to update patient. Please try again.');
+            });
+        });
+    }
+});
+
+(function() {
+    const firstNameInput = document.getElementById('admFirstName');
+    const lastNameInput = document.getElementById('admLastName');
+    const middleNameInput = document.getElementById('admMiddleName');
+    const birthdayInput = document.getElementById('admBirthday');
+    const warningBox = document.getElementById('admDuplicateWarning');
+    const dupNameSpan = document.getElementById('admDupName');
+    const useDupBtn = document.getElementById('admUseDupBtn');
+    const dismissDupBtn = document.getElementById('admDismissDupBtn');
+
+    if (!firstNameInput || !lastNameInput) return;
+
+    let lastMatch = null;
+    let debounceTimer = null;
+
+    async function checkDuplicate() {
+        const first = firstNameInput.value.trim();
+        const last = lastNameInput.value.trim();
+
+        if (first.length < 2 || last.length < 2) {
+            warningBox.style.display = 'none';
+            lastMatch = null;
+            return;
+        }
+
+        const params = new URLSearchParams({
+            first_name: first,
+            last_name: last,
+            middle_name: middleNameInput ? middleNameInput.value.trim() : '',
+            birthday: birthdayInput ? birthdayInput.value.trim() : ''
+        });
+
+        try {
+            const res = await fetch('/admin/check_duplicate_patient?' + params.toString());
+            const result = await res.json();
+
+            if (result.match) {
+                lastMatch = result;
+                dupNameSpan.textContent = [result.first_name, result.middle_name, result.last_name].filter(Boolean).join(' ');
+                warningBox.style.display = 'block';
+            } else {
+                lastMatch = null;
+                warningBox.style.display = 'none';
+            }
+        } catch (err) {
+            console.error('Duplicate check failed:', err);
+        }
+    }
+
+    function debouncedCheck() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(checkDuplicate, 500);
+    }
+
+    [firstNameInput, lastNameInput, middleNameInput, birthdayInput].forEach(el => {
+        if (el) el.addEventListener('blur', debouncedCheck);
+    });
+
+    dismissDupBtn.addEventListener('click', () => {
+        warningBox.style.display = 'none';
+        lastMatch = null;
+    });
+
+    useDupBtn.addEventListener('click', () => {
+        if (!lastMatch) return;
+
+        document.querySelector('input[name="patientMode"][value="existing"]').checked = true;
+        togglePatientMode();
+
+        const searchInput = document.getElementById('admPatientSearch');
+        const select = document.getElementById('admPatientSelect');
+        const uidField = document.getElementById('admPatientUid');
+
+        searchInput.value = dupNameSpan.textContent;
+        searchInput.dispatchEvent(new Event('input'));
+
+        setTimeout(() => {
+            for (const opt of select.options) {
+                if (opt.value === lastMatch.patient_id) {
+                    select.value = lastMatch.patient_id;
+                    uidField.value = opt.dataset.accountUid || '';
+                    break;
+                }
+            }
+        }, 500);
+
+        warningBox.style.display = 'none';
+    });
+})();
+</script>
+
 <div id="checkInfoModal" class="modal" style="display:none;">
-    <div class="modal-content" style="width:90%;max-width:1000px;">
+    <div class="modal-content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h2>Treatment Information</h2>
             <span onclick="closeCheckInfoModal()" style="font-size:28px;cursor:pointer;">&times;</span>
@@ -456,158 +1362,231 @@
             <th>Medicine</th>
             <th>Visit Date</th>
             <th>Procedure</th>
+            <th>Value</th>
             <th>Fee Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
             <th>Next Appointment</th>
             <th>Chart</th>
+            <th>Action</th>
         </tr>
     </thead>
-
     <tbody id="checkInfoBody">
-        <tr>
-            <td colspan="7" style="text-align:center;">
-                No treatment information found.
-            </td>
-        </tr>
+        <tr><td colspan="11" style="text-align:center;">No treatment information found.</td></tr>
     </tbody>
 </table>
     </div>
 </div>
 
 <script>
-async function openCheckInfoModal(uid) {
+let currentCheckInfoPatientId = "";
 
+const CI_PROCEDURE_OPTIONS = [
+    "Dental Consultation",
+    "Oral Prophylaxis (Cleaning)",
+    "Tooth Restoration (Pasta)",
+    "Tooth Extraction (Gabot)",
+    "Dentures (Pustiso)",
+    "Crowns and Bridges",
+    "Teeth Whitening",
+    "Fluoride Treatment",
+    "Pit and Fissure Sealant",
+    "Wisdom Teeth Removal",
+    "Root Canal Treatment",
+    "Periapical Xray",
+    "Other"
+];
+
+function escAttr(s) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(s == null ? "" : String(s)));
+    return d.innerHTML.replace(/"/g, "&quot;");
+}
+
+function buildProcedureSelect(selectedValue) {
+    const current = (selectedValue || "").trim();
+    const isKnown = CI_PROCEDURE_OPTIONS.some(
+        opt => opt.toLowerCase() === current.toLowerCase()
+    );
+
+    let optionsHtml = "";
+
+    if (current && !isKnown) {
+        optionsHtml += `<option value="${escAttr(current)}" selected>${current}</option>`;
+    }
+
+    CI_PROCEDURE_OPTIONS.forEach(opt => {
+        const isSelected = opt.toLowerCase() === current.toLowerCase();
+        optionsHtml += `<option value="${escAttr(opt)}" ${isSelected ? "selected" : ""}>${opt}</option>`;
+    });
+
+    return `<select class="ci-procedure">${optionsHtml}</select>`;
+}
+
+function statusBadge(status) {
+    const isPaid = (status || "").trim().toLowerCase() === "paid";
+    return `<span style="display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;background:${isPaid ? "#22c55e" : "#ef4444"};">${isPaid ? "Paid" : "Not Paid"}</span>`;
+}
+
+async function openCheckInfoModal(patientId) {
     const tbody = document.getElementById("checkInfoBody");
     const modal = document.getElementById("checkInfoModal");
+    if (!tbody || !modal) return;
 
-    if (!tbody || !modal) {
-        console.error("Modal elements not found");
+    patientId = String(patientId).replace("Patient ID:", "").trim();
+    currentCheckInfoPatientId = patientId;
+
+    if (!patientId) {
+        modal.style.display = "flex";
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">This patient has no booking history yet.</td></tr>`;
         return;
     }
 
-    // Clean UID
-    uid = String(uid)
-        .replace("Account No:", "")
-        .replace("Patient ID:", "")
-        .trim();
-
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="7" style="text-align:center;">
-                Loading...
-            </td>
-        </tr>
-    `;
-
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">Loading...</td></tr>`;
     modal.style.display = "flex";
 
     try {
-
-        const response = await fetch(
-            "/get_treatment_info/" + encodeURIComponent(uid)
-        );
-
+        const response = await fetch("/get_treatment_info/" + encodeURIComponent(patientId));
         const result = await response.json();
 
-        console.log("Treatment Info:", result);
-
-        tbody.innerHTML = "";
-
-        if (
-            result.success &&
-            Array.isArray(result.procedures) &&
-            result.procedures.length > 0
-        ) {
-
-            // IMPORTANT:
-            // Save the procedures globally so the View button
-            // can access the correct chart image.
+        if (result.success && Array.isArray(result.procedures) && result.procedures.length > 0) {
             window.currentProcedures = result.procedures;
-
-            result.procedures.forEach((item, index) => {
-
-                tbody.innerHTML += `
-                    <tr>
-
-                        <td>
-                            ${item.dentist || "-"}
-                        </td>
-
-                        <td>
-                            ${item.medicine || "-"}
-                        </td>
-
-                        <td>
-                            ${item.date || "-"}
-                        </td>
-
-                        <td>
-                            ${item.procedure || "-"}
-                        </td>
-
-                        <td>
-                            ₱${item.paid || 0}
-                        </td>
-
-                        <td>
-                            ${item.next_appointment || "-"}
-                        </td>
-
-                        <td>
-
-                            <button
-                                type="button"
-                                class="btn-action"
-                                onclick="openChartViewModal(${index})">
-
-                                View
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-                `;
-            });
-
+            renderCheckInfoTable();
         } else {
-
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align:center;">
-                        No treatment history found.
-                    </td>
-                </tr>
-            `;
+            window.currentProcedures = [];
+            tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">No treatment history found.</td></tr>`;
         }
-
     } catch (error) {
-
-        console.error(
-            "Error loading treatment info:",
-            error
-        );
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7"
-                    style="text-align:center;color:#ef4444;">
-
-                    Failed to load treatment data.
-                    Please try again.
-
-                </td>
-            </tr>
-        `;
+        console.error("Error loading treatment info:", error);
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#ef4444;">Failed to load treatment data.</td></tr>`;
     }
 }
 
+function renderCheckInfoTable() {
+    const tbody = document.getElementById("checkInfoBody");
+    tbody.innerHTML = "";
+
+    window.currentProcedures.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.id = "ci-row-" + index;
+        tr.dataset.doneDocId = item.done_doc_id || "";
+        tr.dataset.procIndex = item.proc_index;
+
+        tr.innerHTML = `
+            <td>${item.dentist || "-"}</td>
+            <td>${item.medicine || "-"}</td>
+            <td>${item.date || "-"}</td>
+            <td>${item.procedure || "-"}</td>
+            <td>₱${item.value || 0}</td>
+            <td>₱${item.paid || 0}</td>
+            <td>₱${item.balance || 0}</td>
+            <td>${statusBadge(item.status)}</td>
+            <td>${item.next_appointment || "-"}</td>
+            <td><button type="button" class="btn-action" onclick="openChartViewModal(${index})">View</button></td>
+            <td><button type="button" class="btn-action" style="background:#f5a623;color:#1a1a1a;" onclick="enterEditMode(${index})">Edit</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function enterEditMode(index) {
+    const item = window.currentProcedures[index];
+    const row = document.getElementById("ci-row-" + index);
+    if (!row) return;
+
+    const isPaid = (item.status || "").trim().toLowerCase() === "paid";
+
+    row.innerHTML = `
+        <td><input type="text" class="ci-dentist" value="${escAttr(item.dentist)}"></td>
+        <td><input type="text" class="ci-medicine" value="${escAttr(item.medicine)}"></td>
+        <td><input type="date" class="ci-date" value="${escAttr(item.date)}"></td>
+        <td>${buildProcedureSelect(item.procedure)}</td>
+        <td><input type="number" class="ci-value" value="${item.value || 0}" step="0.01"></td>
+        <td><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01"></td>
+        <td><input type="number" class="ci-balance" value="${item.balance || 0}" step="0.01" readonly></td>
+        <td>
+            <select class="ci-status">
+                <option value="Not Paid" ${!isPaid ? "selected" : ""}>Not Paid</option>
+                <option value="Paid" ${isPaid ? "selected" : ""}>Paid</option>
+            </select>
+        </td>
+        <td><input type="date" class="ci-next-appt" value="${escAttr(item.next_appointment)}"></td>
+        <td><button type="button" class="btn-action" onclick="openChartViewModal(${index})">View</button></td>
+        <td>
+            <button type="button" class="btn-action accept" onclick="saveTreatmentEdit(${index})">Save</button>
+            <button type="button" class="btn-action" style="background:#6b7280;color:#fff;" onclick="renderCheckInfoTable()">Cancel</button>
+        </td>
+    `;
+}
+
+// Live balance recalculation while editing
+document.addEventListener("input", function (e) {
+    if (e.target.matches("#checkInfoBody .ci-value, #checkInfoBody .ci-paid")) {
+        const row = e.target.closest("tr");
+        const value = parseFloat(row.querySelector(".ci-value").value) || 0;
+        const paid = parseFloat(row.querySelector(".ci-paid").value) || 0;
+        row.querySelector(".ci-balance").value = (value - paid).toFixed(2);
+    }
+});
+
+async function saveTreatmentEdit(index) {
+    const row = document.getElementById("ci-row-" + index);
+    if (!row) return;
+
+    const doneDocId = row.dataset.doneDocId;
+    const procIndex = row.dataset.procIndex;
+    const saveBtn = row.querySelector(".btn-action.accept");
+
+    if (!currentCheckInfoPatientId || !doneDocId || procIndex === undefined) {
+        showToast("Missing information needed to save this record.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("patient_id", currentCheckInfoPatientId);
+    formData.append("done_doc_id", doneDocId);
+    formData.append("proc_index", procIndex);
+    formData.append("dentist", row.querySelector(".ci-dentist").value.trim());
+    formData.append("medicine", row.querySelector(".ci-medicine").value.trim());
+    formData.append("date", row.querySelector(".ci-date").value.trim());
+    formData.append("procedure", row.querySelector(".ci-procedure").value.trim());
+    formData.append("value", row.querySelector(".ci-value").value.trim());
+    formData.append("paid", row.querySelector(".ci-paid").value.trim());
+    formData.append("next_appointment", row.querySelector(".ci-next-appt").value.trim());
+    formData.append("status", row.querySelector(".ci-status").value.trim());
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
+
+    try {
+        const response = await fetch("/admin/update_treatment_record", { method: "POST", body: formData });
+        const result = await response.json();
+
+        if (result.success) {
+            const item = window.currentProcedures[index];
+            item.dentist = row.querySelector(".ci-dentist").value.trim();
+            item.medicine = row.querySelector(".ci-medicine").value.trim();
+            item.date = row.querySelector(".ci-date").value.trim();
+            item.procedure = row.querySelector(".ci-procedure").value.trim();
+            item.value = parseFloat(row.querySelector(".ci-value").value) || 0;
+            item.paid = parseFloat(row.querySelector(".ci-paid").value) || 0;
+            item.balance = parseFloat(row.querySelector(".ci-balance").value) || 0;
+            item.next_appointment = row.querySelector(".ci-next-appt").value.trim();
+            item.status = row.querySelector(".ci-status").value.trim();
+
+            renderCheckInfoTable();
+        } else {
+            showToast(result.message || "Failed to update.");
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save"; }
+        }
+    } catch (error) {
+        console.error("Update treatment record error:", error);
+        showToast("Failed to update treatment record. Please try again.");
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save"; }
+    }
+}
 
 function closeCheckInfoModal() {
-
-    document.getElementById(
-        "checkInfoModal"
-    ).style.display = "none";
-
+    document.getElementById("checkInfoModal").style.display = "none";
 }
 </script>
 
@@ -758,7 +1737,7 @@ window.onclick = function(e) {
 
 
 
-  
+
         <div id="section-WeeklyClients" class="content-section">
             <div class="filter-bar">
                 <input type="text" id="weeklyClientSearch" placeholder="Search approved patients..." class="search-input filter-search" onkeyup="filterWeeklyClients()">
@@ -769,6 +1748,7 @@ window.onclick = function(e) {
                     Newest
                 </button>
             </div>
+            <div id="weeklyClientsCursor" data-cursor="{{ approve_list_next_cursor or '' }}" style="display:none;"></div>
             <div class="patient-card-grid" id="weeklyClientsGrid">
 
                 {% for appointment in Approve %}
@@ -776,13 +1756,13 @@ window.onclick = function(e) {
                     <div class="p-card-header">
                         <div class="p-info">
                             <strong>NAME: {{ appointment.FirstName }}</strong>
-                              
+
                             <small style="opacity: 0.6;">Account No: {{ appointment.uid }}</small>
                         </div>
                     </div>
                     <p class="accepted-at">Accepted: <strong>{{ appointment.accepted_at|default('N/A') }}</strong></p>
                     <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>{{ appointment.DentistName|default('Not Assigned') }}</strong></p>
-                     <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+                    <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
                         data-name="{{ appointment.FirstName }}"
                         data-Patient_unq_id="{{ appointment.Patient_unq_id }}"
                         data-="{{ appointment.FirstName }}"
@@ -822,89 +1802,280 @@ window.onclick = function(e) {
                 </div>
                 {% endfor %}
             </div>
+            <div style="text-align:center; margin-top:16px;">
+                <button type="button" id="weeklyClientsLoadMoreBtn" class="btn-action filter-btn"
+                    {% if not approve_list_next_cursor %}style="display:none;"{% endif %}>
+                    Load More
+                </button>
+            </div>
         </div>
 
+        <div id="section-doctorscalendar" class="content-section">
+    <section class="content-panel">
+        <div style="display:flex; gap:24px; flex-wrap:wrap;">
+            <div style="flex:0 0 340px;">
+                <div id="doctorCalendarPicker"></div>
+                <div style="margin-top:12px; font-size:13px; color:#546e7a;">
+                    <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;margin-right:6px;"></span> Full day blocked
+                    <br>
+                    <span style="display:inline-block;width:10px;height:10px;background:#f5a623;border-radius:50%;margin-right:6px;"></span> Partially blocked
+                </div>
+            </div>
+            <div style="flex:1; min-width:280px;">
+                <h3 id="blockPanelDate" style="margin-top:0;">Select a date</h3>
+
+                <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-weight:600;">
+                    <input type="checkbox" id="blockFullDayToggle">
+                    Block entire day
+                </label>
+
+                <div id="blockTimesGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px;"></div>
+
+                <label style="display:block; font-weight:600; margin-bottom:6px;">Reason (Optional, Internal Note)</label>
+                <input type="text" id="blockReasonInput" placeholder="e.g. Out of town - Cebu conference" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; margin-bottom:16px;">
+
+                <div style="display:flex; gap:10px;">
+                    <button type="button" id="saveBlockBtn" class="btn-action accept">Save Block</button>
+                    <button type="button" id="unblockBtn" class="btn-action" style="background:#6b7280;color:#fff;">Unblock This Day</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+
+
+        
+
         <div id="section-appointments" class="content-section">
-            <section class="content-panel">
-                <table class="appointment-table">
-                      <thead>
-                          <tr>
-                              <th>Patient Name</th>
-                              <th style="display:none;">UID</th>
-                              <th style="display:none;">Appointment ID</th>
-                              <th style="display:none;">Middle Name</th>
-                              <th style="display:none;">Last Name</th>
-                              <th style="display:none;">House No.</th>
-                              <th style="display:none;">Street</th>
-                              <th style="display:none;">Barangay</th>
-                              <th style="display:none;">Municipality</th>
-                              <th style="display:none;">Province</th>
-                              <th style="display:none;">Contact Number</th>
-                              <th style="display:none;">Nationality</th>
-                              <th style="display:none;">Religion</th>
-                              <th style="display:none;">Age</th>
-                              <th style="display:none;">Sex</th>
-                              <th style="display:none;">Birthday</th>
-                              <th style="display:none;">Occupation</th>
-                              <th style="display:none;">Civil Status</th>
-                              <th>Urgency Level</th>
-                              <th>Date and Time</th>
-                              <th>Procedure</th>
-                              <th>Consulting Dentist</th>
-                             
-                              <th>Status</th>
-                              <th>Action</th>
-                          </tr>
-                      </thead>
-                          <tbody>
-                          {% for appointment in Appointment_clients %}
-                          <tr data-appointment='{{ appointment|tojson|safe }}'>
-                              <td>{{ appointment.FirstName }}</td>
-                              <td style="display:none;">{{ appointment.uid }}</td>
-                              <td style="display:none;">{{ appointment.id }}</td>
-                              <td style="display:none;">{{ appointment.MiddleName }}</td>
-                              <td style="display:none;">{{ appointment.LastName }}</td>
-                              <td style="display:none;">{{ appointment.HouseNo }}</td>
-                              <td style="display:none;">{{ appointment.Street }}</td>
-                              <td style="display:none;">{{ appointment.Brgy }}</td>
-                              <td style="display:none;">{{ appointment.Municipality }}</td>
-                              <td style="display:none;">{{ appointment.Province }}</td>
-                              <td style="display:none;">{{ appointment.ContactNumber }}</td>
-                              <td style="display:none;">{{ appointment.Nationality }}</td>
-                              <td style="display:none;">{{ appointment.Religion }}</td>
-                              <td style="display:none;">{{ appointment.Age }}</td>
-                              <td style="display:none;">{{ appointment.Sex }}</td>
-                              <td style="display:none;">{{ appointment.Birthday }}</td>
-                              <td style="display:none;">{{ appointment.Occupation }}</td>
-                              <td style="display:none;">{{ appointment.CivilStatus }}</td>
-                              <td>{{ appointment.UrgencyLevel }}</td>
-                              <td>{{ appointment.appointment_date }}</td>   
-                              <td>{{ appointment.Service }}</td>
-                              <td>
-                                  <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                              </td>
-                             
-                              <td>
-                                  <span class="badge pending">pending</span>
-                              </td>
-                              <td>
-                                  <button class="btn-action"
-                                       onclick="updateStatus(this.closest('tr'), 'accept')">
-                                      Accept
-                                  </button>
-                                  <button class="btn-action"
-                                       onclick="updateStatus(this.closest('tr'), 'decline')">
-                                      Decline
-                                  </button>
-                              </td>
-                          </tr>
-                          {% endfor %}
-                      </tbody>
+    <section class="content-panel">
+        <div class="filter-bar">
+            <button type="button" id="newAppointmentBtn" class="btn-action accept">+ New Appointment</button>
+        </div>
+        <div id="appointmentsCursor" data-cursor="{{ appointment_list_next_cursor or '' }}" style="display:none;"></div>
+        <table class="appointment-table" id="appointmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th style="display:none;">UID</th>
+                            <th style="display:none;">Appointment ID</th>
+                            <th style="display:none;">Middle Name</th>
+                            <th style="display:none;">Last Name</th>
+                            <th style="display:none;">House No.</th>
+                            <th style="display:none;">Street</th>
+                            <th style="display:none;">Barangay</th>
+                            <th style="display:none;">Municipality</th>
+                            <th style="display:none;">Province</th>
+                            <th style="display:none;">Contact Number</th>
+                            <th style="display:none;">Nationality</th>
+                            <th style="display:none;">Religion</th>
+                            <th style="display:none;">Age</th>
+                            <th style="display:none;">Sex</th>
+                            <th style="display:none;">Birthday</th>
+                            <th style="display:none;">Occupation</th>
+                            <th style="display:none;">Civil Status</th>
+                            <th>Urgency Level</th>
+                            <th>Date and Time</th>
+                            <th>Procedure</th>
+                            <th>Consulting Dentist</th>
+                    
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                        {% for appointment in Appointment_clients %}
+                        <tr data-appointment='{{ appointment|tojson|safe }}'>
+                            <td>{{ appointment.FirstName }}</td>
+                            <td style="display:none;">{{ appointment.uid }}</td>
+                            <td style="display:none;">{{ appointment.id }}</td>
+                            <td style="display:none;">{{ appointment.MiddleName }}</td>
+                            <td style="display:none;">{{ appointment.LastName }}</td>
+                            <td style="display:none;">{{ appointment.HouseNo }}</td>
+                            <td style="display:none;">{{ appointment.Street }}</td>
+                            <td style="display:none;">{{ appointment.Brgy }}</td>
+                            <td style="display:none;">{{ appointment.Municipality }}</td>
+                            <td style="display:none;">{{ appointment.Province }}</td>
+                            <td style="display:none;">{{ appointment.ContactNumber }}</td>
+                            <td style="display:none;">{{ appointment.Nationality }}</td>
+                            <td style="display:none;">{{ appointment.Religion }}</td>
+                            <td style="display:none;">{{ appointment.Age }}</td>
+                            <td style="display:none;">{{ appointment.Sex }}</td>
+                            <td style="display:none;">{{ appointment.Birthday }}</td>
+                            <td style="display:none;">{{ appointment.Occupation }}</td>
+                            <td style="display:none;">{{ appointment.CivilStatus }}</td>
+                            <td>{{ appointment.UrgencyLevel }}</td>
+                            <td>{{ appointment.appointment_date }}</td>
+                            <td>{{ appointment.Service }}</td>
+                            <td>
+                                <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </td>
+                            
+                            <td>
+                                <span class="badge pending">pending</span>
+                            </td>
+                            <td>
+                                <button class="btn-action"
+                                    onclick="updateStatus(this.closest('tr'), 'accept')">
+                                    Accept
+                                </button>
+                                <button class="btn-action"
+                                    onclick="updateStatus(this.closest('tr'), 'decline')">
+                                    Decline
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
                 </table>
+                <div style="text-align:center; margin-top:16px;">
+                    <button type="button" id="appointmentsLoadMoreBtn" class="btn-action filter-btn"
+                        {% if not appointment_list_next_cursor %}style="display:none;"{% endif %}>
+                        Load More
+                    </button>
+                </div>
             </section>
         </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ---- Appointments Load More ----
+    const apptBtn = document.getElementById('appointmentsLoadMoreBtn');
+    const apptCursor = document.getElementById('appointmentsCursor');
+    const apptTbody = document.querySelector('#appointmentsTable tbody');
+
+    if (apptBtn && apptCursor && apptTbody) {
+        apptBtn.addEventListener('click', function() {
+            const cursor = apptCursor.getAttribute('data-cursor') || '';
+            apptBtn.disabled = true;
+            apptBtn.textContent = 'Loading...';
+
+            fetch('/admin/appointments_page?cursor=' + encodeURIComponent(cursor))
+                .then(res => res.json())
+                .then(result => {
+                    if (!result.success) {
+                        showToast(result.message || 'Failed to load more appointments.');
+                        return;
+                    }
+
+                    result.rows.forEach(function(appt) {
+                        const tr = document.createElement('tr');
+                        tr.setAttribute('data-appointment', JSON.stringify(appt));
+                        tr.innerHTML = `
+                            <td>${appt.FirstName || ''}</td>
+                            <td>${appt.UrgencyLevel || ''}</td>
+                            <td>${appt.appointment_date || ''}</td>
+                            <td>${appt.Service || ''}</td>
+                            <td><input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></td>
+                            <td><span class="badge pending">pending</span></td>
+                            <td>
+                                <button class="btn-action" onclick="updateStatus(this.closest('tr'), 'accept')">Accept</button>
+                                <button class="btn-action" onclick="updateStatus(this.closest('tr'), 'decline')">Decline</button>
+                            </td>
+                        `;
+                        apptTbody.appendChild(tr);
+                    });
+
+                    if (result.next_cursor) {
+                        apptCursor.setAttribute('data-cursor', result.next_cursor);
+                        apptBtn.disabled = false;
+                        apptBtn.textContent = 'Load More';
+                    } else {
+                        apptBtn.style.display = 'none';
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Load more appointments error:', err);
+                    showToast('Failed to load more appointments. Please try again.');
+                    apptBtn.disabled = false;
+                    apptBtn.textContent = 'Load More';
+                });
+        });
+    }
+
+    // ---- Approved Patients Load More ----
+    const weeklyBtn = document.getElementById('weeklyClientsLoadMoreBtn');
+    const weeklyCursor = document.getElementById('weeklyClientsCursor');
+    const weeklyGrid = document.getElementById('weeklyClientsGrid');
+
+    if (weeklyBtn && weeklyCursor && weeklyGrid) {
+        weeklyBtn.addEventListener('click', function() {
+            const cursor = weeklyCursor.getAttribute('data-cursor') || '';
+            weeklyBtn.disabled = true;
+            weeklyBtn.textContent = 'Loading...';
+
+            fetch('/admin/approved_page?cursor=' + encodeURIComponent(cursor))
+                .then(res => res.json())
+                .then(result => {
+                    if (!result.success) {
+                        showToast(result.message || 'Failed to load more approved patients.');
+                        return;
+                    }
+
+                    result.rows.forEach(function(a) {
+                        const card = document.createElement('div');
+                        card.className = 'patient-card';
+                        card.setAttribute('data-name', a.FirstName || '');
+                        card.setAttribute('data-accepted-at', a.accepted_at || '');
+                        card.innerHTML = `
+                            <div class="p-card-header">
+                                <div class="p-info">
+                                    <strong>NAME: ${a.FirstName || ''}</strong>
+                                    <small style="opacity: 0.6;">Account No: ${a.uid || ''}</small>
+                                </div>
+                            </div>
+                            <p class="accepted-at">Accepted: <strong>${a.accepted_at || 'N/A'}</strong></p>
+                            <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>${a.DentistName || 'Not Assigned'}</strong></p>
+                            <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+                                data-name="${a.FirstName || ''}"
+                                data-Patient_unq_id="${a.Patient_unq_id || ''}"
+                                data-uid="${a.uid || ''}"
+                                data-sex="${a.Sex || 'Female'}"
+                                data-age="${a.Age || 'N/A'}"
+                                data-lastname="${a.LastName || ''}"
+                                data-middlename="${a.MiddleName || ''}"
+                                data-birthday="${a.Birthday || ''}"
+                                data-nationality="${a.Nationality || ''}"
+                                data-religion="${a.Religion || ''}"
+                                data-occupation="${a.Occupation || ''}"
+                                data-civilstatus="${a.CivilStatus || ''}"
+                                data-contact="${a.ContactNumber || ''}"
+                                data-service="${a.Service || ''}"
+                                data-dentist="${a.dentist_name || ''}"
+                                data-q1="${a.q1 || 'N'}" data-q2="${a.q2 || 'N'}" data-q3="${a.q3 || 'N'}"
+                                data-q4="${a.q4 || 'N'}" data-q5="${a.q5 || 'N'}" data-q6="${a.q6 || 'N'}"
+                                data-q7="${a.q7 || 'N'}" data-q9="${a.q9 || 'N'}"
+                                data-q2_spec="${a.q2_spec || ''}" data-q3_spec="${a.q3_spec || ''}"
+                                data-q4_spec="${a.q4_spec || ''}" data-q5_spec="${a.q5_spec || ''}"
+                                data-q7_spec="${a.q7_spec || ''}" data-q9_spec="${a.q9_spec || ''}"
+                                data-w-preg="${a.w_preg || 'N'}" data-w-nurse="${a.w_nurse || 'N'}" data-w-pill="${a.w_pill || 'N'}">
+                                CHECK INFO
+                            </button>
+                        `;
+                        weeklyGrid.appendChild(card);
+                    });
+
+                    if (result.next_cursor) {
+                        weeklyCursor.setAttribute('data-cursor', result.next_cursor);
+                        weeklyBtn.disabled = false;
+                        weeklyBtn.textContent = 'Load More';
+                    } else {
+                        weeklyBtn.style.display = 'none';
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Load more approved patients error:', err);
+                    showToast('Failed to load more approved patients. Please try again.');
+                    weeklyBtn.disabled = false;
+                    weeklyBtn.textContent = 'Load More';
+                });
+        });
+    }
+});
+</script>
+
         <div id="section-patientdashboard" class="content-section">
+            
             <button onclick="showSection('WeeklyClients'); document.getElementById('nav-patientdashboard').style.display='none';" class="btn-back" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
 
             <!-- Hidden Approve data for JS access -->
@@ -914,7 +2085,7 @@ window.onclick = function(e) {
                 <div class="p-main-info">
                     <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
                     <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
-                     
+
                     
                 </div>
                 <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
@@ -995,20 +2166,20 @@ window.onclick = function(e) {
                                 <label>Service</label>
                                 <p id="pd-disp-service">-</p>
                             </div>
-                         <div class="info-group" style="display: none;"> <label>Patient ID</label> <p id="pd-disp-Patient_unq_id">-</p> </div>
+                        <div class="info-group" style="display: none;"> <label>Patient ID</label> <p id="pd-disp-Patient_unq_id">-</p> </div>
                         </div>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Medical History:</strong></p>
-                         <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
-                              <li id="q1-check">Q1 (In Good Health): <span>-</span></li>
-                              <li id="q2-check">Q2 (Under Medical Treatment): <span>-</span> <span id="q2-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                              <li id="q3-check">Q3 (Serious Illness / Surgical Operation): <span>-</span> <span id="q3-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                              <li id="q4-check">Q4 (Have been hospitalized before): <span>-</span> <span id="q4-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                              <li id="q5-check">Q5 (Taking any medication): <span>-</span> <span id="q5-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                              <li id="q6-check">Q6 (Using Tobacco Products): <span>-</span></li>
-                              <li id="q7-check">Q7 (Have any Allergy): <span>-</span> <span id="q7-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                              <li id="q9-check">Q9 (Medical Conditon): <span>-</span> <span id="q9-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                          </ul>
+                        <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
+                            <li id="q1-check">Q1 (In Good Health): <span>-</span></li>
+                            <li id="q2-check">Q2 (Under Medical Treatment): <span>-</span> <span id="q2-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                            <li id="q3-check">Q3 (Serious Illness / Surgical Operation): <span>-</span> <span id="q3-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                            <li id="q4-check">Q4 (Have been hospitalized before): <span>-</span> <span id="q4-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                            <li id="q5-check">Q5 (Taking any medication): <span>-</span> <span id="q5-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                            <li id="q6-check">Q6 (Using Tobacco Products): <span>-</span></li>
+                            <li id="q7-check">Q7 (Have any Allergy): <span>-</span> <span id="q7-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                            <li id="q9-check">Q9 (Medical Conditon): <span>-</span> <span id="q9-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
+                        </ul>
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
                         <p><strong>Women's Health:</strong></p>
                         <ul id="pd-womens" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
@@ -1020,8 +2191,8 @@ window.onclick = function(e) {
                 </div>
 
                 <div class="content-panel">
-                     <div class="panel-header"><h3>Visit History <p hidden id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
-                     <table class="appointment-table">
+                    <div class="panel-header"><h3>Visit History <p hidden id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
+                    <table class="appointment-table">
     <thead>
         <tr>
             <th>Assigned Dentist</th>
@@ -1132,12 +2303,25 @@ window.onclick = function(e) {
             <div id="td-treatment-section" class="treatment-section" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <h3  style="margin:0;">Treatment Notes </h3>
-          <p hidden>
+        <p hidden>
     Patient Record ID:
     <span id="td-Patient_unq_id">-</span>
 </p>
                     </div>
-                    <table class="treatment-table" id="td-treatment-table">
+                    <div style="overflow-x:auto;">
+                    <table class="treatment-table" id="td-treatment-table" style="min-width:1250px; table-layout:fixed;">
+                        <colgroup>
+                            <col style="width:120px;">  <!-- Date -->
+                            <col style="width:80px;">   <!-- Tooth# -->
+                            <col style="width:170px;">  <!-- Procedure -->
+                            <col style="width:150px;">  <!-- Dentist/s -->
+                            <col style="width:110px;">  <!-- Value of Work -->
+                            <col style="width:110px;">  <!-- Amount Paid -->
+                            <col style="width:100px;">  <!-- Balance -->
+                            <col style="width:140px;">  <!-- Next Appointment -->
+                            <col style="width:160px;">  <!-- Medicine -->
+                            <col style="width:110px;">  <!-- Status -->
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Date</th>
@@ -1157,7 +2341,24 @@ window.onclick = function(e) {
     <tr>
         <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td>
+            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
+                <option value="" disabled selected>Select Procedure</option>
+                <option value="Dental Consultation">Dental Consultation</option>
+                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                <option value="Crowns and Bridges">Crowns and Bridges</option>
+                <option value="Teeth Whitening">Teeth Whitening</option>
+                <option value="Fluoride Treatment">Fluoride Treatment</option>
+                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                <option value="Periapical Xray">Periapical Xray</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
         <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
@@ -1168,7 +2369,24 @@ window.onclick = function(e) {
     <tr>
         <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td>
+            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
+                <option value="" disabled selected>Select Procedure</option>
+                <option value="Dental Consultation">Dental Consultation</option>
+                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                <option value="Crowns and Bridges">Crowns and Bridges</option>
+                <option value="Teeth Whitening">Teeth Whitening</option>
+                <option value="Fluoride Treatment">Fluoride Treatment</option>
+                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                <option value="Periapical Xray">Periapical Xray</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
         <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
@@ -1179,7 +2397,24 @@ window.onclick = function(e) {
     <tr>
         <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td>
+            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
+                <option value="" disabled selected>Select Procedure</option>
+                <option value="Dental Consultation">Dental Consultation</option>
+                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                <option value="Crowns and Bridges">Crowns and Bridges</option>
+                <option value="Teeth Whitening">Teeth Whitening</option>
+                <option value="Fluoride Treatment">Fluoride Treatment</option>
+                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                <option value="Periapical Xray">Periapical Xray</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
         <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
@@ -1190,7 +2425,24 @@ window.onclick = function(e) {
     <tr>
         <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td>
+            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
+                <option value="" disabled selected>Select Procedure</option>
+                <option value="Dental Consultation">Dental Consultation</option>
+                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                <option value="Crowns and Bridges">Crowns and Bridges</option>
+                <option value="Teeth Whitening">Teeth Whitening</option>
+                <option value="Fluoride Treatment">Fluoride Treatment</option>
+                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                <option value="Periapical Xray">Periapical Xray</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
         <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
@@ -1201,7 +2453,24 @@ window.onclick = function(e) {
     <tr>
         <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td><input type="text" class="td-procedure" placeholder="Procedure..." required /></td>
+        <td>
+            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
+                <option value="" disabled selected>Select Procedure</option>
+                <option value="Dental Consultation">Dental Consultation</option>
+                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                <option value="Crowns and Bridges">Crowns and Bridges</option>
+                <option value="Teeth Whitening">Teeth Whitening</option>
+                <option value="Fluoride Treatment">Fluoride Treatment</option>
+                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                <option value="Periapical Xray">Periapical Xray</option>
+                <option value="Other">Other</option>
+            </select>
+        </td>
         <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
@@ -1212,6 +2481,7 @@ window.onclick = function(e) {
 
 
                     </table>
+                    </div>
                     <button type="button" id="td-add-row-btn" class="btn-add-row">+ Add Row</button>
                     <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
                 </div>
@@ -1221,10 +2491,10 @@ window.onclick = function(e) {
             </div>
             </div>
 
-  <script>
+<script>
 document.addEventListener("input", function(e) {
 
-    if (e.target.classList.contains("td-value") || 
+    if (e.target.classList.contains("td-value") ||
         e.target.classList.contains("td-paid")) {
 
         let row = e.target.closest("tr");
@@ -1287,7 +2557,7 @@ async function downloadDentalChartPDF() {
     const chartSection = (modalContent && modalContent.querySelector('.dental-chart')) || document.querySelector('.dental-chart');
 
     if (!chartSection) {
-        alert('Dental chart not found. Please open the chart first.');
+        showToast('Dental chart not found. Please open the chart first.');
         return;
     }
 
@@ -1314,6 +2584,7 @@ async function downloadDentalChartPDF() {
 
         const clonedChart = cleanClone.querySelector(".dental-chart");
         const clonedPalette = cleanClone.querySelector(".action-palette");
+        cleanClone.style.colorScheme = "light";   // ADD THIS LINE
 
         if (clonedChart) {
             clonedChart.style.backdropFilter = "none";
@@ -1335,10 +2606,21 @@ async function downloadDentalChartPDF() {
             }
         });
 
+        // Declare OUTSIDE try — so finally can see them
+        let materialFontLink = document.querySelector('link[href*="Material+Symbols"]');
+        let materialFontLinkParent = null;
+        let materialFontLinkNext = null;
+
+        if (materialFontLink) {
+            materialFontLinkParent = materialFontLink.parentNode;
+            materialFontLinkNext = materialFontLink.nextSibling;
+            materialFontLinkParent.removeChild(materialFontLink);
+        }
+
         let canvas;
         try {
             canvas = await html2canvas(cleanClone, {
-                scale: 2,
+                scale: 2, // or 1 in saveDentalRecord
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: '#ffffff',
@@ -1353,6 +2635,9 @@ async function downloadDentalChartPDF() {
             });
         } finally {
             document.body.removeChild(tempContainer);
+            if (materialFontLink && materialFontLinkParent) {
+                materialFontLinkParent.insertBefore(materialFontLink, materialFontLinkNext);
+            }
         }
 
         const imgData = canvas.toDataURL('image/png');
@@ -1402,7 +2687,7 @@ async function downloadDentalChartPDF() {
 
     } catch (err) {
         console.error('PDF generation failed:', err);
-        alert('Could not generate PDF. Please try again.');
+        showToast('Could not generate PDF. Please try again.');
     } finally {
         btn.style.display = '';
         const msg = document.getElementById('pdf-loading');
@@ -1428,11 +2713,14 @@ async function downloadDentalChartPDF() {
 
             const titles = {
                 'dashboard': 'Dashboard Overview',
+                'financialreports': 'Financial Reports',
+                'doctorscalendar': 'Doctors Calendar',
                 'appointments': 'Appointment Requests',
                 'WeeklyClients': 'My Weekly Clients',
                 'records': 'Patient Database',
                 'patientdashboard': 'Patient Dashboard',
-                 'mypatients': 'My Patients',
+                'mypatients': 'My Patients',
+                'usermanagement': 'User Management',
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
         }
@@ -1471,7 +2759,7 @@ function openPatientDashboard(
     w_pill
 ) {
 
-    document.getElementById('pd-name').innerText = 
+    document.getElementById('pd-name').innerText =
     (name || 'Unknown') + " " + (lastname || '');
     document.getElementById('pd-id').innerText = 'Account No: ' + (uid || 'N/A');
 
@@ -1617,22 +2905,16 @@ function setCheckbox(id, value) {
             }
         }
 
-        function filterMyPatients() {
-            var input = document.getElementById('myPatientSearch').value.toUpperCase();
-            var table = document.getElementById('myPatientsTable');
+        function filterUserManagement() {
+            var input = document.getElementById('userMgmtSearch').value.toUpperCase();
+            var table = document.getElementById('userManagementTable');
             var tbody = table.querySelector('tbody');
             var rows = tbody.querySelectorAll('tr');
-            var visibleRows = [];
             rows.forEach(function(row) {
                 var nameCell = row.querySelector('td');
                 if (nameCell) {
                     var textValue = nameCell.textContent || nameCell.innerText;
-                    if (textValue.toUpperCase().indexOf(input) > -1) {
-                        row.style.display = '';
-                        visibleRows.push(row);
-                    } else {
-                        row.style.display = 'none';
-                    }
+                    row.style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
                 }
             });
         }
@@ -1646,11 +2928,35 @@ function setCheckbox(id, value) {
             sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
             sortBtn.textContent = isAsc ? 'A-Z' : 'Z-A';
             rows.sort(function(a, b) {
-                var aName = a.querySelector('td')?.textContent?.toLowerCase() || '';
-                var bName = b.querySelector('td')?.textContent?.toLowerCase() || '';
+                var aName = a.querySelector('td') ? a.querySelector('td').textContent.toLowerCase() : '';
+                var bName = b.querySelector('td') ? b.querySelector('td').textContent.toLowerCase() : '';
                 if (aName < bName) return isAsc ? -1 : 1;
                 if (aName > bName) return isAsc ? 1 : -1;
                 return 0;
+            });
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        }
+
+        function sortMyPatientsByDate() {
+            var table = document.getElementById('myPatientsTable');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var sortBtn = document.getElementById('sortMyPatientsDateBtn');
+            var isNewest = sortBtn.getAttribute('data-sort') !== 'asc';
+            sortBtn.setAttribute('data-sort', isNewest ? 'asc' : 'desc');
+            sortBtn.textContent = isNewest ? 'Newest' : 'Oldest';
+            rows.sort(function(a, b) {
+                var aVal = a.getAttribute('data-recent-appointment');
+                var bVal = b.getAttribute('data-recent-appointment');
+                var aDate = aVal ? new Date(aVal) : new Date(0);
+                var bDate = bVal ? new Date(bVal) : new Date(0);
+                if (isNewest) {
+                    return bDate - aDate;
+                } else {
+                    return aDate - bDate;
+                }
             });
             rows.forEach(function(row) {
                 tbody.appendChild(row);
@@ -1708,49 +3014,44 @@ function setCheckbox(id, value) {
             });
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            var buttons = document.querySelectorAll('.check-profile-btn');
-            buttons.forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    openPatientDashboard(
-                
-                this.getAttribute('data-name'),
-                this.getAttribute('data-lastname'),
-                this.getAttribute('data-uid'),
-                this.getAttribute('data-birthday'),
-                this.getAttribute('data-sex'),
-                this.getAttribute('data-age'),
-                this.getAttribute('data-middlename'),
-                this.getAttribute('data-nationality'),
-                this.getAttribute('data-religion'),
-                this.getAttribute('data-occupation'),
-                this.getAttribute('data-civilstatus'),
-                this.getAttribute('data-contact'),
-                this.getAttribute('data-service'),
-                this.getAttribute('data-Patient_unq_id'),
-                this.getAttribute('data-q1'),
-                this.getAttribute('data-q2'),
-                this.getAttribute('data-q3'),
-                this.getAttribute('data-q4'),
-                this.getAttribute('data-q5'),
-                this.getAttribute('data-q6'),
-                this.getAttribute('data-q7'),
-                this.getAttribute('data-q9'),
-                this.getAttribute('data-q2_spec'),
-                this.getAttribute('data-q3_spec'),
-                this.getAttribute('data-q4_spec'),
-                this.getAttribute('data-q5_spec'),
-                this.getAttribute('data-q7_spec'),
-                this.getAttribute('data-q9_spec'),
-                this.getAttribute('data-w-preg'),
-                this.getAttribute('data-w-nurse'),
-                this.getAttribute('data-w-pill')
-                    
-                    
-                    
-                );
-                });
-            });
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.check-profile-btn');
+            if (!btn) return;
+
+            openPatientDashboard(
+                btn.getAttribute('data-name'),
+                btn.getAttribute('data-lastname'),
+                btn.getAttribute('data-uid'),
+                btn.getAttribute('data-birthday'),
+                btn.getAttribute('data-sex'),
+                btn.getAttribute('data-age'),
+                btn.getAttribute('data-middlename'),
+                btn.getAttribute('data-nationality'),
+                btn.getAttribute('data-religion'),
+                btn.getAttribute('data-occupation'),
+                btn.getAttribute('data-civilstatus'),
+                btn.getAttribute('data-contact'),
+                btn.getAttribute('data-service'),
+                btn.getAttribute('data-Patient_unq_id'),
+                btn.getAttribute('data-q1'),
+                btn.getAttribute('data-q2'),
+                btn.getAttribute('data-q3'),
+                btn.getAttribute('data-q4'),
+                btn.getAttribute('data-q5'),
+                btn.getAttribute('data-q6'),
+                btn.getAttribute('data-q7'),
+                btn.getAttribute('data-q9'),
+                btn.getAttribute('data-q2_spec'),
+                btn.getAttribute('data-q3_spec'),
+                btn.getAttribute('data-q4_spec'),
+                btn.getAttribute('data-q5_spec'),
+                btn.getAttribute('data-q7_spec'),
+                btn.getAttribute('data-q9_spec'),
+                btn.getAttribute('data-w-preg'),
+                btn.getAttribute('data-w-nurse'),
+                btn.getAttribute('data-w-pill')
+            );
+        });
 
             var saveBtn = document.getElementById('td-save-btn');
             var addBtn  = document.getElementById('td-add-row-btn');
@@ -1770,7 +3071,7 @@ function setCheckbox(id, value) {
             render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
             render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
             render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
-        });
+
 
         var currentTool = 'healthy';
         var lastClickedTooth = null;
@@ -1847,7 +3148,7 @@ function setCheckbox(id, value) {
             closeModal();
         }
 
-         function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
+        function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
 
             function saveTreatmentNotes() {
                 var uidEl = document.getElementById('pd-id');
@@ -1873,77 +3174,94 @@ function setCheckbox(id, value) {
                 if (msg) { msg.style.display = 'block'; msg.innerText = 'Treatment notes saved!'; setTimeout(function() { msg.style.display = 'none'; }, 2000); }
             }
 
-            function loadTreatmentNotes(uid) {
-                var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
-                var rows = storage[uid] || [];
-                var tableBody = document.querySelector('#td-treatment-table tbody');
-                if (!tableBody) return;
-                tableBody.innerHTML = '';
-                if (rows.length === 0) {
-                    appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
-                } else {
-                    rows.forEach(function(r) { appendRow(r); });
-                }
+        function loadTreatmentNotes(uid) {
+            var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
+            var rows = storage[uid] || [];
+            var tableBody = document.querySelector('#td-treatment-table tbody');
+            if (!tableBody) return;
+            tableBody.innerHTML = '';
+            if (rows.length === 0) {
+                appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
+            } else {
+                rows.forEach(function(r) { appendRow(r); });
             }
+        }
 
-            function appendRow(data) {
-    var tableBody = document.querySelector('#td-treatment-table tbody');
-    if (!tableBody) return;
+        function appendRow(data) {
+            var tableBody = document.querySelector('#td-treatment-table tbody');
+            if (!tableBody) return;
 
-    var tr = document.createElement('tr');
+            var tr = document.createElement('tr');
 
-    tr.innerHTML =
-        '<td><input type="date" class="td-date" value="' + escHtml(data.date || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+            tr.innerHTML =
+                '<td><input type="date" class="td-date" value="' + escHtml(data.date || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
 
-        '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18"></td>' +
+                '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18"></td>' +
 
-        '<td><input type="text" class="td-procedure" value="' + escHtml(data.procedure || '') + '" placeholder="Procedure..."></td>' +
+                '<td>' +
+                    '<select class="td-procedure" style="width:100%;min-width:130px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;box-sizing:border-box;">' +
+                    '<option value="" disabled' + (!data.procedure ? ' selected' : '') + '>Select Procedure</option>' +
+                    '<option value="Dental Consultation"' + (data.procedure === "Dental Consultation" ? " selected" : "") + '>Dental Consultation</option>' +
+                    '<option value="Oral Prophylaxis (Cleaning)"' + (data.procedure === "Oral Prophylaxis (Cleaning)" ? " selected" : "") + '>Oral Prophylaxis (Cleaning)</option>' +
+                    '<option value="Tooth Restoration (Pasta)"' + (data.procedure === "Tooth Restoration (Pasta)" ? " selected" : "") + '>Tooth Restoration (Pasta)</option>' +
+                    '<option value="Tooth Extraction (Gabot)"' + (data.procedure === "Tooth Extraction (Gabot)" ? " selected" : "") + '>Tooth Extraction (Gabot)</option>' +
+                    '<option value="Dentures (Pustiso)"' + (data.procedure === "Dentures (Pustiso)" ? " selected" : "") + '>Dentures (Pustiso)</option>' +
+                    '<option value="Crowns and Bridges"' + (data.procedure === "Crowns and Bridges" ? " selected" : "") + '>Crowns and Bridges</option>' +
+                    '<option value="Teeth Whitening"' + (data.procedure === "Teeth Whitening" ? " selected" : "") + '>Teeth Whitening</option>' +
+                    '<option value="Fluoride Treatment"' + (data.procedure === "Fluoride Treatment" ? " selected" : "") + '>Fluoride Treatment</option>' +
+                    '<option value="Pit and Fissure Sealant"' + (data.procedure === "Pit and Fissure Sealant" ? " selected" : "") + '>Pit and Fissure Sealant</option>' +
+                    '<option value="Wisdom Teeth Removal"' + (data.procedure === "Wisdom Teeth Removal" ? " selected" : "") + '>Wisdom Teeth Removal</option>' +
+                    '<option value="Root Canal Treatment"' + (data.procedure === "Root Canal Treatment" ? " selected" : "") + '>Root Canal Treatment</option>' +
+                    '<option value="Periapical Xray"' + (data.procedure === "Periapical Xray" ? " selected" : "") + '>Periapical Xray</option>' +
+                    '<option value="Other"' + (data.procedure === "Other" ? " selected" : "") + '>Other</option>' +
+                '</select>' +
+                '</td>' +
 
-        '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Dentist name..."></td>' +
+                '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Dentist name..."></td>' +
 
-        '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork || '') + '" placeholder="0.00" step="0.01"></td>' +
+                '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork || '') + '" placeholder="0.00" step="0.01"></td>' +
 
-        '<td><input type="number" class="td-paid" value="' + escHtml(data.amountPaid || '') + '" placeholder="0.00" step="0.01"></td>' +
+                '<td><input type="number" class="td-paid" value="' + escHtml(data.amountPaid || '') + '" placeholder="0.00" step="0.01"></td>' +
 
-        '<td><input type="text" class="td-balance" value="' + escHtml(data.balance || '') + '" placeholder="Balance" readonly></td>' +
+                '<td><input type="text" class="td-balance" value="' + escHtml(data.balance || '') + '" placeholder="Balance" readonly></td>' +
 
-        '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+                '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
 
-        '<td>' +
-            '<select class="td-medicine" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
-                '<option value="">Select Medicine</option>' +
-                '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
-                '<option value="Tranexamic Acid"' + (data.medicine === "Tranexamic Acid" ? " selected" : "") + '>Tranexamic Acid</option>' +
-                '<option value="Amoxicillin"' + (data.medicine === "Amoxicillin" ? " selected" : "") + '>Amoxicillin</option>' +
-                '<option value="Co- amoxiclav"' + (data.medicine === "Co- amoxiclav" ? " selected" : "") + '>Co- amoxiclav</option>' +
-                '<option value="Other"' + (data.medicine === "Other" ? " selected" : "") + '>Other</option>' +
-            '</select>' +
-        '</td>' +
+                '<td>' +
+                    '<select class="td-medicine" style="width:100%;min-width:130px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                    '<option value="">Select Medicine</option>' +
+                    '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
+                    '<option value="Tranexamic Acid"' + (data.medicine === "Tranexamic Acid" ? " selected" : "") + '>Tranexamic Acid</option>' +
+                    '<option value="Amoxicillin"' + (data.medicine === "Amoxicillin" ? " selected" : "") + '>Amoxicillin</option>' +
+                    '<option value="Co- amoxiclav"' + (data.medicine === "Co- amoxiclav" ? " selected" : "") + '>Co- amoxiclav</option>' +
+                    '<option value="Other"' + (data.medicine === "Other" ? " selected" : "") + '>Other</option>' +
+                '</select>' +
+                '</td>' +
 
-        '<td>' +
-            '<select class="td-status" style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
-                '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
-                '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
-            '</select>' +
-        '</td>';
+                '<td>' +
+                    '<select class="td-status" style="width:100%;min-width:100px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                    '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
+                    '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
+                '</select>' +
+                '</td>';
 
-    tableBody.appendChild(tr);
-}
+            tableBody.appendChild(tr);
+        }
 
-function addTreatmentRow() {
-    appendRow({
-        date: '',
-        tooth: '',
-        procedure: '',
-        dentist: '',
-        valueOfWork: '',
-        amountPaid: '',
-        balance: '',
-        nextAppt: '',
-        medicine: '',
-        status: 'Not Paid'
-    });
-}
+            function addTreatmentRow() {
+                appendRow({
+                    date: '',
+                    tooth: '',
+                    procedure: '',
+                    dentist: '',
+                    valueOfWork: '',
+                    amountPaid: '',
+                    balance: '',
+                    nextAppt: '',
+                    medicine: '',
+                    status: 'Not Paid'
+                });
+            }
 
             function escHtml(s) {
                 var d = document.createElement('div');
@@ -2013,7 +3331,7 @@ function addTreatmentRow() {
                 formData.append('action', action);
                 
                 // Send the data to the /approve endpoint using fetch
-         fetch('/approve', {
+        fetch('/approve', {
     method: 'POST',
     body: formData
 })
@@ -2021,7 +3339,7 @@ function addTreatmentRow() {
     if (response.ok) {
 
         if (action === 'accept') {
-            alert('Appointment accepted successfully!');
+            showToast('Appointment accepted successfully!');
 
             if (rowElement) {
                 rowElement.remove();
@@ -2030,7 +3348,7 @@ function addTreatmentRow() {
             showSection('mypatients');
 
         } else {
-            alert('Appointment declined successfully!');
+            showToast('Appointment declined successfully!');
 
             if (rowElement) {
                 rowElement.remove();
@@ -2041,29 +3359,39 @@ function addTreatmentRow() {
         location.reload();
 
     } else {
-        throw new Error('Failed to ' + action + ' appointment');
+        // On failure (e.g. double-booking conflict), the backend now
+        // returns JSON with a specific "message" field. Read it so the
+        // admin sees *why* it failed instead of a generic error.
+        return response.json()
+            .catch(() => ({}))
+            .then(result => {
+                throw new Error(
+                    result.message ||
+                    ('Failed to ' + action + ' appointment')
+                );
+            });
     }
 })
 .catch(error => {
     console.error('Error:', error);
 
-    alert(
+    showToast(error.message || (
         'Failed to ' +
         action +
         ' appointment. Please try again.'
-    );
+    ));
 });
             }
 
-           // Show section based on hash on page load
-           window.onload = function() {
-               var hash = window.location.hash.substring(1); // removes '#'
-               if (hash) {
-                   showSection(hash);
-               }
-           };
+            // Show section based on hash on page load
+            window.onload = function() {
+                var hash = window.location.hash.substring(1); // removes '#'
+                if (hash) {
+                    showSection(hash);
+                }
+            };
 
-         function initUnifiedGrid(id, cols, topType, bottomType) {
+        function initUnifiedGrid(id, cols, topType, bottomType) {
             var grid = document.getElementById(id);
             if (!grid) return;
             grid.innerHTML = '';
@@ -2107,18 +3435,18 @@ function addTreatmentRow() {
     <script>
     function updateDateTime() {
         const now = new Date();
-        const options = { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit', 
-            second: '2-digit', 
-            hour12: true 
+        const options = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
         };
         // Formats to: Monday, May 24, 2026 • 10:30:45 AM
-        document.getElementById('datetime-display').textContent = 
+        document.getElementById('datetime-display').textContent =
             now.toLocaleDateString('en-US', options).replace(',', ' •');
     }
 
@@ -2144,14 +3472,9 @@ async function saveDentalRecord(uid) {
         // =====================================================
 
         if (!uid) {
-            alert("Patient UID is missing.");
+            showToast("Patient UID is missing.");
             return;
         }
-
-        uid = String(uid)
-            .replace("Account No:", "")
-            .replace("Patient ID:", "")
-            .trim();
 
         console.log("====================================");
         console.log("FINAL UID BEING SENT:", uid);
@@ -2165,7 +3488,7 @@ async function saveDentalRecord(uid) {
         const chartSection = document.querySelector(".dental-chart");
 
         if (!chartSection) {
-            alert("Dental chart not found.");
+            showToast("Dental chart not found.");
             return;
         }
 
@@ -2181,6 +3504,7 @@ async function saveDentalRecord(uid) {
 
         const clonedChart = cleanClone.querySelector(".dental-chart");
         const clonedPalette = cleanClone.querySelector(".action-palette");
+        cleanClone.style.colorScheme = "light";   // ADD THIS LINE
 
         if (clonedChart) {
             clonedChart.style.backdropFilter = "none";
@@ -2202,18 +3526,50 @@ async function saveDentalRecord(uid) {
             }
         });
 
+        // Declare OUTSIDE try — so finally can see them
+        let materialFontLink = document.querySelector('link[href*="Material+Symbols"]');
+        let materialFontLinkParent = null;
+        let materialFontLinkNext = null;
+
+        if (materialFontLink) {
+            materialFontLinkParent = materialFontLink.parentNode;
+            materialFontLinkNext = materialFontLink.nextSibling;
+            materialFontLinkParent.removeChild(materialFontLink);
+        }
+
         let canvas;
         try {
             canvas = await html2canvas(cleanClone, {
-                scale: 1,
+                scale: 2, // or 1 in saveDentalRecord
                 useCORS: true,
-                backgroundColor: "#ffffff",
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                scrollX: 0,
+                scrollY: 0,
+                windowWidth: chartSection.scrollWidth,
+                windowHeight: chartSection.scrollHeight,
+                width: chartSection.scrollWidth,
+                height: chartSection.scrollHeight,
                 ignoreElements: (el) => el.classList.contains("action-palette"),
                 logging: false,
             });
         } finally {
             document.body.removeChild(tempContainer);
+            if (materialFontLink && materialFontLinkParent) {
+                materialFontLinkParent.insertBefore(materialFontLink, materialFontLinkNext);
+            }
         }
+
+        // ADD THIS BLOCK — force a white background before JPEG conversion
+        const flattenedCanvas = document.createElement('canvas');
+        flattenedCanvas.width = canvas.width;
+        flattenedCanvas.height = canvas.height;
+        const flatCtx = flattenedCanvas.getContext('2d');
+        flatCtx.fillStyle = '#ffffff';
+        flatCtx.fillRect(0, 0, flattenedCanvas.width, flattenedCanvas.height);
+        flatCtx.drawImage(canvas, 0, 0);
+
+        // CHANGE: convert the flattened canvas instead of the original
 
 
         // =====================================================
@@ -2221,16 +3577,12 @@ async function saveDentalRecord(uid) {
         // =====================================================
 
         const blob = await new Promise(resolve => {
-            canvas.toBlob(
-                resolve,
-                "image/jpeg",
-                0.7
-            );
+            flattenedCanvas.toBlob(resolve, "image/jpeg", 0.7);
         });
 
 
         if (!blob) {
-            alert("Failed to create dental chart image.");
+            showToast("Failed to create dental chart image.");
             return;
         }
 
@@ -2270,7 +3622,7 @@ async function saveDentalRecord(uid) {
 
         if (!patientUnqId || patientUnqId === "-") {
 
-            alert(
+            showToast(
                 "Patient Record ID is missing."
             );
 
@@ -2503,7 +3855,7 @@ async function saveDentalRecord(uid) {
 
         if (result.success) {
 
-            alert(
+            showToast(
                 "Dental record saved successfully!"
             );
 
@@ -2513,7 +3865,7 @@ async function saveDentalRecord(uid) {
 
         else {
 
-            alert(
+            showToast(
                 "Error: " +
                 (
                     result.message ||
@@ -2532,7 +3884,7 @@ async function saveDentalRecord(uid) {
             error
         );
 
-        alert(
+        showToast(
             "Failed to save dental record: " +
             (
                 error.message ||
@@ -2550,37 +3902,37 @@ async function saveDentalRecord(uid) {
 // =========================
 document.getElementById("td-save-btn").addEventListener("click", () => {
 
-  const uidText = document.getElementById("pd-id")?.innerText || "";
-  const uid = uidText.replace("Patient ID:", "").trim();
+    const uidText = document.getElementById("pd-id")?.innerText || "";
+    const uid = uidText.replace("Account No:", "").trim();
 
-  if (!uid) {
-    alert("No patient selected!");
+    if (!uid) {
+    showToast("No patient selected!");
     return;
-  }
+    }
 
-  const rows = document.querySelectorAll("#td-treatment-table tbody tr");
-  let hasValidNote = false;
+    const rows = document.querySelectorAll("#td-treatment-table tbody tr");
+    let hasValidNote = false;
 
-  rows.forEach(row => {
-    const date = row.querySelector(".td-date")?.value.trim() || "";
-    const procedure = row.querySelector(".td-procedure")?.value.trim() || "";
-    const dentist = row.querySelector(".td-dentist")?.value.trim() || "";
-    const valueOfWork = row.querySelector(".td-value")?.value.trim() || "";
-    const amountPaid = row.querySelector(".td-paid")?.value.trim() || "";
-    const nextAppt = row.querySelector(".td-next-appt")?.value.trim() || "";
+    rows.forEach(row => {
+        const date = row.querySelector(".td-date")?.value.trim() || "";
+        const procedure = row.querySelector(".td-procedure")?.value.trim() || "";
+        const dentist = row.querySelector(".td-dentist")?.value.trim() || "";
+        const valueOfWork = row.querySelector(".td-value")?.value.trim() || "";
+        const amountPaid = row.querySelector(".td-paid")?.value.trim() || "";
+        const nextAppt = row.querySelector(".td-next-appt")?.value.trim() || "";
 
     if (date || procedure || dentist || valueOfWork || amountPaid || nextAppt) {
-      hasValidNote = true;
+        hasValidNote = true;
     }
-  });
+    });
 
-  if (!hasValidNote) {
-    alert("Please fill in at least one treatment note before submitting.");
-    return;
-  }
+    if (!hasValidNote) {
+        showToast("Please fill in at least one treatment note before submitting.");
+        return;
+    }
 
-  saveDentalRecord(uid);
-});
+    saveDentalRecord(uid);
+    });
 
 // Sidebar Toggle for Mobile
 const sidebarToggle = document.getElementById('sidebarToggle');
@@ -2696,7 +4048,7 @@ function openChartViewModal(index) {
     }
 
     if (!window.currentProcedures || !window.currentProcedures[index]) {
-        alert("Procedure not found.");
+        showToast("Procedure not found.");
         return;
     }
 
@@ -2793,6 +4145,101 @@ function animateCounters() {
         requestAnimationFrame(update);
     });
 }
+
+// =========================================================
+// FINANCIAL REPORTS — INCOME TREND CHART
+// =========================================================
+
+let financialTrendChartInstance = null;
+
+function loadFinancialChart(period) {
+    const canvas = document.getElementById('financialTrendChart');
+    if (!canvas) return;
+
+    fetch('/admin/financial_chart_data?period=' + encodeURIComponent(period))
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+            if (!result.success) {
+                console.error('Financial chart error:', result.message);
+                return;
+            }
+
+            if (financialTrendChartInstance) {
+                financialTrendChartInstance.destroy();
+            }
+
+            financialTrendChartInstance = new Chart(canvas, {
+                type: period === 'today' ? 'bar' : 'line',
+                data: {
+                    labels: result.labels,
+                    datasets: [{
+                        label: 'Income (₱)',
+                        data: result.data,
+                        backgroundColor: 'rgba(13, 71, 161, 0.15)',
+                        borderColor: '#0d47a1',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#0d47a1',
+                        pointRadius: 4,
+                        tension: 0.3,
+                        fill: true,
+                        borderRadius: 8,
+                        maxBarThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return '₱' + Number(value).toLocaleString(); },
+                                font: { family: 'Kumbh Sans', size: 12 }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            ticks: { font: { family: 'Kumbh Sans', size: 12, weight: '600' } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '₱' + Number(context.parsed.y).toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
+                        }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+        })
+        .catch(function(err) {
+            console.error('Failed to load financial chart:', err);
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const periodBtns = document.querySelectorAll('.financial-period-btn');
+
+    periodBtns.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            periodBtns.forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            loadFinancialChart(this.getAttribute('data-period'));
+        });
+    });
+
+    if (document.getElementById('financialTrendChart')) {
+        loadFinancialChart('weekly');
+    }
+});
 
 // Initialize dashboard charts
 function initDashboardCharts() {
@@ -2894,8 +4341,806 @@ window.addEventListener('load', function() {
     animateCounters();
     initDashboardCharts();
 });
+
+
+// NOTE: #newApptModal (and everything inside it) is defined in the HTML
+// AFTER this </main> and after this <script> tag. Any element lookup here
+// that runs immediately (not deferred) will find nothing and silently no-op,
+// which is why this whole block is wrapped in DOMContentLoaded below.
+document.addEventListener('DOMContentLoaded', function() {
+
+    const newApptBtn = document.getElementById('newAppointmentBtn');
+    if (newApptBtn) {
+        newApptBtn.addEventListener('click', () => {
+            document.getElementById('newApptModal').style.display = 'flex';
+        });
+    }
+
+    function togglePatientMode() {
+        const mode = document.querySelector('input[name="patientMode"]:checked').value;
+        const existingSection = document.getElementById('existingPatientSection');
+        const newSection = document.getElementById('newPatientSection');
+        const select = document.getElementById('admPatientSelect');
+        const firstName = document.getElementById('admFirstName');
+        const lastName = document.getElementById('admLastName');
+
+        if (mode === 'existing') {
+            existingSection.style.display = 'block';
+            newSection.style.display = 'none';
+            select.required = true;
+            if (firstName) firstName.required = false;
+            if (lastName) lastName.required = false;
+        } else {
+            existingSection.style.display = 'none';
+            newSection.style.display = 'block';
+            select.required = false;
+            select.value = '';
+            document.getElementById('admPatientUid').value = '';
+            if (firstName) firstName.required = true;
+            if (lastName) lastName.required = true;
+        }
+    }
+
+
+
+    // Patient search: type in #admPatientSearch -> query /search_patients -> fill #admPatientSelect
+    (function() {
+        const searchInput = document.getElementById('admPatientSearch');
+        const select = document.getElementById('admPatientSelect');
+        const uidField = document.getElementById('admPatientUid');
+        if (!searchInput || !select) return;
+
+        let debounceTimer = null;
+
+        searchInput.addEventListener('input', function() {
+            const q = this.value.trim();
+            clearTimeout(debounceTimer);
+
+            if (q.length < 2) {
+                select.innerHTML = '<option value="">Select a patient</option>';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch('/search_patients?q=' + encodeURIComponent(q));
+                    const results = await res.json();
+
+                    select.innerHTML = '';
+
+                    if (!Array.isArray(results) || results.length === 0) {
+                        select.innerHTML = '<option value="">No matching patients</option>';
+                        return;
+                    }
+
+                    select.innerHTML = '<option value="">Select a patient</option>';
+                    results.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.patient_id;
+                        opt.dataset.accountUid = p.account_uid || '';
+                        opt.textContent = p.name + (p.birthday ? ' (' + p.birthday + ')' : '');
+                        select.appendChild(opt);
+                    });
+                } catch (err) {
+                    console.error('Patient search error:', err);
+                    select.innerHTML = '<option value="">Search failed, try again</option>';
+                }
+            }, 300);
+        });
+
+        select.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            uidField.value = selectedOption ? (selectedOption.dataset.accountUid || '') : '';
+        });
+    })();
+
+    const admSex = document.getElementById('admSexSelect');
+    const admWomen = document.getElementById('admWomenSection');
+    if (admSex && admWomen) {
+        admSex.addEventListener('change', function() {
+            const enable = this.value === 'Female';
+            admWomen.style.opacity = enable ? '1' : '0.4';
+            admWomen.querySelectorAll('input').forEach(el => el.disabled = !enable);
+        });
+    }
+
+    // Signature pad
+    (function() {
+        const canvas = document.getElementById('admSignaturePad');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        function pos(e) {
+            const r = canvas.getBoundingClientRect();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: x - r.left, y: y - r.top };
+        }
+        function start(e) { e.preventDefault(); drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+        function move(e) { e.preventDefault(); if (!drawing) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+        function end(e) { e.preventDefault(); drawing = false; }
+
+        canvas.addEventListener('mousedown', start);
+        canvas.addEventListener('touchstart', start);
+        canvas.addEventListener('mousemove', move);
+        canvas.addEventListener('touchmove', move);
+        canvas.addEventListener('mouseup', end);
+        canvas.addEventListener('touchend', end);
+    })();
+
+    function admClearSignature() {
+        const canvas = document.getElementById('admSignaturePad');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function admToggleSpec(q, disable) {
+        const el = document.getElementById('adm_' + q + '_spec');
+        if (el) el.disabled = disable;
+    }
+
+    function admCombineDateTime() {
+        const dateInput = document.getElementById('admApptDate');
+        const timeInput = document.getElementById('admApptTime');
+        const hiddenInput = document.getElementById('admApptDateHidden');
+        if (dateInput && timeInput && hiddenInput && dateInput.value && timeInput.value) {
+            hiddenInput.value = dateInput.value + ' ' + timeInput.value;
+        }
+    }
+    (function() {
+        const dateInput = document.getElementById('admApptDate');
+        const timeInput = document.getElementById('admApptTime');
+        if (dateInput) {
+            dateInput.min = new Date().toISOString().split('T')[0];
+            dateInput.addEventListener('change', function() {
+                admCombineDateTime();
+                const info = (window.__blockedSlotsMap || {})[this.value];
+                Array.from(timeInput.options).forEach(opt => opt.disabled = false);
+
+                if (info) {
+                    if (info.full_day) {
+                        showToast('The dentist is unavailable on this date' + (info.reason ? ' (' + info.reason + ')' : '') + '. Please pick another date.');
+                        this.value = '';
+                        timeInput.value = '';
+                        return;
+                    }
+                    (info.blocked_times || []).forEach(t => {
+                        const opt = Array.from(timeInput.options).find(o => o.value === t);
+                        if (opt) opt.disabled = true;
+                    });
+                    if (timeInput.value && (info.blocked_times || []).includes(timeInput.value)) {
+                        timeInput.value = '';
+                    }
+                }
+            });
+        }
+        if (timeInput) timeInput.addEventListener('change', admCombineDateTime);
+    })();
+
+    const newApptForm = document.getElementById('newApptForm');
+    if (newApptForm) {
+        newApptForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const canvas = document.getElementById('admSignaturePad');
+            const blank = document.createElement('canvas');
+            blank.width = canvas.width; blank.height = canvas.height;
+            if (canvas.toDataURL() === blank.toDataURL()) {
+                showToast('Please provide the patient signature.');
+                return;
+            }
+
+            const mode = document.querySelector('input[name="patientMode"]:checked').value;
+            if (mode === 'existing' && !document.getElementById('admPatientSelect').value) {
+                showToast('Please select a patient.');
+                return;
+            }
+
+            admCombineDateTime();
+            if (!document.getElementById('admApptDateHidden').value) {
+                showToast('Please select an appointment date and time.');
+                return;
+            }
+
+            const formData = new FormData(e.target);
+            formData.append('patientMode', mode);
+            formData.append('signature', canvas.toDataURL());
+
+            try {
+                const res = await fetch('/admin/create_appointment', { method: 'POST', body: formData });
+                const result = await res.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    showToast(result.message || 'Failed to create appointment.');
+                }
+            } catch (err) {
+                console.error('Create appointment error:', err);
+                showToast('Failed to create appointment. Please try again.');
+            }
+        });
+    }
+
+    // These are called from inline onchange/onclick attributes in the HTML,
+    // which resolve names on `window` — so expose them explicitly since they
+    // are now declared inside this DOMContentLoaded callback's local scope.
+    window.togglePatientMode = togglePatientMode;
+    window.admClearSignature = admClearSignature;
+    window.admToggleSpec = admToggleSpec;
+    window.admCombineDateTime = admCombineDateTime;
+});
+
 </script>
 </main>
+
+<style>
+#newApptModal .adm-modal-box {
+    width: 95vw; max-width: 1300px; height: 90vh;
+    background: #fff; border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden;
+}
+#newApptModal .adm-modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid #ddd; background: var(--navy, #0d47a1); color: #fff;
+}
+#newApptModal .adm-modal-header h2 { margin: 0; font-size: 20px; }
+#newApptModal .adm-modal-body { display: flex; flex: 1; overflow: hidden; }
+#newApptModal .adm-consent-side {
+    width: 40%; padding: 20px; overflow-y: auto; border-right: 1px solid #eee;
+    font-size: 13px; line-height: 1.5; background: #fafafa;
+}
+#newApptModal .adm-form-side { width: 60%; padding: 20px; overflow-y: auto; }
+#newApptModal .adm-form-side label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
+#newApptModal .adm-form-side input,
+#newApptModal .adm-form-side select {
+    width: 100%; padding: 9px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box;
+}
+#newApptModal .adm-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#newApptModal .adm-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+#newApptModal .adm-women-box { background: #fdeef0; border-radius: 8px; padding: 12px; margin-top: 12px; }
+#newApptModal .adm-sig-canvas { border: 1px solid #ccc; border-radius: 6px; background: #fff; touch-action: none; }
+#newApptModal .adm-patient-toggle {
+    display: flex !important;
+    gap: 24px;
+    margin-bottom: 12px;
+    flex-wrap: nowrap;
+}
+#newApptModal .adm-patient-toggle label {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    margin: 0 !important;
+    font-weight: 400;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#newApptModal .adm-consent-label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    margin: 0 !important;
+    font-weight: 400 !important;
+    font-size: 14px;
+    cursor: pointer;
+}
+#newApptModal .adm-consent-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+#newApptModal button[type="submit"].btn-primary {
+    width: 100%;
+    margin-top: 18px;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--navy, #0d47a1), #1565c0);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+#newApptModal button[type="submit"].btn-primary:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(13, 71, 161, 0.45);
+}
+#newApptModal button[type="submit"].btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.35);
+}
+#newApptModal .adm-patient-toggle label {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    margin: 0 !important;
+    font-weight: 400;
+    font-size: 14px;
+    cursor: pointer;
+}
+#newApptModal .adm-q-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+    padding: 4px 0;
+}
+#newApptModal .adm-q-row span {
+    font-size: 13px;
+    color: #333;
+}
+#newApptModal .adm-yn {
+    display: flex;
+    gap: 14px;
+    white-space: nowrap;
+}
+#newApptModal .adm-yn label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 400;
+    font-size: 13px;
+    margin: 0;
+    cursor: pointer;
+}
+#newApptModal .adm-q-row + input[type="text"] {
+    margin-top: -2px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+</style>
+
+<div id="newApptModal" class="modal" style="display:none;">
+    <div class="adm-modal-box">
+    <div class="adm-modal-header">
+        <h2>Book Appointment (Admin)</h2>
+        <button type="button" onclick="document.getElementById('newApptModal').style.display='none'" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+
+    <div class="adm-modal-body">
+        <div class="adm-consent-side">
+        <h3>Informed Consent</h3>
+        <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits &amp; cost have been fully explained. These include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics &amp; surgical cases.</p>
+        <p><strong>DRUGS &amp; MEDICATIONS:</strong> I understand that antibiotics, analgesics, &amp; other medications can cause allergic reactions like redness &amp; swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
+        <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be necessary to change/add procedures because of conditions found while working on the teeth that were not discovered during examination.</p>
+        <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or radiograph may be necessary as part of diagnostic aid, but that will not give a 100% assurance for the accuracy of the treatment.</p>
+        <p><strong>REMOVAL OF TEETH:</strong> I understand alternatives to tooth removal exist and I authorize the dentist to proceed after these have been explained to me.</p>
+        <p><strong>CROWNS (CAPS) &amp; BRIDGES:</strong> Preparing a tooth may irritate the nerve tissue, leaving it sensitive to heat, cold &amp; pressure.</p>
+        <p><strong>ENDODONTICS (ROOT CANAL):</strong> There is no guarantee that a root canal treatment will save a tooth.</p>
+        <p><strong>PERIODONTAL DISEASE:</strong> This is a serious condition causing gum &amp; bone inflammation and/or loss.</p>
+        <p><strong>FILLINGS:</strong> Care must be exercised in chewing on a new filling, especially during the first 24 hours.</p>
+        <p><strong>DENTURES:</strong> Wearing dentures can be difficult at first — sore spots, altered speech &amp; difficulty eating are common.</p>
+        <hr>
+        <p style="font-style:italic;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+
+        <p style="font-weight:600;margin-top:16px;">Patient Signature:</p>
+        <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
+        <div style="margin-top:6px;">
+            <button type="button" onclick="admClearSignature()" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;">Clear</button>
+        </div>
+    </div>
+
+        <div class="adm-form-side">
+        <form id="newApptForm">
+
+            <!-- Patient Type -->
+            <div class="form-group">
+                <label>Patient Type</label>
+
+                <div class="adm-patient-toggle">
+                    <label>
+                        <input type="radio"
+                            name="patientMode"
+                            value="existing"
+                            checked
+                            onchange="togglePatientMode()">
+                        Existing Patient
+                    </label>
+
+                    <label>
+                        <input type="radio"
+                            name="patientMode"
+                            value="new"
+                            onchange="togglePatientMode()">
+                        New Patient
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Existing Patient -->
+            <div id="existingPatientSection">
+
+                <div class="form-group">
+                    <label for="admPatientSearch">
+                        Search Existing Patient
+                    </label>
+
+                    <input type="text"
+                        id="admPatientSearch"
+                        class="form-control"
+                        placeholder="Search patient name..."
+                        autocomplete="off">
+
+                    <select id="admPatientSelect"
+                            name="patient_id"
+                            class="form-control"
+                            style="margin-top: 8px;">
+                        <option value="">Select a patient</option>
+                    </select>
+                </div>
+
+                <!-- Used by the existing backend for compatibility -->
+                <input type="hidden"
+                    id="admPatientUid"
+                    name="uid"
+                    value="">
+
+            </div>
+
+
+            <!-- New Patient -->
+            <div id="newPatientSection" style="display: none;">
+
+                <div class="form-group">
+                    <label for="admFirstName">First Name</label>
+                    <input type="text"
+                        id="admFirstName"
+                        name="First_Name"
+                        class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="admMiddleName">Middle Name</label>
+                    <input type="text"
+                        id="admMiddleName"
+                        name="Middle_Name"
+                        class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="admLastName">Last Name</label>
+                    <input type="text"
+                        id="admLastName"
+                        name="Last_Name"
+                        class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="admBirthday">Birthday</label>
+                    <input type="date"
+                        id="admBirthday"
+                        name="Birthday"
+                        class="form-control">
+                </div>
+
+            </div>
+
+            <div id="admDuplicateWarning" style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px; margin-top:10px; font-size:13px;">
+                ⚠️ A patient named <strong id="admDupName"></strong> already exists in the system.
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                    <button type="button" id="admUseDupBtn" class="btn-action accept" style="padding:6px 12px; font-size:12px;">Use This Existing Patient</button>
+                    <button type="button" id="admDismissDupBtn" class="btn-action" style="padding:6px 12px; font-size:12px; background:#6b7280; color:#fff;">Continue as New</button>
+                </div>
+            </div>
+
+
+            <!-- Contact & Personal Info -->
+            <div class="adm-row3">
+                <div class="form-group">
+                    <label for="admContactNumber">Contact Number</label>
+                    <input type="tel" id="admContactNumber" name="Contact_number" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admAge">Age</label>
+                    <input type="number" id="admAge" name="Age" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admSexSelect">Sex</label>
+                    <select id="admSexSelect" name="Sex" class="form-control">
+                        <option value="" disabled selected>Sex</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="adm-row3">
+                <div class="form-group">
+                    <label for="admHouseNo">House No.</label>
+                    <input type="text" id="admHouseNo" name="House_No" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admStreet">Street</label>
+                    <input type="text" id="admStreet" name="Street" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admBrgy">Barangay</label>
+                    <input type="text" id="admBrgy" name="Brgy" class="form-control">
+                </div>
+            </div>
+
+            <div class="adm-row2">
+                <div class="form-group">
+                    <label for="admMunicipality">Municipality/City</label>
+                    <input type="text" id="admMunicipality" name="Municipality" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admCity">Province</label>
+                    <input type="text" id="admCity" name="City" class="form-control">
+                </div>
+            </div>
+
+            <div class="adm-row2">
+                <div class="form-group">
+                    <label for="admNationality">Nationality</label>
+                    <input type="text" id="admNationality" name="Nationality" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="admReligion">Religion</label>
+                    <select id="admReligion" name="Religion" class="form-control">
+                        <option value="" disabled selected>Religion</option>
+                        <option value="Roman Catholic">Roman Catholic</option>
+                        <option value="Christian">Christian</option>
+                        <option value="Islam">Islam</option>
+                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
+                        <option value="Baptist">Baptist</option>
+                        <option value="Methodist">Methodist</option>
+                        <option value="Born Again Christian">Born Again Christian</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="adm-row2">
+                <div class="form-group">
+                    <label for="admOccupation">Occupation</label>
+                    <select id="admOccupation" name="Occupation" class="form-control">
+                        <option value="" disabled selected>Occupation</option>
+                        <option value="Student">Student</option>
+                        <option value="Employee">Employee</option>
+                        <option value="Self-Employed">Self-Employed</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Nurse">Nurse</option>
+                        <option value="Doctor">Doctor</option>
+                        <option value="Business Owner">Business Owner</option>
+                        <option value="Housewife">Housewife</option>
+                        <option value="Retired">Retired</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="admCivilStatus">Civil Status</label>
+                    <select id="admCivilStatus" name="Civil_Status" class="form-control">
+                        <option value="" disabled selected>Civil Status</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Separated">Separated</option>
+                        <option value="Divorced">Divorced</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Service -->
+            <div class="form-group">
+                <label for="admService">Service</label>
+                <select id="admService" name="Service" class="form-control" required>
+                    <option value="" disabled selected>Choose a service</option>
+                    <option value="Dental Consultation">Dental Consultation</option>
+                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                    <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                    <option value="Crowns and Bridges">Crowns and Bridges</option>
+                    <option value="Teeth Whitening">Teeth Whitening</option>
+                    <option value="Fluoride Treatment">Fluoride Treatment</option>
+                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                    <option value="Periapical Xray">Periapical Xray</option>
+                </select>
+            </div>
+
+            <!-- Schedule -->
+            <div class="adm-row3">
+                <div class="form-group">
+                    <label for="admUrgencyLevel">Urgency Level</label>
+                    <select id="admUrgencyLevel" name="UrgencyLevel" class="form-control">
+                        <option value="Normal" selected>Normal</option>
+                        <option value="Emergency">Emergency</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="admApptDate">Date of Appointment</label>
+                    <input type="date" id="admApptDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="admApptTime">Time of Appointment</label>
+                    <select id="admApptTime" class="form-control" required>
+                        <option value="" disabled selected>Select time</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="12:00">12:00 PM</option>
+                        <option value="13:00">1:00 PM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                        <option value="17:00">5:00 PM</option>
+                    </select>
+                </div>
+            </div>
+            <input type="hidden" name="appointment_date" id="admApptDateHidden">
+
+            <div class="form-group">
+                <label for="admDentistName">Dentist Name</label>
+                <input type="text" id="admDentistName" name="dentist_name" class="form-control">
+            </div>
+
+            <!-- Medical History -->
+            <div class="form-group">
+                <label>Medical History</label>
+
+                <div class="adm-q-row">
+                    <span>1. Are you in good health?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q1" value="Yes"> Yes</label>
+                        <label><input type="radio" name="q1" value="No"> No</label>
+                    </div>
+                </div>
+
+                <div class="adm-q-row">
+                    <span>2. Under medical treatment now?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q2" value="Yes" onclick="admToggleSpec('q2', false)"> Yes</label>
+                        <label><input type="radio" name="q2" value="No" onclick="admToggleSpec('q2', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q2_spec" id="adm_q2_spec" placeholder="If so, what condition?" class="form-control" disabled>
+
+                <div class="adm-q-row">
+                    <span>3. Serious illness / surgical operation?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q3" value="Yes" onclick="admToggleSpec('q3', false)"> Yes</label>
+                        <label><input type="radio" name="q3" value="No" onclick="admToggleSpec('q3', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q3_spec" id="adm_q3_spec" placeholder="What illness/operation?" class="form-control" disabled>
+
+                <div class="adm-q-row">
+                    <span>4. Ever been hospitalized?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q4" value="Yes" onclick="admToggleSpec('q4', false)"> Yes</label>
+                        <label><input type="radio" name="q4" value="No" onclick="admToggleSpec('q4', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q4_spec" id="adm_q4_spec" placeholder="When and why?" class="form-control" disabled>
+
+                <div class="adm-q-row">
+                    <span>5. Taking any medication?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q5" value="Yes" onclick="admToggleSpec('q5', false)"> Yes</label>
+                        <label><input type="radio" name="q5" value="No" onclick="admToggleSpec('q5', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q5_spec" id="adm_q5_spec" placeholder="Please specify" class="form-control" disabled>
+
+                <div class="adm-q-row">
+                    <span>6. Use tobacco products?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q6" value="Yes"> Yes</label>
+                        <label><input type="radio" name="q6" value="No"> No</label>
+                    </div>
+                </div>
+
+                <div class="adm-q-row">
+                    <span>7. Any allergy?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q7" value="Yes" onclick="admToggleSpec('q7', false)"> Yes</label>
+                        <label><input type="radio" name="q7" value="No" onclick="admToggleSpec('q7', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q7_spec" id="adm_q7_spec" placeholder="Please specify" class="form-control" disabled>
+
+                <div class="adm-q-row">
+                    <span>9. Any medical condition/s?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="q9" value="Yes" onclick="admToggleSpec('q9', false)"> Yes</label>
+                        <label><input type="radio" name="q9" value="No" onclick="admToggleSpec('q9', true)"> No</label>
+                    </div>
+                </div>
+                <input type="text" name="q9_spec" id="adm_q9_spec" placeholder="Please specify" class="form-control" disabled>
+            </div>
+
+            <!-- Women's Health -->
+            <div id="admWomenSection" class="adm-women-box">
+                <p style="margin:0 0 8px;font-weight:600;">For Women Only</p>
+                <div class="adm-q-row">
+                    <span>Pregnant?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="w_preg" value="Yes"> Yes</label>
+                        <label><input type="radio" name="w_preg" value="No"> No</label>
+                    </div>
+                </div>
+                <div class="adm-q-row">
+                    <span>Nursing?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="w_nurse" value="Yes"> Yes</label>
+                        <label><input type="radio" name="w_nurse" value="No"> No</label>
+                    </div>
+                </div>
+                <div class="adm-q-row">
+                    <span>Birth control pills?</span>
+                    <div class="adm-yn">
+                        <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
+                        <label><input type="radio" name="w_pill" value="No"> No</label>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Appointment Source -->
+            <div class="form-group">
+                <label>Appointment Source</label>
+
+                <div class="adm-patient-toggle">
+                    <label>
+                        <input type="radio"
+                            name="appointment_source"
+                            value="walk-in"
+                            checked>
+                        Walk-in
+                    </label>
+
+                    <label>
+                        <input type="radio"
+                            name="appointment_source"
+                            value="online">
+                        Online
+                    </label>
+
+                    <label>
+                        <input type="radio"
+                            name="appointment_source"
+                            value="admin">
+                        Admin/Staff
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Consent -->
+            <div class="form-group">
+                <label class="adm-consent-label">
+                    <input type="checkbox"
+                        id="admConsentCheck"
+                        required>
+                    I confirm that the patient information is correct.
+                </label>
+            </div>
+
+
+            <!-- Confirm -->
+            <button type="submit"
+                    class="btn btn-primary">
+                Confirm Appointment
+            </button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Live Dental Chart Modal -->
 <div id="liveChartModal" class="chart-modal-overlay" style="display: none;">
@@ -2954,6 +5199,375 @@ window.addEventListener('load', function() {
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    const TIME_SLOTS = [
+        {value:"09:00", label:"9:00 AM"}, {value:"10:00", label:"10:00 AM"},
+        {value:"11:00", label:"11:00 AM"}, {value:"12:00", label:"12:00 PM"},
+        {value:"13:00", label:"1:00 PM"}, {value:"14:00", label:"2:00 PM"},
+        {value:"15:00", label:"3:00 PM"}, {value:"16:00", label:"4:00 PM"},
+        {value:"17:00", label:"5:00 PM"}
+    ];
+
+    let blockedMap = {};
+    let selectedDate = null;
+    let calendarInstance = null;
+
+    function pad(n) { return n < 10 ? "0" + n : "" + n; }
+    function toDateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+
+    function buildTimesGrid() {
+        const grid = document.getElementById('blockTimesGrid');
+        grid.innerHTML = '';
+        TIME_SLOTS.forEach(slot => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;';
+            label.innerHTML = `<input type="checkbox" class="block-time-cb" value="${slot.value}"> ${slot.label}`;
+            grid.appendChild(label);
+        });
+    }
+
+    async function loadBlockedSlots() {
+        try {
+            const res = await fetch('/get_blocked_slots');
+            const data = await res.json();
+            blockedMap = {};
+            data.forEach(item => { blockedMap[item.date] = item; });
+            window.__blockedSlotsMap = blockedMap; // shared with the New Appointment modal
+            if (calendarInstance) calendarInstance.redraw();
+            if (selectedDate) selectDate(selectedDate);
+        } catch (err) {
+            console.error('Failed to load blocked slots:', err);
+        }
+    }
+
+    function selectDate(dateStr) {
+        selectedDate = dateStr;
+        document.getElementById('blockPanelDate').textContent = dateStr;
+
+        const existing = blockedMap[dateStr];
+        const fullDayToggle = document.getElementById('blockFullDayToggle');
+        const reasonInput = document.getElementById('blockReasonInput');
+
+        fullDayToggle.checked = !!(existing && existing.full_day);
+        reasonInput.value = existing ? (existing.reason || '') : '';
+
+        document.querySelectorAll('.block-time-cb').forEach(cb => {
+            cb.checked = !!(existing && !existing.full_day && existing.blocked_times.includes(cb.value));
+            cb.disabled = fullDayToggle.checked;
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        buildTimesGrid();
+
+        document.getElementById('blockFullDayToggle').addEventListener('change', function() {
+            document.querySelectorAll('.block-time-cb').forEach(cb => cb.disabled = this.checked);
+        });
+
+        calendarInstance = flatpickr('#doctorCalendarPicker', {
+            inline: true,
+            minDate: 'today',
+            maxDate: new Date().fp_incr(365),
+            onChange: function(selectedDates, dateStr) { selectDate(dateStr); },
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                const key = toDateStr(dayElem.dateObj);
+                const info = blockedMap[key];
+                if (!info) return;
+                const dot = document.createElement('span');
+                dot.style.cssText = 'position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;';
+                dot.style.background = info.full_day ? '#ef4444' : '#f5a623';
+                dayElem.style.position = 'relative';
+                dayElem.appendChild(dot);
+            }
+        });
+
+        document.getElementById('saveBlockBtn').addEventListener('click', async function() {
+            if (!selectedDate) { showToast('Please select a date first.'); return; }
+
+            const fullDay = document.getElementById('blockFullDayToggle').checked;
+            const reason = document.getElementById('blockReasonInput').value.trim();
+            const checkedTimes = Array.from(document.querySelectorAll('.block-time-cb:checked')).map(cb => cb.value);
+
+            if (!fullDay && checkedTimes.length === 0) {
+                showToast('Select "Block entire day" or at least one time slot.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('date', selectedDate);
+            formData.append('full_day', fullDay ? 'true' : 'false');
+            checkedTimes.forEach(t => formData.append('blocked_times[]', t));
+            formData.append('reason', reason);
+
+            try {
+                const res = await fetch('/admin/block_slot', { method: 'POST', body: formData });
+                const result = await res.json();
+                if (result.success) { await loadBlockedSlots(); showToast('Blocked slot saved.'); }
+                else showToast(result.message || 'Failed to save block.');
+            } catch (err) {
+                console.error('Block slot error:', err);
+                showToast('Failed to save block. Please try again.');
+            }
+        });
+
+        document.getElementById('unblockBtn').addEventListener('click', async function() {
+            if (!selectedDate) { showToast('Please select a date first.'); return; }
+            if (!confirm('Unblock ' + selectedDate + '?')) return;
+
+            const formData = new FormData();
+            formData.append('date', selectedDate);
+
+            try {
+                const res = await fetch('/admin/unblock_slot', { method: 'POST', body: formData });
+                const result = await res.json();
+                if (result.success) { await loadBlockedSlots(); selectDate(selectedDate); showToast('Unblocked successfully.'); }
+                else showToast(result.message || 'Failed to unblock.');
+            } catch (err) {
+                console.error('Unblock slot error:', err);
+                showToast('Failed to unblock. Please try again.');
+            }
+        });
+
+        loadBlockedSlots();
+    });
+})();
+</script>
+
+<script>
+let procedureCountChartInstance = null;
+let procedureRevenueChartInstance = null;
+
+function loadProcedureCharts() {
+    const countCanvas = document.getElementById('procedureCountChart');
+    const revenueCanvas = document.getElementById('procedureRevenueChart');
+    if (!countCanvas || !revenueCanvas) return;
+
+    fetch('/admin/procedure_chart_data')
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+            if (!result.success) {
+                console.error('Procedure chart error:', result.message);
+                return;
+            }
+
+            if (procedureCountChartInstance) procedureCountChartInstance.destroy();
+            if (procedureRevenueChartInstance) procedureRevenueChartInstance.destroy();
+
+            procedureCountChartInstance = new Chart(countCanvas, {
+                type: 'bar',
+                data: {
+                    labels: result.counts.labels,
+                    datasets: [{
+                        label: 'Times Performed',
+                        data: result.counts.data,
+                        backgroundColor: '#1565c0',
+                        borderRadius: 8,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { beginAtZero: true, ticks: { precision: 0, font: { family: 'Kumbh Sans', size: 12 } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: { ticks: { font: { family: 'Kumbh Sans', size: 12, weight: '600' } }, grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            procedureRevenueChartInstance = new Chart(revenueCanvas, {
+                type: 'bar',
+                data: {
+                    labels: result.revenue.labels,
+                    datasets: [{
+                        label: 'Revenue (₱)',
+                        data: result.revenue.data,
+                        backgroundColor: '#0d47a1',
+                        borderRadius: 8,
+                        maxBarThickness: 50
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) { return '₱' + Number(value).toLocaleString(); },
+                                font: { family: 'Kumbh Sans', size: 12 }
+                            },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y: { ticks: { font: { family: 'Kumbh Sans', size: 12, weight: '600' } }, grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return '₱' + Number(context.parsed.x).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(function(err) {
+            console.error('Failed to load procedure charts:', err);
+        });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('procedureCountChart')) {
+        loadProcedureCharts();
+    }
+
+});
+
+
+function filterMyPatients() {
+    var input = document.getElementById('myPatientSearch').value.toUpperCase();
+    var table = document.getElementById('myPatientsTable');
+    var tbody = table.querySelector('tbody');
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function(row) {
+        var nameCell = row.querySelector('td');
+        if (nameCell) {
+            var textValue = nameCell.textContent || nameCell.innerText;
+            row.style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+        }
+    });
+}
+
+function filterUserManagement() {
+    var input = document.getElementById('userMgmtSearch').value.toUpperCase();
+    var table = document.getElementById('userManagementTable');
+    var tbody = table.querySelector('tbody');
+    var rows = tbody.querySelectorAll('tr');
+    rows.forEach(function(row) {
+        var nameCell = row.querySelector('td');
+        if (nameCell) {
+            var textValue = nameCell.textContent || nameCell.innerText;
+            row.style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+        }
+    });
+}
+
+ 
+    // --- Financial Chart (Income Trend) ---
+    let incomeChartInstance = null; // Store chart instance to destroy/update it
+
+    function loadFinancialChart(period) {
+        // Update active button state
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.dataset.period === period) btn.classList.add('active');
+        });
+
+        fetch(`/admin/financial_chart_data?period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateIncomeChart(data.labels, data.data);
+                }
+            });
+    }
+
+    function updateIncomeChart(labels, dataValues) {
+        const ctx = document.getElementById('incomeChart').getContext('2d'); // Ensure ID matches your canvas
+        
+        if (incomeChartInstance) {
+            incomeChartInstance.destroy();
+        }
+
+        incomeChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Revenue (₱)',
+                    data: dataValues,
+                    borderColor: '#1e40af', // Blue color
+                    backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    cubicInterpolationMode: 'monotone'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: function(value) { return '₱' + value; } } }
+                }
+            }
+        });
+    }
+
+    // --- Procedure Charts ---
+    let procCountChartInstance = null;
+    let procRevenueChartInstance = null;
+
+    function loadProcedureCharts(period) {
+        // Update active button state for procedure buttons
+        document.querySelectorAll('.proc-period-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.dataset.period === period) btn.classList.add('active');
+        });
+
+        fetch(`/admin/procedure_chart_data?period=${period}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateBarChart('procedureCountChart', data.counts.labels, data.counts.data, 'Count', procCountChartInstance, (instance) => procCountChartInstance = instance);
+                    updateBarChart('procedureRevenueChart', data.revenue.labels, data.revenue.data, 'Revenue (₱)', procRevenueChartInstance, (instance) => procRevenueChartInstance = instance);
+                }
+            });
+    }
+
+    function updateBarChart(canvasId, labels, dataValues, labelName, currentInstance, setInstance) {
+        const ctx = document.getElementById(canvasId).getContext('2d'); // Ensure IDs match your canvases
+        
+        if (currentInstance) {
+            currentInstance.destroy();
+        }
+
+        const newChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: labelName,
+                    data: dataValues,
+                    backgroundColor: '#1e40af'
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Horizontal bar chart
+                responsive: true,
+                scales: {
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+        setInstance(newChart);
+    }
+
+    // Initialize charts on load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFinancialChart('weekly'); // Default for income
+        loadProcedureCharts('overall'); // Default for procedures (shows all time)
+    });
+</script>
+
+
 
 </body>
 </html>

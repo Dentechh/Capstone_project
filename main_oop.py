@@ -920,6 +920,14 @@ def adminDashboard():
     # =========================
     # SEND ALL TO TEMPLATE
     # =========================
+    urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
+    for appt in appointment_list:
+        level = appt.get("UrgencyLevel", "Normal")
+        if level in urgency_counts:
+                urgency_counts[level] += 1
+
+    recent_approve = approve_list[:3]
+
     return render_template(
         "admin_dashboard.html",
         Appointment_clients=appointment_list,
@@ -928,6 +936,8 @@ def adminDashboard():
         pending_count=pending_count,
         approved_count=approved_count,
         total_patients=total_patients,
+        urgency_counts=urgency_counts,
+        recent_approve=recent_approve,
     )
 
 
