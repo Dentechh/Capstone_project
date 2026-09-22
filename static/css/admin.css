@@ -5,7 +5,7 @@
       --navy: #0d47a1;
       --navy-dark: #0a3b7d;
       --gold: #0d47a1;
-      --gold-light: #1565c0;
+      --gold-light: #85ceff;
       --white: #ffffff;
       --black: #000000;
       --dark-black: #1a1a1a;
@@ -1034,9 +1034,7 @@ body.dark-mode .panel-content {
 
 
 .appointment-table button:hover {
-    background: var(--navy-dark);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Dark Mode Support */
@@ -1154,7 +1152,8 @@ body.dark-mode .btn-save-td:hover {
     background-color: #dbeafe;
     color: #1e40af;
     border: 1px solid #93c5fd;
-    font-size: 15px;
+    font-size: 12px;
+    box-shadow: 0px 1px 5px 0.2px;
 }
 .btn-action.decline {
     background: #ef4444;

@@ -755,13 +755,13 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                     <div class="metric-cards">
                         <div class="metric-card">
                             <div class="metric-icon">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21V3h6.5a4.5 4.5 0 0 1 0 9H7" /><line x1="4" y1="6" x2="16" y2="6" /><line x1="4" y1="9" x2="16" y2="9" /></svg>
                             </div>
                             <div class="metric-data">
                                 <h3>₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
                                 <p>Total Income Collected</p>
                             </div>
-                            <div class="metric-bg-icon">💰</div>
+                            <div class="metric-bg-icon">₱</div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon">
@@ -838,13 +838,13 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                                 type="button"
                                                 class="btn-action accept"
                                                 onclick="openCheckInfoModal('{{ appointment.patient_id }}')">
-                                                CHECK INFO
+                                                INFO
                                             </button>
 
                                             <button
                                                 type="button"
                                                 class="btn-action edit-patient-btn"
-                                                style="background:#f5a623;color:#1a1a1a;"
+                                                style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
                                                 data-uid="{{ appointment.uid }}"
                                                 data-patient-id="{{ appointment.patient_id }}"
                                                 data-firstname="{{ appointment.get('firstname', appointment.get('first_name', '')) }}"
@@ -858,11 +858,11 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                             <button
                                                 type="button"
                                                 class="btn-action delete-patient-btn"
-                                                style="background:#ef4444;color:#fff;"
+                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
                                                 data-uid="{{ appointment.uid }}"
                                                 data-patient-id="{{ appointment.patient_id }}"
                                                 data-name="{{ appointment.full_name or appointment.FirstName or 'this patient' }}">
-                                                DELETE
+                                                REMOVE
                                             </button>
                                         </div>
                                     </td>
@@ -908,13 +908,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${p.contact_number || ''}</td>
                         <td>
                             <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-                                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">CHECK INFO</button>
-                                <button type="button" class="btn-action edit-patient-btn" style="background:#f5a623;color:#1a1a1a;"
+                                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">INFO</button>
+                                <button type="button" class="btn-action edit-patient-btn" style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
                                     data-uid="${p.uid}" data-patient-id="${p.patient_id}"
                                     data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
                                     data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}">EDIT</button>
-                                <button type="button" class="btn-action delete-patient-btn" style="background:#ef4444;color:#fff;"
-                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">DELETE</button>
+                                <button type="button" class="btn-action delete-patient-btn" style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">REMOVE</button>
                             </div>
                         </td>
                     `;
@@ -969,7 +969,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <button
                                                 type="button"
                                                 class="btn-action edit-patient-btn"
-                                                style="background:#f5a623;color:#1a1a1a;"
+                                                style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
                                                 data-uid="{{ account.uid }}"
                                                 data-patient-id="{{ account.patient_id }}"
                                                 data-firstname="{{ account.get('firstname', account.get('first_name', '')) }}"
@@ -983,7 +983,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <button
                                                 type="button"
                                                 class="btn-action block-user-btn"
-                                                style="background:{{ '#16a34a' if is_disabled else '#6b7280' }};color:#fff;"
+                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#525252 1px; box-shadow: 0px 1px 5px 0.2px;"
                                                 data-uid="{{ account.uid }}"
                                                 data-name="{{ account.full_name or account.first_name or 'this account' }}"
                                                 data-disabled="{{ 'true' if is_disabled else 'false' }}">
@@ -993,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <button
                                                 type="button"
                                                 class="btn-action delete-patient-btn"
-                                                style="background:#ef4444;color:#fff;"
+                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
                                                 data-uid="{{ account.uid }}"
                                                 data-patient-id="{{ account.patient_id }}"
                                                 data-name="{{ account.full_name or account.first_name or 'this account' }}">
@@ -1045,7 +1045,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${a.email || '-'}</td>
                         <td>
                             <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-                                <button type="button" class="btn-action edit-patient-btn" style="background:#f5a623;color:#1a1a1a;"
+                                <button type="button" class="btn-action edit-patient-btn;"
                                     data-uid="${a.uid}" data-patient-id="${a.patient_id}"
                                     data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
                                     data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}">EDIT</button>
