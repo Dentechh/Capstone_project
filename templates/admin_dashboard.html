@@ -313,6 +313,30 @@
     border-color: var(--navy, #0d47a1);
 }
 
+.financial-period-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.financial-download-btn {
+    background: #0d47a1;
+    color: #fff;
+    border-color: #0d47a1;
+}
+
+.financial-download-btn:hover {
+    background: #0b3d8f;
+}
+
+.financial-download-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .status-badge {
     display: inline-block;
     padding: 2px 8px;
@@ -752,13 +776,24 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
 
 
                 <div id="section-financialreports" class="content-section">
+                    <div class="financial-period-toolbar">
+                        <div class="period-btn-group">
+                            <button class="period-btn" data-period="today" onclick="loadFinancialChart('today')">Today</button>
+                            <button class="period-btn active" data-period="weekly" onclick="loadFinancialChart('weekly')">Weekly</button>
+                            <button class="period-btn" data-period="monthly" onclick="loadFinancialChart('monthly')">Monthly</button>
+                            <button class="period-btn" data-period="yearly" onclick="loadFinancialChart('yearly')">Yearly</button>
+                            <button class="period-btn" data-period="overall" onclick="loadFinancialChart('overall')">Overall</button>
+                        </div>
+                        <button type="button" id="download-financial-report-btn" class="period-btn financial-download-btn" onclick="downloadFinancialReportPDF()">⬇ Download Report</button>
+                    </div>
+
                     <div class="metric-cards">
                         <div class="metric-card">
                             <div class="metric-icon">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 21V3h6.5a4.5 4.5 0 0 1 0 9H7" /><line x1="4" y1="6" x2="16" y2="6" /><line x1="4" y1="9" x2="16" y2="9" /></svg>
                             </div>
                             <div class="metric-data">
-                                <h3>₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
+                                <h3 id="finTotalIncome">₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
                                 <p>Total Income Collected</p>
                             </div>
                             <div class="metric-bg-icon">₱</div>
@@ -768,7 +803,7 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             </div>
                             <div class="metric-data">
-                                <h3>₱{{ "{:,.2f}".format(total_outstanding|default(0)) }}</h3>
+                                <h3 id="finTotalOutstanding">₱{{ "{:,.2f}".format(total_outstanding|default(0)) }}</h3>
                                 <p>Outstanding Balance</p>
                             </div>
                             <div class="metric-bg-icon">📄</div>
@@ -778,7 +813,7 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
                             </div>
                             <div class="metric-data">
-                                <h3>{{ unpaid_procedures|default(0) }}</h3>
+                                <h3 id="finUnpaidProcedures">{{ unpaid_procedures|default(0) }}</h3>
                                 <p>Unpaid Procedures</p>
                             </div>
                             <div class="metric-bg-icon">🧾</div>
@@ -790,13 +825,6 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                             <div>
                                 <h3>Income Trend</h3>
                                 <p>Revenue collected over time</p>
-                            </div>
-                            <div class="period-btn-group">
-                                <button class="period-btn" data-period="today" onclick="loadFinancialChart('today')">Today</button>
-                                <button class="period-btn active" data-period="weekly" onclick="loadFinancialChart('weekly')">Weekly</button>
-                                <button class="period-btn" data-period="monthly" onclick="loadFinancialChart('monthly')">Monthly</button>
-                                <button class="period-btn" data-period="yearly" onclick="loadFinancialChart('yearly')">Yearly</button>
-                                <button class="period-btn" data-period="overall" onclick="loadFinancialChart('overall')">Overall</button>
                             </div>
                         </div>
 
@@ -823,6 +851,9 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                             <thead>
                                 <tr>
                                     <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Birthday</th>
+                                    <th>Sex</th>
                                     <th>Mobile Number</th>
                                     <th>Action</th>
                                 </tr>
@@ -831,6 +862,9 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                 {% for appointment in my_patients %}
                                 <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
                                     <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
+                                    <td>{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
+                                    <td>{{ appointment.get('birthday') or '-' }}</td>
+                                    <td>{{ appointment.get('sex') or '-' }}</td>
                                     <td>{{ appointment.contact_number }}</td>
                                     <td>
                                         <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
@@ -851,7 +885,8 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                                                 data-middlename="{{ appointment.get('middlename', appointment.get('middle_name', '')) }}"
                                                 data-lastname="{{ appointment.get('lastname', appointment.get('last_name', '')) }}"
                                                 data-contact="{{ appointment.get('contact_number', '') }}"
-                                                data-email="{{ appointment.get('email', '') }}">
+                                                data-email="{{ appointment.get('email', '') }}"
+                                                data-sex="{{ appointment.get('sex', '') }}">
                                                 EDIT
                                             </button>
 
@@ -880,6 +915,107 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
                 </div>
 
 <script>
+function buildMyPatientRow(p) {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
+    const ageDisplay = (p.age === null || p.age === undefined) ? '-' : p.age;
+    const birthYearDisplay = p.birthday || '-';
+    const sexDisplay = p.sex || '-';
+    tr.innerHTML = `
+        <td>${p.full_name || ''}</td>
+        <td>${ageDisplay}</td>
+        <td>${birthYearDisplay}</td>
+        <td>${sexDisplay}</td>
+        <td>${p.contact_number || ''}</td>
+        <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">INFO</button>
+                <button type="button" class="btn-action edit-patient-btn" style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
+                    data-uid="${p.uid}" data-patient-id="${p.patient_id}"
+                    data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
+                    data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}" data-sex="${p.sex || ''}">EDIT</button>
+                <button type="button" class="btn-action delete-patient-btn" style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
+                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">REMOVE</button>
+            </div>
+        </td>
+    `;
+    return tr;
+}
+
+function upsertMyPatientRow(uid, fields) {
+    const tbody = document.querySelector('#myPatientsTable tbody');
+    if (!tbody) return;
+
+    const existingBtn = tbody.querySelector('.edit-patient-btn[data-uid="' + uid + '"]');
+    if (existingBtn) {
+        const row = existingBtn.closest('tr');
+        const fullName = [fields.FirstName, fields.MiddleName, fields.LastName].filter(Boolean).join(' ');
+        const cells = row.querySelectorAll('td');
+        if (cells[0]) cells[0].textContent = fullName;
+        if (cells[3]) cells[3].textContent = fields.Sex || '-';
+        if (cells[4]) cells[4].textContent = fields.ContactNumber || '';
+        existingBtn.setAttribute('data-firstname', fields.FirstName || '');
+        existingBtn.setAttribute('data-middlename', fields.MiddleName || '');
+        existingBtn.setAttribute('data-lastname', fields.LastName || '');
+        existingBtn.setAttribute('data-contact', fields.ContactNumber || '');
+        existingBtn.setAttribute('data-sex', fields.Sex || '');
+        tbody.insertBefore(row, tbody.firstChild);
+        return;
+    }
+
+    fetch('/admin/my_patients_page')
+        .then(res => res.json())
+        .then(result => {
+            if (!result.success) return;
+            tbody.innerHTML = '';
+            result.rows.forEach(function(p) { tbody.appendChild(buildMyPatientRow(p)); });
+        })
+        .catch(function(err) { console.error('Refresh my patients error:', err); });
+}
+
+function buildApprovedCard(a) {
+    const card = document.createElement('div');
+    card.className = 'patient-card';
+    card.setAttribute('data-name', a.FirstName || '');
+    card.setAttribute('data-accepted-at', a.accepted_at || '');
+    card.innerHTML = `
+        <div class="p-card-header">
+            <div class="p-info">
+                <strong>NAME: ${a.FirstName || ''}</strong>
+                <small style="opacity: 0.6;">Account No: ${a.uid || ''}</small>
+            </div>
+        </div>
+        <p class="accepted-at">Accepted: <strong>${a.accepted_at || 'N/A'}</strong></p>
+        <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>${a.DentistName || 'Not Assigned'}</strong></p>
+        <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
+            data-name="${a.FirstName || ''}"
+            data-Patient_unq_id="${a.Patient_unq_id || ''}"
+            data-uid="${a.uid || ''}"
+            data-sex="${a.Sex || 'Female'}"
+            data-age="${a.Age || 'N/A'}"
+            data-lastname="${a.LastName || ''}"
+            data-middlename="${a.MiddleName || ''}"
+            data-birthday="${a.Birthday || ''}"
+            data-nationality="${a.Nationality || ''}"
+            data-religion="${a.Religion || ''}"
+            data-occupation="${a.Occupation || ''}"
+            data-civilstatus="${a.CivilStatus || ''}"
+            data-contact="${a.ContactNumber || ''}"
+            data-service="${a.Service || ''}"
+            data-dentist="${a.dentist_name || ''}"
+            data-q1="${a.q1 || 'N'}" data-q2="${a.q2 || 'N'}" data-q3="${a.q3 || 'N'}"
+            data-q4="${a.q4 || 'N'}" data-q5="${a.q5 || 'N'}" data-q6="${a.q6 || 'N'}"
+            data-q7="${a.q7 || 'N'}" data-q9="${a.q9 || 'N'}"
+            data-q2_spec="${a.q2_spec || ''}" data-q3_spec="${a.q3_spec || ''}"
+            data-q4_spec="${a.q4_spec || ''}" data-q5_spec="${a.q5_spec || ''}"
+            data-q7_spec="${a.q7_spec || ''}" data-q9_spec="${a.q9_spec || ''}"
+            data-w-preg="${a.w_preg || 'N'}" data-w-nurse="${a.w_nurse || 'N'}" data-w-pill="${a.w_pill || 'N'}">
+            CHECK INFO
+        </button>
+    `;
+    return card;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const loadMoreBtn = document.getElementById('myPatientsLoadMoreBtn');
     const cursorHolder = document.getElementById('myPatientsCursor');
@@ -901,24 +1037,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 result.rows.forEach(function(p) {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
-                    tr.innerHTML = `
-                        <td>${p.full_name || ''}</td>
-                        <td>${p.contact_number || ''}</td>
-                        <td>
-                            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-                                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">INFO</button>
-                                <button type="button" class="btn-action edit-patient-btn" style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
-                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}"
-                                    data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
-                                    data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}">EDIT</button>
-                                <button type="button" class="btn-action delete-patient-btn" style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
-                                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">REMOVE</button>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
+                    tbody.appendChild(buildMyPatientRow(p));
                 });
 
                 if (result.next_cursor) {
@@ -937,6 +1056,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     });
 });
+
 </script>
 
 <div id="section-usermanagement" class="content-section">
@@ -976,7 +1096,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 data-middlename="{{ account.get('middlename', account.get('middle_name', '')) }}"
                                                 data-lastname="{{ account.get('lastname', account.get('last_name', '')) }}"
                                                 data-contact="{{ account.get('contact_number', '') }}"
-                                                data-email="{{ account.get('email', '') }}">
+                                                data-email="{{ account.get('email', '') }}"
+                                                data-sex="{{ account.get('sex', '') }}">
                                                 EDIT
                                             </button>
 
@@ -1048,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <button type="button" class="btn-action edit-patient-btn;"
                                     data-uid="${a.uid}" data-patient-id="${a.patient_id}"
                                     data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
-                                    data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}">EDIT</button>
+                                    data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}" data-sex="${a.sex || ''}">EDIT</button>
                                 <button type="button" class="btn-action block-user-btn" style="background:${isDisabled ? '#16a34a' : '#6b7280'};color:#fff;"
                                     data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}">${isDisabled ? 'UNBLOCK' : 'BLOCK'}</button>
                                 <button type="button" class="btn-action delete-patient-btn" style="background:#ef4444;color:#fff;"
@@ -1104,13 +1225,57 @@ document.addEventListener('DOMContentLoaded', function() {
             <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Email</label>
             <input type="email" id="editEmail" name="email" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
 
+            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Sex</label>
+            <select id="editSex" name="sex" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+                <option value="">-- Not set --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+            <p style="margin:4px 0 0; font-size:12px; color:#777;">Auto-filled from the patient's most recent appointment. Correct it here if needed.</p>
+
             <button type="submit" class="btn-action accept" style="width:100%;margin-top:20px;padding:12px;">SAVE CHANGES</button>
         </form>
     </div>
 </div>
 
+<div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width:400px; text-align:center;">
+        <p id="confirmModalMessage" style="font-size:16px; color:#1a1a1a; margin:0 0 24px; line-height:1.5;"></p>
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <button type="button" id="confirmModalCancelBtn" class="btn-action" style="background:#e5e7eb;color:#1a1a1a;flex:1;">Cancel</button>
+            <button type="button" id="confirmModalOkBtn" class="btn-action" style="background:var(--navy, #0d47a1);color:#fff;flex:1;">OK</button>
+        </div>
+    </div>
+</div>
+
 <script>
-function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email) {
+function showConfirm(message, opts) {
+    opts = opts || {};
+    return new Promise(function(resolve) {
+        const modal = document.getElementById('confirmModal');
+        const msgEl = document.getElementById('confirmModalMessage');
+        const okBtn = document.getElementById('confirmModalOkBtn');
+        const cancelBtn = document.getElementById('confirmModalCancelBtn');
+
+        msgEl.textContent = message;
+        okBtn.style.background = opts.danger ? '#dc2626' : 'var(--navy, #0d47a1)';
+        modal.style.display = 'flex';
+
+        function cleanup(result) {
+            modal.style.display = 'none';
+            okBtn.removeEventListener('click', onOk);
+            cancelBtn.removeEventListener('click', onCancel);
+            resolve(result);
+        }
+        function onOk() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+    });
+}
+
+function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email, sex) {
     document.getElementById('editPatientUid').value = uid || '';
     document.getElementById('editPatientPatientId').value = patientId || '';
     document.getElementById('editFirstName').value = firstname || '';
@@ -1118,6 +1283,7 @@ function openEditPatientModal(uid, patientId, firstname, middlename, lastname, c
     document.getElementById('editLastName').value = lastname || '';
     document.getElementById('editContactNumber').value = contact || '';
     document.getElementById('editEmail').value = email || '';
+    document.getElementById('editSex').value = sex || '';
     document.getElementById('editPatientModal').style.display = 'flex';
 }
 
@@ -1127,7 +1293,7 @@ function closeEditPatientModal() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', async function(e) {
         const editBtn = e.target.closest('.edit-patient-btn');
         if (editBtn) {
             openEditPatientModal(
@@ -1137,7 +1303,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 editBtn.getAttribute('data-middlename'),
                 editBtn.getAttribute('data-lastname'),
                 editBtn.getAttribute('data-contact'),
-                editBtn.getAttribute('data-email')
+                editBtn.getAttribute('data-email'),
+                editBtn.getAttribute('data-sex')
             );
             return;
         }
@@ -1153,7 +1320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ? 'Block ' + name + '? They will not be able to log in until you unblock them.'
                 : 'Unblock ' + name + '? They will be able to log in again.';
 
-            if (!confirm(confirmMsg)) {
+            if (!(await showConfirm(confirmMsg))) {
                 return;
             }
 
@@ -1199,7 +1366,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const patientId = delBtn.getAttribute('data-patient-id');
             const name = delBtn.getAttribute('data-name') || 'this patient';
 
-            if (!confirm('Are you sure you want to permanently delete ' + name + '? This cannot be undone.')) {
+            if (!(await showConfirm('Are you sure you want to permanently delete ' + name + '? This cannot be undone.', { danger: true }))) {
                 return;
             }
 
@@ -1236,6 +1403,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const formData = new FormData(editPatientForm);
 
+            // admin_dashboard.html — inside editPatientForm submit handler
             fetch('/admin/update_patient', {
                 method: 'POST',
                 body: formData
@@ -1244,7 +1412,36 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(result => {
                 if (result.success) {
                     showToast('Patient updated successfully.');
-                    location.reload();
+
+                    const uid = formData.get('uid');
+                    const firstName = formData.get('first_name') || '';
+                    const middleName = formData.get('middle_name') || '';
+                    const lastName = formData.get('last_name') || '';
+                    const contact = formData.get('contact_number') || '';
+                    const email = formData.get('email') || '';
+                    const sex = formData.get('sex') || '';
+                    const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+
+                    const editBtn = document.querySelector('.edit-patient-btn[data-uid="' + uid + '"]');
+                    if (editBtn) {
+                        const row = editBtn.closest('tr');
+                        if (row) {
+                            const cells = row.querySelectorAll('td');
+                            if (cells[0]) cells[0].textContent = fullName;
+                            if (cells[3]) cells[3].textContent = sex || '-';
+                            if (cells[4]) cells[4].textContent = contact;
+                            const delBtn = row.querySelector('.delete-patient-btn');
+                            if (delBtn) delBtn.setAttribute('data-name', fullName);
+                        }
+                        editBtn.setAttribute('data-firstname', firstName);
+                        editBtn.setAttribute('data-middlename', middleName);
+                        editBtn.setAttribute('data-lastname', lastName);
+                        editBtn.setAttribute('data-contact', contact);
+                        editBtn.setAttribute('data-email', email);
+                        editBtn.setAttribute('data-sex', sex);
+                    }
+
+                    closeEditPatientModal();
                 } else {
                     showToast(result.message || 'Failed to update patient.');
                 }
@@ -2013,46 +2210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     result.rows.forEach(function(a) {
-                        const card = document.createElement('div');
-                        card.className = 'patient-card';
-                        card.setAttribute('data-name', a.FirstName || '');
-                        card.setAttribute('data-accepted-at', a.accepted_at || '');
-                        card.innerHTML = `
-                            <div class="p-card-header">
-                                <div class="p-info">
-                                    <strong>NAME: ${a.FirstName || ''}</strong>
-                                    <small style="opacity: 0.6;">Account No: ${a.uid || ''}</small>
-                                </div>
-                            </div>
-                            <p class="accepted-at">Accepted: <strong>${a.accepted_at || 'N/A'}</strong></p>
-                            <p style="font-size: 17px; margin-bottom: 15px;">Assigned Dentist: <strong>${a.DentistName || 'Not Assigned'}</strong></p>
-                            <button type="button" class="btn-action accept check-profile-btn" style="width: 100%;"
-                                data-name="${a.FirstName || ''}"
-                                data-Patient_unq_id="${a.Patient_unq_id || ''}"
-                                data-uid="${a.uid || ''}"
-                                data-sex="${a.Sex || 'Female'}"
-                                data-age="${a.Age || 'N/A'}"
-                                data-lastname="${a.LastName || ''}"
-                                data-middlename="${a.MiddleName || ''}"
-                                data-birthday="${a.Birthday || ''}"
-                                data-nationality="${a.Nationality || ''}"
-                                data-religion="${a.Religion || ''}"
-                                data-occupation="${a.Occupation || ''}"
-                                data-civilstatus="${a.CivilStatus || ''}"
-                                data-contact="${a.ContactNumber || ''}"
-                                data-service="${a.Service || ''}"
-                                data-dentist="${a.dentist_name || ''}"
-                                data-q1="${a.q1 || 'N'}" data-q2="${a.q2 || 'N'}" data-q3="${a.q3 || 'N'}"
-                                data-q4="${a.q4 || 'N'}" data-q5="${a.q5 || 'N'}" data-q6="${a.q6 || 'N'}"
-                                data-q7="${a.q7 || 'N'}" data-q9="${a.q9 || 'N'}"
-                                data-q2_spec="${a.q2_spec || ''}" data-q3_spec="${a.q3_spec || ''}"
-                                data-q4_spec="${a.q4_spec || ''}" data-q5_spec="${a.q5_spec || ''}"
-                                data-q7_spec="${a.q7_spec || ''}" data-q9_spec="${a.q9_spec || ''}"
-                                data-w-preg="${a.w_preg || 'N'}" data-w-nurse="${a.w_nurse || 'N'}" data-w-pill="${a.w_pill || 'N'}">
-                                CHECK INFO
-                            </button>
-                        `;
-                        weeklyGrid.appendChild(card);
+                        weeklyGrid.appendChild(buildApprovedCard(a));
                     });
 
                     if (result.next_cursor) {
@@ -2542,10 +2700,19 @@ document.addEventListener("input", function(e) {
 
 <script id="dashboard-data" type="application/json">
     {
-        "approvedCount": {{ approved_count | default(0) }},
-        "pendingCount": {{ pending_count | default(0) }},
-        "totalPatients": {{ total_patients | default(0) }},
+        "approvedCount": {{ approved_count | default(0) | tojson }},
+        "pendingCount": {{ pending_count | default(0) | tojson }},
+        "totalPatients": {{ total_patients | default(0) | tojson }},
         "urgencyCounts": {{ urgency_counts | default({}) | tojson }}
+    }
+</script>
+
+<script id="financial-report-data" type="application/json">
+    {
+        "period": "weekly",
+        "totalIncome": {{ total_income | default(0) | tojson }},
+        "totalOutstanding": {{ total_outstanding | default(0) | tojson }},
+        "unpaidProcedures": {{ unpaid_procedures | default(0) | tojson }}
     }
 </script>
 
@@ -3337,39 +3504,43 @@ function setCheckbox(id, value) {
 })
 .then(response => {
     if (response.ok) {
+        return response.json().then(result => ({ ok: true, result: result }));
+    }
+    return response.json()
+        .catch(() => ({}))
+        .then(result => {
+            throw new Error(
+                result.message ||
+                ('Failed to ' + action + ' appointment')
+            );
+        });
+})
+.then(function(payload) {
+    const result = payload.result;
 
-        if (action === 'accept') {
-            showToast('Appointment accepted successfully!');
+    if (action === 'accept') {
+        showToast('Appointment accepted successfully!');
 
-            if (rowElement) {
-                rowElement.remove();
-            }
-
-            showSection('mypatients');
-
-        } else {
-            showToast('Appointment declined successfully!');
-
-            if (rowElement) {
-                rowElement.remove();
-            }
+        if (rowElement) {
+            rowElement.remove();
         }
 
-        // Reload the page after the action is completed
-        location.reload();
+        if (result && result.patient) {
+            const grid = document.getElementById('weeklyClientsGrid');
+            if (grid) {
+                grid.insertBefore(buildApprovedCard(result.patient), grid.firstChild);
+            }
+            upsertMyPatientRow(result.patient.uid, result.patient);
+        }
+
+        showSection('mypatients');
 
     } else {
-        // On failure (e.g. double-booking conflict), the backend now
-        // returns JSON with a specific "message" field. Read it so the
-        // admin sees *why* it failed instead of a generic error.
-        return response.json()
-            .catch(() => ({}))
-            .then(result => {
-                throw new Error(
-                    result.message ||
-                    ('Failed to ' + action + ' appointment')
-                );
-            });
+        showToast('Appointment declined successfully!');
+
+        if (rowElement) {
+            rowElement.remove();
+        }
     }
 })
 .catch(error => {
@@ -4495,10 +4666,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const dateInput = document.getElementById('admApptDate');
         const timeInput = document.getElementById('admApptTime');
         if (dateInput) {
-            dateInput.min = new Date().toISOString().split('T')[0];
+            // Admin may record past/already-done procedures, so no min date.
             dateInput.addEventListener('change', function() {
                 admCombineDateTime();
-                const info = (window.__blockedSlotsMap || {})[this.value];
+                const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local time
+                const isPast = this.value && this.value < todayStr;
+                const info = isPast ? null : (window.__blockedSlotsMap || {})[this.value];
                 Array.from(timeInput.options).forEach(opt => opt.disabled = false);
 
                 if (info) {
@@ -5314,7 +5487,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         document.getElementById('unblockBtn').addEventListener('click', async function() {
             if (!selectedDate) { showToast('Please select a date first.'); return; }
-            if (!confirm('Unblock ' + selectedDate + '?')) return;
+            if (!(await showConfirm('Unblock ' + selectedDate + '?'))) return;
 
             const formData = new FormData();
             formData.append('date', selectedDate);
@@ -5464,6 +5637,20 @@ function filterUserManagement() {
     // --- Financial Chart (Income Trend) ---
     let incomeChartInstance = null; // Store chart instance to destroy/update it
 
+    // Shared state for whatever period is currently on screen -- read by
+    // downloadFinancialReportPDF() so the report always matches the view,
+    // without a separate fetch. Seeded from the server-rendered (all-time)
+    // values, then kept in sync by loadFinancialChart() on every period switch.
+    let financialReportState = { period: 'weekly', totalIncome: 0, totalOutstanding: 0, unpaidProcedures: 0 };
+    (function seedFinancialReportState() {
+        try {
+            const raw = document.getElementById('financial-report-data');
+            if (raw) financialReportState = Object.assign(financialReportState, JSON.parse(raw.textContent || '{}'));
+        } catch (e) {
+            console.warn('Financial report data seed failed', e);
+        }
+    })();
+
     function loadFinancialChart(period) {
         // Update active button state
         document.querySelectorAll('.period-btn').forEach(btn => {
@@ -5476,8 +5663,31 @@ function filterUserManagement() {
             .then(data => {
                 if (data.success) {
                     updateIncomeChart(data.labels, data.data);
+                    updateFinancialCards(data.total_income, data.total_outstanding, data.unpaid_procedures);
+                    financialReportState = {
+                        period: period,
+                        totalIncome: data.total_income,
+                        totalOutstanding: data.total_outstanding,
+                        unpaidProcedures: data.unpaid_procedures
+                    };
                 }
             });
+    }
+
+    function updateFinancialCards(totalIncome, totalOutstanding, unpaidProcedures) {
+        const incomeEl = document.getElementById('finTotalIncome');
+        const outstandingEl = document.getElementById('finTotalOutstanding');
+        const unpaidEl = document.getElementById('finUnpaidProcedures');
+
+        if (incomeEl && typeof totalIncome === 'number') {
+            incomeEl.textContent = '₱' + totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        if (outstandingEl && typeof totalOutstanding === 'number') {
+            outstandingEl.textContent = '₱' + totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        if (unpaidEl && typeof unpaidProcedures === 'number') {
+            unpaidEl.textContent = unpaidProcedures;
+        }
     }
 
     function updateIncomeChart(labels, dataValues) {
@@ -5565,6 +5775,120 @@ function filterUserManagement() {
         loadFinancialChart('weekly'); // Default for income
         loadProcedureCharts('overall'); // Default for procedures (shows all time)
     });
+
+    // --- Downloadable Financial Report (PDF) ---
+    const FINANCIAL_PERIOD_LABELS = {
+        today: 'Today',
+        weekly: 'This Week',
+        monthly: 'This Month',
+        yearly: 'Last 12 Months',
+        overall: 'All Time'
+    };
+
+    function formatPesoForPdf(value) {
+        // jsPDF's built-in fonts (Helvetica/Times/Courier) only cover the
+        // WinAnsi/Latin-1 character set, which does NOT include the ₱ Peso
+        // sign (U+20B1) -- that's what was rendering as garbled "±" text.
+        // Using "PHP" here (ASCII-only) keeps the summary text readable
+        // and consistent. The ₱ symbol on-screen and inside the chart image
+        // is unaffected -- those are drawn by the browser's own fonts.
+        const num = typeof value === 'number' ? value : parseFloat(String(value).replace(/,/g, '')) || 0;
+        return 'PHP ' + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    async function downloadFinancialReportPDF() {
+        const { jsPDF } = window.jspdf;
+        const btn = document.getElementById('download-financial-report-btn');
+        const chartCanvas = document.getElementById('incomeChart');
+
+        if (!chartCanvas) {
+            showToast('Income chart not found.');
+            return;
+        }
+
+        if (btn) btn.disabled = true;
+
+        try {
+            // Chart.js draws straight onto a <canvas>, so it can be exported
+            // directly -- no html2canvas needed here. We flatten it onto a
+            // white background first so the transparent areas of the chart
+            // don't come out black in the PDF.
+            const flat = document.createElement('canvas');
+            flat.width = chartCanvas.width;
+            flat.height = chartCanvas.height;
+            const fctx = flat.getContext('2d');
+            fctx.fillStyle = '#ffffff';
+            fctx.fillRect(0, 0, flat.width, flat.height);
+            fctx.drawImage(chartCanvas, 0, 0);
+            const chartImg = flat.toDataURL('image/png', 1.0);
+
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageW = pdf.internal.pageSize.getWidth();
+            const margin = 15;
+            let y = margin;
+
+            const periodLabel = FINANCIAL_PERIOD_LABELS[financialReportState.period] || financialReportState.period;
+
+            pdf.setFontSize(18);
+            pdf.setTextColor(13, 71, 161);
+            pdf.text('Capizonda Dental Clinic', margin, y);
+            y += 8;
+
+            pdf.setFontSize(13);
+            pdf.setTextColor(40, 40, 40);
+            pdf.text('Financial Report', margin, y);
+            y += 8;
+
+            pdf.setFontSize(10);
+            pdf.setTextColor(90, 90, 90);
+            pdf.text(`Period: ${periodLabel}`, margin, y);
+            pdf.text(`Generated: ${new Date().toLocaleString()}`, pageW - margin, y, { align: 'right' });
+            y += 10;
+
+            pdf.setDrawColor(220, 220, 220);
+            pdf.line(margin, y, pageW - margin, y);
+            y += 12;
+
+            const summaryItems = [
+                ['Total Income Collected', formatPesoForPdf(financialReportState.totalIncome)],
+                ['Outstanding Balance', formatPesoForPdf(financialReportState.totalOutstanding)],
+                ['Unpaid Procedures', String(financialReportState.unpaidProcedures || 0)]
+            ];
+            const colWidth = (pageW - margin * 2) / summaryItems.length;
+            summaryItems.forEach(([label, value], i) => {
+                const x = margin + colWidth * i;
+                pdf.setFontSize(9);
+                pdf.setTextColor(90, 90, 90);
+                pdf.text(label, x, y);
+                pdf.setFontSize(14);
+                pdf.setTextColor(13, 71, 161);
+                pdf.text(value, x, y + 7);
+            });
+            y += 22;
+
+            pdf.setDrawColor(220, 220, 220);
+            pdf.line(margin, y, pageW - margin, y);
+            y += 10;
+
+            pdf.setFontSize(11);
+            pdf.setTextColor(40, 40, 40);
+            pdf.text('Income Trend', margin, y);
+            y += 6;
+
+            const usableW = pageW - margin * 2;
+            const imgRatio = chartCanvas.width / chartCanvas.height;
+            const imgH = usableW / imgRatio;
+            pdf.addImage(chartImg, 'PNG', margin, y, usableW, imgH);
+
+            const dateStamp = new Date().toISOString().slice(0, 10);
+            pdf.save(`financial-report-${financialReportState.period}-${dateStamp}.pdf`);
+        } catch (err) {
+            console.error('Financial report PDF generation failed:', err);
+            showToast('Could not generate the report. Please try again.');
+        } finally {
+            if (btn) btn.disabled = false;
+        }
+    }
 </script>
 
 

@@ -251,6 +251,32 @@ class DentalClinicApp(BaseFlaskApp):
         return f"P-{new_number:06d}"
 
 
+    def compute_age_and_birth_year(self, birthday):
+        """
+        Given a birthday string (YYYY-MM-DD, as produced by an HTML
+        <input type="date">), return (age, birth_year) as ints.
+
+        Age is always computed live from the stored Birthday rather
+        than saved anywhere, so it can never go stale/drift out of
+        sync the way a manually-entered number would.
+
+        Returns (None, None) if there's no usable birthday on file.
+        """
+        birthday = str(birthday or "").strip()
+        if not birthday:
+            return None, None
+
+        try:
+            bday = datetime.strptime(birthday[:10], "%Y-%m-%d").date()
+        except ValueError:
+            return None, None
+
+        today = datetime.now(UTC).date()
+        had_birthday_this_year = (today.month, today.day) >= (bday.month, bday.day)
+        age = today.year - bday.year - (0 if had_birthday_this_year else 1)
+
+        return age, bday.year
+
     def normalize_patient_name(self, value):
         """
         Normalize a name so searching is less affected by:
@@ -644,15 +670,21 @@ class DentalClinicApp(BaseFlaskApp):
         has_done = any(True for _ in target_ref.collection("Done_procedure").limit(1).stream())
 
         latest_accepted = None
+        latest_sex = ""
         for a in target_ref.collection("Approve").stream():
-            accepted_at = a.to_dict().get("accepted_at", "")
+            a_data = a.to_dict()
+            accepted_at = a_data.get("accepted_at", "")
             if accepted_at and (latest_accepted is None or accepted_at > latest_accepted):
                 latest_accepted = accepted_at
+                latest_sex = a_data.get("Sex", "")
 
-        target_ref.update({
+        account_update = {
             "has_history": has_approve or has_done,
             "last_approved_at": latest_accepted or ""
-        })
+        }
+        if latest_sex:
+            account_update["last_sex"] = latest_sex
+        target_ref.update(account_update)
 
         source_ref.delete()
         self._invalidate_financial_cache()
@@ -2773,11 +2805,18 @@ class DentalClinicApp(BaseFlaskApp):
 
                 batch.commit()
 
-                # NEW: cache history flag + latest date on the account doc
-                user_ref.update({
+                # NEW: cache history flag + latest date on the account doc.
+                # Also refresh last_sex from this appointment's answer, so
+                # "My Patients" always reflects the most recent visit --
+                # but only if this appointment actually answered it, so we
+                # never clobber a known value with a blank one.
+                account_update = {
                     "has_history": True,
                     "last_approved_at": data["accepted_at"]
-                })
+                }
+                if data.get("Sex"):
+                    account_update["last_sex"] = data["Sex"]
+                user_ref.update(account_update)
 
 
             elif action == "decline":
@@ -2797,7 +2836,11 @@ class DentalClinicApp(BaseFlaskApp):
             ).start()
 
 
-            return f"Appointment {action}ed"
+            return jsonify({
+                "success": True,
+                "action": action,
+                "patient": data if action == "accept" else None
+            })
 
 
         except Exception as e:
@@ -3447,13 +3490,19 @@ class DentalClinicApp(BaseFlaskApp):
                 appointment_id
             ).set(data)
 
-            # NEW: cache history flag + latest date on the account doc
-            self.db.collection(
-                self.Customer_Account
-            ).document(uid).update({
+            # NEW: cache history flag + latest date on the account doc,
+            # same as approve() -- see the comment there for why last_sex
+            # is only set when this appointment actually answered it.
+            account_update = {
                 "has_history": True,
                 "last_approved_at": data["accepted_at"]
-            })
+            }
+            if data.get("Sex"):
+                account_update["last_sex"] = data["Sex"]
+
+            self.db.collection(
+                self.Customer_Account
+            ).document(uid).update(account_update)
 
             return jsonify({
                 "success": True,
@@ -3528,12 +3577,23 @@ class DentalClinicApp(BaseFlaskApp):
         # Now: one cached lookup map shared across the whole page.
         account_to_patient = self._get_account_to_patient_map()
 
+        # NEW: patient_id -> full Patients doc, reusing the SAME cached
+        # scan _get_account_to_patient_map() already pulled from, so
+        # Birthday joins in for free -- no extra per-row Firestore reads.
+        patients_by_id = {pid: data for pid, data in self._get_patients_cached()}
+
         rows = []
         for doc in docs:
             account_uid = doc.id
             account_data = doc.to_dict()
 
             patient_id = account_to_patient.get(account_uid, "")
+
+            birthday = ""
+            if patient_id:
+                birthday = patients_by_id.get(patient_id, {}).get("birthday", "")
+
+            age, birth_year = self.compute_age_and_birth_year(birthday)
 
             first = account_data.get("firstname") or ""
             last = account_data.get("lastname") or ""
@@ -3547,6 +3607,14 @@ class DentalClinicApp(BaseFlaskApp):
                 "full_name": account_data.get("name") or f"{first} {last}".strip(),
                 "contact_number": account_data.get("contact_number", ""),
                 "email": account_data.get("email", ""),
+                "birthday": birthday,
+                "age": age,
+                "birth_year": birth_year,
+                # Auto-pulled from the patient's most recently approved
+                # appointment (whether self-booked or dentist-entered),
+                # kept in sync in approve()/admin_create_appointment()/
+                # the merge paths. Still admin-editable via EDIT.
+                "sex": account_data.get("last_sex", ""),
                 "most_recent_appointment": account_data.get("last_approved_at", ""),
             })
 
@@ -3628,6 +3696,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "full_name": account_data.get("name") or f"{first} {last}".strip(),
                 "contact_number": account_data.get("contact_number", ""),
                 "email": account_data.get("email", ""),
+                "sex": account_data.get("last_sex", ""),
                 "disabled": bool(account_data.get("disabled", False)),
             })
 
@@ -3966,6 +4035,13 @@ class DentalClinicApp(BaseFlaskApp):
             request.form.get("email", "").strip()
         )
 
+        # NEW: Sex is auto-pulled from the patient's most recent appointment
+        # (see approve()/admin_create_appointment()), but admins can still
+        # correct it here. Stored on Customer_Account as last_sex.
+        sex = bleach.clean(
+            request.form.get("sex", "").strip()
+        )
+
         if not uid:
             return jsonify({
                 "success": False,
@@ -3995,7 +4071,8 @@ class DentalClinicApp(BaseFlaskApp):
                 "middlename": middle_name,
                 "lastname": last_name,
                 "contact_number": contact_number,
-                "email": email
+                "email": email,
+                "last_sex": sex
             })
 
             # Keep the canonical Patients record in sync, if linked.
@@ -5327,17 +5404,39 @@ class DentalClinicApp(BaseFlaskApp):
         source_ref = self.db.collection(self.Doc_Patients).document(source_patient_id)
         target_ref = self.db.collection(self.Doc_Patients).document(target_patient_id)
         
-        source_doc = source_ref.get()
-        target_doc = target_ref.get()
-        
         if not source_doc.exists or not target_doc.exists:
             return jsonify({"success": False, "message": "One of the patient records does not exist"}), 404
-            
-        source_uid = source_doc.to_dict().get("account_uid", "")
-        target_uid = target_doc.to_dict().get("account_uid", "")
+
+        source_data = source_doc.to_dict()
+        target_data = target_doc.to_dict()
+
+        source_uid = source_data.get("account_uid", "")
+        target_uid = target_data.get("account_uid", "")
         
         if not source_uid or not target_uid:
             return jsonify({"success": False, "message": "One of the patients does not have a linked account"}), 400
+
+        # NEW: reconcile Birthday BEFORE touching anything else. This
+        # mirrors the same rule find_patient() already uses for duplicate
+        # detection ("if both records have a birthday, it must match
+        # exactly") -- so a genuine mismatch here is a signal these may
+        # not actually be the same person, and we block rather than
+        # silently discard one of the two birthdays.
+        source_birthday = str(source_data.get("birthday", "") or "").strip()
+        target_birthday = str(target_data.get("birthday", "") or "").strip()
+
+        if source_birthday and target_birthday and source_birthday != target_birthday:
+            return jsonify({
+                "success": False,
+                "message": (
+                    f"These records have different birthdays "
+                    f"(target: {target_birthday}, source: {source_birthday}) "
+                    f"and may not be the same patient. Merge blocked -- "
+                    f"please verify before merging."
+                )
+            }), 409
+
+        birthday_to_keep = target_birthday or source_birthday
 
         # Merge subcollections from source account to target account
         source_acc_ref = self.db.collection(self.Customer_Account).document(source_uid)
@@ -5350,7 +5449,36 @@ class DentalClinicApp(BaseFlaskApp):
                 # Use the original document ID to prevent duplicates if run twice
                 target_acc_ref.collection(sub_name).document(doc.id).set(data)
                 doc.reference.delete()
-                
+
+        # NEW: recompute has_history / last_approved_at / last_sex on the
+        # target account now that source's appointments live there too.
+        # Mirrors merge_patient_accounts() (the walk-in merge path), which
+        # already does this -- without it, target's "most recent
+        # appointment" data (including Sex) could go stale after a merge
+        # if source actually had the more recent visit.
+        has_approve = any(True for _ in target_acc_ref.collection("Approve").limit(1).stream())
+        has_done = any(True for _ in target_acc_ref.collection("Done_procedure").limit(1).stream())
+
+        latest_accepted = None
+        latest_sex = ""
+        for a in target_acc_ref.collection("Approve").stream():
+            a_data = a.to_dict()
+            accepted_at = a_data.get("accepted_at", "")
+            if accepted_at and (latest_accepted is None or accepted_at > latest_accepted):
+                latest_accepted = accepted_at
+                latest_sex = a_data.get("Sex", "")
+
+        account_update = {
+            "has_history": has_approve or has_done,
+            "last_approved_at": latest_accepted or ""
+        }
+        if latest_sex:
+            account_update["last_sex"] = latest_sex
+        target_acc_ref.update(account_update)
+
+        if birthday_to_keep and birthday_to_keep != target_birthday:
+            target_ref.update({"birthday": birthday_to_keep})
+
         # Clean up source account and patient record
         source_acc_ref.delete()
         source_ref.delete()
@@ -5390,7 +5518,10 @@ class DentalClinicApp(BaseFlaskApp):
                 key = m.strftime("%Y-%m")
                 income_by_month[key] = 0.0
                 labels.append(m.strftime("%b %Y"))
-                
+
+            total_income = 0.0
+            total_outstanding = 0.0
+            unpaid_procedures = 0
             try:
                 done_docs = self._get_done_procedures_cached()
                 for data in done_docs:
@@ -5401,7 +5532,13 @@ class DentalClinicApp(BaseFlaskApp):
                                 proc_date = datetime.fromisoformat(date_str).date()
                                 key = proc_date.strftime("%Y-%m")
                                 if key in income_by_month:
-                                    income_by_month[key] += self.safe_float(p.get("paid", 0))
+                                    paid = self.safe_float(p.get("paid", 0))
+                                    balance = self.safe_float(p.get("balance", 0))
+                                    income_by_month[key] += paid
+                                    total_income += paid
+                                    total_outstanding += balance
+                                    if balance > 0:
+                                        unpaid_procedures += 1
                             except:
                                 pass
             except Exception as e:
@@ -5409,20 +5546,42 @@ class DentalClinicApp(BaseFlaskApp):
                 return jsonify({"success": False, "message": str(e)}), 500
                 
             values = [round(income_by_month[k], 2) for k in income_by_month.keys()]
-            return jsonify({"success": True, "period": period, "labels": labels, "data": values})
+            return jsonify({
+                "success": True,
+                "period": period,
+                "labels": labels,
+                "data": values,
+                "total_income": round(total_income, 2),
+                "total_outstanding": round(total_outstanding, 2),
+                "unpaid_procedures": unpaid_procedures
+            })
 
         # --- NEW: Handle Overall (All Time Total) ---
         if period == "overall":
             total = 0.0
+            total_outstanding = 0.0
+            unpaid_procedures = 0
             try:
                 done_docs = self._get_done_procedures_cached()
                 for data in done_docs:
                     for p in data.get("procedures", []):
                         total += self.safe_float(p.get("paid", 0))
+                        balance = self.safe_float(p.get("balance", 0))
+                        total_outstanding += balance
+                        if balance > 0:
+                            unpaid_procedures += 1
             except Exception as e:
                 print("FINANCIAL CHART DATA ERROR:", e)
                 return jsonify({"success": False, "message": str(e)}), 500
-            return jsonify({"success": True, "period": period, "labels": ["All Time"], "data": [round(total, 2)]})
+            return jsonify({
+                "success": True,
+                "period": period,
+                "labels": ["All Time"],
+                "data": [round(total, 2)],
+                "total_income": round(total, 2),
+                "total_outstanding": round(total_outstanding, 2),
+                "unpaid_procedures": unpaid_procedures
+            })
 
         # --- Existing Logic for Today/Weekly/Monthly ---
         if period == "today":
@@ -5441,14 +5600,23 @@ class DentalClinicApp(BaseFlaskApp):
             for i in range(num_days)
         ]
         income_by_date = {d: 0.0 for d in date_keys}
-        
+        total_income = 0.0
+        total_outstanding = 0.0
+        unpaid_procedures = 0
+
         try:
             done_docs = self._get_done_procedures_cached()
             for data in done_docs:
                 for p in data.get("procedures", []):
                     date_str = str(p.get("date", "")).strip()
                     if date_str in income_by_date:
-                        income_by_date[date_str] += self.safe_float(p.get("paid", 0))
+                        paid = self.safe_float(p.get("paid", 0))
+                        balance = self.safe_float(p.get("balance", 0))
+                        income_by_date[date_str] += paid
+                        total_income += paid
+                        total_outstanding += balance
+                        if balance > 0:
+                            unpaid_procedures += 1
         except Exception as e:
             print("FINANCIAL CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": str(e)}), 500
@@ -5466,7 +5634,10 @@ class DentalClinicApp(BaseFlaskApp):
             "success": True,
             "period": period,
             "labels": labels,
-            "data": values
+            "data": values,
+            "total_income": round(total_income, 2),
+            "total_outstanding": round(total_outstanding, 2),
+            "unpaid_procedures": unpaid_procedures
         })
 
     def get_approve(self, uid):
@@ -5643,33 +5814,6 @@ class DentalClinicApp(BaseFlaskApp):
             "revenue": {"labels": revenue_labels, "data": revenue_values}
         })
 
-        def top_n(metric_dict, limit=10):
-            sorted_keys = sorted(metric_dict.keys(), key=lambda k: metric_dict[k], reverse=True)
-            top_keys = sorted_keys[:limit]
-            other_keys = sorted_keys[limit:]
-
-            labels = [display_names[k] for k in top_keys]
-            values = [round(metric_dict[k], 2) for k in top_keys]
-
-            if other_keys:
-                other_total = round(sum(metric_dict[k] for k in other_keys), 2)
-                if other_total > 0:
-                    labels.append("Other")
-                    values.append(other_total)
-
-            return labels, values
-
-        count_labels, count_values = top_n(counts)
-        revenue_labels, revenue_values = top_n(revenue)
-
-        return jsonify({
-            "success": True,
-            "counts": {"labels": count_labels, "data": count_values},
-            "revenue": {"labels": revenue_labels, "data": revenue_values}
-        })
-
-    
-        
 
     def _register_routes(self):
         """Polymorphism: Register all routes"""
