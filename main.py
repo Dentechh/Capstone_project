@@ -3961,7 +3961,7 @@ class DentalClinicApp(BaseFlaskApp):
             if len(results) >= MAX_RESULTS:
                 break
 
-        return jsonify(results)
+            return jsonify(results)
     
     def check_duplicate_patient(self):
         if not session.get('admin_logged_in'):
