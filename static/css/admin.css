@@ -403,7 +403,7 @@ body.dark-mode .patient-profile-header {
 .metric-data h3 {
     font-size: 32px;
     margin: 0;
-    color: #0d47a1;
+    color: #42A5F6;
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.5px;
@@ -431,13 +431,13 @@ body.dark-mode .patient-profile-header {
 }
 
 .metric-card:nth-child(1) .metric-icon { background: linear-gradient(135deg, #e3f2fd, #bbdefb); color: #0d47a1; }
-.metric-card:nth-child(1) .metric-data h3 { color: #0d47a1; }
+.metric-card:nth-child(1) .metric-data h3 { color: #42A5F6; }
 
 .metric-card:nth-child(2) .metric-icon { background: linear-gradient(135deg, #e3f2fd, #bbdefb); color: #1565c0; }
-.metric-card:nth-child(2) .metric-data h3 { color: #1565c0; }
+.metric-card:nth-child(2) .metric-data h3 { color: #42A5F6; }
 
 .metric-card:nth-child(3) .metric-icon { background: linear-gradient(135deg, #e3f2fd, #bbdefb); color: #42a5f5; }
-.metric-card:nth-child(3) .metric-data h3 { color: #42a5f5; }
+.metric-card:nth-child(3) .metric-data h3 { color: #42A5F6; }
 
 @media (max-width: 1024px) {
     .metric-cards {
@@ -904,7 +904,11 @@ body.dark-mode .chart-header p {
 }
 
 body.dark-mode .metric-data h3 {
-    color: #e0e0e0;
+    color: #42A5F6;
+}
+
+body.dark-mode .metric-card:nth-child(3) .metric-data h3 {
+    color: #42A5F6;
 }
 
 body.dark-mode .metric-data p {
@@ -1160,6 +1164,30 @@ body.dark-mode .btn-save-td:hover {
     color: #ffffff;
     border: 1px solid #ef4444;
     margin-left: 5px;
+}
+#newAppointmentBtn {
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 10px;
+    letter-spacing: 0.2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.28);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+#newAppointmentBtn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(30, 64, 175, 0.38);
+}
+#newAppointmentBtn:active {
+    transform: translateY(0);
+}
+body.dark-mode #newAppointmentBtn {
+    background-color: #1e3a8a;
+    color: #dbeafe;
+    border-color: #3b82f6;
 }
 
 .btn-add-row {
@@ -1926,10 +1954,6 @@ body.dark-mode .label-side.rotated{
 
 #logoutModal .btn-logout-cancel:hover {
     background: #e5e7eb;
-}
-
-#logoutModal .close-btn {
-    color: #ef4444;
 }
 
 body.dark-mode #logoutModal .modal-content {
@@ -4068,4 +4092,361 @@ body.dark-mode #checkInfoModal .btn-action {
 
 body.dark-mode #checkInfoModal .btn-action:hover {
     background: var(--gold-light);
+}
+
+/* =========================================
+   DOCTORS CALENDAR - MODERN CHECKBOX STYLES
+   ========================================= */
+
+/* Base custom checkbox */
+input[type="checkbox"].calendar-checkbox,
+input[type="checkbox"].block-time-cb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+/* Hover state */
+input[type="checkbox"].calendar-checkbox:hover,
+input[type="checkbox"].block-time-cb:hover {
+    border-color: var(--navy, #0d47a1);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+/* Checked state */
+input[type="checkbox"].calendar-checkbox:checked,
+input[type="checkbox"].block-time-cb:checked {
+    background: var(--navy, #0d47a1);
+    border-color: var(--navy, #0d47a1);
+}
+
+/* Checkmark (custom) */
+input[type="checkbox"].calendar-checkbox:checked::after,
+input[type="checkbox"].block-time-cb:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 11px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Focus state for accessibility */
+input[type="checkbox"].calendar-checkbox:focus-visible,
+input[type="checkbox"].block-time-cb:focus-visible {
+    outline: 2px solid var(--navy, #0d47a1);
+    outline-offset: 2px;
+}
+
+/* Disabled state */
+input[type="checkbox"].calendar-checkbox:disabled,
+input[type="checkbox"].block-time-cb:disabled {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Dark mode overrides */
+body.dark-mode input[type="checkbox"].calendar-checkbox,
+body.dark-mode input[type="checkbox"].block-time-cb {
+    background: #1e293b;
+    border-color: #475569;
+}
+
+body.dark-mode input[type="checkbox"].calendar-checkbox:hover,
+body.dark-mode input[type="checkbox"].block-time-cb:hover {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+
+body.dark-mode input[type="checkbox"].calendar-checkbox:checked,
+body.dark-mode input[type="checkbox"].block-time-cb:checked {
+    background: #64b5f6;
+    border-color: #64b5f6;
+}
+
+body.dark-mode input[type="checkbox"].calendar-checkbox:disabled,
+body.dark-mode input[type="checkbox"].block-time-cb:disabled {
+    background: #334155;
+    border-color: #475569;
+}
+
+/* Label wrapper for block-time-cb (time slots) */
+.block-time-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.block-time-label:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--navy, #0d47a1);
+    transform: translateY(-1px);
+}
+
+.block-time-label:has(input:checked) {
+    background: rgba(13, 71, 161, 0.12);
+    border-color: var(--navy, #0d47a1);
+}
+
+.block-time-label span {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+body.dark-mode .block-time-label {
+    background: rgba(30, 35, 45, 0.6);
+    border-color: rgba(255, 255, 255, 0.08);
+    color: #e0e0e0;
+}
+
+body.dark-mode .block-time-label:hover {
+    background: rgba(30, 35, 45, 0.9);
+    border-color: #64b5f6;
+}
+
+body.dark-mode .block-time-label:has(input:checked) {
+    background: rgba(100, 181, 246, 0.15);
+    border-color: #64b5f6;
+}
+
+body.dark-mode .block-time-label span {
+    color: #e0e0e0;
+}
+
+/* =========================================
+   DOCTORS CALENDAR - BUTTONS & INPUT STYLES
+   ========================================= */
+
+/* Reason Input - Enhanced */
+#blockReasonInput {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1a1a1a;
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+    outline: none;
+}
+
+#blockReasonInput::placeholder {
+    color: #94a3b8;
+    font-weight: 400;
+}
+
+#blockReasonInput:focus {
+    border-color: var(--navy, #0d47a1);
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.12);
+}
+
+body.dark-mode #blockReasonInput {
+    background: rgba(15, 23, 42, 0.85);
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode #blockReasonInput::placeholder {
+    color: #64748b;
+}
+
+body.dark-mode #blockReasonInput:focus {
+    border-color: #64b5f6;
+    background: rgba(15, 23, 42, 0.95);
+    box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.25);
+}
+
+/* Save Block Button - Primary Navy */
+#saveBlockBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--navy, #0d47a1);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+    min-width: 140px;
+}
+
+#saveBlockBtn:hover {
+    background: var(--navy-dark, #0a3b7d);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(13, 71, 161, 0.45);
+}
+
+#saveBlockBtn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+}
+
+#saveBlockBtn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
+/* Dark mode: Save button uses bright blue (#42A5F6) for contrast on dark background */
+body.dark-mode #saveBlockBtn {
+    background: #42A5F6;
+    color: #0b1a3a;
+    box-shadow: 0 4px 14px rgba(66, 165, 246, 0.4);
+}
+
+body.dark-mode #saveBlockBtn:hover {
+    background: #64b5f6;
+    box-shadow: 0 8px 22px rgba(100, 181, 246, 0.5);
+}
+
+/* Unblock This Day Button - Destructive Red */
+#unblockBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border: 2px solid #ef4444;
+    border-radius: 10px;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ef4444;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex: 1;
+    min-width: 140px;
+}
+
+#unblockBtn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(239, 68, 68, 0.35);
+}
+
+#unblockBtn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+#unblockBtn:disabled {
+    border-color: #94a3b8;
+    color: #94a3b8;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
+}
+
+body.dark-mode #unblockBtn {
+    border-color: #f87171;
+    color: #fca5a5;
+}
+
+body.dark-mode #unblockBtn:hover {
+    background: #f87171;
+    color: #1a0a0a;
+    box-shadow: 0 8px 22px rgba(248, 113, 113, 0.4);
+}
+
+/* Button group container */
+#calendarBtnGroup {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Responsive button group */
+@media (max-width: 480px) {
+    #calendarBtnGroup {
+        flex-direction: column;
+    }
+    
+    #saveBlockBtn,
+    #unblockBtn {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+}
+
+/* Block full day toggle label */
+#blockFullDayToggleLabel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #1a1a1a;
+    transition: all 0.2s ease;
+}
+
+#blockFullDayToggleLabel:hover {
+    color: var(--navy, #0d47a1);
+}
+
+body.dark-mode #blockFullDayToggleLabel {
+    color: #e0e0e0;
+}
+
+body.dark-mode #blockFullDayToggleLabel:hover {
+    color: #64b5f6;
+}
+
+/* Block times grid layout improvement */
+#blockTimesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+@media (max-width: 600px) {
+    #blockTimesGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    #blockTimesGrid {
+        grid-template-columns: 1fr;
+    }
 }

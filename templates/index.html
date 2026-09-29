@@ -302,136 +302,179 @@
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
                 <div class="personal-info-grid">
-                    <div class="name-fields">
-                        <input type="text" placeholder="First Name" name="First_Name" required>
-                        <input type="text" placeholder="Middle Name" name="Middle_Name">
-                        <input type="text" placeholder="Last Name" name="Last_Name" required>
-                    </div>
-                    
-                        <input type="text" placeholder="House No." name="House_No" required>
-                        <input type="text" placeholder="Street" name="Street">
 
-                    
-                    <input type="text" placeholder="Barangay" name="Brgy" required>
-                    <input type="text" placeholder="Municipality/City" name="Municipality/City" required>
-                    <input type="text" placeholder="Province" name="Province" required>
-
-                    <input type="text" placeholder="Nationality" name="Nationality">
-                    
-                    <select name="Religion" required>
-                        <option value="" disabled selected>Religion</option>
-                        <option value="Roman Catholic">Roman Catholic</option>
-                        <option value="Christian">Christian</option>
-                        <option value="Islam">Islam</option>
-                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
-                        <option value="Baptist">Baptist</option>
-                        <option value="Methodist">Methodist</option>
-                        <option value="Presbyterian">Presbyterian</option>
-                        <option value="Anglican">Anglican</option>
-                        <option value="Lutheran">Lutheran</option>
-                        <option value="Mormon">Mormon</option>
-                        <option value="Jehovah's Witness">Jehovah's Witness</option>
-                        <option value="Buddhist">Buddhist</option>
-                        <option value="Hindu">Hindu</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    
-                    <div class="age-sex-group">
-                        <input type="number" placeholder="Age" name="Age"required>
-                        <select name="Sex" id="sexSelect"required>
-                            <option value="" disabled selected>Sex</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                        </select>
+                    <div class="form-group">
+                        <label for="patientFirstName">First Name</label>
+                        <input type="text" id="patientFirstName" name="First_Name" required>
                     </div>
-                    <input type="tel" placeholder="Contact Number" name="Contact_number" required>
-                    <div class="birthday-field">
+
+                    <div class="form-group">
+                        <label for="patientMiddleName">Middle Name</label>
+                        <input type="text" id="patientMiddleName" name="Middle_Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="patientLastName">Last Name</label>
+                        <input type="text" id="patientLastName" name="Last_Name" required>
+                    </div>
+
+                    <div class="form-group birthday-field">
                         <label for="birthday">Birthday</label>
-                        <input type="date" id="birthday" name="Birthday" required>
+                        <input type="date" id="birthday" name="Birthday" class="adm-date-native" required>
                     </div>
-                    
-                    
-                    <select name="Occupation" required>
-                        <option value="" disabled selected>Occupation</option>
-                        <option value="Student">Student</option>
-                        <option value="Employee">Employee</option>
-                        <option value="Self-Employed">Self-Employed</option>
-                        <option value="Teacher">Teacher</option>
-                        <option value="Nurse">Nurse</option>
-                        <option value="Doctor">Doctor</option>
-                        <option value="Engineer">Engineer</option>
-                        <option value="Lawyer">Lawyer</option>
-                        <option value="Business Owner">Business Owner</option>
-                        <option value="Housewife">Housewife</option>
-                        <option value="Retired">Retired</option>
-                    </select>
 
+                    <div class="form-row3">
+                        <div class="form-group">
+                            <label for="patientContact">Contact Number</label>
+                            <input type="tel" id="patientContact" name="Contact_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientAge">Age</label>
+                            <input type="number" id="patientAge" name="Age" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sexSelect">Sex</label>
+                            <select name="Sex" id="sexSelect" required>
+                                <option value="" disabled selected>Sex</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
 
-                    <select name="Urgency_Level" required>
-                        <option value="" disabled selected>Urgency Level</option>
-                        <option value="Normal">Normal</option>
-                        <option value="Emergency">Emergency</option>
-                    </select>
-                    
-                    <select name="Civil_Status" required>
-                        <option value="" disabled selected>Civil Status</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Widowed">Widowed</option>
-                        <option value="Separated">Separated</option>
-                        <option value="Divorced">Divorced</option>
-                    </select>
+                    <div class="form-row3">
+                        <div class="form-group">
+                            <label for="patientHouseNo">House No.</label>
+                            <input type="text" id="patientHouseNo" name="House_No" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientStreet">Street</label>
+                            <input type="text" id="patientStreet" name="Street">
+                        </div>
+                        <div class="form-group">
+                            <label for="patientBrgy">Barangay</label>
+                            <input type="text" id="patientBrgy" name="Brgy" required>
+                        </div>
+                    </div>
 
-                    <div class="service-schedule-section">
+                    <div class="form-row2">
+                        <div class="form-group">
+                            <label for="patientMunicipality">Municipality/City</label>
+                            <input type="text" id="patientMunicipality" name="Municipality/City" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientProvince">Province</label>
+                            <input type="text" id="patientProvince" name="Province" required>
+                        </div>
+                    </div>
 
-                        <!-- SELECT SERVICE -->
-                        <div>
-                            <label>SELECT SERVICE</label>
+                    <div class="form-row2">
+                        <div class="form-group">
+                            <label for="patientNationality">Nationality</label>
+                            <input type="text" id="patientNationality" name="Nationality">
+                        </div>
+                        <div class="form-group">
+                            <label for="patientReligion">Religion</label>
+                            <select name="Religion" id="patientReligion" required>
+                                <option value="" disabled selected>Religion</option>
+                                <option value="Roman Catholic">Roman Catholic</option>
+                                <option value="Christian">Christian</option>
+                                <option value="Islam">Islam</option>
+                                <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
+                                <option value="Baptist">Baptist</option>
+                                <option value="Methodist">Methodist</option>
+                                <option value="Presbyterian">Presbyterian</option>
+                                <option value="Anglican">Anglican</option>
+                                <option value="Lutheran">Lutheran</option>
+                                <option value="Mormon">Mormon</option>
+                                <option value="Jehovah's Witness">Jehovah's Witness</option>
+                                <option value="Buddhist">Buddhist</option>
+                                <option value="Hindu">Hindu</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <select name="Service" required>
-                    <option value="" disabled selected>Choose a service</option>
-                    <option value="Dental Consultation">Dental Consultation - ₱300</option>
-                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) - ₱800 - 2,000</option>
-                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta) - ₱800 - 1,500</option>
-                    <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot) - ₱800 - 1,500</option>
-                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                    <option value="Crowns and Bridges">Crowns and Bridges</option>
-                    <option value="Teeth Whitening">Teeth Whitening</option>
-                    <option value="Fluoride Treatment">Fluoride Treatment</option>
-                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                    <option value="Root Canal Treatment">Root Canal Treatment</option>
-                    <option value="Periapical Xray">Periapical Xray</option>
+                    <div class="form-row2">
+                        <div class="form-group">
+                            <label for="patientOccupation">Occupation</label>
+                            <select name="Occupation" id="patientOccupation" required>
+                                <option value="" disabled selected>Occupation</option>
+                                <option value="Student">Student</option>
+                                <option value="Employee">Employee</option>
+                                <option value="Self-Employed">Self-Employed</option>
+                                <option value="Teacher">Teacher</option>
+                                <option value="Nurse">Nurse</option>
+                                <option value="Doctor">Doctor</option>
+                                <option value="Engineer">Engineer</option>
+                                <option value="Lawyer">Lawyer</option>
+                                <option value="Business Owner">Business Owner</option>
+                                <option value="Housewife">Housewife</option>
+                                <option value="Retired">Retired</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientCivilStatus">Civil Status</label>
+                            <select name="Civil_Status" id="patientCivilStatus" required>
+                                <option value="" disabled selected>Civil Status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Separated">Separated</option>
+                                <option value="Divorced">Divorced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="serviceSelect">Service</label>
+                        <select name="Service" id="serviceSelect" required>
+                            <option value="" disabled selected>Choose a service</option>
+                            <option value="Dental Consultation">Dental Consultation - ₱300</option>
+                            <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning) - ₱800 - 2,000</option>
+                            <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta) - ₱800 - 1,500</option>
+                            <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot) - ₱800 - 1,500</option>
+                            <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                            <option value="Crowns and Bridges">Crowns and Bridges</option>
+                            <option value="Teeth Whitening">Teeth Whitening</option>
+                            <option value="Fluoride Treatment">Fluoride Treatment</option>
+                            <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                            <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                            <option value="Root Canal Treatment">Root Canal Treatment</option>
+                            <option value="Periapical Xray">Periapical Xray</option>
                         </select>
-                        </div>
-
-                        <!-- SELECT SCHEDULE -->
-                        <div class="schedule-pair">
-                            <div class="schedule-card">
-                                <label for="scheduleDate">Date</label>
-                                <input type="text" id="scheduleDate" placeholder="Choose date" required readonly>
-                                <span class="card-icon">📆</span>
-                            </div>
-                            <div class="schedule-card">
-                                <label for="scheduleTime">Time</label>
-                                <select id="scheduleTime" required>
-                                    <option value="" disabled selected>Select time</option>
-                                    <option value="09:00">9:00 AM</option>
-                                    <option value="10:00">10:00 AM</option>
-                                    <option value="11:00">11:00 AM</option>
-                                    <option value="12:00">12:00 PM</option>
-                                    <option value="13:00">1:00 PM</option>
-                                    <option value="14:00">2:00 PM</option>
-                                    <option value="15:00">3:00 PM</option>
-                                    <option value="16:00">4:00 PM</option>
-                                    <option value="17:00">5:00 PM</option>
-                                </select>
-                                <span class="card-icon">🕐</span>
-                            </div>
-                        </div>
-                        <input type="hidden" name="appointment_date" id="appointmentDateHidden">
-
                     </div>
+
+                    <div class="form-row3">
+                        <div class="form-group">
+                            <label for="patientUrgency">Urgency Level</label>
+                            <select name="Urgency_Level" id="patientUrgency" required>
+                                <option value="" disabled selected>Urgency Level</option>
+                                <option value="Normal">Normal</option>
+                                <option value="Emergency">Emergency</option>
+                            </select>
+                        </div>
+                        <div class="form-group date-field">
+                            <label for="scheduleDate">Date of Appointment</label>
+                            <input type="text" id="scheduleDate" placeholder="Choose date" required readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduleTime">Time of Appointment</label>
+                            <select id="scheduleTime" required>
+                                <option value="" disabled selected>Select time</option>
+                                <option value="09:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                                <option value="13:00">1:00 PM</option>
+                                <option value="14:00">2:00 PM</option>
+                                <option value="15:00">3:00 PM</option>
+                                <option value="16:00">4:00 PM</option>
+                                <option value="17:00">5:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    <input type="hidden" name="appointment_date" id="appointmentDateHidden">
                 </div> <!-- This closes the personal-info-grid div -->
 
                 <h3>Medical History</h3>
@@ -439,41 +482,62 @@
                 <div class="medical-history-questions">
                     <div class="question-row">
                         <span>1. Are you in good health?</span>
-                        <div><input type="radio" name="q1" value="Yes"> Yes <input type="radio" name="q1" value="No"> No</div>
+                        <div class="yn">
+                            <label><input type="radio" name="q1" value="Yes"> Yes</label>
+                            <label><input type="radio" name="q1" value="No"> No</label>
+                        </div>
                     </div>
 
                     <div class="question-item">
                         <div class="question-row"><span>2. Are you under medical treatment now?</span>
-                        <div><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes <input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q2" value="Yes" onclick="toggleSpecInput('q2', false)"> Yes</label>
+                            <label><input type="radio" name="q2" value="No" onclick="toggleSpecInput('q2', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q2_spec" id="q2_spec" placeholder="If so, what condition?" disabled>
                     </div>
 
                     <div class="question-item">
                         <div class="question-row"><span>3. Serious illness / surgical operation?</span>
-                        <div><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes <input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q3" value="Yes" onclick="toggleSpecInput('q3', false)"> Yes</label>
+                            <label><input type="radio" name="q3" value="No" onclick="toggleSpecInput('q3', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q3_spec" id="q3_spec" placeholder="What illness/operation?" disabled>
                     </div>
 
                     <div class="question-item">
                         <div class="question-row"><span>4. Have you ever been hospitalized?</span>
-                        <div><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes <input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q4" value="Yes" onclick="toggleSpecInput('q4', false)"> Yes</label>
+                            <label><input type="radio" name="q4" value="No" onclick="toggleSpecInput('q4', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q4_spec" id="q4_spec" placeholder="When and why?" disabled>
                     </div>
 
                     <div class="question-item">
                         <div class="question-row"><span>5. Are you taking any medication?</span>
-                        <div><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes <input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q5" value="Yes" onclick="toggleSpecInput('q5', false)"> Yes</label>
+                            <label><input type="radio" name="q5" value="No" onclick="toggleSpecInput('q5', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q5_spec" id="q5_spec" placeholder="If so, please specify" disabled>
                     </div>
 
                     <div class="question-row">
                         <span>6. Do you use tobacco products?</span>
-                        <div><input type="radio" name="q6" value="Yes"> Yes <input type="radio" name="q6" value="No"> No</div>
+                        <div class="yn">
+                            <label><input type="radio" name="q6" value="Yes"> Yes</label>
+                            <label><input type="radio" name="q6" value="No"> No</label>
+                        </div>
                     </div>
 
                     <div>
                         <div class="question-row"><span>7. Do you have any allergy?</span>
-                        <div><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes <input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q7" value="Yes" onclick="toggleSpecInput('q7', false)"> Yes</label>
+                            <label><input type="radio" name="q7" value="No" onclick="toggleSpecInput('q7', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q7_spec" id="q7_spec" placeholder="If so, please specify" disabled>
                     </div>
 
@@ -483,7 +547,7 @@
     
     <div class="women-question">
         <span>Are you pregnant?</span>
-        <div>
+        <div class="yn">
             <label><input type="radio" name="w_pregnant" value="Yes"> Yes</label>
             <label><input type="radio" name="w_pregnant" value="No"> No</label>
         </div>
@@ -491,7 +555,7 @@
 
     <div class="women-question">
         <span>Are you nursing?</span>
-        <div>
+        <div class="yn">
             <label><input type="radio" name="w_nursing" value="Yes"> Yes</label>
             <label><input type="radio" name="w_nursing" value="No"> No</label>
         </div>
@@ -499,7 +563,7 @@
 
     <div class="women-question">
         <span>On birth control pills?</span>
-        <div>
+        <div class="yn">
             <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
             <label><input type="radio" name="w_pill" value="No"> No</label>
         </div>
@@ -508,13 +572,19 @@
 
                     <div>
                         <div class="question-row"><span>9. Do you have any medical condition/s?</span>
-                        <div><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes <input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</div></div>
+                        <div class="yn">
+                            <label><input type="radio" name="q9" value="Yes" onclick="toggleSpecInput('q9', false)"> Yes</label>
+                            <label><input type="radio" name="q9" value="No" onclick="toggleSpecInput('q9', true)"> No</label>
+                        </div></div>
                         <input type="text" name="q9_spec" id="q9_spec" placeholder="If so, please specify" disabled>
                     </div>
                 </div>
 
                 <div class="consent-checkbox">
-                    <label><input type="checkbox" required> I authorize the doctor to proceed with treatment & understand dentistry is not an exact science.</label>
+                    <label>
+                        <input type="checkbox" required>
+                        <span class="consent-checkbox-text">I authorize the doctor to proceed with treatment &amp; understand dentistry is not an exact science.</span>
+                    </label>
                 </div>
 
                 <button type="button" id="confirmAppointmentBtn" class="submit-btn">Confirm Appointment</button>
@@ -716,13 +786,12 @@ sendPasswordResetEmail
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCpt9dnVFDvDNfnX4jQyfxxtYfnR_duUEE",
-    authDomain: "dentech-c2ee0.firebaseapp.com",
-    projectId: "dentech-c2ee0",
-    storageBucket: "dentech-c2ee0.firebasestorage.app",
-    messagingSenderId: "921529543911",
-    appId: "1:921529543911:web:08e91a5f6982eb541b0642",
-    measurementId: "G-Y3X4RF50Y5"
+  apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
+  authDomain: "capizonda-dentech-dev.firebaseapp.com",
+  projectId: "capizonda-dentech-dev",
+  storageBucket: "capizonda-dentech-dev.firebasestorage.app",
+  messagingSenderId: "938908117708",
+  appId: "1:938908117708:web:77d10befb2f8917ccf3069"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -1164,6 +1233,13 @@ resetPasswordBtn.addEventListener("click", async () => {
                 alert("Please provide your signature.");
                 return;
             }
+            // The birthday input is rendered by flatpickr's alt input, so the
+            // browser can't validate the hidden original - check it here.
+            const birthdayValue = document.getElementById("birthday");
+            if (birthdayValue && !birthdayValue.value) {
+                alert("Please select your birthday.");
+                return;
+            }
             const form = document.getElementById("appointmentForm");
             if (form.checkValidity()) {
                 form.submit();
@@ -1223,17 +1299,40 @@ resetPasswordBtn.addEventListener("click", async () => {
         }
     }
 
-        // Calendar Initialization
-        scheduleDatePicker = flatpickr("#scheduleDate", {
-            minDate: "today",
-            dateFormat: "Y-m-d",
-            onChange: function(selectedDates, dateStr) {
-                applyBlockedTimeOptions(dateStr);
-                combineDateTime();
-            }
-        });
+    // Calendar Initialization
+    scheduleDatePicker = flatpickr("#scheduleDate", {
+        minDate: "today",
+        dateFormat: "Y-m-d",
+        className: "adm-datepicker",
+        monthSelectorType: "static",
+        onChange: function(selectedDates, dateStr) {
+            applyBlockedTimeOptions(dateStr);
+            combineDateTime();
+        }
+    });
 
-        loadDoctorBlockedSlots();
+    // Birthday uses the same themed calendar instead of the browser popup.
+    if (typeof flatpickr === 'function' && document.getElementById('birthday')) {
+        flatpickr("#birthday", {
+            maxDate: "today",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "F j, Y",
+            altInputClass: "adm-date-alt",
+            className: "adm-datepicker",
+            allowInput: false,
+            monthSelectorType: "static"
+        });
+        const birthdayNative = document.getElementById('birthday');
+        // flatpickr's alt input is the visible control; keep the real
+        // input out of sight but still holding the posted value.
+        if (birthdayNative) {
+            birthdayNative.style.display = 'none';
+            birthdayNative.removeAttribute('required');
+        }
+    }
+
+    loadDoctorBlockedSlots();
 
     function combineDateTime() {
         const dateInput = document.getElementById("scheduleDate");
@@ -1415,6 +1514,193 @@ function respondPatientMatch(confirmed) {
 }
 </script>
 {% endif %}
+
+<script>
+// -------------------------------------------------------------------
+// Custom option panel for the selects inside the appointment form.
+// The native <select> stays the real form control (so required
+// validation, names and change events keep working) - we only stop
+// the browser popup from opening and draw our own listbox instead.
+// -------------------------------------------------------------------
+(function () {
+    const form = document.getElementById('appointmentForm');
+    if (!form) return;
+
+    const CHECK_SVG =
+        '<svg class="adm-select-check" viewBox="0 0 24 24" fill="none" ' +
+        'stroke="currentColor" stroke-width="3" stroke-linecap="round" ' +
+        'stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+
+    let openWrap = null;
+
+    function closeAll() {
+        if (!openWrap) return;
+        openWrap.classList.remove('is-open', 'is-open-up');
+        const s = openWrap.querySelector('select');
+        if (s) s.setAttribute('aria-expanded', 'false');
+        openWrap = null;
+    }
+
+    // The form pane scrolls, so fit the panel to the free space and flip
+    // upward when there is not enough room below the trigger.
+    function positionMenu(wrap) {
+        const select = wrap.querySelector('select');
+        const menu = wrap.querySelector('.adm-select-menu');
+        const scroller = wrap.closest('.form-container');
+        if (!select || !menu || !scroller) return;
+
+        wrap.scrollIntoView({ block: 'nearest' });
+
+        const trigger = select.getBoundingClientRect();
+        const box = scroller.getBoundingClientRect();
+        const gap = 10;
+        const below = box.bottom - trigger.bottom - gap;
+        const above = trigger.top - box.top - gap;
+
+        wrap.classList.toggle('is-open-up', below < 170 && above > below);
+        const room = wrap.classList.contains('is-open-up') ? above : below;
+        menu.style.maxHeight = Math.max(110, Math.min(230, room)) + 'px';
+    }
+
+    function render(wrap) {
+        const select = wrap.querySelector('select');
+        const menu = wrap.querySelector('.adm-select-menu');
+        if (!select || !menu) return;
+
+        menu.textContent = '';
+        const options = Array.from(select.options);
+        if (!options.length) {
+            const empty = document.createElement('li');
+            empty.className = 'adm-select-empty';
+            empty.textContent = 'No options available';
+            menu.appendChild(empty);
+            return;
+        }
+
+        options.forEach(function (opt, index) {
+            const li = document.createElement('li');
+            li.className = 'adm-select-option';
+            li.setAttribute('role', 'option');
+            li.dataset.index = String(index);
+            li.textContent = opt.textContent.trim();
+            li.insertAdjacentHTML('beforeend', CHECK_SVG);
+            if (opt.disabled) li.classList.add('is-disabled');
+            if (opt.selected) li.classList.add('is-selected');
+            menu.appendChild(li);
+        });
+    }
+
+    function scrollActiveIntoView(menu) {
+        const active = menu.querySelector('.adm-select-option.is-selected') ||
+                       menu.querySelector('.adm-select-option.is-active');
+        if (active) active.scrollIntoView({ block: 'nearest' });
+    }
+
+    function move(step) {
+        const wrap = openWrap;
+        if (!wrap) return;
+        const menu = wrap.querySelector('.adm-select-menu');
+        const items = Array.from(menu.querySelectorAll('.adm-select-option:not(.is-disabled)'));
+        if (!items.length) return;
+        const current = items.findIndex(i => i.classList.contains('is-active'));
+        const next = items[Math.min(items.length - 1, Math.max(0, (current === -1 ? 0 : current) + step))];
+        items.forEach(i => i.classList.remove('is-active'));
+        next.classList.add('is-active');
+        scrollActiveIntoView(menu);
+    }
+
+    document.addEventListener('click', function (e) {
+        if (openWrap && !openWrap.contains(e.target)) closeAll();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && openWrap) {
+            const s = openWrap.querySelector('select');
+            closeAll();
+            if (s) s.focus();
+        }
+    });
+
+    form.querySelectorAll('select').forEach(function (select) {
+        if (select.dataset.admEnhanced === '1') return;
+        select.dataset.admEnhanced = '1';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'adm-select';
+        select.parentNode.insertBefore(wrap, select);
+        wrap.appendChild(select);
+
+        const menu = document.createElement('ul');
+        menu.className = 'adm-select-menu';
+        menu.setAttribute('role', 'listbox');
+        wrap.appendChild(menu);
+
+        select.setAttribute('aria-haspopup', 'listbox');
+        select.setAttribute('aria-expanded', 'false');
+        render(wrap);
+
+        // Rebuild when the doctor blocked-slot logic enables/disables
+        // options, or when any other code rewrites the option list.
+        new MutationObserver(function () {
+            render(wrap);
+            if (wrap === openWrap) {
+                positionMenu(wrap);
+                scrollActiveIntoView(menu);
+            }
+        }).observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+
+        select.addEventListener('change', function () {
+            Array.from(menu.querySelectorAll('.adm-select-option')).forEach(function (li) {
+                const opt = select.options[Number(li.dataset.index)];
+                li.classList.toggle('is-selected', !!(opt && opt.selected));
+            });
+        });
+
+        select.addEventListener('mousedown', function (e) {
+            if (select.disabled) return;
+            e.preventDefault();
+            const isOpen = wrap.classList.contains('is-open');
+            closeAll();
+            if (!isOpen) {
+                wrap.classList.add('is-open');
+                select.setAttribute('aria-expanded', 'true');
+                openWrap = wrap;
+                render(wrap);
+                positionMenu(wrap);
+                scrollActiveIntoView(menu);
+            }
+            select.focus();
+        });
+
+        select.addEventListener('keydown', function (e) {
+            if (select.disabled) return;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!wrap.classList.contains('is-open')) {
+                    select.dispatchEvent(new Event('mousedown'));
+                }
+                move(e.key === 'ArrowDown' ? 1 : -1);
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                if (wrap.classList.contains('is-open')) {
+                    e.preventDefault();
+                    const active = menu.querySelector('.adm-select-option.is-active');
+                    if (active) active.click();
+                }
+            }
+        });
+
+        menu.addEventListener('click', function (e) {
+            const li = e.target.closest('.adm-select-option');
+            if (!li || li.classList.contains('is-disabled')) return;
+            const opt = select.options[Number(li.dataset.index)];
+            if (!opt) return;
+            select.selectedIndex = Number(li.dataset.index);
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+            closeAll();
+            select.focus();
+        });
+    });
+})();
+</script>
 
 </body>
 </html>

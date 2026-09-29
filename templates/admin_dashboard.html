@@ -10,12 +10,486 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=2">
+
+    <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
+                    <style id="doctorCalendarTheme">
+    /* ==========================================================
+       DOCTORS CALENDAR - flatpickr theme
+       VERIFIED (headless browser): in inline mode flatpickr inserts
+       .flatpickr-calendar as a SIBLING of the target element, and the
+       className option does NOT land on the calendar. Both picker and
+       calendar are children of .doctor-cal-panel, so that panel is the
+       only reliable scope root. No JS class-tagging required.
+       */
+
+    /* ---- Card shell ---- */
+    .doctor-cal-panel .flatpickr-calendar {
+        width: 100% !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+                    0 10px 24px -8px rgba(15, 23, 42, 0.10) !important;
+        font-family: 'Kumbh Sans', sans-serif !important;
+        overflow: hidden !important;
+    }
+
+    /* ---- Month / year header ---- */
+    .doctor-cal-panel .flatpickr-months,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+        padding: 14px 10px 10px !important;
+    }
+
+    .doctor-cal-panel .flatpickr-current-month .cur-month,
+    .doctor-cal-panel .flatpickr-current-month input.cur-year,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month .cur-month,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+    }
+
+    .doctor-cal-panel .flatpickr-current-month input.cur-year,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* Month dropdown.
+       This calendar does NOT set monthSelectorType, so flatpickr renders a
+       native <select>. Its opened <option> list is drawn with OS chrome and
+       CSS cannot restyle it (Chrome ignores option backgrounds), so the native
+       select is hidden and a real listbox (.adm-month-dd) takes its place.
+       flatpickr keeps maintaining the hidden select, which stays the source of
+       truth for the available months. */
+    /* Only hide the native select once the custom listbox has actually been
+       built - buildMonthDropdown() adds .has-custom-month when it succeeds.
+       If that JS ever fails, the native control stays visible and usable
+       rather than leaving a blank header with no way to change month. */
+    .doctor-cal-panel .flatpickr-calendar.has-custom-month .flatpickr-monthDropdown-months {
+        display: none !important;
+    }
+
+    .adm-month-dd {
+        position: relative;
+        display: inline-block;
+        background-color: transparent;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 13px;
+        border: none;
+        border-radius: 8px;
+        color: #ffffff;
+        font-family: 'Kumbh Sans', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        line-height: 1.2;
+        padding: 6px 28px 6px 10px;
+        cursor: pointer;
+        transition: background-color 0.15s ease;
+    }
+
+    .adm-month-dd:hover,
+    .adm-month-dd:focus-visible {
+        background-color: rgba(255, 255, 255, 0.18);
+        outline: none;
+    }
+
+    .adm-month-dd-list {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 168px;
+        max-height: 260px;
+        overflow-y: auto;
+        padding: 6px;
+        text-align: left;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 14px 32px -8px rgba(15, 23, 42, 0.3);
+        z-index: 40;
+    }
+
+    .adm-month-dd-list.is-open {
+        display: block;
+    }
+
+    /* flatpickr sets overflow:hidden on .flatpickr-month (the prev/next arrow
+       box) and nests .flatpickr-current-month inside it, which clips the
+       dropdown list completely. Let it overflow, and lift the whole header
+       subtree above the day grid so the open list is not painted behind it. */
+    .doctor-cal-panel .flatpickr-month,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-month {
+        overflow: visible !important;
+    }
+
+    .doctor-cal-panel .flatpickr-months,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        position: relative !important;
+        z-index: 20 !important;
+    }
+
+    .adm-month-dd-item {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-family: 'Kumbh Sans', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: #0d47a1;
+        transition: background-color 0.12s ease, color 0.12s ease;
+    }
+
+    .adm-month-dd-item:hover,
+    .adm-month-dd-item:focus-visible {
+        background: #dbeafe;
+        color: #0d47a1;
+        outline: none;
+    }
+
+    .adm-month-dd-item.is-active {
+        background: #0d47a1;
+        color: #ffffff;
+    }
+
+    .doctor-cal-panel .flatpickr-current-month .numInputWrapper:hover,
+    .doctor-cal-panel .numInputWrapper:hover,
+    .doctor-cal-panel .flatpickr-calendar .numInputWrapper:hover {
+        background: rgba(255, 255, 255, 0.18) !important;
+        border-radius: 6px !important;
+    }
+
+    .doctor-cal-panel .numInputWrapper span,
+    .doctor-cal-panel .flatpickr-calendar .numInputWrapper span {
+        border-color: rgba(255, 255, 255, 0.45) !important;
+    }
+
+    .doctor-cal-panel .numInputWrapper span.arrowUp::after,
+    .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowUp::after {
+        border-bottom-color: #ffffff !important;
+    }
+
+    .doctor-cal-panel .numInputWrapper span.arrowDown::after,
+    .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowDown::after {
+        border-top-color: #ffffff !important;
+    }
+
+    .doctor-cal-panel .flatpickr-prev-month svg,
+    .doctor-cal-panel .flatpickr-next-month svg,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-prev-month svg,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-next-month svg {
+        fill: #ffffff !important;
+    }
+
+    /* ---- Weekday header: light slate band instead of a second navy bar ---- */
+    .doctor-cal-panel .flatpickr-weekdays,
+    .doctor-cal-panel span.flatpickr-weekday,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
+    .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+        background: #f1f5f9 !important;
+    }
+
+    .doctor-cal-panel .flatpickr-weekday,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+        color: #64748b !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.6px !important;
+        text-transform: uppercase !important;
+    }
+
+    /* ---- Day grid (grid layout: even 7 columns) ---- */
+    /* flatpickr renders .flatpickr-rContainer as a flex item inside
+       .flatpickr-innerContainer, which makes it shrink instead of filling
+       the card. Force block layout down the whole chain. */
+    .doctor-cal-panel .flatpickr-innerContainer,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-innerContainer {
+        display: block !important;
+        overflow: hidden !important;
+        width: auto !important;
+    }
+
+    .doctor-cal-panel .flatpickr-rContainer,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-rContainer {
+        display: block !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .doctor-cal-panel .flatpickr-days,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-days {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 10px 10px 6px !important;
+        border: none !important;
+    }
+
+    .doctor-cal-panel .dayContainer,
+    .doctor-cal-panel .flatpickr-calendar .dayContainer {
+        display: grid !important;
+        grid-template-columns: repeat(7, 38px) !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        align-content: start !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        height: auto !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .doctor-cal-panel .flatpickr-day,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+        background: none !important;
+        border: 1px solid transparent !important;
+        border-radius: 50% !important;
+        color: #334155 !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        width: 38px !important;
+        height: 38px !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        line-height: 1 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: background 0.15s ease, color 0.15s ease,
+                    transform 0.15s ease, box-shadow 0.15s ease !important;
+    }
+
+    .doctor-cal-panel .flatpickr-day:hover,
+    .doctor-cal-panel .flatpickr-day:focus,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+        background: #dbeafe !important;
+        border-color: transparent !important;
+        color: #0d47a1 !important;
+        transform: scale(1.08) !important;
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.18) !important;
+    }
+
+    /* Today */
+    .doctor-cal-panel .flatpickr-day.today,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+        border: 2px solid #1e63cd !important;
+        background: #eff6ff !important;
+        color: #0d47a1 !important;
+        font-weight: 800 !important;
+    }
+
+    .doctor-cal-panel .flatpickr-day.today:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today:hover {
+        background: #dbeafe !important;
+        border-color: #0d47a1 !important;
+    }
+
+    /* Selected */
+    .doctor-cal-panel .flatpickr-day.selected,
+    .doctor-cal-panel .flatpickr-day.startRange,
+    .doctor-cal-panel .flatpickr-day.endRange,
+    .doctor-cal-panel .flatpickr-day.selected:hover,
+    .doctor-cal-panel .flatpickr-day.startRange:hover,
+    .doctor-cal-panel .flatpickr-day.endRange:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+        background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 12px rgba(13, 71, 161, 0.4) !important;
+        transform: none !important;
+    }
+
+    /* Adjacent-month + disabled days */
+    .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+    .doctor-cal-panel .flatpickr-day.prevMonthDay,
+    .doctor-cal-panel .flatpickr-day.nextMonthDay,
+    .doctor-cal-panel .flatpickr-day.notAllowed,
+    .doctor-cal-panel .flatpickr-day.flatpickr-disabled:hover,
+    .doctor-cal-panel .flatpickr-day.prevMonthDay:hover,
+    .doctor-cal-panel .flatpickr-day.nextMonthDay:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.notAllowed,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay:hover,
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay:hover {
+        background: transparent !important;
+        border-color: transparent !important;
+        color: #cbd5e1 !important;
+        font-weight: 400 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    /* Blocked-day dot (built inline by onDayCreate) */
+    .doctor-cal-panel .flatpickr-day > span[style*="border-radius:50%"],
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day > span[style*="border-radius:50%"] {
+        width: 5px !important;
+        height: 5px !important;
+        box-shadow: 0 0 0 1.5px #ffffff !important;
+        z-index: 2 !important;
+    }
+
+    .doctor-cal-panel .flatpickr-day.selected > span[style*="border-radius:50%"],
+    .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected > span[style*="border-radius:50%"] {
+        box-shadow: 0 0 0 1.5px #1e63cd !important;
+    }
+
+    /* ============================ DARK MODE ============================ */
+    /* NOTE: target the CALENDAR only. Writing bare .doctor-cal-panel here
+       would repaint the outer panel and undo its transparent background. */
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+                    0 14px 32px -12px rgba(0, 0, 0, 0.55) !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-months,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        background: linear-gradient(135deg, #0b1a3a 0%, #14346b 100%) !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-weekdays,
+    body.dark-mode .doctor-cal-panel span.flatpickr-weekday,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+        background: #0f172a !important;
+    }
+
+    /* Month dropdown - dark */
+    body.dark-mode .adm-month-dd-list {
+        background: #1e293b;
+        border-color: #334155;
+        box-shadow: 0 16px 34px -8px rgba(0, 0, 0, 0.65);
+    }
+
+    body.dark-mode .adm-month-dd-item {
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .adm-month-dd-item:hover,
+    body.dark-mode .adm-month-dd-item:focus-visible {
+        background: #1e3a8a;
+        color: #ffffff;
+    }
+
+    body.dark-mode .adm-month-dd-item.is-active {
+        background: #2563eb;
+        color: #ffffff;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-weekday,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+        color: #7dd3fc !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+        color: #cbd5e1 !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day:hover,
+    body.dark-mode .doctor-cal-panel .flatpickr-day:focus,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+        background: #1e3a8a !important;
+        color: #dbeafe !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day.today,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+        border-color: #60a5fa !important;
+        background: #172554 !important;
+        color: #bfdbfe !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day.selected,
+    body.dark-mode .doctor-cal-panel .flatpickr-day.startRange,
+    body.dark-mode .doctor-cal-panel .flatpickr-day.endRange,
+    body.dark-mode .doctor-cal-panel .flatpickr-day.selected:hover,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border-color: transparent !important;
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+    body.dark-mode .doctor-cal-panel .flatpickr-day.prevMonthDay,
+    body.dark-mode .doctor-cal-panel .flatpickr-day.nextMonthDay,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay {
+        color: #475569 !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day > span[style*="border-radius:50%"],
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day > span[style*="border-radius:50%"] {
+        box-shadow: 0 0 0 1.5px #1e293b !important;
+    }
+
+    body.dark-mode .doctor-cal-panel .flatpickr-day.selected > span[style*="border-radius:50%"],
+    body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected > span[style*="border-radius:50%"] {
+        box-shadow: 0 0 0 1.5px #2563eb !important;
+    }
+
+    /* ---- Legend under the calendar ---- */
+    .calendar-legend {
+        margin-top: 14px !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 7px !important;
+        line-height: 1.4 !important;
+    }
+
+    .calendar-legend > span {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .calendar-legend > span > span {
+        flex-shrink: 0 !important;
+    }
+
+    body.dark-mode .calendar-legend {
+        color: #e2e8f0 !important;
+    }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
@@ -78,7 +552,7 @@
 }
 
 
-/* CLOSE BUTTON */
+/* CLOSE BUTTON - styled with the shared .modal-x rules below */
 .chart-modal-close {
     border: none;
     background: transparent;
@@ -88,8 +562,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
-    padding: 5px;
 }
 
 
@@ -276,7 +748,7 @@
     margin: 0;
     font-size: 18px;
     font-weight: 700;
-    color: #0d47a1;
+    color: #42A5F6;
 }
 
 .income-trend-header p {
@@ -311,6 +783,36 @@
     background: var(--navy, #0d47a1);
     color: #fff;
     border-color: var(--navy, #0d47a1);
+}
+
+body.dark-mode .income-trend-card {
+    background: rgba(30, 35, 45, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.45);
+}
+
+body.dark-mode .income-trend-header h3 {
+    color: #42A5F6;
+}
+
+body.dark-mode .income-trend-header p {
+    color: #42A5F6;
+}
+
+body.dark-mode .period-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(45, 55, 75, 0.75);
+    color: #cbd5e1;
+}
+
+body.dark-mode .period-btn:hover {
+    background: rgba(60, 70, 95, 0.85);
+}
+
+body.dark-mode .period-btn.active {
+    background: #42A5F6;
+    border-color: #42A5F6;
+    color: #1e293b;
 }
 
 .financial-period-toolbar {
@@ -495,6 +997,22 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
     border-color: var(--navy, #0d47a1);
 }
 
+body.dark-mode .proc-period-btn {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(45, 55, 75, 0.75);
+    color: #cbd5e1;
+}
+
+body.dark-mode .proc-period-btn:hover {
+    background: rgba(60, 70, 95, 0.85);
+}
+
+body.dark-mode .proc-period-btn.active {
+    background: #42A5F6;
+    border-color: #42A5F6;
+    color: #1e293b;
+}
+
 .income-chart-wrapper {
     position: relative;
     height: 350px;
@@ -605,8 +1123,8 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">Appointments</a>
             <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
             <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
+            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Accepted Patients</a>
             <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My Patients</a>
-            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item" onclick="showSection('WeeklyClients')">Approved Patients</a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item" onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
             <a href="javascript:void(0)" id="nav-usermanagement" class="nav-item" onclick="showSection('usermanagement')">User Management</a>
         </nav>
@@ -751,7 +1269,7 @@ body.dark-mode .toast-close:hover { color: #cbd5e1; }
             <div class="recent-activity">
                 <div class="recent-header">
                     <h3>Recent Approved Patients</h3>
-                    <a href="javascript:void(0)" onclick="showSection('WeeklyClients')" class="view-all">View All &rarr;</a>
+                    <a href="javascript:void(0)" onclick="showSection('mypatients')" class="view-all">View All &rarr;</a>
                 </div>
                 <div class="recent-list">
                     {% if recent_approve %}
@@ -1203,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <div style="display:flex !important; justify-content:space-between !important; align-items:center !important; margin-bottom:15px !important;">
             <h2 style="display:block !important; visibility:visible !important; color:#1a1a1a !important; font-size:20px !important; margin:0 !important;">Edit Patient</h2>
-            <span onclick="closeEditPatientModal()" style="display:block !important; visibility:visible !important; color:#1a1a1a !important; font-size:28px !important; cursor:pointer !important; line-height:1 !important;">&times;</span>
+            <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeEditPatientModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
         </div>
 
         <form id="editPatientForm">
@@ -1549,7 +2067,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-content">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
             <h2>Treatment Information</h2>
-            <span onclick="closeCheckInfoModal()" style="font-size:28px;cursor:pointer;">&times;</span>
+            <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeCheckInfoModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
         </div>
 
 <table class="treatment-table" style="width:100%;">
@@ -1952,7 +2470,7 @@ window.onclick = function(e) {
                 <div class="patient-card" data-name="{{ appointment.FirstName }}" data-accepted-at="{{ appointment.accepted_at }}">
                     <div class="p-card-header">
                         <div class="p-info">
-                            <strong>NAME: {{ appointment.FirstName }}</strong>
+                            <strong>{{ appointment.FirstName }}</strong>
 
                             <small style="opacity: 0.6;">Account No: {{ appointment.uid }}</small>
                         </div>
@@ -2010,30 +2528,33 @@ window.onclick = function(e) {
         <div id="section-doctorscalendar" class="content-section">
     <section class="content-panel">
         <div style="display:flex; gap:24px; flex-wrap:wrap;">
-            <div style="flex:0 0 340px;">
+            <div class="doctor-cal-panel">
                 <div id="doctorCalendarPicker"></div>
-                <div style="margin-top:12px; font-size:13px; color:#546e7a;">
-                    <span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;margin-right:6px;"></span> Full day blocked
-                    <br>
-                    <span style="display:inline-block;width:10px;height:10px;background:#f5a623;border-radius:50%;margin-right:6px;"></span> Partially blocked
+                <div class="calendar-legend">
+                    <span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px;">
+                        <span style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;box-shadow:0 0 0 3px rgba(239,68,68,0.15);"></span> Full day blocked
+                    </span>
+                    <span style="display:inline-flex;align-items:center;gap:6px;">
+                        <span style="display:inline-block;width:12px;height:12px;background:#f59e0b;border-radius:50%;box-shadow:0 0 0 3px rgba(245,158,11,0.15);"></span> Partially blocked
+                    </span>
                 </div>
             </div>
             <div style="flex:1; min-width:280px;">
-                <h3 id="blockPanelDate" style="margin-top:0;">Select a date</h3>
+                <h3 id="blockPanelDate" style="margin-top:0; font-size:22px; color:#0d47a1; font-weight:700; margin-bottom:20px;">Select a date</h3>
 
-                <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-weight:600;">
-                    <input type="checkbox" id="blockFullDayToggle">
+                <label id="blockFullDayToggleLabel" style="display:flex; align-items:center; gap:10px; margin-bottom:16px; font-weight:600; cursor:pointer; color:#1e293b; font-size:15px;">
+                    <input type="checkbox" id="blockFullDayToggle" class="calendar-checkbox">
                     Block entire day
                 </label>
 
-                <div id="blockTimesGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px;"></div>
+                <div id="blockTimesGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px;"></div>
 
-                <label style="display:block; font-weight:600; margin-bottom:6px;">Reason (Optional, Internal Note)</label>
-                <input type="text" id="blockReasonInput" placeholder="e.g. Out of town - Cebu conference" style="width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; margin-bottom:16px;">
+                <label style="display:block; font-weight:600; margin-bottom:8px; color:#1e293b; font-size:14px;">Reason (Optional, Internal Note)</label>
+                <input type="text" id="blockReasonInput" placeholder="e.g. Out of town - Cebu conference">
 
-                <div style="display:flex; gap:10px;">
-                    <button type="button" id="saveBlockBtn" class="btn-action accept">Save Block</button>
-                    <button type="button" id="unblockBtn" class="btn-action" style="background:#6b7280;color:#fff;">Unblock This Day</button>
+                <div id="calendarBtnGroup" style="display:flex; gap:12px; margin-top:20px;">
+                    <button type="button" id="saveBlockBtn"><span class="material-symbols-rounded" style="font-size:18px;">save</span> Save Block</button>
+                    <button type="button" id="unblockBtn"><span class="material-symbols-rounded" style="font-size:18px;">block</span> Unblock This Day</button>
                 </div>
             </div>
         </div>
@@ -3599,6 +4120,28 @@ function setCheckbox(id, value) {
             body.classList.toggle('dark-mode');
             var isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            // Rebuild income chart with theme-appropriate colors
+            if (typeof incomeChartInstance !== 'undefined' && incomeChartInstance) {
+                var activePeriod = 'weekly';
+                var activeBtn = document.querySelector('.period-btn.active');
+                if (activeBtn && activeBtn.dataset.period) {
+                    activePeriod = activeBtn.dataset.period;
+                }
+                loadFinancialChart(activePeriod);
+            }
+            // Rebuild procedure charts with theme-appropriate colors
+            if (typeof procCountChartInstance !== 'undefined') {
+                var procPeriod = 'overall';
+                var procBtn = document.querySelector('.proc-period-btn.active');
+                if (procBtn && procBtn.dataset.period) {
+                    procPeriod = procBtn.dataset.period;
+                }
+                loadProcedureCharts(procPeriod);
+            }
+            // Rebuild dashboard charts with theme-appropriate colors
+            if (typeof dashboardDonutInstance !== 'undefined' && dashboardDonutInstance) {
+                rebuildDashboardCharts();
+            }
         });
 
     </script>
@@ -4413,6 +4956,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Initialize dashboard charts
+let dashboardDonutInstance = null;
+let dashboardBarInstance = null;
 function initDashboardCharts() {
     let dashboardData = {};
     try {
@@ -4426,10 +4971,15 @@ function initDashboardCharts() {
     const otherCount = Math.max(0, (typeof dashboardData.totalPatients === 'number' ? dashboardData.totalPatients : 0) - approvedCount);
     const urgencyCounts = (typeof dashboardData.urgencyCounts === 'object' && dashboardData.urgencyCounts !== null) ? dashboardData.urgencyCounts : {};
 
+    const isDark = document.body.classList.contains('dark-mode');
+    const textColor = isDark ? '#ffffff' : '#37474f';
+    const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)';
+
     // Donut Chart - Patient Status
     const donutCtx = document.getElementById('statusDonut');
     if (donutCtx) {
-        new Chart(donutCtx, {
+        if (dashboardDonutInstance) dashboardDonutInstance.destroy();
+        dashboardDonutInstance = new Chart(donutCtx, {
             type: 'doughnut',
             data: {
                 labels: ['Approved', 'Pending', 'Registered'],
@@ -4454,7 +5004,7 @@ function initDashboardCharts() {
                         labels: {
                             padding: 20,
                             font: { family: 'Kumbh Sans', size: 12, weight: '600' },
-                            color: '#546e7a'
+                            color: textColor
                         }
                     }
                 }
@@ -4465,7 +5015,8 @@ function initDashboardCharts() {
     // Bar Chart - Urgency Levels
     const barCtx = document.getElementById('urgencyBar');
     if (barCtx) {
-        new Chart(barCtx, {
+        if (dashboardBarInstance) dashboardBarInstance.destroy();
+        dashboardBarInstance = new Chart(barCtx, {
             type: 'bar',
             data: {
                 labels: ['Emergency',  'Normal'],
@@ -4485,13 +5036,15 @@ function initDashboardCharts() {
                         beginAtZero: true,
                         ticks: {
                             stepSize: 1,
-                            font: { family: 'Kumbh Sans', size: 12 }
+                            font: { family: 'Kumbh Sans', size: 12 },
+                            color: textColor
                         },
-                        grid: { color: 'rgba(0,0,0,0.05)' }
+                        grid: { color: gridColor }
                     },
                     x: {
                         ticks: {
-                            font: { family: 'Kumbh Sans', size: 12, weight: '600' }
+                            font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                            color: textColor
                         },
                         grid: { display: false }
                     }
@@ -4505,6 +5058,10 @@ function initDashboardCharts() {
             }
         });
     }
+}
+
+function rebuildDashboardCharts() {
+    initDashboardCharts();
 }
 
 // Run animations and charts when page loads
@@ -4745,6 +5302,243 @@ document.addEventListener('DOMContentLoaded', function() {
     window.admClearSignature = admClearSignature;
     window.admToggleSpec = admToggleSpec;
     window.admCombineDateTime = admCombineDateTime;
+
+    // ---------------------------------------------------------------
+    // Custom option panel for the selects inside the appointment modal.
+    // The native <select> stays the real form control (so ids, values,
+    // change events and validation keep working) - we only stop the
+    // browser popup from opening and draw our own listbox instead.
+    // ---------------------------------------------------------------
+    (function () {
+        const modal = document.getElementById('newApptModal');
+        if (!modal) return;
+
+        const CHECK_SVG =
+            '<svg class="adm-select-check" viewBox="0 0 24 24" fill="none" ' +
+            'stroke="currentColor" stroke-width="3" stroke-linecap="round" ' +
+            'stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>';
+
+        let openWrap = null;
+
+        function closeAll() {
+            if (!openWrap) return;
+            openWrap.classList.remove('is-open', 'is-open-up');
+            const s = openWrap.querySelector('select');
+            if (s) s.setAttribute('aria-expanded', 'false');
+            openWrap = null;
+        }
+
+        // The form pane scrolls, so the panel must fit the visible space and
+        // flip upward when there is not enough room below the trigger.
+        function positionMenu(wrap) {
+            const select = wrap.querySelector('select');
+            const menu = wrap.querySelector('.adm-select-menu');
+            const scroller = wrap.closest('.adm-form-side');
+            if (!select || !menu) return;
+
+            if (!scroller) {
+                menu.style.maxHeight = '';
+                return;
+            }
+
+            wrap.scrollIntoView({ block: 'nearest' });
+
+            const trigger = select.getBoundingClientRect();
+            const box = scroller.getBoundingClientRect();
+            const gap = 10;
+            const below = box.bottom - trigger.bottom - gap;
+            const above = trigger.top - box.top - gap;
+
+            wrap.classList.toggle('is-open-up', below < 170 && above > below);
+            const room = wrap.classList.contains('is-open-up') ? above : below;
+            menu.style.maxHeight = Math.max(110, Math.min(230, room)) + 'px';
+        }
+
+        document.addEventListener('click', function (e) {
+            if (openWrap && !openWrap.contains(e.target)) closeAll();
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && openWrap) {
+                const s = openWrap.querySelector('select');
+                closeAll();
+                if (s) s.focus();
+            }
+        });
+
+        function render(wrap) {
+            const select = wrap.querySelector('select');
+            const menu = wrap.querySelector('.adm-select-menu');
+            if (!select || !menu) return;
+
+            menu.textContent = '';
+            const options = Array.from(select.options);
+            if (!options.length) {
+                const empty = document.createElement('li');
+                empty.className = 'adm-select-empty';
+                empty.textContent = 'No options available';
+                menu.appendChild(empty);
+                return;
+            }
+
+            options.forEach(function (opt, index) {
+                const li = document.createElement('li');
+                li.className = 'adm-select-option';
+                li.setAttribute('role', 'option');
+                li.dataset.index = String(index);
+                li.textContent = opt.textContent.trim();
+                li.insertAdjacentHTML('beforeend', CHECK_SVG);
+                if (opt.disabled) li.classList.add('is-disabled');
+                if (opt.selected) li.classList.add('is-selected');
+                menu.appendChild(li);
+            });
+        }
+
+        function scrollActiveIntoView(menu) {
+            const active = menu.querySelector('.adm-select-option.is-selected') ||
+                           menu.querySelector('.adm-select-option.is-active');
+            if (active) {
+                active.scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function move(step) {
+            const wrap = openWrap;
+            if (!wrap) return;
+            const menu = wrap.querySelector('.adm-select-menu');
+            const select = wrap.querySelector('select');
+            const items = Array.from(menu.querySelectorAll('.adm-select-option:not(.is-disabled)'));
+            if (!items.length) return;
+            const current = items.findIndex(i => i.classList.contains('is-active'));
+            const next = items[Math.min(items.length - 1, Math.max(0, (current === -1 ? 0 : current) + step))];
+            items.forEach(i => i.classList.remove('is-active'));
+            next.classList.add('is-active');
+            scrollActiveIntoView(menu);
+            select.setAttribute('aria-activedescendant', next.dataset.index);
+        }
+
+        modal.querySelectorAll('select').forEach(function (select) {
+            if (select.dataset.admEnhanced === '1') return;
+            select.dataset.admEnhanced = '1';
+
+            const wrap = document.createElement('div');
+            wrap.className = 'adm-select';
+            select.parentNode.insertBefore(wrap, select);
+            wrap.appendChild(select);
+
+            const menu = document.createElement('ul');
+            menu.className = 'adm-select-menu';
+            menu.setAttribute('role', 'listbox');
+            wrap.appendChild(menu);
+
+            select.setAttribute('aria-haspopup', 'listbox');
+            select.setAttribute('aria-expanded', 'false');
+            render(wrap);
+
+            // Keep the panel in sync when JS rewrites the options or the value.
+            new MutationObserver(function () {
+                render(wrap);
+                if (wrap === openWrap) {
+                    positionMenu(wrap);
+                    scrollActiveIntoView(menu);
+                }
+            }).observe(select, { childList: true, subtree: true });
+
+            select.addEventListener('change', function () {
+                Array.from(menu.querySelectorAll('.adm-select-option')).forEach(function (li) {
+                    const opt = select.options[Number(li.dataset.index)];
+                    li.classList.toggle('is-selected', !!(opt && opt.selected));
+                });
+            });
+
+            // Suppress the native popup and show ours instead.
+            select.addEventListener('mousedown', function (e) {
+                if (select.disabled) return;
+                e.preventDefault();
+                const isOpen = wrap.classList.contains('is-open');
+                closeAll();
+                if (!isOpen) {
+                    wrap.classList.add('is-open');
+                    select.setAttribute('aria-expanded', 'true');
+                    openWrap = wrap;
+                    render(wrap);
+                    positionMenu(wrap);
+                    scrollActiveIntoView(menu);
+                }
+                select.focus();
+            });
+
+            select.addEventListener('keydown', function (e) {
+                if (select.disabled) return;
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!wrap.classList.contains('is-open')) {
+                        select.dispatchEvent(new Event('mousedown'));
+                    }
+                    move(e.key === 'ArrowDown' ? 1 : -1);
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    if (wrap.classList.contains('is-open')) {
+                        e.preventDefault();
+                        const active = menu.querySelector('.adm-select-option.is-active');
+                        if (active) active.click();
+                    }
+                }
+            });
+
+            menu.addEventListener('click', function (e) {
+                const li = e.target.closest('.adm-select-option');
+                if (!li || li.classList.contains('is-disabled')) return;
+                const index = Number(li.dataset.index);
+                const opt = select.options[index];
+                if (!opt) return;
+                select.selectedIndex = index;
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                closeAll();
+                select.focus();
+            });
+        });
+
+        // ---------------------------------------------------------------
+        // Birthday + Date of Appointment: replace the native date popup
+        // with the same flatpickr calendar the patient side already uses.
+        // The original inputs keep their ids/names/values (Y-m-d) so the
+        // existing submit and blocked-slot logic is unchanged.
+        // ---------------------------------------------------------------
+        if (typeof flatpickr === 'function') {
+            const baseOptions = {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'F j, Y',
+                altInputClass: 'adm-date-alt',
+                className: 'adm-datepicker',
+                allowInput: false,
+                monthSelectorType: 'static'
+            };
+
+            const birthday = document.getElementById('admBirthday');
+            if (birthday) {
+                flatpickr('#admBirthday', Object.assign({}, baseOptions, {
+                    maxDate: 'today'
+                }));
+            }
+
+            const apptDate = document.getElementById('admApptDate');
+            if (apptDate) {
+                flatpickr('#admApptDate', Object.assign({}, baseOptions, {
+                    minDate: 'today',
+                    onChange: function () {
+                        admCombineDateTime();
+                    }
+                }));
+            }
+
+            // The visible control is now flatpickr's alt input; keep the
+            // real inputs out of sight but still holding their values.
+            modal.querySelectorAll('.adm-date-native').forEach(function (input) {
+                input.style.display = 'none';
+                input.removeAttribute('required');
+            });
+        }
+    })();
 });
 
 </script>
@@ -4752,91 +5546,605 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <style>
 #newApptModal .adm-modal-box {
-    width: 95vw; max-width: 1300px; height: 90vh;
-    background: #fff; border-radius: 12px;
+    width: 95vw; max-width: 1600px; height: 92vh;
+    background: #fff; border-radius: 15px;
+    border-top: 8px solid #0d47a1;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    color: #000;
     display: flex; flex-direction: column; overflow: hidden;
 }
 #newApptModal .adm-modal-header {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 24px; border-bottom: 1px solid #ddd; background: var(--navy, #0d47a1); color: #fff;
+    padding: 20px 30px; border-bottom: 1px solid #dee2e6; background: #ffffff; color: #000;
+    flex-shrink: 0;
 }
-#newApptModal .adm-modal-header h2 { margin: 0; font-size: 20px; }
-#newApptModal .adm-modal-body { display: flex; flex: 1; overflow: hidden; }
+#newApptModal .adm-modal-header h2 { margin: 0; font-size: 1.4rem; color: #0d47a1; font-weight: 700; }
+#newApptModal .adm-modal-body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 #newApptModal .adm-consent-side {
-    width: 40%; padding: 20px; overflow-y: auto; border-right: 1px solid #eee;
-    font-size: 13px; line-height: 1.5; background: #fafafa;
+    flex: 1; padding: 30px; overflow-y: auto; border-right: 1px solid #dee2e6;
+    font-size: 13.5px; line-height: 1.65; background: #ffffff; color: #333333;
 }
-#newApptModal .adm-form-side { width: 60%; padding: 20px; overflow-y: auto; }
-#newApptModal .adm-form-side label { display: block; font-size: 13px; font-weight: 600; margin: 10px 0 4px; }
-#newApptModal .adm-form-side input,
+#newApptModal .adm-consent-side h3 { font-size: 20px; color: #0d47a1; margin: 0 0 16px; font-weight: 700; }
+#newApptModal .adm-consent-side p { margin: 0 0 12px; }
+#newApptModal .adm-form-side { flex: 1.5; padding: 30px; overflow-y: auto; background: #fff; }
+#newApptModal .adm-form-side h2 {
+    font-size: 1.4rem; color: #64b5f6; font-weight: 700; margin: 0 0 20px;
+}
+#newApptModal .adm-form-side label { display: block; font-size: 15px; font-weight: 600; margin: 14px 0 6px; color: #0d47a1; }
+
+/* Form controls - matches #appointmentForm in index-s.css */
+#newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
 #newApptModal .adm-form-side select {
-    width: 100%; padding: 9px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: 'Kumbh Sans', sans-serif;
+    background-color: #f1f8ff;
+    color: #333;
+    box-shadow: none;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+#newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]):focus,
+#newApptModal .adm-form-side select:focus {
+    border-color: #0d47a1;
+    outline: none;
+    background-color: #f1f8ff;
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.14);
+}
+#newApptModal .adm-form-side input::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+}
+#newApptModal .adm-form-side input:disabled {
+    background: #eef2f7;
+    color: #94a3b8;
+    cursor: not-allowed;
+    border-style: dashed;
+}
+
+/* Dropdowns - custom chip + chevron, no native arrow */
+#newApptModal .adm-form-side select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding: 12px 46px 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background-color: #f1f8ff;
+    color: #0d47a1;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+    background-image:
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+        linear-gradient(#f1f8ff, #f1f8ff);
+    background-repeat: no-repeat, no-repeat;
+    background-position: right 10px center, 0 0;
+    background-size: 24px 24px, 100% 100%;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+#newApptModal .adm-form-side select:hover {
+    border-color: #0d47a1;
+    background-color: #e8f2ff;
+    background-image:
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+        linear-gradient(#e8f2ff, #e8f2ff);
+}
+#newApptModal .adm-form-side select:focus {
+    border-color: #0d47a1;
+    background-color: #e8f2ff;
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+    background-image:
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+        linear-gradient(#e8f2ff, #e8f2ff);
+}
+#newApptModal .adm-form-side select option {
+    background: #ffffff;
+    color: #1f2937;
+    font-weight: 500;
+}
+#newApptModal .adm-form-side select option:checked {
+    background: #dbeafe;
+    color: #0d47a1;
+    font-weight: 700;
+}
+#newApptModal .adm-form-side select:disabled {
+    background-color: #eef2f7;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+/* ===== Custom option panel (native popup is not stylable) ===== */
+#newApptModal .adm-select {
+    position: relative;
+    width: 100%;
+    margin: 5px 0;
+}
+#newApptModal .adm-select > select:not([type="radio"]):not([type="checkbox"]) {
+    margin: 0;
+}
+#newApptModal .adm-select.is-open > select {
+    border-color: #0d47a1;
+    background-color: #e8f2ff;
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+}
+#newApptModal .adm-select-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 60;
+    display: none;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    max-height: 230px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #ffffff;
+    border: 1px solid #d5dde8;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
+    -webkit-overflow-scrolling: touch;
+}
+#newApptModal .adm-select.is-open .adm-select-menu {
+    display: block;
+}
+#newApptModal .adm-select.is-open-up .adm-select-menu {
+    top: auto;
+    bottom: calc(100% + 6px);
+}
+#newApptModal .adm-select-menu::-webkit-scrollbar {
+    width: 8px;
+}
+#newApptModal .adm-select-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 999px;
+}
+#newApptModal .adm-select-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+#newApptModal .adm-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+#newApptModal .adm-select-option:hover,
+#newApptModal .adm-select-option.is-active {
+    background: #eff6ff;
+    color: #0d47a1;
+}
+#newApptModal .adm-select-option.is-selected {
+    background: #dbeafe;
+    color: #0d47a1;
+    font-weight: 700;
+}
+#newApptModal .adm-select-option.is-disabled {
+    color: #9aa6b6;
+    cursor: not-allowed;
+    background: transparent;
+}
+#newApptModal .adm-select-option .adm-select-check {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    opacity: 0;
+}
+#newApptModal .adm-select-option.is-selected .adm-select-check {
+    opacity: 1;
+}
+#newApptModal .adm-select-empty {
+    padding: 12px;
+    font-size: 13px;
+    color: #94a3b8;
+    text-align: center;
+}
+body.dark-mode #newApptModal .adm-select-menu {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+}
+body.dark-mode #newApptModal .adm-select-menu::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+body.dark-mode #newApptModal .adm-select-option {
+    color: #cbd5e1;
+}
+body.dark-mode #newApptModal .adm-select-option:hover,
+body.dark-mode #newApptModal .adm-select-option.is-active {
+    background: #1e3a8a;
+    color: #dbeafe;
+}
+body.dark-mode #newApptModal .adm-select-option.is-selected {
+    background: #1d4ed8;
+    color: #ffffff;
+}
+body.dark-mode #newApptModal .adm-select-empty {
+    color: #94a3b8;
+}
+
+/* Date pickers - Birthday and Date of Appointment */
+#newApptModal .adm-form-side input[type="date"] {
+    padding: 12px 14px 12px 14px;
+    border-radius: 10px;
+    min-height: 44px;
+    cursor: pointer;
+    color: #333;
+}
+#newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.55;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px;
+    filter: invert(11%) sepia(58%) saturate(2723%) hue-rotate(196deg) brightness(96%) contrast(96%);
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+#newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    background: #dbeafe;
+}
+#newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit {
+    font-family: 'Kumbh Sans', sans-serif;
+    font-size: 14px;
+}
+#newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-month-field,
+#newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-day-field,
+#newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-year-field {
+    padding: 0 2px;
+}
+/* Date fields use the same label style as every other field */
+#newApptModal .adm-form-side .form-group:has(input[type="date"]) > label,
+#newApptModal .adm-form-side .form-group:has(.flatpickr-input) > label {
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    margin: 14px 0 6px;
+    color: #0d47a1;
+}
+#newApptModal .adm-form-side .adm-date-alt,
+#newApptModal .adm-form-side .flatpickr-input {
+    width: 100%;
+    margin: 5px 0;
+    padding: 12px 42px 12px 14px;
+    min-height: 44px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f1f8ff;
+    color: #333;
+    font-size: 14px;
+    font-family: 'Kumbh Sans', sans-serif;
+    cursor: pointer;
+    box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+#newApptModal .adm-form-side .adm-date-alt::placeholder {
+    color: #94a3b8;
+    opacity: 1;
+}
+#newApptModal .adm-form-side .flatpickr-input:focus {
+    border-color: #0d47a1;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+}
+#newApptModal .adm-select .flatpickr-input {
+    margin: 0;
+}
+#newApptModal .adm-form-side .flatpickr {
+    display: block;
+    width: 100%;
+}
+#newApptModal .adm-form-side .flatpickr__toggle {
+    border-color: #0d47a1;
+    background: transparent;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+#newApptModal .adm-form-side .flatpickr__toggle:hover {
+    background: #dbeafe;
+}
+#newApptModal .adm-form-side .flatpickr__toggle svg {
+    fill: #0d47a1;
+}
+body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle {
+    border-color: #475569;
+}
+body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle:hover {
+    background: #334155;
+}
+body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle svg {
+    fill: #64b5f6;
+}
+
+
+    /* Doctors Calendar panel: layout only, no background/border/shadow */
+    .doctor-cal-panel {
+        flex: 0 0 340px;
+        padding: 16px;
+    }
+
+    /* Dark mode: Doctor Calendar panel */
+    body.dark-mode .doctor-cal-panel {
+        background: none;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+body.dark-mode #blockPanelDate {
+    color: #64b5f6 !important;
+}
+
+body.dark-mode #blockFullDayToggleLabel {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode label[style*="color:#1e293b"] {
+    color: #cbd5e1 !important;
+}
+body.dark-mode #newApptModal .adm-form-side .adm-date-alt,
+body.dark-mode #newApptModal .adm-form-side .flatpickr-input {
+    background-color: #1e1e1e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-form-side .flatpickr-input:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
 }
 #newApptModal .adm-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 #newApptModal .adm-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-#newApptModal .adm-women-box { background: #fdeef0; border-radius: 8px; padding: 12px; margin-top: 12px; }
-#newApptModal .adm-sig-canvas { border: 1px solid #ccc; border-radius: 6px; background: #fff; touch-action: none; }
+#newApptModal .adm-women-box {
+    background: #fdf6f6;
+    border: 1px solid #feeaea;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+}
+#newApptModal .adm-women-box p {
+    font-weight: bold;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #333;
+}
+#newApptModal .adm-sig-canvas {
+    border: 1px solid #ccc; border-radius: 4px; background: #fff;
+    touch-action: none; cursor: crosshair; width: 100%; max-width: 300px;
+}
+#newApptModal .adm-sig-clear {
+    margin-top: 8px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: #e0e0e0;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+#newApptModal .adm-sig-clear:hover {
+    background: #d0d0d0;
+    border-color: #999;
+}
 #newApptModal .adm-patient-toggle {
-    display: flex !important;
-    gap: 24px;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
     margin-bottom: 12px;
-    flex-wrap: nowrap;
+    flex-wrap: normal;
 }
 #newApptModal .adm-patient-toggle label {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 6px;
-    margin: 0 !important;
-    font-weight: 400;
-    font-size: 14px;
-    cursor: pointer;
-    white-space: nowrap;
-}
-#newApptModal .adm-consent-label {
     display: flex !important;
     align-items: center;
     gap: 8px;
     margin: 0 !important;
-    font-weight: 400 !important;
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    white-space: normal;
+    padding: 11px 14px;
+    border: 1.5px solid #d5dde8;
+    border-radius: 10px;
+    background: #fff;
+    color: #475569;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+#newApptModal .adm-patient-toggle label:hover {
+    border-color: #93c5fd;
+    background: #f8fbff;
+    transform: translateY(-1px);
+}
+#newApptModal .adm-patient-toggle label:has(input:checked) {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+#newApptModal .adm-patient-toggle label:has(input:focus-visible) {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+#newApptModal .adm-patient-toggle input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    padding: 0;
+    accent-color: #0d47a1;
+    flex: 0 0 auto;
     cursor: pointer;
 }
+#newApptModal .adm-opt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+#newApptModal .adm-opt-title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+#newApptModal .adm-opt-hint {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748b;
+    line-height: 1.2;
+}
+#newApptModal .adm-patient-toggle label:has(input:checked) .adm-opt-hint {
+    color: #3b82f6;
+}
+body.dark-mode #newApptModal .adm-patient-toggle label {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+    box-shadow: none;
+}
+body.dark-mode #newApptModal .adm-patient-toggle label:hover {
+    background: #24334a;
+    border-color: #60a5fa;
+}
+body.dark-mode #newApptModal .adm-patient-toggle label:has(input:checked) {
+    background: #1e3a8a;
+    border-color: #60a5fa;
+    color: #dbeafe;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+}
+body.dark-mode #newApptModal .adm-patient-toggle label:has(input:checked) .adm-opt-hint {
+    color: #93c5fd;
+}
+#newApptModal .adm-consent-label {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    margin: 0 !important;
+    font-weight: 500 !important;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #334155;
+    cursor: pointer;
+    padding: 14px 16px;
+    border: 1.5px solid #dbe2ec;
+    border-radius: 12px;
+    background: #f8fafc;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+#newApptModal .adm-consent-label:hover {
+    border-color: #93c5fd;
+    background: #f0f7ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+}
 #newApptModal .adm-consent-label input[type="checkbox"] {
-    width: auto;
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
     margin: 0;
+    padding: 0;
+    border: 2px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff no-repeat center / 14px 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+#newApptModal .adm-consent-label input[type="checkbox"]:hover {
+    border-color: #60a5fa;
+}
+#newApptModal .adm-consent-label input[type="checkbox"]:checked {
+    border-color: #2563eb;
+    /* Single shorthand so no other background rule can drop the tick. */
+    background: #2563eb
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E")
+        no-repeat center / 15px 15px;
+}
+#newApptModal .adm-consent-label:has(input:checked) {
+    border-color: #16a34a;
+    background: #f0fdf4;
+    color: #14532d;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+#newApptModal .adm-consent-label:has(input:focus-visible) {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+}
+#newApptModal .adm-consent-label:has(input:user-invalid) {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+#newApptModal .adm-consent-check-text {
+    flex: 1;
+}
+body.dark-mode #newApptModal .adm-consent-label {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+    box-shadow: none;
+}
+body.dark-mode #newApptModal .adm-consent-label:hover {
+    background: #24334a;
+    border-color: #60a5fa;
+    box-shadow: none;
+}
+body.dark-mode #newApptModal .adm-consent-label input[type="checkbox"] {
+    background: #0f172a;
+    border-color: #475569;
+}
+body.dark-mode #newApptModal .adm-consent-label input[type="checkbox"]:checked {
+    border-color: #2563eb;
+    background: #2563eb
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E")
+        no-repeat center / 15px 15px;
+}
+body.dark-mode #newApptModal .adm-consent-label:has(input:checked) {
+    background: #14532d;
+    border-color: #22c55e;
+    color: #bbf7d0;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+body.dark-mode #newApptModal .adm-consent-label:has(input:user-invalid) {
+    background: #4c0519;
+    border-color: #f43f5e;
 }
 #newApptModal button[type="submit"].btn-primary {
     width: 100%;
-    margin-top: 18px;
-    padding: 14px 0;
+    margin-top: 15px;
+    padding: 15px;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: 0.3px;
     color: #fff;
-    background: linear-gradient(135deg, var(--navy, #0d47a1), #1565c0);
+    background: linear-gradient(135deg, #0d47a1 0%, #8CD3FF 100%);
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.35);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    box-shadow: 0 4px 10px rgba(21, 102, 153, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 #newApptModal button[type="submit"].btn-primary:hover {
-    filter: brightness(1.08);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(13, 71, 161, 0.45);
+    filter: brightness(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(21, 102, 153, 0.4);
 }
 #newApptModal button[type="submit"].btn-primary:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(13, 71, 161, 0.35);
-}
-#newApptModal .adm-patient-toggle label {
-    display: inline-flex !important;
-    align-items: center;
-    gap: 6px;
-    margin: 0 !important;
-    font-weight: 400;
-    font-size: 14px;
-    cursor: pointer;
 }
 #newApptModal .adm-q-row {
     display: grid;
@@ -4847,27 +6155,527 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 4px 0;
 }
 #newApptModal .adm-q-row span {
-    font-size: 13px;
-    color: #333;
+    font-size: 15px;
+    color: #444;
+    font-weight: 500;
 }
 #newApptModal .adm-yn {
     display: flex;
-    gap: 14px;
+    gap: 6px;
     white-space: nowrap;
+    background: #eef2f7;
+    border: 1px solid #dbe2ec;
+    border-radius: 999px;
+    padding: 3px;
 }
 #newApptModal .adm-yn label {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-weight: 400;
-    font-size: 13px;
+    gap: 5px;
+    font-weight: 600;
+    font-size: 14.5px;
     margin: 0;
     cursor: pointer;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 5px 12px;
+    user-select: none;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+}
+#newApptModal .adm-yn label:hover {
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+#newApptModal .adm-yn label:active {
+    transform: scale(0.96);
+}
+#newApptModal .adm-yn input[type="radio"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 auto;
+    cursor: pointer;
+}
+#newApptModal .adm-yn label:has(input[value="Yes"]) input[type="radio"] {
+    accent-color: #16a34a;
+}
+#newApptModal .adm-yn label:has(input[value="No"]) input[type="radio"] {
+    accent-color: #e11d48;
+}
+#newApptModal .adm-yn label:has(input[value="Yes"]:checked) {
+    background: #dcfce7;
+    color: #15803d;
+    border-color: #86efac;
+    box-shadow: 0 1px 4px rgba(21, 128, 61, 0.25);
+}
+#newApptModal .adm-yn label:has(input[value="No"]:checked) {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #fda4af;
+    box-shadow: 0 1px 4px rgba(190, 18, 60, 0.25);
+}
+#newApptModal .adm-yn label:has(input:focus-visible) {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
 }
 #newApptModal .adm-q-row + input[type="text"] {
     margin-top: -2px;
     margin-bottom: 6px;
     font-size: 13px;
+}
+body.dark-mode #newApptModal .adm-yn {
+    background: #0f172a;
+    border-color: #334155;
+}
+body.dark-mode #newApptModal .adm-yn label {
+    color: #94a3b8;
+}
+body.dark-mode #newApptModal .adm-yn label:hover {
+    background: #1e293b;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+body.dark-mode #newApptModal .adm-yn label:has(input[value="Yes"]:checked) {
+    background: #14532d;
+    color: #bbf7d0;
+    border-color: #22c55e;
+}
+body.dark-mode #newApptModal .adm-yn label:has(input[value="No"]:checked) {
+    background: #881337;
+    color: #fecdd3;
+    border-color: #f43f5e;
+}
+
+/* =========================
+   NEW APPOINTMENT MODAL - RESPONSIVE
+========================== */
+@media (max-width: 900px) {
+    #newApptModal {
+        align-items: stretch;
+        justify-content: stretch;
+    }
+    #newApptModal .adm-modal-box {
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+    }
+    #newApptModal .adm-modal-header {
+        padding: 12px 16px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        gap: 12px;
+    }
+    #newApptModal .adm-modal-header h2 { font-size: 17px; }
+    #newApptModal .adm-modal-body {
+        flex-direction: column;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #newApptModal .adm-consent-side,
+    #newApptModal .adm-form-side {
+        width: 100%;
+        flex: none !important;
+        overflow-y: visible;
+        padding: 16px;
+    }
+    #newApptModal .adm-consent-side {
+        border-right: none;
+        border-bottom: 1px solid #dee2e6;
+    }
+    #newApptModal .adm-row2,
+    #newApptModal .adm-row3 {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    #newApptModal .adm-q-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #e2e8f0;
+    }
+    #newApptModal .adm-yn {
+        align-self: flex-start;
+    }
+    #newApptModal .adm-patient-toggle {
+        grid-template-columns: 1fr;
+    }
+    #newApptModal .adm-sig-canvas {
+        width: 100%;
+        max-width: 100%;
+    }
+    #newApptModal button[type="submit"].btn-primary {
+        margin-bottom: max(18px, env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 480px) {
+    #newApptModal .adm-consent-side,
+    #newApptModal .adm-form-side {
+        padding: 12px;
+    }
+    #newApptModal .adm-modal-header {
+        padding: 14px 16px;
+    }
+    #newApptModal .adm-modal-header h2 { font-size: 18px; }
+    #newApptModal .adm-form-side h2 { font-size: 18px; margin-bottom: 15px; }
+    #newApptModal .adm-consent-side h3 { font-size: 16px; }
+    #newApptModal .adm-consent-side { font-size: 12.5px; line-height: 1.5; }
+    #newApptModal .adm-form-side label { font-size: 14px; }
+    #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
+    #newApptModal .adm-form-side select {
+        padding: 11px 10px;
+        font-size: 16px;
+    }
+    #newApptModal .adm-form-side select {
+        padding-right: 46px;
+        font-size: 16px;
+    }
+    #newApptModal .adm-form-side input[type="date"] {
+        font-size: 16px;
+        min-height: 46px;
+    }
+    #newApptModal .adm-form-side .adm-date-alt,
+    #newApptModal .adm-form-side .flatpickr-input {
+        font-size: 16px;
+        min-height: 46px;
+    }
+    #newApptModal .adm-patient-toggle label {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    #newApptModal .adm-yn label {
+        flex: 1;
+        justify-content: center;
+    }
+    #newApptModal .adm-consent-label {
+        padding: 12px;
+        gap: 10px;
+        font-size: 13.5px;
+    }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+    #newApptModal .adm-modal-box {
+        height: 100vh;
+        height: 100dvh;
+    }
+}
+
+/* Dark mode mirrors the patient-side appointment modal
+   (see body.dark-mode .appointment-modal-content in index-s.css):
+   neutral #121212 surfaces, #e0e0e0 text, #64b5f6 accent. */
+body.dark-mode #newApptModal .adm-modal-box {
+    background: #121212;
+    color: #e0e0e0;
+    border-top-color: #64b5f6;
+}
+body.dark-mode #newApptModal .adm-modal-header {
+    background: #121212;
+    color: #e0e0e0;
+    border-bottom-color: #333333;
+}
+body.dark-mode #newApptModal .adm-modal-header h2 { color: #64b5f6; }
+body.dark-mode #newApptModal .adm-form-side {
+    background: #121212;
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-form-side label { color: #e0e0e0; }
+body.dark-mode #newApptModal .adm-form-side h2 { color: #64b5f6; }
+body.dark-mode #newApptModal .adm-q-row span { color: #e0e0e0; }
+body.dark-mode #newApptModal .adm-q-row { border-bottom-color: #333333; }
+body.dark-mode #newApptModal .adm-consent-side {
+    background: #121212;
+    color: #e0e0e0;
+    border-right-color: #333333;
+    border-bottom-color: #333333;
+}
+body.dark-mode #newApptModal .adm-consent-side h3 { color: #64b5f6; }
+body.dark-mode #newApptModal .adm-sig-clear {
+    background: #444;
+    border-color: #555;
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-sig-clear:hover {
+    background: #555;
+    border-color: #666;
+    color: #ffffff;
+}
+body.dark-mode #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
+body.dark-mode #newApptModal .adm-form-side select,
+body.dark-mode #newApptModal .adm-form-side .flatpickr-input,
+body.dark-mode #newApptModal .adm-form-side .adm-date-alt {
+    background: #1e1e1e;
+    border-color: #555;
+    color: #e0e0e0;
+}
+/* Restate the chevron as a full shorthand so the repeat/position/size survive
+   and the arrow cannot tile across the field. Matches the patient-side rules
+   for #appointmentForm .adm-select > select. */
+body.dark-mode #newApptModal .adm-form-side select,
+body.dark-mode #newApptModal .adm-select > select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background: #1e1e1e
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 10px center / 24px 24px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+body.dark-mode #newApptModal .adm-form-side select:hover,
+body.dark-mode #newApptModal .adm-form-side select:focus,
+body.dark-mode #newApptModal .adm-select.is-open > select {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+    background: #262626
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 10px center / 24px 24px;
+}
+body.dark-mode #newApptModal .adm-form-side select option {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-form-side select option:checked {
+    background: #1e3a8a;
+    color: #dbeafe;
+}
+body.dark-mode #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]):focus,
+body.dark-mode #newApptModal .adm-form-side .flatpickr-input:focus {
+    border-color: #64b5f6;
+    background-color: #1e1e1e;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.18);
+}
+body.dark-mode #newApptModal .adm-form-side input::placeholder {
+    color: #7c8aa0;
+}
+body.dark-mode #newApptModal .adm-form-side input[type="date"] {
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(78%) sepia(46%) saturate(1120%) hue-rotate(175deg) brightness(103%) contrast(101%);
+}
+/* Both date fields are Flatpickr alt inputs, so the original date input is
+   hidden - match on the flatpickr class, not only on input[type="date"].
+   This also needs to outrank the light rule's :has() specificity, which the
+   generic dark label rule above does not. */
+body.dark-mode #newApptModal .adm-form-side .form-group:has(input[type="date"]) > label,
+body.dark-mode #newApptModal .adm-form-side .form-group:has(.flatpickr-input) > label,
+body.dark-mode #newApptModal .adm-form-side .form-group:has(.adm-date-alt) > label {
+    color: #e0e0e0;
+}
+body.dark-mode #newApptModal .adm-women-box {
+    background: #1a1a1a;
+    border-color: #333333;
+}
+body.dark-mode #newApptModal .adm-women-box p {
+    color: #e0e0e0;
+}
+
+/* =========================
+   SHARED MODAL CLOSE (X) BUTTON
+   Matches the patient-side .close design
+========================== */
+.modal-x {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    background: #f5f5f5;
+    color: #0d47a1;
+    font-size: 22px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+.modal-x svg {
+    width: 20px;
+    height: 20px;
+}
+.modal-x:hover {
+    background: #0d47a1;
+    color: #ffffff;
+    border-color: #0d47a1;
+    transform: rotate(90deg);
+}
+.modal-x:focus-visible {
+    outline: 2px solid #0d47a1;
+    outline-offset: 2px;
+}
+body.dark-mode .modal-x {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+body.dark-mode .modal-x:hover {
+    background: #64b5f6;
+    color: #0b1220;
+    border-color: #64b5f6;
+}
+
+/* The appointment header is white, so it uses the default .modal-x styling */
+#editPatientModal .modal-x {
+    display: flex !important;
+    visibility: visible !important;
+}
+#logoutModal .modal-x {
+    float: right;
+    margin-bottom: 10px;
+}
+
+#unblockConfirmModal .modal-x {
+    float: right;
+    margin-bottom: 10px;
+}
+
+/* Live / Saved chart modals use an icon button instead of a glyph */
+.chart-modal-close {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    background: #f5f5f5;
+    color: #0d47a1;
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+}
+.chart-modal-close .material-symbols-rounded {
+    font-size: 22px;
+    line-height: 1;
+}
+.chart-modal-close:hover {
+    background: #0d47a1;
+    color: #ffffff;
+    border-color: #0d47a1;
+}
+.chart-modal-close:focus-visible {
+    outline: 2px solid #0d47a1;
+    outline-offset: 2px;
+}
+body.dark-mode .chart-modal-close {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+body.dark-mode .chart-modal-close:hover {
+    background: #64b5f6;
+    color: #0b1220;
+    border-color: #64b5f6;
+}
+/* The live chart modal has a dark header, so invert the resting state */
+.chart-modal-header .chart-modal-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.2);
+}
+.chart-modal-header .chart-modal-close:hover {
+    background: #ffffff;
+    color: #0d47a1;
+    border-color: #ffffff;
+}
+body.dark-mode .chart-modal-header .chart-modal-close {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+body.dark-mode .chart-modal-header .chart-modal-close:hover {
+    background: #64b5f6;
+    color: #0b1220;
+    border-color: #64b5f6;
+}
+@media (max-width: 600px) {
+    .modal-x {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 18px;
+    }
+    .modal-x svg {
+        width: 18px;
+        height: 18px;
+    }
+    .chart-modal-close {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 18px;
+    }
+    .chart-modal-close .material-symbols-rounded {
+        font-size: 18px;
+    }
+}
+
+/* Unblock Confirmation Modal - styled buttons */
+.unblock-modal-btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    letter-spacing: 0.3px;
+}
+
+.unblock-modal-btn-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.unblock-modal-btn-danger:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+}
+
+.unblock-modal-btn-danger:active {
+    transform: translateY(0);
+}
+
+.unblock-modal-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.unblock-modal-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #334155;
+    border-color: #94a3b8;
+}
+
+.unblock-modal-btn-cancel:active {
+    transform: translateY(0);
+}
+
+body.dark-mode .unblock-modal-btn-cancel {
+    background: #334155;
+    color: #e2e8f0;
+    border-color: #475569;
+}
+
+body.dark-mode .unblock-modal-btn-cancel:hover {
+    background: #475569;
+    color: #ffffff;
+    border-color: #64748b;
 }
 </style>
 
@@ -4875,7 +6683,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="adm-modal-box">
     <div class="adm-modal-header">
         <h2>Book Appointment (Admin)</h2>
-        <button type="button" onclick="document.getElementById('newApptModal').style.display='none'" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;">&times;</button>
+        <button type="button" class="modal-x" aria-label="Close" onclick="document.getElementById('newApptModal').style.display='none'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
 
     <div class="adm-modal-body">
@@ -4897,11 +6705,12 @@ document.addEventListener('DOMContentLoaded', function() {
         <p style="font-weight:600;margin-top:16px;">Patient Signature:</p>
         <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
         <div style="margin-top:6px;">
-            <button type="button" onclick="admClearSignature()" style="padding:6px 12px;border:1px solid #ccc;border-radius:6px;background:#fff;cursor:pointer;">Clear</button>
+            <button type="button" class="adm-sig-clear" onclick="admClearSignature()">Clear</button>
         </div>
     </div>
 
         <div class="adm-form-side">
+        <h2>Appointment Details</h2>
         <form id="newApptForm">
 
             <!-- Patient Type -->
@@ -4915,7 +6724,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             value="existing"
                             checked
                             onchange="togglePatientMode()">
-                        Existing Patient
+                        <span class="adm-opt">
+                            <span class="adm-opt-title">Existing Patient</span>
+                            <span class="adm-opt-hint">Search current records</span>
+                        </span>
                     </label>
 
                     <label>
@@ -4923,7 +6735,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             name="patientMode"
                             value="new"
                             onchange="togglePatientMode()">
-                        New Patient
+                        <span class="adm-opt">
+                            <span class="adm-opt-title">New Patient</span>
+                            <span class="adm-opt-hint">Register a new record</span>
+                        </span>
                     </label>
                 </div>
             </div>
@@ -4992,7 +6807,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="date"
                         id="admBirthday"
                         name="Birthday"
-                        class="form-control">
+                        class="form-control adm-date-native">
                 </div>
 
             </div>
@@ -5135,7 +6950,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="form-group">
                     <label for="admApptDate">Date of Appointment</label>
-                    <input type="date" id="admApptDate" class="form-control" required>
+                    <input type="date" id="admApptDate" class="form-control adm-date-native">
                 </div>
                 <div class="form-group">
                     <label for="admApptTime">Time of Appointment</label>
@@ -5272,21 +7087,30 @@ document.addEventListener('DOMContentLoaded', function() {
                             name="appointment_source"
                             value="walk-in"
                             checked>
-                        Walk-in
+                        <span class="adm-opt">
+                            <span class="adm-opt-title">Walk-in</span>
+                            <span class="adm-opt-hint">Came to the clinic</span>
+                        </span>
                     </label>
 
                     <label>
                         <input type="radio"
                             name="appointment_source"
                             value="online">
-                        Online
+                        <span class="adm-opt">
+                            <span class="adm-opt-title">Online</span>
+                            <span class="adm-opt-hint">Booked via website</span>
+                        </span>
                     </label>
 
                     <label>
                         <input type="radio"
                             name="appointment_source"
                             value="admin">
-                        Admin/Staff
+                        <span class="adm-opt">
+                            <span class="adm-opt-title">Admin/Staff</span>
+                            <span class="adm-opt-hint">Set by the front desk</span>
+                        </span>
                     </label>
                 </div>
             </div>
@@ -5298,7 +7122,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <input type="checkbox"
                         id="admConsentCheck"
                         required>
-                    I confirm that the patient information is correct.
+                    <span class="adm-consent-check-text">
+                        I confirm that the patient information is correct.
+                    </span>
                 </label>
             </div>
 
@@ -5363,12 +7189,27 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Logout Confirmation Modal -->
 <div id="logoutModal" class="modal" style="display: none;">
     <div class="modal-content auth-card" style="max-width: 400px;">
-        <span class="close-btn" onclick="closeLogoutModal()">&times;</span>
+        <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeLogoutModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
         <h2>Confirm Logout</h2>
         <p style="margin: 20px 0; text-align: center;">Are you sure you want to logout?</p>
         <div style="display: flex; gap: 10px; justify-content: center;">
-            <button onclick="confirmLogout()" class="sign-up-btn" style="background: #ef4444; color: white;">Yes, Logout</button>
-            <button onclick="closeLogoutModal()" class="sign-up-btn" style="background: #6b7280; color: white;">Cancel</button>
+            <button onclick="confirmLogout()" class="unblock-modal-btn unblock-modal-btn-danger">Yes, Logout</button>
+            <button onclick="closeLogoutModal()" class="unblock-modal-btn unblock-modal-btn-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Unblock Confirmation Modal -->
+<div id="unblockConfirmModal" class="modal" style="display: none;">
+    <div class="modal-content auth-card" style="max-width: 420px;">
+        <span class="modal-x" role="button" tabindex="0" aria-label="Close" id="unblockConfirmModalClose"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
+        <h2 style="color:#ef4444;">Unblock This Day?</h2>
+        <p id="unblockConfirmMessage" style="margin: 16px 0; text-align: center; color:#475569; font-size:14px; line-height:1.5;">
+            Are you sure you want to remove the block for this date?
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button id="unblockConfirmYesBtn" class="unblock-modal-btn unblock-modal-btn-danger">Yes, Unblock</button>
+            <button id="unblockConfirmCancelBtn" class="unblock-modal-btn unblock-modal-btn-cancel">Cancel</button>
         </div>
     </div>
 </div>
@@ -5387,6 +7228,91 @@ document.addEventListener('DOMContentLoaded', function() {
     let selectedDate = null;
     let calendarInstance = null;
 
+    /* Custom month dropdown.
+       The native <select> flatpickr renders is hidden by CSS because its
+       opened <option> list is drawn with OS chrome that CSS cannot restyle.
+       We hide it but keep using it as the source of truth for which months are
+       selectable, and drive the calendar through fp.changeMonth(). */
+    const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+
+    function buildMonthDropdown(fp) {
+        // Scope via .doctor-cal-panel, NOT #doctorCalendarPicker: the calendar
+        // is a sibling of the picker, so a descendant selector matches nothing.
+        const host = document.querySelector('.doctor-cal-panel .flatpickr-current-month');
+        if (!host) return;
+        const sel = host.querySelector('select.flatpickr-monthDropdown-months');
+        if (!sel) return;
+        if (host.querySelector('.adm-month-dd')) { fp.syncMonthLabel(); return; }
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'adm-month-dd';
+        btn.setAttribute('aria-haspopup', 'listbox');
+        btn.setAttribute('aria-expanded', 'false');
+        host.insertBefore(btn, sel);
+
+        const list = document.createElement('div');
+        list.className = 'adm-month-dd-list';
+        list.setAttribute('role', 'listbox');
+        host.appendChild(list);
+
+        // Read the current month off the instance, not the hidden select: the
+        // select is not guaranteed to stay in sync when we drive navigation.
+        const label = () => MONTH_NAMES[fp.currentMonth] || '';
+
+        function close() {
+            list.classList.remove('is-open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+
+        function open() {
+            if (list.classList.contains('is-open')) { close(); return; }
+            list.innerHTML = '';
+            for (let i = 0; i < sel.options.length; i++) {
+                const opt = sel.options[i];
+                const month = Number(opt.value);
+                const isActive = month === fp.currentMonth;
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'adm-month-dd-item' + (isActive ? ' is-active' : '');
+                item.setAttribute('role', 'option');
+                if (isActive) item.setAttribute('aria-selected', 'true');
+                item.textContent = opt.text;
+                item.addEventListener('click', function () {
+                    const target = Number(this.dataset.month);
+                    close();
+                    if (target === fp.currentMonth) return;
+                    // changeMonth() is a relative offset, so jumpToDate is used
+                    // to move to an absolute month.
+                    fp.jumpToDate(new Date(fp.currentYear, target, 1));
+                    fp.syncMonthLabel();
+                });
+                item.dataset.month = String(month);
+                list.appendChild(item);
+            }
+            list.classList.add('is-open');
+            btn.setAttribute('aria-expanded', 'true');
+        }
+
+        btn.addEventListener('click', open);
+        btn.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && list.classList.contains('is-open')) { close(); btn.focus(); }
+        });
+        document.addEventListener('click', function (e) {
+            if (!host.contains(e.target)) close();
+        });
+
+        fp.syncMonthLabel = function () { btn.textContent = label(); };
+        fp.syncMonthLabel();
+
+        // Signal that the custom control is live, which is what allows the CSS
+        // to hide the native select. Done last so a failure above leaves the
+        // native dropdown in place.
+        const card = document.querySelector('.doctor-cal-panel .flatpickr-calendar');
+        if (card) card.classList.add('has-custom-month');
+    }
+
     function pad(n) { return n < 10 ? "0" + n : "" + n; }
     function toDateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
 
@@ -5395,8 +7321,8 @@ document.addEventListener('DOMContentLoaded', function() {
         grid.innerHTML = '';
         TIME_SLOTS.forEach(slot => {
             const label = document.createElement('label');
-            label.style.cssText = 'display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;';
-            label.innerHTML = `<input type="checkbox" class="block-time-cb" value="${slot.value}"> ${slot.label}`;
+            label.className = 'block-time-label';
+            label.innerHTML = `<input type="checkbox" class="block-time-cb calendar-checkbox" value="${slot.value}"> <span>${slot.label}</span>`;
             grid.appendChild(label);
         });
     }
@@ -5408,16 +7334,30 @@ document.addEventListener('DOMContentLoaded', function() {
             blockedMap = {};
             data.forEach(item => { blockedMap[item.date] = item; });
             window.__blockedSlotsMap = blockedMap; // shared with the New Appointment modal
-            if (calendarInstance) calendarInstance.redraw();
+            if (calendarInstance) {
+                calendarInstance.redraw();
+                // redraw() can rebuild the native month select, so re-sync label
+                if (calendarInstance.syncMonthLabel) calendarInstance.syncMonthLabel();
+            }
             if (selectedDate) selectDate(selectedDate);
         } catch (err) {
             console.error('Failed to load blocked slots:', err);
         }
     }
 
+    /* Display-only date format.
+       selectedDate deliberately stays in Y-m-d: that is what the
+       /admin/block_slot and /admin/unblock_slot endpoints and the blockedMap
+       keys expect, so only the heading text is reformatted. */
+    function formatBlockDate(iso) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+        if (!m) return 'Select a date';
+        return MONTH_NAMES[Number(m[2]) - 1] + ' ' + m[3] + ', ' + m[1];
+    }
+
     function selectDate(dateStr) {
         selectedDate = dateStr;
-        document.getElementById('blockPanelDate').textContent = dateStr;
+        document.getElementById('blockPanelDate').textContent = formatBlockDate(dateStr);
 
         const existing = blockedMap[dateStr];
         const fullDayToggle = document.getElementById('blockFullDayToggle');
@@ -5450,9 +7390,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!info) return;
                 const dot = document.createElement('span');
                 dot.style.cssText = 'position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;';
-                dot.style.background = info.full_day ? '#ef4444' : '#f5a623';
+                dot.style.background = info.full_day ? '#ef4444' : '#f59e0b';
                 dayElem.style.position = 'relative';
                 dayElem.appendChild(dot);
+            },
+            onReady: function (selectedDates, dateStr, fp) {
+                buildMonthDropdown(fp);
+            },
+            onMonthChange: function (selectedDates, dateStr, fp) {
+                if (fp.syncMonthLabel) fp.syncMonthLabel();
+            },
+            onYearChange: function (selectedDates, dateStr, fp) {
+                if (fp.syncMonthLabel) fp.syncMonthLabel();
             }
         });
 
@@ -5485,7 +7434,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        document.getElementById('unblockBtn').addEventListener('click', async function() {
+        document.getElementById('unblockBtn').addEventListener('click', function() {
             if (!selectedDate) { showToast('Please select a date first.'); return; }
             if (!(await showConfirm('Unblock ' + selectedDate + '?'))) return;
 
@@ -5502,6 +7451,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast('Failed to unblock. Please try again.');
             }
         });
+
+        const unblockConfirmClose = document.getElementById('unblockConfirmModalClose');
+        if (unblockConfirmClose) {
+            unblockConfirmClose.addEventListener('click', closeUnblockConfirmModal);
+        }
+
+        const unblockConfirmCancel = document.getElementById('unblockConfirmCancelBtn');
+        if (unblockConfirmCancel) {
+            unblockConfirmCancel.addEventListener('click', closeUnblockConfirmModal);
+        }
 
         loadBlockedSlots();
     });
@@ -5697,6 +7656,12 @@ function filterUserManagement() {
             incomeChartInstance.destroy();
         }
 
+        const isDark = document.body.classList.contains('dark-mode');
+        const lineColor = '#42A5F6';
+        const fillColor = isDark ? 'rgba(66, 165, 246, 0.15)' : 'rgba(66, 165, 246, 0.1)';
+        const textColor = '#42A5F6';
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+
         incomeChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -5704,8 +7669,8 @@ function filterUserManagement() {
                 datasets: [{
                     label: 'Revenue (₱)',
                     data: dataValues,
-                    borderColor: '#1e40af', // Blue color
-                    backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                    borderColor: lineColor, // Matches unpaid procedures number color
+                    backgroundColor: fillColor,
                     fill: true,
                     tension: 0.4,
                     cubicInterpolationMode: 'monotone'
@@ -5715,7 +7680,31 @@ function filterUserManagement() {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { beginAtZero: true, ticks: { callback: function(value) { return '₱' + value; } } }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: textColor, // Matches unpaid procedures number color
+                            callback: function(value) { return '₱' + value; }
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: textColor
+                        },
+                        grid: {
+                            color: gridColor
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor
+                        }
+                    }
                 }
             }
         });
@@ -5736,18 +7725,23 @@ function filterUserManagement() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    updateBarChart('procedureCountChart', data.counts.labels, data.counts.data, 'Count', procCountChartInstance, (instance) => procCountChartInstance = instance);
-                    updateBarChart('procedureRevenueChart', data.revenue.labels, data.revenue.data, 'Revenue (₱)', procRevenueChartInstance, (instance) => procRevenueChartInstance = instance);
+                    updateBarChart('procedureCountChart', data.counts.labels, data.counts.data, 'Count', procCountChartInstance, (instance) => procCountChartInstance = instance, '#64B5F6');
+                    updateBarChart('procedureRevenueChart', data.revenue.labels, data.revenue.data, 'Revenue (₱)', procRevenueChartInstance, (instance) => procRevenueChartInstance = instance, '#42A5F6');
                 }
             });
     }
 
-    function updateBarChart(canvasId, labels, dataValues, labelName, currentInstance, setInstance) {
+    function updateBarChart(canvasId, labels, dataValues, labelName, currentInstance, setInstance, barColor) {
         const ctx = document.getElementById(canvasId).getContext('2d'); // Ensure IDs match your canvases
         
         if (currentInstance) {
             currentInstance.destroy();
         }
+
+        const isDark = document.body.classList.contains('dark-mode');
+        const resolvedColor = barColor || '#1e40af';
+        const textColor = isDark ? '#ffffff' : '#37474f';
+        const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)';
 
         const newChart = new Chart(ctx, {
             type: 'bar',
@@ -5756,14 +7750,29 @@ function filterUserManagement() {
                 datasets: [{
                     label: labelName,
                     data: dataValues,
-                    backgroundColor: '#1e40af'
+                    backgroundColor: resolvedColor
                 }]
             },
             options: {
                 indexAxis: 'y', // Horizontal bar chart
                 responsive: true,
                 scales: {
-                    x: { beginAtZero: true }
+                    x: {
+                        beginAtZero: true,
+                        ticks: { color: textColor },
+                        grid: { color: gridColor }
+                    },
+                    y: {
+                        ticks: { color: textColor },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: textColor
+                        }
+                    }
                 }
             }
         });
