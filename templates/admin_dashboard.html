@@ -7434,7 +7434,7 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
             }
         });
 
-        document.getElementById('unblockBtn').addEventListener('click', function() {
+        document.getElementById('unblockBtn').addEventListener('click', async function() {
             if (!selectedDate) { showToast('Please select a date first.'); return; }
             if (!(await showConfirm('Unblock ' + selectedDate + '?'))) return;
 

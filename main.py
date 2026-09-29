@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 import firebase
 import uuid
 from cache_store import SimpleCache
+from google.cloud.firestore_v1.base_query import FieldFilter
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
@@ -70,6 +71,7 @@ class DentalClinicApp(BaseFlaskApp):
 
     def _setup_app(self):
         self._app = Flask(__name__)
+        import read_meter; read_meter.install(self._app)
 
     def _setup_config(self):
         self.app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -520,18 +522,36 @@ class DentalClinicApp(BaseFlaskApp):
         return False, None
 
 
+    BLOCKED_SLOTS_CACHE_KEY = "blocked_slots_upcoming"
+    BLOCKED_SLOTS_TTL_SECONDS = 120
+
     def get_blocked_slots(self):
         try:
-            docs = self.db.collection(self.Blocked_Slots).stream()
-            result = []
-            for doc in docs:
-                data = doc.to_dict()
-                result.append({
-                    "date": doc.id,
-                    "full_day": bool(data.get("full_day", False)),
-                    "blocked_times": data.get("blocked_times", []),
-                    "reason": data.get("reason", "")
-                })
+            result = self.cache.get(self.BLOCKED_SLOTS_CACHE_KEY)
+
+            if result is None:
+                # Only today onward (minus 1 day to be safe across timezones).
+                cutoff = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
+                query = self.db.collection(self.Blocked_Slots).where(
+                    filter=FieldFilter("date", ">=", cutoff)
+                )
+
+                result = []
+                for doc in query.stream():
+                    data = doc.to_dict()
+                    result.append({
+                        "date": doc.id,
+                        "full_day": bool(data.get("full_day", False)),
+                        "blocked_times": data.get("blocked_times", []),
+                        "reason": data.get("reason", "")
+                    })
+
+                self.cache.set(
+                    self.BLOCKED_SLOTS_CACHE_KEY,
+                    result,
+                    ttl_seconds=self.BLOCKED_SLOTS_TTL_SECONDS
+                )
+
             return jsonify(result)
         except Exception as e:
             print("GET BLOCKED SLOTS ERROR:", e)
@@ -565,6 +585,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "created_by": session.get('admin_uid', ''),
                 "updated_at": datetime.now(UTC).isoformat()
             })
+            self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
             return jsonify({"success": True, "message": "Slot blocked successfully"})
         except Exception as e:
             print("ADMIN BLOCK SLOT ERROR:", e)
@@ -581,6 +602,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         try:
             self.db.collection(self.Blocked_Slots).document(date).delete()
+            self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
             return jsonify({"success": True, "message": "Slot unblocked successfully"})
         except Exception as e:
             print("ADMIN UNBLOCK SLOT ERROR:", e)
@@ -3889,81 +3911,56 @@ class DentalClinicApp(BaseFlaskApp):
         )
 
     def search_patients(self):
+        if not session.get('admin_logged_in'):
+            return jsonify([]), 403
+
         query = request.args.get("q", "").strip().lower()
 
         if len(query) < 2:
             return jsonify([])
 
+        MAX_RESULTS = 20
+
+        # uid -> account data, from the cache User Management already uses.
+        # This replaces one Firestore read per matching patient.
+        accounts_by_uid = {
+            uid: data for uid, data in self._get_manageable_accounts_cached()
+        }
+
         results = []
 
-        patients = self._get_patients_cached()
+        for doc_id, data in self._get_patients_cached():
+            first = str(data.get("first_name", "")).strip()
+            middle = str(data.get("middle_name", "")).strip()
+            last = str(data.get("last_name", "")).strip()
 
-        for doc_id, data in patients:
+            full_name = " ".join(part for part in [first, middle, last] if part)
 
-            first = str(
-                data.get("first_name", "")
-            ).strip()
-
-            middle = str(
-                data.get("middle_name", "")
-            ).strip()
-
-            last = str(
-                data.get("last_name", "")
-                ).strip()
-
-            full_name = " ".join(
-                part for part in [first, middle, last]
-                if part
-            )
-
-            searchable_name = full_name.lower()
-
-            if (
+            if not (
                 query in first.lower()
                 or query in middle.lower()
                 or query in last.lower()
-                or query in searchable_name
+                or query in full_name.lower()
             ):
-                account_uid = data.get("account_uid") or ""
-                email = data.get("email", "")
+                continue
 
-                # If the patient has a linked login account,
-                # get the email from Customer_Account if needed.
-                if account_uid:
-                    account_doc = (
-                        self.db.collection(
-                            self.Customer_Account
-                        )
-                        .document(account_uid)
-                        .get()
-                    )
+            account_uid = data.get("account_uid") or ""
+            email = data.get("email", "") or accounts_by_uid.get(account_uid, {}).get("email", "")
 
-                    if account_doc.exists:
-                        account_data = account_doc.to_dict()
+            results.append({
+                "patient_id": doc_id,
+                "account_uid": account_uid,
+                "firstname": first,
+                "middlename": middle,
+                "lastname": last,
+                "name": full_name,
+                "email": email,
+                "birthday": data.get("birthday", "")
+            })
 
-                        if not email:
-                            email = account_data.get(
-                                "email",
-                                ""
-                                )
+            if len(results) >= MAX_RESULTS:
+                break
 
-                results.append({
-                    "patient_id": doc_id,
-                    "account_uid": account_uid,
-
-                    "firstname": first,
-                    "middlename": middle,
-                    "lastname": last,
-
-                    "name": full_name,
-                    "email": email,
-
-                    "birthday": data.get(
-                        "birthday",
-                        ""
-                    )
-                })
         return jsonify(results)
     
     def check_duplicate_patient(self):
