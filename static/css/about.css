@@ -1415,9 +1415,16 @@ body.dark-mode #appointmentForm select:focus {
     background: #3d3d3d;
 }
 
+/* The signature pad stays white in dark mode so the ink (drawn in #000)
+   remains readable. This file loads after index-s.css, so it is the rule
+   that actually wins here. */
 body.dark-mode #signaturePad {
-    background: #1e1e1e !important;
-    border-color: #444 !important;
+    background: #ffffff !important;
+    border-color: #999 !important;
+}
+
+body.dark-mode #signaturePad:hover {
+    border-color: #64b5f6 !important;
 }
 
 body.dark-mode #signatureUpload {
