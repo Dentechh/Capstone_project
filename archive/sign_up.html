@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+  <title>Theater Reservation</title>
+
+  <!-- Google Identity Services -->
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+
+
+  <style>
+
+    body {
+
+      font-family: 'Arial', sans-serif;
+
+      background: linear-gradient(to right, #ff9a9e, #fad0c4);
+
+      margin: 0;
+
+      padding: 0;
+
+      display: flex;
+
+      justify-content: center;
+
+      align-items: center;
+
+      min-height: 100vh;
+
+      flex-direction: column;
+
+    }
+
+
+    h1 {
+
+      color: #fff;
+
+      text-shadow: 2px 2px 4px #00000050;
+
+    }
+
+
+    #user-info {
+
+      margin: 20px 0;
+
+      color: #fff;
+
+      font-size: 18px;
+
+    }
+
+
+    #reservation-form {
+
+      display: none; /* hide until login */
+
+      background: rgba(255, 255, 255, 0.9);
+
+      padding: 20px;
+
+      border-radius: 12px;
+
+      box-shadow: 0px 8px 20px rgba(0,0,0,0.3);
+
+      width: 300px;
+
+      text-align: left;
+
+    }
+
+
+    #reservation-form h2 {
+
+      text-align: center;
+
+      color: #333;
+
+    }
+
+
+    label {
+
+      display: block;
+
+      margin-top: 10px;
+
+      color: #333;
+
+    }
+
+
+    input, select, button {
+
+      width: 100%;
+
+      padding: 8px;
+
+      margin-top: 5px;
+
+      border-radius: 6px;
+
+      border: 1px solid #ccc;
+
+      box-sizing: border-box;
+
+    }
+
+
+    button {
+
+      background: #ff7e5f;
+
+      color: white;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+      margin-top: 15px;
+
+      transition: 0.3s;
+
+    }
+
+
+    button:hover {
+
+      background: #feb47b;
+
+    }
+
+
+    .g_id_signin {
+
+      margin-top: 20px;
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+  <h1>Welcome to Star Theater</h1>
+
+ <!-- Written by: Dr.Fuentes | Jan 23, 2026-->
+
+  <!-- Google Sign-In button -->
+
+  <!-- this the crucial part of the area -->
+
+  <div id="g_id_onload"
+
+       data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+
+       data-callback="handleCredentialResponse">
+
+  </div>
+
+  <div class="g_id_signin" data-type="standard"></div>
+
+
+  <div id="user-info"></div>
+
+
+  <!-- Theater Reservation Form -->
+
+  <div id="reservation-form">
+
+    <h2>Book Your Seat</h2>
+
+    <form id="bookingForm">
+
+      <label for="show">Select Show:</label>
+
+      <select id="show" required>
+
+        <option value="">--Choose a Show--</option>
+
+        <option value="Phantom of the Opera">Phantom of the Opera</option>
+
+        <option value="Hamilton">Hamilton</option>
+
+        <option value="Lion King">The Lion King</option>
+
+      </select>
+
+
+      <label for="date">Select Date:</label>
+
+      <input type="date" id="date" required>
+
+
+      <label for="seats">Number of Seats:</label>
+
+      <input type="number" id="seats" min="1" max="10" required>
+
+
+      <button type="submit">Reserve</button>
+
+    </form>
+
+  </div>
+
+
+   <script>
+
+    // List of allowed Gmail accounts
+
+    window.alert("only allowed email can access the area!")
+
+    const allowedEmails = ["jayralphbonitillo09@gmail.com","y@gmail.com"];
+
+
+    function handleCredentialResponse(response) {
+
+      const user = jwt_decode(response.credential);
+
+      const infoDiv = document.getElementById('user-info');
+
+
+      // Check if email is allowed
+
+      if (!allowedEmails.includes(user.email)) {
+
+        infoDiv.innerText = `❌ Sorry, your account (${user.email}) is not allowed.`;
+
+        document.getElementById('reservation-form').style.display = 'none';
+
+        document.querySelector('.g_id_signin').style.display = 'block';
+
+        return; // stop further execution
+
+      }
+
+
+      // If allowed, show welcome and reservation form
+
+      infoDiv.innerText = `Hello ${user.name}!\nYour email: ${user.email}`;
+
+      document.querySelector('.g_id_signin').style.display = 'none';
+
+      document.getElementById('reservation-form').style.display = 'block';
+
+    }
+
+
+    // Handle reservation submission
+
+    document.getElementById('bookingForm').addEventListener('submit', function(e) {
+
+      e.preventDefault();
+
+      const show = document.getElementById('show').value;
+
+      const date = document.getElementById('date').value;
+
+      const seats = document.getElementById('seats').value;
+
+
+      alert(`✅ Reservation Confirmed!\n\nShow: ${show}\nDate: ${date}\nSeats: ${seats}`);
+
+      document.getElementById('bookingForm').reset();
+
+    });
+
+  </script>
+
+</body>
+
+</html>
+

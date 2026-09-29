@@ -1,0 +1,1622 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Patient Profile | Capizona Dental</title>
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+        <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}">
+    </head>
+    <body>
+
+    <style>
+    /* ---------- Toast notifications (replaces default window.alert()) ---------- */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 100000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-width: 380px;
+        width: calc(100% - 40px);
+        pointer-events: none;
+    }
+
+    .toast {
+        pointer-events: auto;
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        background: #ffffff;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 10px 28px rgba(0,0,0,0.18);
+        border-left: 4px solid #607d8b;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: #263238;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+
+    .toast-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        margin-top: 1px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .toast-message {
+        flex: 1;
+        word-break: break-word;
+    }
+
+    .toast-close {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        font-size: 18px;
+        line-height: 1;
+        color: #90a4ae;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .toast-close:hover {
+        color: #37474f;
+    }
+
+    .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(0,0,0,0.14);
+        width: 100%;
+        transform-origin: left;
+        animation-name: toast-progress-shrink;
+        animation-timing-function: linear;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes toast-progress-shrink {
+        from { transform: scaleX(1); }
+        to { transform: scaleX(0); }
+    }
+
+    .toast.success { border-left-color: #16a34a; }
+    .toast.success .toast-icon { background: #16a34a; }
+    .toast.error { border-left-color: #ef4444; }
+    .toast.error .toast-icon { background: #ef4444; }
+    .toast.warning { border-left-color: #f59e0b; }
+    .toast.warning .toast-icon { background: #f59e0b; }
+    </style>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+    (function() {
+        var icons = { success: '\u2713', error: '\u2715', warning: '!' };
+
+        function classifyToast(message) {
+            var m = String(message == null ? '' : message).trim();
+            if (/successfully/i.test(m) || m === 'Blocked slot saved.') return 'success';
+            if (/fail|error|not found|unauthorized|invalid|unavailable|missing|could not/i.test(m)) return 'error';
+            if (/^please\b/i.test(m) || /select/i.test(m) || /do not match/i.test(m)) return 'warning';
+            return 'error';
+        }
+
+        window.showToast = function(message, type, duration) {
+            type = type || classifyToast(message);
+            duration = duration || 4500;
+
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+
+            var icon = document.createElement('div');
+            icon.className = 'toast-icon';
+            icon.textContent = icons[type] || icons.error;
+
+            var msg = document.createElement('div');
+            msg.className = 'toast-message';
+            msg.textContent = message;
+
+            var closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close';
+            closeBtn.type = 'button';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.innerHTML = '&times;';
+
+            var progress = document.createElement('div');
+            progress.className = 'toast-progress';
+            progress.style.animationDuration = duration + 'ms';
+
+            toast.appendChild(icon);
+            toast.appendChild(msg);
+            toast.appendChild(closeBtn);
+            toast.appendChild(progress);
+            container.appendChild(toast);
+
+            requestAnimationFrame(function() {
+                toast.classList.add('show');
+            });
+
+            var removed = false;
+            function remove() {
+                if (removed) return;
+                removed = true;
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(function() { toast.remove(); }, 250);
+            }
+
+            var timer = setTimeout(remove, duration);
+            closeBtn.addEventListener('click', function() {
+                clearTimeout(timer);
+                remove();
+            });
+        };
+    })();
+    </script>
+
+    <!-- Flash Messages Display - Fixed Position with Close Button -->
+    <div class="flash-container" id="flashContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash {{ category }}" id="flash-{{ loop.index }}">
+                {{ message }}
+                <button class="flash-close-btn" onclick="closeFlash('flash-{{ loop.index }}')" aria-label="Close">&times;</button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <nav class="navbar">
+            <a href="/" class="logo-container">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+                <div class="logo-text">
+                    <span class="brand-name">CAPIZONDA</span>
+                    <span class="brand-sub">DENTAL CLINIC</span>
+                </div>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="active">HOME</a></li>
+                <li><a href="/about">ABOUT</a></li>
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
+                    <div class="dropdown-content" id="servicesDropdownMenu">
+                        <a href="/services/consultation">Dental Consultation</a>
+                        <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
+                        <a href="/services/pasta">Tooth Restoration (Pasta)</a>
+                        <a href="/services/extraction">Tooth Extraction (Cabot)</a>
+                        <a href="/services/dentures">Dentures (Pustiso)</a>
+                        <a href="/services/crowns-bridges">Crowns and Bridges</a>
+                        <a href="/services/whitening">Teeth Whitening</a>
+                        <a href="/services/fluoride">Fluoride Treatment</a>
+                        <a href="/services/sealant">Pit and Fissure Sealant</a>
+                        <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
+                        <a href="/services/root-canal">Root Canal Treatment</a>
+                        <a href="/services/xray">Periapical Xray</a>
+                    </div>
+                </li>
+                <li><a href="/location">LOCATION</a></li>
+            </ul>
+
+            {% if name == "Guest" or not name %}
+            <div class="auth-buttons">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                    </svg>
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+            </div>
+            {% else %}
+
+
+                    
+
+
+<script>
+function openAuthModal(modalId) {
+    const modal = document.getElementById(modalId);
+
+    if (!modal) {
+        console.error("Auth modal not found:", modalId);
+        return;
+    }
+
+    modal.style.display = "flex";
+    modal.classList.add("show");
+}
+
+function closeAuthModal(modalId) {
+    const modal = document.getElementById(modalId);
+
+    if (!modal) {
+        console.error("Auth modal not found:", modalId);
+        return;
+    }
+
+    modal.style.display = "none";
+    modal.classList.remove("show");
+}
+</script>
+<script>
+
+function openAuthModal(modalId) {
+
+    const modal = document.getElementById(modalId);
+
+    if (!modal) {
+        console.error("Modal not found:", modalId);
+        return;
+    }
+
+    modal.style.display = "flex";
+
+    // Allow CSS animation
+    setTimeout(() => {
+        modal.classList.add("show");
+    }, 10);
+}
+
+
+function closeAuthModal(modalId) {
+
+    const modal = document.getElementById(modalId);
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove("show");
+
+    setTimeout(() => {
+        modal.style.display = "none";
+    }, 200);
+}
+
+
+// Close modal when clicking outside
+document.addEventListener("click", function(event) {
+
+    if (event.target.classList.contains("auth-modal")) {
+
+        const modalId = event.target.id;
+
+        closeAuthModal(modalId);
+
+    }
+
+});
+
+
+// ESC key closes modal
+document.addEventListener("keydown", function(event) {
+
+    if (event.key === "Escape") {
+
+        document.querySelectorAll(".auth-modal.show")
+            .forEach(modal => {
+
+                closeAuthModal(modal.id);
+
+            });
+
+    }
+
+});
+
+
+// Google Login
+function handleCredentialResponse(response) {
+
+    fetch("/google-auth", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+            token: response.credential
+        })
+
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        console.log("Google Login:", data);
+
+        if (data.success) {
+
+            window.location.href =
+                data.redirect || "/";
+
+        } else {
+
+            showToast(
+                data.message ||
+                "Google login failed."
+            );
+
+        }
+
+    })
+    .catch(error => {
+
+        console.error(
+            "Google authentication error:",
+            error
+        );
+
+        showToast(
+            "Google login failed. Please try again."
+        );
+
+    });
+
+}
+
+</script>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                    </svg>
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+
+                <div class="profile-nav">
+                    <div class="user-info-brief">
+                        <span>{{ name }}</span>
+                        <small>Patient Account</small>
+                    </div>
+
+                    <div class="profile-img-container" id="profileDropdownTrigger">
+                        <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img" id="navProfilePic">
+                    
+                        <div class="dropdown-menu" id="profileDropdown">
+                            <a href="/patient-profile">PROFILE</a>
+                            <a href="/logout">LOGOUT</a>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+            {% endif %}
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Back to Home Button -->
+        <a href="/" class="btn-back">← Back to Home</a>
+
+            <div class="profile-card">
+            <div class="profile-left">
+                <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User">
+                <label for="profilePicInput" class="btn-edit-trigger" style="margin-top: 10px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem; cursor: pointer;">UPDATE AVATAR</label>
+                <input type="file" id="profilePicInput" accept="image/png, image/jpeg, image/gif" style="display: none;">
+                <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 8px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
+            </div>
+
+                <div class="profile-right">
+                    <h2>{{ user.get('firstname', name) }} {% if user.get('lastname') %}{{ user.get('lastname') }}{% endif %}</h2>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>First Name</label>
+                            <p>{{ user.get('firstname', name) }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Last Name</label>
+                            <p>{{ user.get('lastname', 'Not set') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Phone Number</label>
+                            <p>{{ user.get('contact_number', 'Not set') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Email Address</label>
+                            <p>{{ user.get('email', 'N/A') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                        
+                        
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        <!-- =========================
+            NAVIGATION BUTTONS
+        ========================== -->
+
+        <div class="nav-grid">
+
+                <!-- Notifications Card
+                <a href="https://mail.google.com/mail/u/0/#inbox" class="nav-card">
+                    <img src="https://img.icons8.com/ios-filled/50/ffffff/appointment-reminders.png" alt="Notifications">
+                    <span>Notifications</span>
+                </a>
+                -->
+
+                <!-- My next Schedule Card -->
+    <a href="#" class="nav-card" id="scheduleBtn">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
+        <span>My Next Schedule</span>
+        
+    </a>
+
+    <!-- Schedule Modal -->
+        <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>My Next Schedule</h2>
+                <button class="close" onclick="closeScheduleModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h2 style="display: none;">{{ user.get('uid', '') }}</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date and Time</th>
+                                <th>Services</th>
+                                <th>Dentist</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scheduleTableBody"> </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+  <script>
+        const scheduleBtn = document.getElementById("scheduleBtn");
+        const scheduleModal = document.getElementById("scheduleModal");
+        const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
+
+        function openScheduleModal() {
+            scheduleModal.style.display = "flex";
+            scheduleModal.classList.add("show");
+
+            const uid = "{{ user.get('uid', '') }}";
+            console.log("UID:", uid);
+
+            loadApprove(uid);
+        }
+
+        function closeScheduleModal() {
+            scheduleModal.style.display = "none";
+            scheduleModal.classList.remove("show");
+        }
+
+        scheduleBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openScheduleModal();
+        });
+
+        scheduleCloseBtn.addEventListener("click", closeScheduleModal);
+
+        function loadApprove(uid) {
+
+            const tbody = document.getElementById("scheduleTableBody");
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align:center;">
+                        Loading...
+                    </td>
+                </tr>
+            `;
+
+            fetch(`/get_approve/${uid}`)
+                .then(response => response.json())
+        .then(data => {
+
+
+        console.log(data);
+
+                    if (data.error) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="3" style="text-align:center;color:red;">
+                                    ${data.error}
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="3" style="text-align:center;">
+                                    No schedule found.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    tbody.innerHTML = "";
+
+                    data.forEach(item => {
+
+                        console.log(item);
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${item.appointment_date || item.Date || "-"}</td>
+                                <td>${item.Service || item.service || "-"}</td>
+                                <td>${item.DentistName || "-"}</td>
+                            </tr>
+                        `;
+                    });
+
+                })
+                .catch(error => {
+
+                    console.error(error);
+
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="3" style="text-align:center;color:red;">
+                                Failed to load schedule.
+                            </td>
+                        </tr>
+                    `;
+                });
+        }
+        </script>
+
+    <!-- Dental Records -->
+    <a href="javascript:void(0);" class="nav-card" data-uid="{{ user.get('uid', '') }}" onclick="openVisitHistory(this.dataset.uid)">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
+        <span>Dental Records</span>
+    </a>
+
+    <div id="visitHistoryModal" class="modal">
+        <div class="modal-content" style="max-width:900px;">
+            <div class="modal-header">
+                <h2>Dental Records</h2>
+                <button class="close" onclick="closeVisitHistory()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+            <table class="payment-table">
+
+                <thead>
+                    <tr>
+                        <th>Assigned Dentist</th>
+                        <th>Medicine</th>
+                        <th>Date</th>
+                        <th>Procedure</th>
+                        <th>Chart</th>
+                        <th>Next Appointment</th>
+                    </tr>
+                </thead>
+
+                <tbody id="visitHistoryBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+    </div>
+
+    <div id="chartViewModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>Dental Chart</h2>
+                <button class="close" onclick="closeChartView()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="chartViewMessage" style="display:none; text-align:center; padding:20px;">No saved dental chart found for this patient.</p>
+                <img id="chartViewImage" style="display:none; max-width:100%; border-radius:8px;" />
+            </div>
+        </div>
+    </div>
+
+<script>
+
+function openVisitHistory(uid) {
+
+    const visitModal = document.getElementById("visitHistoryModal");
+    visitModal.style.display = "flex";
+    visitModal.classList.add("show");
+
+    const tbody = document.getElementById("visitHistoryBody");
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align:center;">
+                Loading...
+            </td>
+        </tr>
+    `;
+
+    fetch(`/get_patient/${uid}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Server returned " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+
+            tbody.innerHTML = "";
+
+            const procedures = data.Done_procedure || [];
+
+            // store for the Chart "View" buttons
+            window.patientProcedures = procedures;
+
+            if (procedures.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align:center;">
+                            No medical records found.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            procedures.forEach((p, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.dentist || "-"}</td>
+                        <td>${p.medicine || "-"}</td>
+                        <td>${p.date || "-"}</td>
+                        <td>${p.procedure || "-"}</td>
+                        <td>
+                            ${p.chart_image
+                                ? `<button class="btn-action" onclick="viewPatientChart(${index})">View</button>`
+                                : "-"
+                            }
+                        </td>
+                        <td>${p.next_appointment || "-"}</td>
+                    </tr>
+                `;
+            });
+
+        })
+        .catch(error => {
+            console.error("Fetch Error:", error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;color:red;">
+                        Failed to load medical records.
+                    </td>
+                </tr>
+            `;
+        });
+
+}
+
+
+function closeVisitHistory() {
+    const modal = document.getElementById("visitHistoryModal");
+    modal.style.display = "none";
+    modal.classList.remove("show");
+}
+
+function viewPatientChart(index) {
+    const item = window.patientProcedures && window.patientProcedures[index];
+    if (!item || !item.chart_image) {
+        showToast("No saved dental chart found for this record.");
+        return;
+    }
+
+    const modal = document.getElementById('chartViewModal');
+    const imgEl = document.getElementById('chartViewImage');
+    const msgEl = document.getElementById('chartViewMessage');
+
+    if (msgEl) msgEl.style.display = 'none';
+    if (imgEl) {
+        imgEl.src = "data:image/jpeg;base64," + item.chart_image;
+        imgEl.style.display = 'block';
+    }
+    modal.style.display = 'flex';
+    modal.classList.add("show");
+}
+
+async function viewSavedChart(uid) {
+    try {
+        const response = await fetch(`/get_patient/${uid}`);
+        const data = await response.json();
+
+        const modal = document.getElementById('chartViewModal');
+        const imgEl = document.getElementById('chartViewImage');
+        const msgEl = document.getElementById('chartViewMessage');
+
+        if (!data.latest_chart_image) {
+            if (msgEl) msgEl.style.display = 'block';
+            if (imgEl) imgEl.style.display = 'none';
+            modal.style.display = 'flex';
+            modal.classList.add("show");
+            return;
+        }
+
+        if (msgEl) msgEl.style.display = 'none';
+        if (imgEl) {
+            imgEl.src = data.latest_chart_image;
+            imgEl.style.display = 'block';
+        }
+        modal.style.display = 'flex';
+        modal.classList.add("show");
+    } catch (error) {
+        console.error('Error loading chart:', error);
+        showToast('Failed to load saved chart');
+    }
+}
+
+function closeChartView() {
+    const modal = document.getElementById('chartViewModal');
+    modal.style.display = 'none';
+    modal.classList.remove("show");
+}
+</script>
+
+    <!-- Payments Card -->
+    <!-- Payments Card -->
+    <a href="#" class="nav-card" onclick="openPaymentModal(); return false;">
+        <img src="https://img.icons8.com/ios-filled/50/ffffff/cash.png" alt="Payments">
+        <span>Payments</span>
+    </a>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content" style="max-width:900px;">
+            <div class="modal-header">
+                <h2>Payments</h2>
+                <button class="close" onclick="closePaymentModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Procedure</th>
+                        <th>Value</th>
+                        <th>Fee Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Pay</th>
+                    </tr>
+                </thead>
+
+                <tbody id="paymentTableBody">
+                    <tr>
+                        <td colspan="7" style="text-align:center;">
+                            Loading...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    </div>
+
+    <script>
+        
+    function openPaymentModal() {
+        const paymentModal = document.getElementById("paymentModal");
+        paymentModal.style.display = "flex";
+        paymentModal.classList.add("show");
+
+        const body = document.getElementById("paymentTableBody");
+
+        body.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align:center;">
+                    Loading...
+                </td>
+            </tr>
+        `;
+
+        fetch("/get_patient/{{ user.get('uid','') }}")
+        .then(res => res.json())
+        .then(data => {
+
+            const procedures = data.Done_procedure || [];
+
+            body.innerHTML = "";
+
+            if (procedures.length === 0) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center;">
+                            No payment records found.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            procedures.forEach(p => {
+
+                const status = p.status || "Not Paid";
+                const isPaid = status.toLowerCase() === "paid";
+
+                body.innerHTML += `
+                    <tr>
+                        <td>${p.date || "-"}</td>
+                        <td>${p.procedure || "-"}</td>
+                        <td>₱${p.value || 0}</td>
+                        <td>₱${p.paid || 0}</td>
+                        <td>₱${p.balance || 0}</td>
+                        <td>
+                            ${isPaid
+                                ? `<span class="paid">Paid</span>`
+                                : `<span class="unpaid">${status}</span>`
+                            }
+                        </td>
+                        <td>
+                            ${isPaid
+                                ? `-`
+                                : `<button class="gcash-btn"
+                                        onclick="payGCash('${p.balance}','${p.procedure}')">
+                                        Pay with GCash
+                                    </button>`
+                            }
+                        </td>
+                    </tr>
+                `;
+
+            });
+
+        })
+        .catch(err => {
+
+            body.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center;color:red;">
+                        Failed to load payment records.
+                    </td>
+                </tr>
+            `;
+
+            console.error(err);
+
+        });
+
+    }
+
+    function closePaymentModal() {
+        const modal = document.getElementById("paymentModal");
+        modal.style.display = "none";
+        modal.classList.remove("show");
+    }
+    </script>
+
+    <script>
+
+async function payGCash(amount, procedure) {
+
+    try {
+
+        const uid = "{{ user.get('uid', '') }}";
+
+        if (!uid) {
+            showToast("Patient UID is missing.");
+            return;
+        }
+
+        const numericAmount = parseFloat(amount);
+
+        if (
+            isNaN(numericAmount) ||
+            numericAmount <= 0
+        ) {
+            showToast("Invalid payment amount.");
+            return;
+        }
+
+        const response = await fetch(
+            "/create_gcash_payment",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+
+                    amount: numericAmount,
+
+                    procedure: procedure,
+
+                    uid: uid
+
+                })
+            }
+        );
+
+        const result =
+            await response.json();
+
+        console.log(
+            "PayMongo Response:",
+            result
+        );
+
+        if (result.checkout_url) {
+
+            window.location.href =
+                result.checkout_url;
+
+        } else {
+
+            console.error(
+                "PayMongo Error:",
+                result
+            );
+
+            showToast(
+                result.error ||
+                "Unable to create payment."
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Payment Error:",
+        error
+        );
+
+        showToast(
+            "Something went wrong while creating the payment."
+        );
+    }
+}
+    </script>
+
+    </div>
+
+<div class="modal" id="updateModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>EDIT PROFILE</h2>
+            <button class="close" onclick="closeUpdateModal()" aria-label="Close">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form class="modal-form" action="/update-profile" method="POST">
+
+    <input type="hidden"
+           name="uid"
+           value="{{ user.get('uid', '') }}">
+
+    <div class="info-item">
+        <label>First Name</label>
+        <input type="text"
+               name="new_firstname"
+               value="{% if user.get('provider') == 'google' %}{{ user.get('name', '').split()[0] }}{% else %}{{ user.get('firstname', '') }}{% endif %}"
+               placeholder="Enter your first name"
+               required>
+    </div>
+
+    <div class="info-item">
+        <label>Last Name</label>
+        <input type="text"
+               name="new_lastname"
+               value="{% if user.get('provider') == 'google' %}{% set name_parts = user.get('name', '').split() %}{% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}{% else %}{{ user.get('lastname', '') }}{% endif %}"
+               placeholder="Enter your last name">
+    </div>
+
+    <div class="info-item">
+        <label>Phone Number</label>
+        <input type="text"
+               name="new_phone"
+               value="{{ user.get('contact_number', '') }}"
+               placeholder="+63 9XX XXX XXXX">
+    </div>
+
+    <div class="modal-actions">
+        <button type="submit" class="btn-primary">Save Changes</button>
+        <button type="button" onclick="closeUpdateModal()" class="btn-secondary">Cancel</button>
+    </div>
+
+</form>
+    </div>
+</div>
+</div>
+
+
+    <script>
+        const modal = document.getElementById('updateModal');
+        function openUpdateModal() { 
+            modal.style.display = 'flex'; 
+            modal.classList.add("show");
+        }
+        function closeUpdateModal() { 
+            modal.style.display = 'none'; 
+            modal.classList.remove("show");
+        }
+
+        document.getElementById('profilePicInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('profile_pic', file);
+
+            fetch('/upload_profile_pic', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const newSrc = data.profile_pic_url + '?t=' + new Date().getTime();
+                    document.getElementById('profileAvatar').src = newSrc;
+                    document.getElementById('navProfilePic').src = newSrc;
+                    showToast('Profile picture updated successfully!');
+                } else {
+                    showToast(data.message || 'Failed to upload profile picture');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Failed to upload profile picture');
+            });
+        });
+
+        function validatePasswords() {
+            const pass = document.getElementById('new_password');
+            const confirm = document.getElementById('confirm_password');
+            
+            if (pass && pass.value !== "" && pass.value !== confirm.value) {
+                showToast("Passwords do not match!");
+                return false;
+            }
+            return true;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+             const dropBtn = document.getElementById('servicesDropdownBtn');
+             const dropMenu = document.getElementById('servicesDropdownMenu');
+
+             dropBtn.addEventListener('click', function(e) {
+                 e.stopPropagation();
+                 dropMenu.classList.toggle('show');
+                 this.classList.toggle('active-link');
+             });
+
+             window.addEventListener('click', function(e) {
+                 if (!dropMenu.contains(e.target) && !dropBtn.contains(e.target)) {
+                     dropMenu.classList.remove('show');
+                     dropBtn.classList.remove('active-link');
+                 }
+             });
+
+             const dropdownTrigger = document.getElementById('profileDropdownTrigger');
+             const dropdownMenu = document.getElementById('profileDropdown');
+
+             if(dropdownTrigger && dropdownMenu) {
+                 dropdownTrigger.onclick = (e) => {
+                     e.stopPropagation();
+                     dropdownMenu.classList.toggle('show');
+                 };
+             }
+
+             window.addEventListener('click', function(e) {
+                 if (dropdownMenu && !dropdownMenu.contains(e.target) && !dropdownTrigger.contains(e.target)) {
+                     dropdownMenu.classList.remove('show');
+                 }
+             });
+         });
+
+        // Hamburger menu toggle
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('navLinks');
+
+        if (hamburger && navLinks) {
+            hamburger.addEventListener('click', () => {
+                hamburger.classList.toggle('active');
+                navLinks.classList.toggle('active');
+            });
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+        }
+
+        if (themeToggle) {
+            themeToggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const isDark = body.classList.contains('dark-mode');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            });
+        }
+    </script>
+
+    <script>
+    function validatePasswords() {
+        let pass = document.getElementById("new_password").value;
+        let confirm = document.getElementById("confirm_password").value;
+
+        if (pass !== confirm) {
+            showToast("Passwords do not match!");
+            return false;
+        }
+        return true;
+    }
+    </script>
+
+    <script>
+    // Close flash message function
+    function closeFlash(flashId) {
+        const flash = document.getElementById(flashId);
+        if (flash) {
+            flash.style.animation = 'slideDown 0.3s ease-out reverse';
+            setTimeout(() => {
+                flash.remove();
+                // Hide container if no more flashes
+                const container = document.getElementById('flashContainer');
+                if (container && !container.querySelector('.flash')) {
+                    container.style.display = 'none';
+                }
+            }, 300);
+        }
+    }
+
+    // Auto-close after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const flashes = document.querySelectorAll('.flash');
+        flashes.forEach((flash, index) => {
+            setTimeout(() => {
+                closeFlash(flash.id);
+            }, 5000 + (index * 1000)); // Stagger if multiple
+        });
+    });
+</script>
+
+    </div>
+</div>
+
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-text">
+                    <span class="brand-name">CAPIZONDA DENTAL</span>
+                    <span class="brand-sub">Trusted Care Since 2024</span>
+                </div>
+                <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
+            </div>
+            
+            <div class="footer-contact">
+                <h4>CONTACT US</h4>
+                <ul>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        231 Lopez Jaena St, Molo, Iloilo City
+                    </li>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.94 19.94 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.94 19.94 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        0962 687 6076
+                    </li>
+                    <li>
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        capizondadental@gmail.com
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="footer-socials">
+                <h4>FOLLOW US</h4>
+                <div class="social-links">
+                    <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
+                        <img src="https://img.icons8.com/ios-filled/50/blue/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                        Facebook Page
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="footer-copy">
+                &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+            </div>
+            <div class="footer-legal">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+        <div class="chatbot-launcher" id="chatLauncher" aria-label="Open chat">
+        <svg class="chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="chat-pulse"></span>
+    </div>
+
+    <div class="chatbot-window" id="chatWindow">
+        <div class="chatbot-header">
+            <div class="header-info">
+                <div class="header-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                </div>
+                <div class="header-text">
+                    <span class="header-title">Capizonda Assistant</span>
+                    <span class="header-sub">Usually replies instantly</span>
+                </div>
+            </div>
+            <button class="chat-close" id="chatClose" aria-label="Close chat">&times;</button>
+        </div>
+        <div class="chatbot-messages" id="chat-box">
+            <div class="message bot">
+                <div class="bubble">Hello! 👋 I'm your dental assistant. Ask me anything about our services, pricing, or the clinic!</div>
+            </div>
+        </div>
+        <div class="chatbot-quick" id="chatQuick"></div>
+        <div class="chatbot-typing" id="chatTyping" style="display:none;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    </div>
+
+<script>
+    (function() {
+        const launcher = document.getElementById('chatLauncher');
+        const windowChat = document.getElementById('chatWindow');
+        const chatClose = document.getElementById('chatClose');
+        const chatBox = document.getElementById('chat-box');
+        const chatQuick = document.getElementById('chatQuick');
+        const chatTyping = document.getElementById('chatTyping');
+
+        const toggleChat = () => {
+            const isOpen = windowChat.style.display === 'flex';
+            windowChat.style.display = isOpen ? 'none' : 'flex';
+            if (!isOpen) renderQuickReplies();
+        };
+        launcher.onclick = toggleChat;
+        if(chatClose) chatClose.onclick = toggleChat;
+        windowChat.onclick = (e) => e.stopPropagation();
+
+        const faqData = [
+            { q: "What are braces?", a: "Braces are dental devices used to straighten teeth and correct problems with tooth alignment and bite." },
+            { q: "How much are braces?", a: "The cost depends on the type of braces, the complexity of the case, and the dental clinic. The dentist can give an exact estimate after an assessment." },
+            { q: "How long do I need to wear braces?", a: "It usually takes around 1–3 years, depending on the patient's teeth and treatment needs." },
+            { q: "What is a dental crown?", a: "A dental crown is a cap placed over a damaged or weakened tooth to restore its shape, strength, and function." },
+            { q: "How much is a dental crown?", a: "The price depends on the type of crown and the material used." },
+            { q: "What is tooth extraction?", a: "Tooth extraction is a procedure where a dentist removes a tooth from its socket." },
+            { q: "How much is tooth extraction?", a: "The cost depends on whether the extraction is simple or complicated and may vary between dental clinics." },
+            { q: "What is dental cleaning or oral prophylaxis?", a: "Dental cleaning, also called oral prophylaxis, is a procedure that removes plaque, tartar, and stains from the teeth." },
+            { q: "How often should I have dental cleaning?", a: "Dental cleaning is commonly recommended every six months, although some patients may need it more frequently depending on their oral health." },
+            { q: "How often should I visit the dentist for a check-up?", a: "It is generally recommended to visit the dentist twice a year, or every six months, for regular check-ups and preventive care." },
+            { q: "What is a dental filling?", a: "A dental filling is used to repair a tooth that has been damaged by tooth decay or a cavity." },
+            { q: "How much is a dental filling?", a: "The cost depends on the filling material, the size of the cavity, and the tooth being treated." },
+            { q: "What is a root canal?", a: "A root canal is a procedure that removes infected or damaged tissue from inside a tooth and seals the tooth to prevent further infection." },
+            { q: "How much is a root canal?", a: "The cost depends on the tooth being treated and the complexity of the procedure." },
+            { q: "When should I bring my baby to the dentist for the first time?", a: "A child should ideally have their first dental visit when the first baby tooth erupts or by their first birthday, whichever comes first." },
+            { q: "Why should I bring my baby to the dentist early?", a: "An early dental visit helps the dentist check the baby's developing teeth, identify potential problems, and teach parents proper oral care." },
+            { q: "What is teeth whitening?", a: "Teeth whitening is a cosmetic procedure that lightens the color of the teeth and helps reduce certain stains and discoloration." },
+            { q: "How much is teeth whitening?", a: "The cost depends on the whitening method and the dental clinic." },
+            { q: "What is a dental implant?", a: "A dental implant is a replacement for a missing tooth root that can support a dental crown or other restoration." },
+            { q: "How much is a dental implant?", a: "The cost varies depending on the implant, crown, materials, and whether additional procedures are required." },
+            { q: "What is the name of the dentist?", a: "Dr. Julix Dionne Capizonda, DMD" },
+            { q: "What is the educational background of the dentist?", a: "He graduated in Iloilo Doctor's College. He obtained a degree in Dental Medicine." },
+            { q: "Where the clinic is located?", a: "It located in 231 Lopez Jaena st. Molo Baluarte, West habog-habog, Iloilo City, 5000." }
+        ];
+
+        const categories = [
+            { name: "Braces", items: [0, 1, 2] },
+            { name: "Crowns & Extractions", items: [3, 4, 5, 6] },
+            { name: "Cleanings & Check-ups", items: [7, 8, 9] },
+            { name: "Fillings & Root Canal", items: [10, 11, 12, 13] },
+            { name: "Kids Dentistry", items: [14, 15] },
+            { name: "Whitening & Implants", items: [16, 17, 18, 19] },
+            { name: "Dentist Info", items: [20, 21, 22] }
+        ];
+
+        let currentCategory = null;
+
+        function addMsg(sender, html) {
+            const d = document.createElement('div');
+            d.className = `message ${sender}`;
+            d.innerHTML = `<div class="bubble">${html}</div>`;
+            chatBox.appendChild(d);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showTyping() {
+            chatTyping.style.display = 'flex';
+            chatBox.appendChild(chatTyping);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function hideTyping() {
+            chatTyping.style.display = 'none';
+        }
+
+        function getAnswer(input) {
+            const text = input.toLowerCase();
+            const direct = faqData.find(item => text.includes(item.q.toLowerCase().slice(0, 10)) || item.q.toLowerCase().includes(text));
+            if (direct) return direct.a;
+
+            const keywords = {
+                "brace": 0, "braces": 0, "align": 0, "straighten": 0,
+                "crown": 3, "cap": 3, "bridge": 3,
+                "extract": 5, "removal": 5, "pull": 5, "cabot": 5,
+                "clean": 7, "prophylaxis": 7, "tartar": 7, "plaque": 7,
+                "check-up": 9, "checkup": 9, "check up": 9, "visit": 9, "twice": 9,
+                "filling": 10, "cavity": 10, "pasta": 10,
+                "root canal": 12, "rct": 12,
+                "baby": 14, "child": 14, "kid": 14, "first visit": 14, "toddler": 14,
+                "whiten": 16, "whitening": 16, "stain": 16,
+                "implant": 18, "missing tooth": 18, "tooth replacement": 18,
+                "dentist name": 20, "dr": 20, "doctor": 20,
+                "education": 21, "graduated": 21, "college": 21, "school": 21,
+                "location": 22, "address": 22, "where": 22, "clinic located": 22, "lopez": 22
+            };
+
+            for (const [key, idx] of Object.entries(keywords)) {
+                if (text.includes(key)) return faqData[idx].a;
+            }
+
+            return null;
+        }
+
+        function handleSend(text) {
+            if (!text.trim()) return;
+            addMsg('user', text);
+            chatQuick.innerHTML = '';
+            chatQuick.style.display = 'none';
+            currentCategory = null;
+
+            showTyping();
+            setTimeout(() => {
+                hideTyping();
+                const answer = getAnswer(text);
+                if (answer) {
+                    addMsg('bot', answer);
+                } else {
+                    addMsg('bot', "I'm not sure about that. 😅 Please pick a category below or rephrase your question.");
+                    renderQuickReplies();
+                }
+            }, 800);
+        }
+
+        function renderQuickReplies() {
+            chatQuick.innerHTML = '';
+            if (currentCategory !== null) {
+                const cat = categories[currentCategory];
+                cat.items.forEach(idx => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quick-chip';
+                    btn.textContent = faqData[idx].q;
+                    btn.onclick = () => {
+                        addMsg('user', faqData[idx].q);
+                        showTyping();
+                        setTimeout(() => {
+                            hideTyping();
+                            addMsg('bot', faqData[idx].a);
+                            renderQuickReplies();
+                        }, 600);
+                    };
+                    chatQuick.appendChild(btn);
+                });
+                const back = document.createElement('button');
+                back.className = 'quick-chip back-chip';
+                back.textContent = '← Back';
+                back.onclick = () => { currentCategory = null; renderQuickReplies(); };
+                chatQuick.appendChild(back);
+            } else {
+                categories.forEach((cat, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'quick-chip';
+                    btn.textContent = cat.name;
+                    btn.onclick = () => { currentCategory = idx; renderQuickReplies(); };
+                    chatQuick.appendChild(btn);
+                });
+            }
+            chatQuick.style.display = 'flex';
+        }
+
+        renderQuickReplies();
+    
+    })();
+</script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch data for the patient profile
+        fetch('/get_patient_profile_data')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    renderSchedule(data.schedule);
+                    renderDentalRecords(data.procedures);
+                    renderPayments(data.procedures);
+                }
+            })
+            .catch(err => console.error('Error loading profile data:', err));
+
+        function renderSchedule(schedule) {
+            const tbody = document.querySelector('#scheduleTable tbody'); // Make sure your table has id="scheduleTable" or select the correct tbody
+            // Fallback selector if no ID: document.querySelectorAll('table')[0].querySelector('tbody');
+            const tbodyEl = document.querySelector('.table-responsive table tbody') || document.querySelector('table tbody');
+            
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (schedule.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="4" class="text-center">No upcoming or past appointments.</td></tr>';
+                return;
+            }
+
+            schedule.forEach(appt => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${appt.appointment_date || 'N/A'}</td>
+                    <td>${appt.Service || 'N/A'}</td>
+                    <td>${appt.DentistName || 'Not Assigned'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+
+        function renderDentalRecords(procedures) {
+            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[1] || document.querySelectorAll('table tbody')[1];
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (procedures.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No dental records found.</td></tr>';
+                return;
+            }
+
+            procedures.forEach(proc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${proc.dentist || 'N/A'}</td>
+                    <td>${proc.medicine || '-'}</td>
+                    <td>${proc.date || 'N/A'}</td>
+                    <td>${proc.procedure || 'N/A'}</td>
+                    <td><a href="#" onclick="viewChart('${proc.chart_image || ''}')">View Chart</a></td>
+                    <td>${proc.next_appointment || '-'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+
+        function renderPayments(procedures) {
+            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[2] || document.querySelectorAll('table tbody')[2];
+            if (!tbodyEl) return;
+            tbodyEl.innerHTML = '';
+
+            if (procedures.length === 0) {
+                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No payment records found.</td></tr>';
+                return;
+            }
+
+            procedures.forEach(proc => {
+                const tr = document.createElement('tr');
+                const statusClass = proc.status === 'Paid' ? 'text-success' : 'text-warning';
+                tr.innerHTML = `
+                    <td>${proc.date || 'N/A'}</td>
+                    <td>${proc.procedure || 'N/A'}</td>
+                    <td>₱${proc.value || 0}</td>
+                    <td>₱${proc.paid || 0}</td>
+                    <td>₱${proc.balance || 0}</td>
+                    <td class="${statusClass}">${proc.status || 'Pending'}</td>
+                    <td>${proc.status !== 'Paid' ? '<button class="btn btn-sm btn-primary">Pay Now</button>' : '-'}</td>
+                `;
+                tbodyEl.appendChild(tr);
+            });
+        }
+    });
+
+    function viewChart(base64Image) {
+        if (!base64Image) {
+            showToast("No chart image available for this record.");
+            return;
+        }
+        const win = window.open();
+        win.document.write('<img src="data:image/png;base64,' + base64Image + '" style="max-width:100%;"/>');
+    }
+    </script>
+
+</body>
+    </html>

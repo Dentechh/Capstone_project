@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "capizonda-dentech-dev",
+  "private_key_id": "a4e020df3906c91b3d2eca8b61686861e5be02bd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDKvP3RAYSJkWE5\nLcHyL/2dE4t+85UwmCUi9XzbCVM87bHERiSt9ZrLrNqhItlIUtl/0Boc0iCIvprz\nPSHq6UhnBVU7L1KQMAF+GzITUXh2xuz11HSLQuFNjjNKTKhPC2pEu3Lgt9zwagAQ\nW9gd3FP2vWzvVwDsrj4Tiy2fNWNuyuzeW8EyrtrDlI+Yrk40Nndlc5CJhHEeCvKo\nuxYQnz+Ttadmvra1wmZXbfqi9nyTX+3w9u7w4thG4EUa/C7rzqQQg5g8sE3UoGGs\nJs1Xgkn+cyyoKP1f9rBpAYmUu708Kbj66wBR5jYn6wTz9k0yyjXkWsgvGdQfvNDr\ny9Ggnr8nAgMBAAECggEAEJNyiS5/lfkt+CKBSKTwg8bqUTSR48mSF7v3O7gVIdZ+\nrKveKd76i2E+9Y0c3iiaod7zk5xWjqJO7Ej48fT64iQce4dQpSYCU+YzVO2vVL7K\nTFsqNYyqpnr+6eSUn58w+XJTX9jd6/DZanz9PDZxzasKh2hsqe1LzrCYHVFHJ51d\n4NASHL+iUWJYXjlXtEBGWVvVXFiv3rEQtn/OKZOYajO86f+jysk6k1HE+DtXVVwR\nC3mrVgwBUnVbNgzA5w6xPfa2h+9CxlyiwIOsX2uHFml5G23BlgXBQ0Sw6vMOQMI9\nwB3VnPdfAX6xs7Zud+Rs2jAXXmuN3MAPpaSL+st+sQKBgQDqDMkkyB1rRfIR12yq\nrdJNo4MYV0Z4OzgupfOAP9Ks+QKEW7TymcUus2fiKAWPYWKfw9bRnZySPANtpzsC\n0bPpdq/lMzzWzR1qUR9qERd2RTOfuyqzaIMwjBl97HPFd7tNIfSf4n2rtgriMNUX\n59FytKhy098fO8/8/n9dxkmxzwKBgQDdwHSUUaQg8jFKLWdCBH07mHYEWL9OvMfe\njCB/Jsqpe5caS/if29tTrMxSEPWAgM0ELVicXARjg5eZGdd8aBgie4HZ7XLDH22C\nZIQWs5cff9OVay0oEnXPmZusshu7xPslK22C4BS6HaUPK6hHQdHaZGFfy32krgFq\nkCRayTSrKQKBgQDG3pJS5I7KxaYILumwpP2a5qLPnejM5FS6nlumz5QtUXAoEtxP\nfwUix2Ivsh33VKI+amMvvSJ6xu+Kzpu/q3uZljWjJMQ/KA4kdkWhFGDBJ8/Tm2+O\n/fDq4UAP1UgRs8i8o2t+Jy7tJkNdKm0GYP2A36x51TkzCtmReJW0knWv1QKBgQDY\nfl+Suk4h+DIU+FTaSCW3vDZkMfy8M2Ryqp3DZazwYH/6JXebIntzqr1j1bjJd3Yx\nANCE/vUt7rhfubH+fGYrrCbvC3pCc3lnlxi6TSValGKOey9/8t3gC1jH9q9K15pW\nBJsK7hhuSCjwsa+9uc3WiK/kZXfKAjPRxN4pYEyyWQKBgEmxXBJQjzsAtmwmobex\nJ2vzoogcEak1VwbK/tZAlJqu+QnRdvNOxJqaJSynB5klsgHDH4FX7xqXsTIGN78Q\nXzF3yd23uLd3lOr33leZPfnSldfz39M4Q8sCEPKwuT9VwIosFgFY5X0Hu5hNiooE\nbiP8SMocpuw28X4c88qlukBB\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-fbsvc@capizonda-dentech-dev.iam.gserviceaccount.com",
+  "client_id": "105043369110327089209",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40capizonda-dentech-dev.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

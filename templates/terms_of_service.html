@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service | Capizonda Dental Clinic</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+    <style>
+        /* ===== GLOBAL STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Kumbh Sans', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #e6f7ff 0%, #d4edf7 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER STYLES ===== */
+        header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #0d47a1;
+        }
+
+        .logo-icon {
+            height: 42px;
+            width: 42px;
+            margin-right: 12px;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #0d47a1;
+        }
+
+        .brand-sub {
+            font-weight: 400;
+            font-size: 0.9rem;
+            color: #1a1a1a;
+        }
+
+        /* ===== LEGAL CONTAINER STYLES ===== */
+        .legal-container {
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 24px 60px;
+            font-family: 'Kumbh Sans', sans-serif;
+            color: #333;
+            line-height: 1.7;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .legal-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0d47a1, #1565c0, #0d47a1);
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            color: #0d47a1;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 24px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            text-decoration: underline;
+            color: #1565c0;
+        }
+
+        .legal-container h1 {
+            color: #0d47a1;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .legal-updated {
+            color: #546e7a;
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+            font-weight: 500;
+        }
+
+        /* ===== SECTION STYLES ===== */
+        .legal-container h2 {
+            color: #0d47a1;
+            font-size: 1.5rem;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #eef3fb;
+            padding-bottom: 8px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .legal-container h2::after {
+            content: "";
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: #0d47a1;
+        }
+
+        .legal-container p {
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+            color: #444;
+        }
+
+        .legal-container ul {
+            padding-left: 28px;
+            margin: 16px 0;
+        }
+
+        .legal-container li {
+            margin-bottom: 12px;
+            font-size: 1.05rem;
+        }
+
+        .legal-container li::marker {
+            color: #0d47a1;
+            font-weight: bold;
+        }
+
+        /* Highlight important text */
+        .legal-container strong {
+            color: #0d47a1;
+            font-weight: 600;
+        }
+
+        /* ===== FOOTER STYLES ===== */
+        footer {
+            background: #0d47a1;
+            color: white;
+            padding: 24px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .footer-content p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .footer-content a {
+            color: #e3f2fd;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-content a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .legal-container {
+                padding: 0 16px 40px;
+            }
+            
+            .legal-container h1 {
+                font-size: 1.8rem;
+            }
+            
+            .legal-container h2 {
+                font-size: 1.3rem;
+            }
+            
+            .navbar {
+                padding: 12px 5%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legal-container h1 {
+                font-size: 1.6rem;
+            }
+            
+            .legal-container h2 {
+                font-size: 1.2rem;
+            }
+            
+            .logo-icon {
+                height: 36px;
+                width: 36px;
+            }
+            
+            .brand-name {
+                font-size: 1.3rem;
+            }
+        }
+        
+        /* ===== DARK MODE SUPPORT ===== */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .legal-container {
+            background: rgba(30, 41, 59, 0.9);
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .legal-container h1, 
+        body.dark-mode .legal-container h2 {
+            color: #a8d8ff;
+        }
+
+        body.dark-mode .legal-updated {
+            color: #88a9c5;
+        }
+
+        body.dark-mode .legal-container ul {
+            color: #d1e0f0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <nav class="navbar">
+        <a href="/" class="logo-container">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
+            <div class="logo-text">
+                <span class="brand-name">CAPIZONDA</span>
+                <span class="brand-sub">DENTAL CLINIC</span>
+            </div>
+        </a>
+    </nav>
+</header>
+
+<main class="legal-container">
+    <h1>Terms of Service</h1>
+    <p class="legal-updated">Last updated: September 12, 2026</p>
+
+    <p>These Terms of Service ("Terms") govern your use of the Capizonda Dental Clinic website and patient portal. By creating an account or booking an appointment, you agree to these Terms.</p>
+
+    <h2>1. Eligibility and Accounts</h2>
+    <p>You must provide accurate, current information when creating an account, whether by email/password or Google Sign-In. You are responsible for keeping your login credentials confidential and for all activity under your account.</p>
+
+    <h2>2. Appointment Booking</h2>
+    <ul>
+        <li>Submitting a booking request does not guarantee an appointment — all requests are subject to review and acceptance by our clinic staff based on dentist availability.</li>
+        <li>You will be notified by email once your appointment is accepted or declined.</li>
+        <li>Please arrive on time; late arrivals may result in a shortened appointment or the need to reschedule.</li>
+        <li>We reserve the right to block or reschedule time slots due to dentist unavailability.</li>
+    </ul>
+
+    <h2>3. Medical Information and Informed Consent</h2>
+    <p>The medical history questionnaire you complete is used solely to help our dentist provide safe and appropriate care. Before any procedure, you (or your authorized representative) must review and sign our informed consent form, which sets out the risks, benefits, and limitations of dental treatment.</p>
+    <p><strong>This website does not provide medical advice or diagnosis.</strong> It is a scheduling and records tool only. Always consult our dentist directly for diagnosis and treatment decisions.</p>
+
+    <h2>4. Fees and Payment</h2>
+    <ul>
+        <li>Service fees are communicated by our clinic and may vary based on your specific treatment plan.</li>
+        <li>Online payments (e.g., GCash) are processed through our third-party payment processor, PayMongo. We are not responsible for delays or errors caused by the payment processor or your bank/e-wallet provider.</li>
+        <li>Outstanding balances remain your responsibility until settled in full.</li>
+    </ul>
+
+    <h2>5. User Conduct</h2>
+    <p>You agree not to:</p>
+    <ul>
+        <li>Provide false medical or personal information.</li>
+        <li>Attempt to access another patient's account or records.</li>
+        <li>Use the site to disrupt, damage, or gain unauthorized access to our systems.</li>
+        <li>Use the appointment system to make fraudulent or duplicate bookings.</li>
+    </ul>
+
+    <h2>6. Cancellations</h2>
+    <p>If you need to cancel or reschedule, please contact the clinic directly as soon as possible so the time slot can be offered to another patient.</p>
+
+    <h2>7. Intellectual Property</h2>
+    <p>All content on this website, including text, logos, and design, is the property of Capizonda Dental Clinic unless otherwise noted, and may not be copied or reused without permission.</p>
+
+    <h2>8. Limitation of Liability</h2>
+    <p>To the extent permitted by law, Capizonda Dental Clinic is not liable for indirect or incidental damages arising from your use of this website, including technical errors, scheduling issues, or third-party service interruptions (e.g., Google, Firebase, or PayMongo outages). This does not limit any liability related to the actual dental treatment you receive in person, which is governed separately by your signed informed consent form.</p>
+
+    <h2>9. Termination</h2>
+    <p>We may suspend or terminate accounts that violate these Terms or that we reasonably believe are being used fraudulently.</p>
+
+    <h2>10. Governing Law</h2>
+    <p>These Terms are governed by the laws of the Republic of the Philippines. Any disputes will be resolved in the appropriate courts of Iloilo City.</p>
+
+    <h2>11. Changes to These Terms</h2>
+    <p>We may update these Terms from time to time. Continued use of the site after changes are posted constitutes acceptance of the updated Terms.</p>
+
+    <h2>12. Contact Us</h2>
+    <p>
+        Capizonda Dental Clinic<br>
+        231 Lopez Jaena St, Molo, Iloilo City, 5000<br>
+        Email: capizondadental@gmail.com<br>
+        Phone: 0962 687 6076
+    </p>
+</main>
+
+<footer>
+    <div class="footer-content">
+        <p>© 2026 Capizonda Dental Clinic. All Rights Reserved.</p>
+        <p><a href="/privacy-policy">Privacy Policy</a> | <a href="/terms">Terms of Service</a></p>
+        <p>231 Lopez Jaena St, Molo, Iloilo City, 5000</p>
+        <p>0962 687 6076 | capizondadental@gmail.com</p>
+    </div>
+</footer>
+
+</body>
+</html>

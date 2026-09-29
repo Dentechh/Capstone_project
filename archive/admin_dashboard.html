@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capizonda | Admin Panel</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+
+
+</head>
+<body class="dashboard-body">
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>CAPIZONDA</h2>
+            <span>ADMIN PANEL</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active" onclick="showSection('dashboard')">📊 Dashboard</a>
+            <a href="javascript:void(0)" id="nav-appointments" class="nav-item" onclick="showSection('appointments')">📅 Appointments</a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">🩺 My Patients</a>
+            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item"  onclick="showSection('patientdashboard')">👤 Patient Dashboard</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout" class="nav-item logout">🚪 Logout</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-header">
+            <h2 id="page-title">Dashboard Overview</h2>
+            <div class="admin-profile" style="display: flex; align-items: center; gap: 12px;">
+                <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+                    </svg>
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <span>Dr. Admin</span>
+                <div class="avatar"></div>
+            </div>
+        </header>
+
+        <div id="section-dashboard" class="content-section active-section">
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">📅</div>
+                    <div class="metric-data"><h3>12</h3><p>Today's Appointments</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">⏳</div>
+                    <div class="metric-data"><h3 style="color: #d4af37">5</h3><p>Pending Requests</p></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">👥</div>
+                    <div class="metric-data"><h3>1,204</h3><p>Total Patients</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="section-mypatients" class="content-section">
+            <div class="patient-card-grid">
+                 {% for appointment in Appointment_clients %}
+                 <div class="patient-card">
+                     <div class="p-card-header">
+                         
+                         <div class="p-info">
+                             \
+                             <small style="opacity: 0.6;">{{ appointment.uid }}</small>
+                         </div>
+                     </div>
+                    <p style="font-size: 13px; margin-bottom: 15px;">Assigned for: <strong>{{ appointment.Service_appointment  }}</strong></p>
+                    <button class="btn-action accept" style="width: 100%;" 
+                        onclick="openPatientDashboard('{{ appointment.FullName }}', '{{ appointment.uid }}', '{{ appointment.Sex }}', '{{ appointment.Age }}', 'O+')">
+                        Check Profile
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="section-appointments" class="content-section">
+            <section class="content-panel">
+                <table class="appointment-table">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th>Date & Time</th>
+                            <th>Procedure</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                         <tbody>
+                         {% for appointment in Appointment_clients %}
+                         <tr>
+                             <td>{{ appointment.FullName }}</td>
+                             <td>{{ appointment.created_at or appointment.Birthday or 'N/A' }}</td>
+                             <td>{{ appointment.Service_appointment }}</td>
+                             <td><span class="badge pending">pending</span></td>
+                             <td>
+                                 <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'accept')">Accept</button>
+                                 <button class="btn-action" onclick="updateStatus('{{ appointment.id }}', 'decline')">Decline</button>
+                             </td>
+                         </tr>
+                         {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <div id="section-patientdashboard" class="content-section">
+
+            <button onclick="showSection('mypatients')" class="btn-action" style="margin-bottom: 20px; background: #666; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">← Back to Patients</button>
+            
+            <div class="patient-profile-header">
+                <div class="p-avatar-circle large" id="pd-avatar">??</div>
+                <div class="p-main-info">
+                    <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
+                    <p id="pd-id" style="margin: 0; color: #000000; font-size: 14px;">#ID-0000</p>
+                </div>
+                
+                <div style="display: flex; gap: 40px; margin-left: auto; padding-right: 20px; border-left: 1px solid #eee; padding-left: 40px;">
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Age</label><span id="pd-age" style="font-weight: 700;">-</span></div>
+                    <div class="pd-stat"><label style="display: block; font-size: 11px; color: #ffffff; text-transform: uppercase;">Blood Type</label><span id="pd-blood" style="font-weight: 700;">-</span></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="content-panel">
+                    <div class="panel-header"><h3>Visits History</h3></div>
+                    {% for appointment in Appointment_clients %}
+                    <table class="appointment-table">
+                        <thead>
+                            <tr>
+                                <th>Consulting Doctor</th>
+                                <th>Visit Date</th>
+                                <th>Procedure</th>
+                                <th>Fee Paid</th>
+                            </tr>
+                        </thead>
+                     <tbody id="pd-visit-history">
+                             <tr>
+                                 <td>Dr. Capizonda</td>
+                                 <td>{{ appointment.created_at or appointment.Birthday or '20/05/2026' }}</td>
+                                 <td>{{ appointment.Service_appointment }}</td>
+                                 <td>₱1,500</td>
+                             </tr>
+                     </tbody>
+                    </table>
+                     {% endfor %}
+                </div>
+
+                <div class="content-panel" >
+                    <div class="panel-header"><h3>Prescription & Notes</h3></div>
+                    <div class="panel-content">
+                        <p><strong>Notes:</strong> <span id="pd-notes">No known allergies. Prefers morning appointments.</span></p>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <p><strong>Medicines:</strong></p>
+                        <ul id="pd-meds" style="font-size: 14px; color: #555; padding-left: 20px;">
+                            <li>Amoxicillin (500mg) - 3x a day</li>
+                            <li>Mefenamic Acid - As needed</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-chart" class="content-section">
+                <div class="chart-container">
+                    <aside class="action-palette">
+                        <div class="palette-title">ACTION PALETTE</div>
+                        
+                        <div class="tool active" data-tool="healthy" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">verified</span>
+                            <span>Healthy</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="caries" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">brush</span>
+                            <span>Caries</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="filling" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">format_color_fill</span>
+                            <span>Filling</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="crown" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">workspace_premium</span>
+                            <span>Crown</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="rootcanal" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">medical_services</span>
+                            <span>Root Canal</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="extraction" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">content_cut</span>
+                            <span>Extraction</span>
+                        </div>
+                        
+                        <div class="tool" data-tool="check" onclick="setTool(this)">
+                            <span class="material-symbols-rounded">task_alt</span>
+                            <span>Check</span>
+                        </div>
+                    </aside>
+
+                    <section class="dental-chart">
+                        <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                        
+                        <div class="odontogram-container">
+                            <div class="axis-v"></div>
+                            
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-upper"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                            
+                            <div class="teeth-row" id="teeth-temp-top"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+
+                            <div class="axis-h"></div>
+
+                            <div style="position: relative; width: 100%;">
+                                <div class="label-side rotated">PERMANENT TEETH</div>
+                                <div class="permanent-block">
+                                    <div class="unified-grid wide" id="grid-perm-upper"></div>
+                                    <div class="teeth-row wide" id="teeth-perm-top"></div>
+                                    <div class="axis-h-mid"></div>
+                                    <div class="teeth-row wide reverse-layout" id="teeth-perm-bottom"></div>
+                                    <div class="unified-grid wide" id="grid-perm-lower"></div>
+                                </div>
+                            </div>
+
+                            <div class="axis-h"></div>
+
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="teeth-row reverse-layout" id="teeth-temp-bottom"></div>
+                            
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-lower"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div id="section-records" class="content-section">
+            <div class="search-bar-container">
+                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input" onkeyup="filterPatients()">
+            </div>
+            <section class="content-panel">
+                <table class="appointment-table" id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Last Visit</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#PT-001</td>
+                            <td>Jericho Manalo</td>
+                            <td>Mar 15, 2026</td>
+                            <td>0912-345-6789</td>
+                            <td><button class="btn-action accept" onclick="openPatientDashboard('Jericho Manalo', '#PT-001', 'Male', '26', 'B+')">View History</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- Patient Dental Chart -->
+
+    </main>
+
+
+
+        <!-- MODAL (UNCHANGED) -->
+        <div id="tool-modal" class="modal">
+            <div class="modal-content">
+                <h3>Select Action Color</h3>
+                <div class="modal-buttons">
+                    <button class="btn-modal-red" onclick="applyModalChoice('#ff4d4d')">RED</button>
+                    <button class="btn-modal-blue" onclick="applyModalChoice('#156699')">BLUE</button>
+                    <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    <script>
+        function showSection(sectionId) {
+            // Update Sidebar Nav
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            const activeNav = document.getElementById('nav-' + sectionId);
+            if(activeNav) activeNav.classList.add('active');
+
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active-section');
+            });
+
+            // Show selected section
+            const target = document.getElementById('section-' + sectionId);
+            if(target) target.classList.add('active-section');
+
+            // 🔥 CONTROL CHART VISIBILITY
+            const chart = document.getElementById('section-chart');
+
+            if (sectionId === 'patientdashboard') {
+                if (chart) chart.classList.add('active-section');
+            } else {
+                if (chart) chart.classList.remove('active-section');
+            }
+
+            // Update Header Title
+            const titles = {
+                'dashboard': 'Dashboard Overview',
+                'appointments': 'Appointment Requests',
+                'mypatients': 'My Assigned Patients',
+                'records': 'Patient Database',
+                'patientdashboard': 'Patient Dashboard'
+            };
+            document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
+        }
+
+        function openPatientDashboard(name, uid, Sex, age, blood) {
+            // 1. Populate data
+            document.getElementById('pd-name').innerText = name;
+            document.getElementById('pd-id').innerText = "Patient ID: " + uid;
+            document.getElementById('pd-gender').innerText = Sex || 'Female';
+            document.getElementById('pd-age').innerText = age || '24';
+            document.getElementById('pd-blood').innerText = blood || 'O+';
+            
+            // 2. Set initials
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('pd-avatar').innerText = initials;
+
+            // 3. Show hidden nav link and switch
+            const navLink = document.getElementById('nav-patientdashboard');
+            navLink.style.display = "block";
+            
+            showSection('patientdashboard');
+        }
+
+        function filterPatients() {
+            let input = document.getElementById('patientSearch').value.toUpperCase();
+            let table = document.getElementById('recordsTable');
+            let tr = table.getElementsByTagName('tr');
+            for (let i = 1; i < tr.length; i++) {
+                let td = tr[i].getElementsByTagName('td')[1]; 
+                if (td) {
+                    let textValue = td.textContent || td.innerText;
+                    tr[i].style.display = textValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+                }
+            }
+        }
+        let currentTool = 'healthy';
+        let lastClickedTooth = null;
+
+        function setTool(el) {
+            document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            currentTool = el.getAttribute('data-tool');
+        }
+
+        function createToothSVG(id) {
+            return `
+            <div class="tooth-unit" id="tooth-${id}">
+                <span class="tooth-label">${id}</span>
+                <svg class="tooth-svg" viewBox="0 0 100 100" onclick="handleToothAction('${id}')">
+                    <path class="segment" d="M50,50 L12,12 A54,54 0 0,1 88,12 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L88,12 A54,54 0 0,1 88,88 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L88,88 A54,54 0 0,1 12,88 Z" onclick="paintSegment(event)" /> 
+                    <path class="segment" d="M50,50 L12,88 A54,54 0 0,1 12,12 Z" onclick="paintSegment(event)" /> 
+                    <circle class="segment" cx="50" cy="50" r="23" onclick="paintSegment(event)" />
+                    
+                    <line class="mark-line" x1="50" y1="5" x2="50" y2="95" stroke-width="8" style="display:none; pointer-events:none;" />
+                    
+                    <g class="mark-x" style="display:none; pointer-events:none; stroke:#ff4d4d; stroke-width:8;">
+                        <line x1="20" y1="20" x2="80" y2="80" />
+                        <line x1="80" y1="20" x2="20" y2="80" />
+                    </g>
+                </svg>
+            </div>`;
+        }
+
+        function paintSegment(e) {
+            if (currentTool === 'caries' || currentTool === 'filling') {
+                e.stopPropagation(); // Stops the modal from popping up
+                e.target.style.fill = (currentTool === 'caries') ? '#ff4d4d' : '#156699';
+            }
+        }
+
+        function handleToothAction(id) {
+            const tooth = document.getElementById(`tooth-${id}`);
+            const markX = tooth.querySelector('.mark-x');
+            const markLine = tooth.querySelector('.mark-line');
+
+            if (currentTool === 'healthy') {
+                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = '#ffffff');
+                markX.style.display = 'none';
+                markLine.style.display = 'none';
+            } 
+            else if (currentTool === 'extraction') {
+                markX.style.display = (markX.style.display === 'block') ? 'none' : 'block';
+            }
+            else if (currentTool === 'crown' || currentTool === 'rootcanal') {
+                lastClickedTooth = id;
+                document.getElementById('tool-modal').style.display = 'flex';
+            }
+        }
+
+        function applyModalChoice(color) {
+            const tooth = document.getElementById(`tooth-${lastClickedTooth}`);
+            if (currentTool === 'crown') {
+                tooth.querySelectorAll('.segment').forEach(s => s.style.fill = color);
+            } else if (currentTool === 'rootcanal') {
+                const line = tooth.querySelector('.mark-line');
+                line.setAttribute('stroke', color);
+                line.style.display = 'block';
+            }
+            closeModal();
+        }
+
+        function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
+
+        function initUnifiedGrid(id, cols) {
+            const grid = document.getElementById(id);
+            if (!grid) return;
+            grid.innerHTML = ''; // Clear existing
+            for (let i = 0; i < cols * 2; i++) {
+                const box = document.createElement('div');
+                box.className = 'grid-box';
+                box.onclick = function() {
+                    if (currentTool === 'check') this.innerHTML = (this.innerHTML === '✔️') ? '' : '✔️';
+                };
+                grid.appendChild(box);
+            }
+        }
+
+        window.onload = () => {
+            initUnifiedGrid('grid-upper', 10);
+            initUnifiedGrid('grid-perm-upper', 16);
+            initUnifiedGrid('grid-perm-lower', 16);
+            initUnifiedGrid('grid-lower', 10);
+
+            const render = (rowId, nums) => {
+                const row = document.getElementById(rowId);
+                if(row) nums.forEach(n => row.innerHTML += createToothSVG(n));
+            };
+
+            render('teeth-temp-top', [55, 54, 53, 52, 51, 61, 62, 63, 64, 65]);
+            render('teeth-perm-top', [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]);
+            render('teeth-perm-bottom', [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]);
+            render('teeth-temp-bottom', [85, 84, 83, 82, 81, 71, 72, 73, 74, 75]);
+        };
+
+        // Theme Toggle Functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+        
+
+    
+    </script>
+    
+</body>
+</html>
