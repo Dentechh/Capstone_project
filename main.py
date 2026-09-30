@@ -212,6 +212,172 @@ class DentalClinicApp(BaseFlaskApp):
                 mapping[account_uid] = patient_id
         return mapping
 
+    def _get_account_contact_and_sex(self, account_uid, cache=None):
+        """
+        Fallback lookup for the two identity fields that are NOT guaranteed
+        to exist on Customer_Account/{uid}:
+
+          contact_number - only written by password sign-up, the patient
+                           profile update, and the admin EDIT save. The
+                           Google sign-in path (which never sees a phone
+                           number) and the admin walk-in account creator
+                           never write it, so those accounts rendered a
+                           blank "Mobile Number" forever.
+          last_sex       - only written when an appointment actually
+                           answered the Sex question, so any booking that
+                           left it blank leaves the account with no sex.
+
+        Both values ARE recorded on every appointment/Approve document, so
+        fall back to the most recent one instead of rendering an empty cell.
+        Stops at the first document that actually carries a value, so this
+        costs at most one small query per row that is missing something.
+
+        `cache` is a per-render dict so a row is never read twice.
+        Returns (contact_number, sex, civil_status); any may be "".
+
+        CivilStatus is included here because it is only ever written to the
+        appointment/Approve documents, never to Customer_Account, so it rides
+        along on the same read the other two already needed.
+        """
+        if not account_uid:
+            return ("", "", "")
+
+        if cache is not None and account_uid in cache:
+            return cache[account_uid]
+
+        account_ref = self.db.collection(
+            self.Customer_Account
+        ).document(account_uid)
+
+        # Approved history first, then anything still pending.
+        for collection_name, order_field in (
+            ("Approve", "accepted_at"),
+            (self.Appointment_cliets, "appointment_date"),
+        ):
+            docs = None
+
+            # Newest first when the sort field is present and indexed...
+            try:
+                docs = list(
+                    account_ref.collection(collection_name)
+                    .order_by(order_field, direction="DESCENDING")
+                    .limit(5)
+                    .stream()
+                )
+            except Exception:
+                docs = None
+
+            # ...and an unordered scan otherwise. Firestore returns an EMPTY
+            # result (rather than raising) when no document carries the sort
+            # field, so this has to trigger on "no rows" as well, or a
+            # legacy collection with no appointment_date would come back
+            # blank.
+            if not docs:
+                try:
+                    docs = list(
+                        account_ref.collection(collection_name)
+                        .limit(5)
+                        .stream()
+                    )
+                except Exception:
+                    docs = None
+
+            for doc in (docs or []):
+                data = doc.to_dict() or {}
+                contact = str(data.get("ContactNumber") or "").strip()
+                sex = str(data.get("Sex") or "").strip()
+                civil = str(
+                    data.get("CivilStatus") or data.get("civil_status") or ""
+                ).strip()
+                if contact or sex or civil:
+                    result = (contact, sex, civil)
+                    if cache is not None:
+                        cache[account_uid] = result
+                    return result
+
+        result = ("", "", "")
+        if cache is not None:
+            cache[account_uid] = result
+        return result
+
+    def _resolve_google_name_fields(self, existing_data, google_name):
+        """
+        Name fields to write when a Google account signs in.
+
+        The Google profile name must never overwrite a name the admin set in
+        "My Patients": the account keeps whatever firstname/lastname it
+        already has, and `name` is re-synced from those parts so every
+        screen that reads `name` agrees with the editable ones.
+
+        Only an account with no name parts of its own adopts the Google name,
+        and then it is split into the parts so the admin edit form is
+        pre-filled instead of blank. A single-word Google name leaves
+        lastname empty, which the admin can complete.
+        """
+        data = existing_data or {}
+        google_name = str(google_name or "").strip()
+
+        first = str(data.get("firstname") or "").strip()
+        middle = str(data.get("middlename") or "").strip()
+        last = str(data.get("lastname") or "").strip()
+
+        if first or last:
+            return {
+                "firstname": first,
+                "middlename": middle,
+                "lastname": last,
+                "name": f"{first} {last}".strip()
+            }
+
+        parts = google_name.split(" ", 1)
+        return {
+            "firstname": parts[0] if parts else "",
+            "lastname": parts[1] if len(parts) > 1 else "",
+            # No middlename on a fresh adopt: middle is never inferred, and
+            # overwriting an existing value with "" would lose data.
+            **({} if "middlename" in data else {}),
+            "name": google_name
+        }
+
+    def _resolve_account_identity(self, account_uid, account_data, cache=None):
+        """
+        contact_number / sex / civil_status for a Customer_Account doc,
+        preferring the denormalised values already on the account and falling
+        back to the patient's own appointment history. See
+        _get_account_contact_and_sex() for why the fallback is needed.
+        """
+        data = account_data or {}
+
+        contact = str(
+            data.get("contact_number")
+            or data.get("ContactNumber")
+            or ""
+        ).strip()
+
+        sex = str(
+            data.get("last_sex")
+            or data.get("sex")
+            or ""
+        ).strip()
+
+        # Accounts written by the walk-in/appointment flows carry it here;
+        # password and Google sign-ups do not.
+        civil = str(
+            data.get("CivilStatus")
+            or data.get("civil_status")
+            or ""
+        ).strip()
+
+        if not contact or not sex or not civil:
+            fb_contact, fb_sex, fb_civil = self._get_account_contact_and_sex(
+                account_uid, cache
+            )
+            contact = contact or fb_contact
+            sex = sex or fb_sex
+            civil = civil or fb_civil
+
+        return (contact, sex, civil)
+
     # ============================================================
     # PATIENT IDENTITY MANAGEMENT
     # ============================================================
@@ -1856,10 +2022,14 @@ class DentalClinicApp(BaseFlaskApp):
             update_data = {
                 "uid": session['uid'],
                 "email": session['email'],
-                "name": session['name'],
                 "provider": "google",
                 "last_login": datetime.now(UTC).isoformat()
             }
+            update_data.update(
+                self._resolve_google_name_fields(
+                    existing_data, session['name']
+                )
+            )
 
             # Only set created_at on the very first login for this account
             if not existing_doc.exists or not existing_data.get("created_at"):
@@ -3605,6 +3775,9 @@ class DentalClinicApp(BaseFlaskApp):
         patients_by_id = {pid: data for pid, data in self._get_patients_cached()}
 
         rows = []
+        # Shared across the page so a row needing the fallback is only
+        # ever read once.
+        identity_cache = {}
         for doc in docs:
             account_uid = doc.id
             account_data = doc.to_dict()
@@ -3620,23 +3793,34 @@ class DentalClinicApp(BaseFlaskApp):
             first = account_data.get("firstname") or ""
             last = account_data.get("lastname") or ""
 
+            # Auto-pulled from the patient's most recently approved
+            # appointment (whether self-booked or dentist-entered), kept in
+            # sync in approve()/admin_create_appointment()/the merge paths
+            # and still admin-editable via EDIT -- but the account doc does
+            # not always carry them, so fall back to the appointment history.
+            contact_number, sex, civil_status = self._resolve_account_identity(
+                account_uid, account_data, identity_cache
+            )
+
             rows.append({
                 "patient_id": patient_id,
                 "uid": account_uid,
                 "first_name": first,
                 "middle_name": account_data.get("middlename", ""),
                 "last_name": last,
-                "full_name": account_data.get("name") or f"{first} {last}".strip(),
-                "contact_number": account_data.get("contact_number", ""),
+                # Prefer the editable name parts. A Google account's "name"
+                # is the Google profile name and can disagree with what the
+                # admin set here; it is only a fallback for accounts that
+                # genuinely have no name parts yet.
+                "full_name": f"{first} {last}".strip()
+                or account_data.get("name") or "",
+                "contact_number": contact_number,
                 "email": account_data.get("email", ""),
                 "birthday": birthday,
                 "age": age,
                 "birth_year": birth_year,
-                # Auto-pulled from the patient's most recently approved
-                # appointment (whether self-booked or dentist-entered),
-                # kept in sync in approve()/admin_create_appointment()/
-                # the merge paths. Still admin-editable via EDIT.
-                "sex": account_data.get("last_sex", ""),
+                "sex": sex,
+                "civil_status": civil_status,
                 "most_recent_appointment": account_data.get("last_approved_at", ""),
             })
 
@@ -3703,11 +3887,18 @@ class DentalClinicApp(BaseFlaskApp):
         account_to_patient = self._get_account_to_patient_map()
 
         rows = []
+        identity_cache = {}
         for account_uid, account_data in docs:
             patient_id = account_to_patient.get(account_uid, "")
 
             first = account_data.get("firstname") or ""
             last = account_data.get("lastname") or ""
+
+            # Same fallback as "My Patients": this table shares the EDIT
+            # modal, so a blank contact/sex/civil here blanks it there too.
+            contact_number, sex, civil_status = self._resolve_account_identity(
+                account_uid, account_data, identity_cache
+            )
 
             rows.append({
                 "patient_id": patient_id,
@@ -3715,10 +3906,16 @@ class DentalClinicApp(BaseFlaskApp):
                 "first_name": first,
                 "middle_name": account_data.get("middlename", ""),
                 "last_name": last,
-                "full_name": account_data.get("name") or f"{first} {last}".strip(),
-                "contact_number": account_data.get("contact_number", ""),
+                # Same precedence as "My Patients": the editable parts win
+                # over a Google profile "name".
+                "full_name": f"{first} {last}".strip()
+                or account_data.get("name") or "",
+                "contact_number": contact_number,
                 "email": account_data.get("email", ""),
-                "sex": account_data.get("last_sex", ""),
+                "sex": sex,
+                # admin_dashboard.html already reads a.CivilStatus on this
+                # table, but nothing was ever returning it.
+                "CivilStatus": civil_status,
                 "disabled": bool(account_data.get("disabled", False)),
             })
 
@@ -4039,6 +4236,24 @@ class DentalClinicApp(BaseFlaskApp):
             request.form.get("sex", "").strip()
         )
 
+        # Civil status is only ever written to the appointment documents, so
+        # an admin correcting it here is the way it gets onto the account
+        # (and therefore onto the My Patients / User Management tables).
+        # Whitelisted so a hand-rolled POST cannot write junk.
+        civil_status = bleach.clean(
+            request.form.get("civil_status", "").strip()
+        )
+
+        CIVIL_STATUS_ALLOWED = (
+            "", "Single", "Married", "Widowed", "Separated", "Divorced"
+        )
+
+        if civil_status not in CIVIL_STATUS_ALLOWED:
+            return jsonify({
+                "success": False,
+                "message": "Invalid civil status"
+            }), 400
+
         if not uid:
             return jsonify({
                 "success": False,
@@ -4069,7 +4284,13 @@ class DentalClinicApp(BaseFlaskApp):
                 "lastname": last_name,
                 "contact_number": contact_number,
                 "email": email,
-                "last_sex": sex
+                "last_sex": sex,
+                "CivilStatus": civil_status,
+                # Google accounts carry a "name" copied from the Google
+                # profile. Keep it in step with the parts the admin just
+                # saved, or every screen that prefers "name" would keep
+                # showing the stale Google value until the user re-signed in.
+                "name": f"{first_name} {last_name}".strip()
             })
 
             # Keep the canonical Patients record in sync, if linked.
@@ -4385,6 +4606,132 @@ class DentalClinicApp(BaseFlaskApp):
 
         except Exception as e:
             print("UPDATE TREATMENT RECORD ERROR:", e)
+            return jsonify({"success": False, "message": str(e)}), 500
+
+    def delete_treatment_record(self):
+        """
+        Remove a single procedure row from a Done_procedure document.
+
+        Mirrors update_treatment_record() deliberately: the account is
+        resolved from the Patient ID server-side (never trusted from the
+        client), and the cached financial stats plus the "next visit"
+        suggestion are kept in sync by SUBTRACTING the removed row's
+        contribution, so deleting a row can never leave the totals
+        double-counted or pointing at a row that no longer exists.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        patient_id = request.form.get("patient_id", "").strip()
+        done_doc_id = request.form.get("done_doc_id", "").strip()
+        proc_index_raw = request.form.get("proc_index", "").strip()
+
+        if not patient_id or not done_doc_id or proc_index_raw == "":
+            return jsonify({"success": False, "message": "Missing required fields"}), 400
+
+        try:
+            proc_index = int(proc_index_raw)
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid procedure index"}), 400
+
+        patient_ref = self.db.collection(self.Doc_Patients).document(patient_id)
+        patient_doc = patient_ref.get()
+
+        if not patient_doc.exists:
+            return jsonify({"success": False, "message": "Patient not found"}), 404
+
+        account_uid = patient_doc.to_dict().get("account_uid") or ""
+
+        if not account_uid:
+            return jsonify({"success": False, "message": "Patient has no linked account"}), 404
+
+        done_ref = (
+            self.db.collection(self.Customer_Account)
+            .document(account_uid)
+            .collection("Done_procedure")
+            .document(done_doc_id)
+        )
+
+        done_doc = done_ref.get()
+
+        if not done_doc.exists:
+            return jsonify({"success": False, "message": "Treatment record not found"}), 404
+
+        procedures = done_doc.to_dict().get("procedures", [])
+
+        if proc_index < 0 or proc_index >= len(procedures):
+            return jsonify({"success": False, "message": "Procedure index out of range"}), 400
+
+        removed = procedures.pop(proc_index)
+        removed_paid = self.safe_float(removed.get("paid", 0))
+        removed_balance = self.safe_float(removed.get("balance", 0))
+
+        try:
+            if procedures:
+                done_ref.update({
+                    "procedures": procedures,
+                    "updated_at": firestore.SERVER_TIMESTAMP
+                })
+            else:
+                # That was the last row in this treatment record, so drop
+                # the whole document (and its chart image with it) instead
+                # of leaving an empty shell that still counts as history.
+                done_ref.delete()
+
+            self.db.collection("Stats").document("financial_summary").set({
+                "total_income": firestore.Increment(-removed_paid),
+                "total_outstanding": firestore.Increment(-removed_balance),
+                "unpaid_procedures": firestore.Increment(-(1 if removed_balance > 0 else 0))
+            }, merge=True)
+
+            # =================================================
+            # REFRESH "NEXT VISIT" SUGGESTION FOR THIS RECORD
+            # =================================================
+            # Same rule as update_treatment_record(): last row (top to
+            # bottom) in THIS treatment record that has a next_appointment
+            # date wins, so the suggestion can never point at a row that
+            # was just deleted.
+            next_appt_date = ""
+            next_appt_service = ""
+            next_appt_dentist = ""
+
+            for p in procedures:
+                if p.get("next_appointment"):
+                    next_appt_date = p["next_appointment"]
+                    next_appt_service = p.get("procedure", "")
+                    next_appt_dentist = p.get("dentist", "")
+
+            next_visit_ref = (
+                self.db.collection(self.Customer_Account)
+                .document(account_uid)
+                .collection("Approve")
+                .document("next_visit")
+            )
+
+            if next_appt_date:
+                next_visit_ref.set({
+                    "Patient_unq_id": patient_id,
+                    "uid": account_uid,
+                    "appointment_date": next_appt_date,
+                    "Service": next_appt_service,
+                    "DentistName": next_appt_dentist,
+                    "status": "suggested",
+                    "source": "treatment_record",
+                    "created_at": datetime.now(UTC).isoformat()
+                })
+            else:
+                next_visit_ref.delete()
+
+            self._invalidate_financial_cache()
+
+            return jsonify({
+                "success": True,
+                "message": "Treatment record deleted successfully",
+                "remaining": len(procedures)
+            })
+
+        except Exception as e:
+            print("DELETE TREATMENT RECORD ERROR:", e)
             return jsonify({"success": False, "message": str(e)}), 500
 
     def get_patient(self, uid):
@@ -5856,6 +6203,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
         self.app.route("/admin/toggle_user_block", methods=["POST"])(self.toggle_user_block)
         self.app.route("/admin/update_treatment_record", methods=["POST"])(self.update_treatment_record)
+        self.app.route("/admin/delete_treatment_record", methods=["POST"])(self.delete_treatment_record)
         self.app.route("/admin/check_duplicate_patient")(self.check_duplicate_patient)
         self.app.route("/link_patient_account", methods=["POST"])(self.link_patient_account)
         self.app.route("/get_patient_profile_data")(self.get_patient_profile_data)

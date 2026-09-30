@@ -1132,6 +1132,16 @@ body.dark-mode .treatment-table input:focus {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+.btn-save-td:disabled,
+.btn-save-td:disabled:hover {
+    background: #9aa5b1;
+    color: #f0f2f5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.75;
+}
+
 body.dark-mode .btn-save-td {
     background: var(--gold);
     color: #000;
@@ -1139,6 +1149,12 @@ body.dark-mode .btn-save-td {
 
 body.dark-mode .btn-save-td:hover {
     background: var(--gold-light);
+}
+
+body.dark-mode .btn-save-td:disabled,
+body.dark-mode .btn-save-td:disabled:hover {
+    background: #5c6670;
+    color: #cfd4da;
 }
 
 .btn-action {
@@ -1188,6 +1204,22 @@ body.dark-mode #newAppointmentBtn {
     background-color: #1e3a8a;
     color: #dbeafe;
     border-color: #3b82f6;
+}
+
+#newAppointmentBtn > .material-symbols-rounded {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
 }
 
 .btn-add-row {
@@ -1298,11 +1330,173 @@ body.dark-mode .search-input {
     border: 1px solid rgba(0,0,0,0.1); 
 }
 
-body.dark-mode .filter-btn { 
-    background: rgba(255, 255, 255, 0.08); 
-    color: #e0e0e0; 
-    border-color: rgba(255,255,255,0.15); 
-}
+body.dark-mode .filter-btn {
+        background: rgba(255, 255, 255, 0.08);
+        color: #e0e0e0;
+        border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ===== My Patients / Records toolbar =====
+       The shared .filter-search / .filter-btn rules above are a flat grey
+       pill with no affordance, so the sections that pair a search box with
+       sort buttons get the same language as the new modals and row
+       actions: navy focus, outlined controls, icon + label. */
+    .filter-search-wrap {
+        position: relative;
+        flex: 1 1 260px;
+        min-width: 200px;
+        display: flex;
+        align-items: center;
+    }
+
+    .filter-search-icon {
+        position: absolute;
+        left: 14px;
+        font-size: 20px;
+        line-height: 1;
+        color: #94a3b8;
+        pointer-events: none;
+        user-select: none;
+        transition: color 0.18s ease;
+    }
+
+    .filter-search-wrap:focus-within .filter-search-icon {
+        color: var(--navy);
+    }
+
+    .filter-search-wrap .filter-search {
+        width: 100%;
+        min-width: 0;
+        margin-bottom: 0;
+        padding: 11px 14px 11px 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #1a1a1a;
+        font-size: 14px;
+        font-family: inherit;
+        line-height: 1.4;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .filter-search-wrap .filter-search::placeholder {
+        color: #94a3b8;
+    }
+
+    .filter-search-wrap .filter-search:focus {
+        outline: none;
+        border-color: var(--navy);
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-btn--sort {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 10px 14px;
+        min-height: 40px;
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+    }
+
+    .filter-btn--sort .material-symbols-rounded {
+        font-size: 18px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        user-select: none;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* The direction arrow only appears once a direction has been chosen. */
+    .filter-btn--sort .filter-btn__dir {
+        font-size: 15px;
+        opacity: 0;
+        transform: translateY(0);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .filter-btn--sort[data-sort] {
+        color: var(--navy);
+        border-color: #bfdbfe;
+        background: #eff6ff;
+    }
+
+    .filter-btn--sort[data-sort] .filter-btn__dir {
+        opacity: 1;
+    }
+
+    /* "asc" points up, "desc" flips the same arrow. */
+    .filter-btn--sort[data-sort="asc"] .filter-btn__dir {
+        transform: rotate(180deg);
+    }
+
+    .filter-btn--sort:hover:not(:disabled) {
+        background: #eaf2fc;
+        border-color: var(--navy);
+        color: var(--navy-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(13, 71, 161, 0.16);
+    }
+
+    .filter-btn--sort:focus-visible {
+        outline: 2px solid var(--navy);
+        outline-offset: 2px;
+    }
+
+    body.dark-mode .filter-search-wrap .filter-search {
+        background: #131a26;
+        border-color: #33415a;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .filter-search-icon {
+        color: #64748b;
+    }
+
+    body.dark-mode .filter-search-wrap:focus-within .filter-search-icon {
+        color: var(--gold);
+    }
+
+    body.dark-mode .filter-search-wrap .filter-search:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+    }
+
+    body.dark-mode .filter-btn--sort {
+        background: #131a26;
+        color: #e2e8f0;
+        border-color: #33415a;
+    }
+
+    body.dark-mode .filter-btn--sort[data-sort] {
+        background: rgba(100, 181, 246, 0.12);
+        border-color: rgba(100, 181, 246, 0.4);
+        color: var(--gold);
+    }
+
+    body.dark-mode .filter-btn--sort:hover:not(:disabled) {
+        background: #1e3a8a;
+        border-color: var(--gold);
+        color: #dbeafe;
+    }
+
 
 .patient-card .accepted-at {
     font-size: 14px;
@@ -3052,22 +3246,42 @@ body.dark-mode .datetime-text {
     }
     
     /* Filter Bar - Mobile */
-    .filter-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-search {
-        min-width: 100%;
-    }
-    
-    .filter-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 12px;
-        font-size: 13px;
-    }
-    
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-search {
+            min-width: 100%;
+        }
+
+        .filter-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            font-size: 13px;
+        }
+
+    /* The redesigned toolbar stacks the sort pair side by side, so the
+           blanket width:100% above would make them overflow. */
+        .filter-search-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-btn--sort {
+            flex: 1 1 0;
+            min-width: 0;
+            width: auto;
+            justify-content: center;
+            padding: 11px 12px;
+            font-size: 13px;
+        }
+
     /* Schedule */
     .schedule-item {
         flex-direction: column;
@@ -3980,75 +4194,683 @@ body.dark-mode .datetime-text {
     }
 }
 
+/* =========================================
+   MY PATIENTS TABLE
+   Gained a Civil Status column, so its cells are a little tighter and
+   are allowed to wrap instead of being clipped by the table's
+   overflow: hidden.
+   ========================================= */
+#section-mypatients .appointment-table th,
+#section-mypatients .appointment-table td {
+    padding-left: 14px;
+    padding-right: 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#section-mypatients .appointment-table th:nth-child(5),
+#section-mypatients .appointment-table td:nth-child(5) {
+    min-width: 96px;
+}
+
+#section-mypatients .appointment-table th:nth-child(6),
+#section-mypatients .appointment-table td:nth-child(6) {
+    min-width: 120px;
+}
+
+#section-mypatients .appointment-table th:nth-child(7),
+#section-mypatients .appointment-table td:nth-child(7) {
+    min-width: 158px;
+    text-align: center;
+}
+
 /* =========================
      TREATMENT INFO MODAL
    ========================= */
 #checkInfoModal {
     background: rgba(0, 0, 0, 0.7);
+    padding: 24px;
+    box-sizing: border-box;
 }
 
+/* Full-height flex column: the header and close button stay put and
+   ONLY the table scrolls, so a 12-column table can never push the close
+   button off screen. */
 #checkInfoModal .modal-content {
     background: #ffffff;
     color: #1a1a1a;
     border: 2px solid var(--navy);
     border-radius: 16px;
-    padding: 24px;
+    padding: 0;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1180px;
+    max-height: calc(100vh - 48px);
+    margin: auto;
+    text-align: left;
+    overflow: hidden;
 }
 
-#checkInfoModal .modal-content h2 {
+/* ---------- header ---------- */
+#checkInfoModal .ci-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex: 0 0 auto;
+}
+
+#checkInfoModal .ci-head-text {
+    min-width: 0;
+}
+
+#checkInfoModal .ci-head h2 {
     color: var(--navy);
     margin: 0;
-    font-size: 22px;
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+#checkInfoModal .ci-sub {
+    margin: 5px 0 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #6b7280;
 }
 
 #checkInfoModal .close {
     color: var(--navy);
 }
 
+/* ---------- scroll container ---------- */
+#checkInfoModal .ci-table-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* ---------- table ---------- */
 #checkInfoModal .treatment-table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
+    /* separate + border-spacing:0 is required for position:sticky
+       headers; "collapse" drops the borders in most browsers. */
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 0;
+    /* Explicitly zero: an earlier, unscoped ".treatment-table
+       { min-width: 500px }" inside a max-width:768px block would
+       otherwise still force this table to scroll sideways on a phone.
+       The table shrinks to its container instead; cells wrap, and the
+       600px breakpoint stacks each row into a card. */
+    min-width: 0;
+    table-layout: auto;
 }
 
 #checkInfoModal .treatment-table th {
-    background: rgba(13, 71, 161, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #eef3fb;
     color: var(--navy);
     border-bottom: 2px solid var(--navy);
-    padding: 10px 8px;
-    font-size: 12px;
+    /* Identical box to td below, so a column label sits on the same grid
+       line as the value / control beneath it. */
+    padding: 11px 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.45;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
 #checkInfoModal .treatment-table td {
-    padding: 8px;
+    padding: 11px 12px;
     color: #1a1a1a;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     font-size: 14px;
+    line-height: 1.45;
+    vertical-align: middle;
+}
+
+#checkInfoModal .treatment-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Money columns: Value / Fee Paid / Balance (5th-7th) */
+#checkInfoModal .treatment-table td:nth-child(5),
+#checkInfoModal .treatment-table td:nth-child(6),
+#checkInfoModal .treatment-table td:nth-child(7) {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Chart / Action columns (10th-11th) */
+#checkInfoModal .treatment-table td:nth-child(10),
+#checkInfoModal .treatment-table td:nth-child(11) {
+    text-align: center;
+    white-space: nowrap;
+}
+
+#checkInfoModal .treatment-table th:nth-child(5),
+#checkInfoModal .treatment-table th:nth-child(6),
+#checkInfoModal .treatment-table th:nth-child(7) {
+    text-align: right;
+}
+
+#checkInfoModal .treatment-table th:nth-child(10),
+#checkInfoModal .treatment-table th:nth-child(11) {
+    text-align: center;
+}
+
+/* Give the Chart + Action cells room for their buttons. The Action cell
+   holds three 36px buttons and two 6px gaps, so it needs 120px of content
+   box plus the cell's own 24px of padding, otherwise they wrap. */
+#checkInfoModal .treatment-table th:nth-child(10),
+#checkInfoModal .treatment-table td:nth-child(10) {
+    min-width: 72px;
+}
+
+#checkInfoModal .treatment-table th:nth-child(11),
+#checkInfoModal .treatment-table td:nth-child(11) {
+    min-width: 144px;
+}
+
+/* Long free-text cells are the ones allowed to wrap, so the numeric and
+   action columns never have to be squeezed. */
+#checkInfoModal .treatment-table td:nth-child(1),
+#checkInfoModal .treatment-table td:nth-child(2),
+#checkInfoModal .treatment-table td:nth-child(3),
+#checkInfoModal .treatment-table td:nth-child(4) {
+    min-width: 80px;
+    overflow-wrap: anywhere;
 }
 
 #checkInfoModal .treatment-table tbody tr:hover {
     background: rgba(13, 71, 161, 0.04);
 }
 
-#checkInfoModal .btn-action {
-    background: var(--navy);
-    color: white;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
+/* ---------- status badge ----------
+   Mirrors the admin's existing .badge / .badge.accepted / .badge.declined
+   treatment (soft tint, dark text, thin border, uppercase) instead of a
+   saturated pill, so the status reads like every other status in the
+   admin. */
+#checkInfoModal .ci-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    white-space: nowrap;
 }
 
-#checkInfoModal .btn-action:hover {
-    background: var(--navy-dark);
+#checkInfoModal .ci-badge--paid {
+    background: #d4edda;
+    color: #155724;
+    border-color: #28a745;
+}
+
+#checkInfoModal .ci-badge--unpaid {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #dc3545;
+}
+
+/* ---------- buttons ----------
+   Palette taken from the rest of the admin so the modal does not invent
+   its own language. The brand hue here is BLUE: --gold is #0d47a1 in light
+   mode and #64b5f6 in dark mode, and the primary button everywhere else
+   (.btn-save-td, .appointment-table button, .btn-add-row) is solid navy.
+   So: one solid blue primary, the established .accept blue tint for
+   confirm, semantic red for destructive, neutral grey for dismiss, and a
+   border-only "ghost" for the read-only View. */
+#checkInfoModal .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14),
+                inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease;
+}
+
+#checkInfoModal .btn-action:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+#checkInfoModal .btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* View: read-only, so it is a border-only button. A solid fill here made
+   it compete with Edit for attention even though it only navigates. */
+#checkInfoModal .ci-btn--view {
+    background: #ffffff;
+    border-color: var(--navy);
+    color: var(--navy);
+    box-shadow: none;
+}
+
+/* Edit: the primary action in this modal, matching the admin's solid navy. */
+#checkInfoModal .ci-btn--edit {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+/* Save: reuses the admin's existing .btn-action.accept treatment. */
+#checkInfoModal .ci-btn--save {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1e40af;
+}
+
+/* Cancel: neutral, deliberately quiet next to Save. */
+#checkInfoModal .ci-btn--cancel {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #475569;
+    box-shadow: none;
+}
+
+/* Delete: destructive, same red the admin uses for .btn-action.decline. */
+#checkInfoModal .ci-btn--delete {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+/* The shared .btn-action.accept rule (2 classes) outranks the plain
+   id-scoped base above, so restate Save's size/shadow here or it renders
+   with the old 12px label. */
+#checkInfoModal .btn-action.accept.ci-btn--save {
+    border-color: #93c5fd;
+    font-size: 12.5px;
+    letter-spacing: 0.2px;
+    box-shadow: 0 1px 2px rgba(30, 64, 175, 0.18),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+#checkInfoModal .ci-btn--view:hover:not(:disabled) {
+    background: #eaf2fc;
+    border-color: var(--navy-dark);
+    color: var(--navy-dark);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.18);
+}
+
+#checkInfoModal .ci-btn--edit:hover:not(:disabled) {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(13, 71, 161, 0.28);
+}
+
+#checkInfoModal .ci-btn--cancel:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.14);
+}
+
+#checkInfoModal .btn-action.accept.ci-btn--save:hover:not(:disabled) {
+    background: #bfdbfe;
+    border-color: #60a5fa;
+    color: #1e3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(30, 64, 175, 0.24);
+}
+
+#checkInfoModal .btn-action.accept.ci-btn--save:active:not(:disabled) {
+    box-shadow: 0 1px 2px rgba(30, 64, 175, 0.22);
+}
+
+#checkInfoModal .ci-btn--delete:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.32);
+}
+
+/* Pressed state: the shadow collapses instead of lifting further. The
+   border-only buttons keep a shadow-free press. */
+#checkInfoModal .ci-btn--view:active:not(:disabled),
+#checkInfoModal .ci-btn--cancel:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+#checkInfoModal .ci-btn--edit:active:not(:disabled),
+#checkInfoModal .ci-btn--delete:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.22);
+}
+
+/* ---------- edit-mode inputs ---------- */
+/* ---------- edit-mode inputs ----------
+   One rule covers every control type, and one height per breakpoint covers
+   controls AND buttons, so text, number, date, select and button all measure
+   identically. Values are written out rather than behind a custom property
+   so they can be checked directly. The previous rule mixed padding per type
+   (7px 9px vs 7px 9px 7px 32px) and pinned min-width: 96px, which looked
+   ragged and forced the table wider than its container. */
+#checkInfoModal .treatment-table td input[type="text"],
+#checkInfoModal .treatment-table td input[type="number"],
+#checkInfoModal .treatment-table td input[type="date"],
+#checkInfoModal .treatment-table td select,
+#checkInfoModal .treatment-table td input.adm-date-alt {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* The wrapper the shared .adm-select component puts around each <select> */
+#checkInfoModal .adm-select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    margin: 0;
+}
+
+#checkInfoModal .treatment-table td input:focus,
+#checkInfoModal .treatment-table td select:focus,
+#checkInfoModal .treatment-table td input.adm-date-alt:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+
+#checkInfoModal .treatment-table td input[readonly] {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* ---------- Treatment Information date + select controls ----------
+   The native date picker and <select> popups are OS-drawn and cannot be
+   restyled, so flatpickr and the shared .adm-select listbox replace them.
+   These rules are qualified with the same ".treatment-table td" chain as the
+   shared control rule above: a shorter selector lost the cascade, and the
+   icon-bearing fields ended up with 10px of padding under a 16px glyph, so
+   the icon sat on top of the text. */
+#checkInfoModal .treatment-table td .adm-select > select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 30px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 15px 15px;
+}
+
+#checkInfoModal .treatment-table td .adm-select > select:hover {
+    border-color: #94a3b8;
+}
+
+#checkInfoModal .treatment-table td .adm-select.is-open > select {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+#checkInfoModal .treatment-table td .adm-select > select option {
+    background: #ffffff;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+/* flatpickr keeps the original input (and its .ci-date value) in place and
+   inserts this visible alt input in front of it. */
+#checkInfoModal .treatment-table td input.adm-date-alt {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-left: 32px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' fill='none' stroke='%2364748b' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 11h18' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 9px center;
+    background-size: 15px 15px;
+}
+
+#checkInfoModal .treatment-table td input.adm-date-alt:hover {
+    border-color: #94a3b8;
+}
+
+#checkInfoModal .treatment-table td input.adm-date-alt::placeholder {
+    color: #94a3b8;
+}
+
+/* flatpickr's own calendar popup (className lands on .flatpickr-calendar in
+   popup mode) themed with the same tokens as the rest of the admin. */
+.adm-datepicker.flatpickr-calendar {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.18);
+    font-family: 'Kumbh Sans', sans-serif;
+}
+
+.adm-datepicker .flatpickr-months {
+    background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%);
+    padding: 10px 8px 6px;
+}
+
+.adm-datepicker .flatpickr-current-month .cur-month,
+.adm-datepicker .flatpickr-current-month input.cur-year {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.adm-datepicker .flatpickr-current-month input.cur-year {
+    background: transparent;
+    border: none;
+}
+
+.adm-datepicker .flatpickr-weekday {
+    color: #cbd5e1;
+    font-weight: 700;
+}
+
+.adm-datepicker .flatpickr-day {
+    color: #1f2937;
+    border-radius: 8px;
+}
+
+.adm-datepicker .flatpickr-day:hover {
+    background: #eaf2fc;
+    border-color: #eaf2fc;
+}
+
+.adm-datepicker .flatpickr-day.selected,
+.adm-datepicker .flatpickr-day.startRange,
+.adm-datepicker .flatpickr-day.endRange {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+.adm-datepicker .flatpickr-day.today {
+    border-color: var(--navy);
+}
+
+.adm-datepicker .flatpickr-day.today:hover {
+    background: #eaf2fc;
+    border-color: var(--navy);
+}
+
+.adm-datepicker .flatpickr-nav-prev svg,
+.adm-datepicker .flatpickr-nav-next svg {
+    fill: #ffffff;
+}
+
+.adm-datepicker .numInputWrapper:hover,
+.adm-datepicker .flatpickr-week:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-mode #checkInfoModal .adm-select > select,
+body.dark-mode #checkInfoModal .adm-date-alt {
+    background-color: #131a26;
+    border-color: #33415a;
+    color: #e0e0e0;
+}
+
+body.dark-mode #checkInfoModal .adm-select.is-open > select,
+body.dark-mode #checkInfoModal .adm-date-alt:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+}
+
+body.dark-mode .adm-datepicker.flatpickr-calendar {
+    background: #131a26;
+    border-color: #33415a;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-day {
+    color: #cbd5e1;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-day:hover {
+    background: #1e3a8a;
+    border-color: #1e3a8a;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-day.selected,
+body.dark-mode .adm-datepicker .flatpickr-day.startRange,
+body.dark-mode .adm-datepicker .flatpickr-day.endRange {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-weekday {
+    color: #94a3b8;
+}
+
+/* Money inputs follow the right-aligned money columns. */
+#checkInfoModal .treatment-table td input[type="number"] {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Action cell: Edit + Delete (and Save + Cancel while editing) sit in a
+   wrapping centred row, so 2 or 3 buttons share the cell evenly. */
+#checkInfoModal .ci-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
+    white-space: normal;
+}
+
+/* Action cell: same shape as the My Patients row actions - a centred,
+   wrapping cluster of fixed-size icon buttons. */
+#checkInfoModal .ci-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: normal;
+}
+
+#checkInfoModal .ci-actions .btn-action {
+    flex: 0 0 auto;
+    min-width: 0;
+    /* matches the control height above so the row lines up */
+    min-height: 36px;
+    height: 36px;
+    gap: 6px;
+}
+
+/* Icon-only buttons. The selector is qualified with .btn-action so it
+   outranks ".ci-actions .btn-action" and its own size rules actually win. */
+#checkInfoModal .btn-action.ci-ico {
+    flex: 0 0 auto;
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    gap: 0;
+}
+
+/* Pending save: swap the tick for a spinner. */
+#checkInfoModal .btn-action.ci-ico[data-saving] .material-symbols-rounded {
+    animation: ci-ico-spin 1s linear infinite;
+}
+
+@keyframes ci-ico-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #checkInfoModal .btn-action.ci-ico[data-saving] .material-symbols-rounded {
+        animation: none;
+    }
+}
+
+/* Icons inside the Treatment Information buttons. */
+#checkInfoModal .btn-action > .material-symbols-rounded {
+    font-size: 17px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 
 /* Dark Mode - Treatment Info Modal */
@@ -4062,8 +4884,16 @@ body.dark-mode #checkInfoModal .modal-content {
     border-color: var(--gold);
 }
 
-body.dark-mode #checkInfoModal .modal-content h2 {
+body.dark-mode #checkInfoModal .ci-head {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #checkInfoModal .ci-head h2 {
     color: var(--gold);
+}
+
+body.dark-mode #checkInfoModal .ci-sub {
+    color: #9aa5b1;
 }
 
 body.dark-mode #checkInfoModal .close {
@@ -4071,7 +4901,7 @@ body.dark-mode #checkInfoModal .close {
 }
 
 body.dark-mode #checkInfoModal .treatment-table th {
-    background: rgba(100, 181, 246, 0.08);
+    background: #1b2333;
     color: var(--gold);
     border-bottom-color: var(--gold);
 }
@@ -4085,13 +4915,1797 @@ body.dark-mode #checkInfoModal .treatment-table tbody tr:hover {
     background: rgba(255, 255, 255, 0.04);
 }
 
+body.dark-mode #checkInfoModal .treatment-table td input[type="text"],
+body.dark-mode #checkInfoModal .treatment-table td input[type="date"],
+body.dark-mode #checkInfoModal .treatment-table td input[type="number"],
+body.dark-mode #checkInfoModal .treatment-table td select {
+    background: #131a26;
+    border-color: #33415a;
+    color: #e0e0e0;
+}
+
+body.dark-mode #checkInfoModal .treatment-table td input[readonly] {
+    background: #0f141d;
+    color: #7c8794;
+}
+
 body.dark-mode #checkInfoModal .btn-action {
     background: var(--gold);
     color: #000;
 }
 
-body.dark-mode #checkInfoModal .btn-action:hover {
+body.dark-mode #checkInfoModal .btn-action:focus-visible {
+    outline-color: var(--gold);
+}
+
+/* Modifiers still own their colour in dark mode so View / Edit / Save /
+   Cancel / Delete stay distinct, but the palette mirrors the light one:
+   --navy and --gold are both #64b5f6 here, which is the admin's dark
+   primary. */
+body.dark-mode #checkInfoModal .ci-btn--view {
+    background: #1f2937;
+    border-color: var(--navy);
+    color: var(--navy);
+    box-shadow: none;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--edit {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #0b1220;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--save {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+    color: #dbeafe;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--cancel {
+    background: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--delete {
+    background: #b91c1c;
+    border-color: #ef4444;
+    color: #ffe4e4;
+}
+
+body.dark-mode #checkInfoModal .btn-action.accept.ci-btn--save {
+    border-color: #3b82f6;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode #checkInfoModal .ci-btn--view:hover:not(:disabled) {
+    background: #273449;
+    border-color: var(--gold-light);
+    color: var(--gold-light);
+}
+
+body.dark-mode #checkInfoModal .ci-btn--edit:hover:not(:disabled) {
     background: var(--gold-light);
+    border-color: var(--gold-light);
+    color: #0b1220;
+}
+
+body.dark-mode #checkInfoModal .btn-action.accept.ci-btn--save:hover:not(:disabled) {
+    background: #1d4ed8;
+    border-color: #60a5fa;
+    color: #eff6ff;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--cancel:hover:not(:disabled) {
+    background: #273449;
+    border-color: #64748b;
+    color: #ffffff;
+}
+
+body.dark-mode #checkInfoModal .ci-btn--delete:hover:not(:disabled) {
+    background: #991b1b;
+    border-color: #f87171;
+}
+
+body.dark-mode #checkInfoModal .ci-badge--paid {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border-color: rgba(40, 167, 69, 0.4);
+}
+
+body.dark-mode #checkInfoModal .ci-badge--unpaid {
+    background: rgba(220, 53, 69, 0.2);
+    color: #ef5350;
+    border-color: rgba(220, 53, 69, 0.4);
+}
+
+/* ---------- DELETE TREATMENT CONFIRM ----------
+   A dialog of its own, so it is unaffected by the shared #confirmModal
+   styling and can be designed separately. Sits above the Treatment
+   Information modal, which is z-index 2000.
+
+   #confirmModal reuses the exact same design language (it is the generic
+   confirm used by delete-patient / block / unblock), so both dialogs read
+   as one system. */
+.ci-danger-modal,
+#confirmModal {
+    z-index: 2100;
+    background: rgba(15, 23, 42, 0.55);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.ci-danger-card,
+#confirmModal .ci-danger-card {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #dc2626;
+    border-radius: 16px;
+    padding: 28px 24px 22px;
+    width: 100%;
+    max-width: 440px;
+    margin: auto;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+/* The neutral (non-danger) variant: navy accent, not red. */
+#confirmModal[data-variant="default"] {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+#confirmModal[data-variant="default"] .ci-danger-card {
+    border-top-color: var(--navy);
+}
+
+#confirmModal[data-variant="default"] .ci-danger-icon {
+    background: #eaf2fc;
+    color: var(--navy);
+}
+
+#confirmModal[data-variant="default"] .ci-danger-confirm {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+#confirmModal[data-variant="default"] .ci-danger-confirm:hover:not(:disabled) {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+}
+
+.ci-danger-icon,
+#confirmModal .ci-danger-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.ci-danger-title,
+#confirmModal .ci-danger-title {
+    margin: 0 0 8px;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1a1a1a;
+}
+
+.ci-danger-text,
+#confirmModal .ci-danger-text {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: #64748b;
+}
+
+/* The details list sits above the message in the generic confirm, so
+   reverse the visual order there. */
+#confirmModal .ci-danger-details {
+    margin: 0 0 14px;
+    text-align: left;
+}
+
+.ci-danger-details,
+#confirmModal .ci-danger-details {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 10px;
+    background: #f8fafc;
+    text-align: left;
+}
+
+.ci-danger-details[hidden],
+#confirmModal .ci-danger-details[hidden] {
+    display: none;
+}
+
+.ci-danger-details li,
+#confirmModal .ci-danger-details li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 5px 0;
+    font-size: 13.5px;
+    line-height: 1.45;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ci-danger-details li:last-child,
+#confirmModal .ci-danger-details li:last-child {
+    border-bottom: none;
+}
+
+.ci-danger-key,
+#confirmModal .ci-danger-key {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.ci-danger-value,
+#confirmModal .ci-danger-value {
+    flex: 1 1 auto;
+    text-align: right;
+    font-weight: 600;
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}
+
+.ci-danger-note,
+#confirmModal .ci-danger-note {
+    margin: 0 0 20px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #9a3412;
+    text-align: left;
+}
+
+.ci-danger-note[hidden],
+#confirmModal .ci-danger-note[hidden] {
+    display: none;
+}
+
+.ci-danger-actions,
+#confirmModal .ci-danger-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.ci-danger-actions .btn-action,
+#confirmModal .ci-danger-actions .btn-action {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 40px;
+    font-size: 14px;
+    box-shadow: none;
+}
+
+.ci-danger-cancel,
+#confirmModal .ci-danger-cancel {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+.ci-danger-confirm,
+#confirmModal .ci-danger-confirm {
+    background: #dc2626;
+    border: 1px solid #b91c1c;
+    color: #ffffff;
+}
+
+.ci-danger-cancel:hover:not(:disabled),
+#confirmModal .ci-danger-cancel:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.ci-danger-confirm:hover:not(:disabled),
+#confirmModal .ci-danger-confirm:hover:not(:disabled) {
+    background: #b91c1c;
+    border-color: #991b1b;
+}
+
+.ci-danger-actions .btn-action:active:not(:disabled),
+#confirmModal .ci-danger-actions .btn-action:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.ci-danger-actions .btn-action:focus-visible,
+#confirmModal .ci-danger-actions .btn-action:focus-visible {
+    outline: 2px solid #dc2626;
+    outline-offset: 2px;
+}
+
+.ci-danger-actions .btn-action:disabled,
+#confirmModal .ci-danger-actions .btn-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+body.dark-mode .ci-danger-modal,
+body.dark-mode #confirmModal {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+body.dark-mode .ci-danger-card,
+body.dark-mode #confirmModal .ci-danger-card {
+    background: rgba(20, 25, 35, 0.97);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.1);
+    border-top-color: #ef4444;
+}
+
+body.dark-mode #confirmModal[data-variant="default"] .ci-danger-card {
+    border-top-color: var(--gold);
+}
+
+body.dark-mode .ci-danger-title,
+body.dark-mode #confirmModal .ci-danger-title {
+    color: #f1f5f9;
+}
+
+body.dark-mode .ci-danger-text,
+body.dark-mode #confirmModal .ci-danger-text,
+body.dark-mode .ci-danger-key,
+body.dark-mode #confirmModal .ci-danger-key {
+    color: #94a3b8;
+}
+
+body.dark-mode .ci-danger-details,
+body.dark-mode #confirmModal .ci-danger-details {
+    background: #131a26;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .ci-danger-details li,
+body.dark-mode #confirmModal .ci-danger-details li {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode .ci-danger-value,
+body.dark-mode #confirmModal .ci-danger-value {
+    color: #e2e8f0;
+}
+
+body.dark-mode .ci-danger-note,
+body.dark-mode #confirmModal .ci-danger-note {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: rgba(217, 119, 6, 0.35);
+    color: #fcd9a8;
+}
+
+body.dark-mode .ci-danger-icon,
+body.dark-mode #confirmModal .ci-danger-icon {
+    background: rgba(239, 68, 68, 0.16);
+    color: #ef4444;
+}
+
+body.dark-mode #confirmModal[data-variant="default"] .ci-danger-icon {
+    background: rgba(100, 181, 246, 0.16);
+    color: var(--gold);
+}
+
+body.dark-mode #confirmModal[data-variant="default"] .ci-danger-confirm {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+}
+
+body.dark-mode .ci-danger-cancel,
+body.dark-mode #confirmModal .ci-danger-cancel {
+    background: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .ci-danger-cancel:hover:not(:disabled),
+body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
+    background: #273449;
+    border-color: #64748b;
+    color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .ci-danger-modal,
+    #confirmModal {
+        padding: 0;
+    }
+
+    .ci-danger-card,
+    #confirmModal .ci-danger-card {
+        max-width: none;
+        border-radius: 0;
+        border-width: 1px 0 0;
+        padding: 24px 18px 20px;
+    }
+
+    .ci-danger-title,
+    #confirmModal .ci-danger-title {
+        font-size: 17.5px;
+    }
+
+    .ci-danger-details li,
+    #confirmModal .ci-danger-details li {
+        font-size: 13px;
+    }
+
+    .ci-danger-actions,
+    #confirmModal .ci-danger-actions {
+        flex-direction: column-reverse;
+    }
+
+    .ci-danger-actions .btn-action,
+    #confirmModal .ci-danger-actions .btn-action {
+        min-height: 46px;
+    }
+}
+
+/* ---------- responsiveness ----------
+   Goal: never scroll sideways. Above 600px the table shrinks to fit by
+   tightening padding/type; at 600px and below each row becomes a
+   labelled card, which is the only way 11 fields fit a phone. */
+@media (max-width: 1024px) {
+    #checkInfoModal {
+        padding: 16px;
+    }
+
+    #checkInfoModal .modal-content {
+        max-height: calc(100vh - 32px);
+    }
+
+    #checkInfoModal .ci-head {
+        padding: 18px 20px 14px;
+    }
+
+    #checkInfoModal .treatment-table th {
+        padding: 10px 6px;
+        font-size: 10.5px;
+        letter-spacing: 0.3px;
+    }
+
+    #checkInfoModal .treatment-table td {
+        padding: 10px 6px;
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .treatment-table td:nth-child(1),
+    #checkInfoModal .treatment-table td:nth-child(2),
+    #checkInfoModal .treatment-table td:nth-child(3),
+    #checkInfoModal .treatment-table td:nth-child(4) {
+        min-width: 62px;
+    }
+
+    #checkInfoModal .treatment-table th:nth-child(10),
+    #checkInfoModal .treatment-table td:nth-child(10),
+    #checkInfoModal .treatment-table th:nth-child(11),
+    #checkInfoModal .treatment-table td:nth-child(11) {
+        min-width: 0;
+    }
+
+    /* Controls and buttons step down together, never apart. */
+    #checkInfoModal .treatment-table td input[type="text"],
+    #checkInfoModal .treatment-table td input[type="number"],
+    #checkInfoModal .treatment-table td input[type="date"],
+    #checkInfoModal .treatment-table td select,
+    #checkInfoModal .treatment-table td input.adm-date-alt {
+        height: 34px;
+        padding: 0 8px;
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .adm-select {
+        height: 34px;
+    }
+
+    #checkInfoModal .ci-actions .btn-action {
+        min-height: 34px;
+        height: 34px;
+    }
+
+    #checkInfoModal .btn-action.ci-ico {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+    }
+
+}
+
+@media (max-width: 768px) {
+    #checkInfoModal {
+        padding: 0;
+    }
+
+    #checkInfoModal .modal-content {
+        max-width: none;
+        /* 100dvh tracks the mobile URL bar collapsing; 100vh is the
+           fallback for browsers without dynamic viewport units. */
+        max-height: 100vh;
+        max-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        border: none;
+        margin: 0;
+    }
+
+    #checkInfoModal .ci-head {
+        padding: 16px;
+    }
+
+    #checkInfoModal .ci-head h2 {
+        font-size: 18px;
+    }
+
+    #checkInfoModal .ci-sub {
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .treatment-table th {
+        padding: 9px 6px;
+        font-size: 10.5px;
+    }
+
+    #checkInfoModal .treatment-table td {
+        padding: 9px 6px;
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .treatment-table td:nth-child(1),
+    #checkInfoModal .treatment-table td:nth-child(2),
+    #checkInfoModal .treatment-table td:nth-child(3),
+    #checkInfoModal .treatment-table td:nth-child(4) {
+        min-width: 56px;
+    }
+
+    #checkInfoModal .treatment-table th:nth-child(10),
+    #checkInfoModal .treatment-table td:nth-child(10),
+    #checkInfoModal .treatment-table th:nth-child(11),
+    #checkInfoModal .treatment-table td:nth-child(11) {
+        min-width: 0;
+    }
+
+    /* Controls and buttons share one height so the row lines up. */
+    #checkInfoModal .treatment-table td input[type="text"],
+    #checkInfoModal .treatment-table td input[type="number"],
+    #checkInfoModal .treatment-table td input[type="date"],
+    #checkInfoModal .treatment-table td select,
+    #checkInfoModal .treatment-table td input.adm-date-alt {
+        height: 36px;
+        padding: 0 8px;
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .adm-select {
+        height: 36px;
+    }
+
+    #checkInfoModal .ci-actions .btn-action {
+        min-height: 36px;
+        height: 36px;
+    }
+
+    #checkInfoModal .btn-action.ci-ico {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+    }
+
+}
+
+/* Phone: stack every row into a labelled card. No sideways scroll,
+   and every field keeps its name. */
+@media (max-width: 600px) {
+    #checkInfoModal .treatment-table,
+    #checkInfoModal .treatment-table tbody,
+    #checkInfoModal .treatment-table tr,
+    #checkInfoModal .treatment-table td {
+        display: block;
+        width: 100%;
+    }
+
+    #checkInfoModal .treatment-table thead {
+        display: none;
+    }
+
+    #checkInfoModal .treatment-table {
+        padding: 12px;
+    }
+
+    #checkInfoModal .treatment-table tr {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        margin-bottom: 10px;
+        padding: 4px 0;
+        background: #ffffff;
+    }
+
+    #checkInfoModal .treatment-table tr:last-child {
+        margin-bottom: 0;
+    }
+
+    #checkInfoModal .treatment-table td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-width: 0;
+        padding: 7px 12px;
+        text-align: right;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    #checkInfoModal .treatment-table td:last-child {
+        border-bottom: none;
+    }
+
+    #checkInfoModal .treatment-table td:nth-child(5),
+    #checkInfoModal .treatment-table td:nth-child(6),
+    #checkInfoModal .treatment-table td:nth-child(7),
+    #checkInfoModal .treatment-table td:nth-child(10),
+    #checkInfoModal .treatment-table td:nth-child(11) {
+        text-align: right;
+    }
+
+    #checkInfoModal .treatment-table td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        text-align: left;
+        color: #64748b;
+    }
+
+    #checkInfoModal .treatment-table td[data-label=""]::before {
+        content: none;
+    }
+
+    /* The "no records" / "loading" row spans every column; keep it a
+       plain centred block instead of a flex label row. */
+    #checkInfoModal .treatment-table td[colspan] {
+        display: block;
+        padding: 20px 12px;
+        border-bottom: none;
+    }
+
+    /* Buttons go full width in the stacked card. */
+    #checkInfoModal .ci-actions {
+        gap: 8px;
+    }
+
+    #checkInfoModal .ci-actions .btn-action {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    /* Edit-mode inputs fill the row instead of sitting in a narrow cell. */
+    /* One rule covers every control type so the stacked card rows all
+       measure the same, icon-bearing fields included. 44px matches the
+       touch-target buttons below it. */
+    #checkInfoModal .treatment-table td input[type="text"],
+    #checkInfoModal .treatment-table td input[type="date"],
+    #checkInfoModal .treatment-table td input[type="number"],
+    #checkInfoModal .treatment-table td select,
+    #checkInfoModal .treatment-table td input.adm-date-alt {
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        max-width: 65%;
+    }
+
+    #checkInfoModal .adm-select {
+        height: 44px;
+        max-width: 65%;
+    }
+
+
+    #checkInfoModal .btn-action.ci-ico {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+    }
+
+}
+
+@media (max-width: 480px) {
+    #checkInfoModal .ci-head h2 {
+        font-size: 17px;
+    }
+
+    #checkInfoModal .treatment-table {
+        padding: 10px;
+    }
+
+    #checkInfoModal .treatment-table td {
+        padding: 7px 10px;
+        font-size: 12.5px;
+    }
+
+    #checkInfoModal .treatment-table td::before {
+        font-size: 11px;
+    }
+}
+
+body.dark-mode #checkInfoModal .treatment-table tr {
+    background: rgba(30, 40, 56, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #checkInfoModal .treatment-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode #checkInfoModal .treatment-table td::before {
+    color: #94a3b8;
+}
+
+/* Short viewports (landscape phones): give the table the room back. */
+@media (orientation: landscape) and (max-height: 500px) {
+    #checkInfoModal .modal-content {
+        border-radius: 0;
+        border: none;
+        max-height: 100vh;
+        max-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    #checkInfoModal .ci-head {
+        padding: 12px 16px;
+    }
+}
+
+/* =========================================
+   MY PATIENTS / USER MANAGEMENT ROW ACTIONS
+   Same palette as the Treatment Information
+   modal: navy primary, the .accept blue tint
+   for the read-only INFO, red for destructive.
+   ========================================= */
+#section-mypatients .mp-actions,
+#section-usermanagement .mp-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+#section-mypatients .mp-actions .btn-action,
+#section-usermanagement .mp-actions .btn-action {
+    /* Icon-only: square tap targets, no text metrics. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease;
+}
+
+#section-mypatients .mp-actions .btn-action > .material-symbols-rounded,
+#section-usermanagement .mp-actions .btn-action > .material-symbols-rounded {
+    font-size: 21px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+/* INFO: the old #dbeafe tint on a white cell was effectively invisible.
+   Solid slate keeps it inside the existing palette (navy / red / neutrals)
+   while reading unmistakably as the read-only, non-primary action. */
+#section-mypatients .mp-info-btn,
+#section-usermanagement .mp-info-btn {
+    background: #475569;
+    border-color: #334155;
+    color: #ffffff;
+}
+
+#section-mypatients .mp-info-btn:hover:not(:disabled),
+#section-usermanagement .mp-info-btn:hover:not(:disabled) {
+    background: #334155;
+    border-color: #1e293b;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(51, 65, 85, 0.32);
+}
+
+#section-mypatients .edit-patient-btn,
+#section-usermanagement .edit-patient-btn {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+#section-mypatients .delete-patient-btn,
+#section-usermanagement .delete-patient-btn {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+/* Block is a moderation action, so it stays neutral; Unblock restores
+   access and is styled as the positive action. */
+#section-usermanagement .block-user-btn {
+    background: #ffffff;
+    border-color: #94a3b8;
+    color: #475569;
+    box-shadow: none;
+}
+
+#section-usermanagement .block-user-btn[data-disabled="true"] {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+#section-mypatients .edit-patient-btn:hover:not(:disabled),
+#section-usermanagement .edit-patient-btn:hover:not(:disabled) {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.26);
+}
+
+#section-mypatients .delete-patient-btn:hover:not(:disabled),
+#section-usermanagement .delete-patient-btn:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+}
+
+#section-mypatients .mp-actions .btn-action:focus-visible,
+#section-usermanagement .mp-actions .btn-action:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+#section-mypatients .edit-patient-btn:active:not(:disabled),
+#section-usermanagement .edit-patient-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Dark mode keeps the same blue-primary / red-danger relationship. */
+body.dark-mode #section-mypatients .mp-info-btn,
+body.dark-mode #section-usermanagement .mp-info-btn {
+    background: #334155;
+    border-color: #64748b;
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-mypatients .edit-patient-btn,
+body.dark-mode #section-usermanagement .edit-patient-btn {
+    background: var(--navy);
+    border-color: var(--gold-light);
+    color: #0b1220;
+}
+
+body.dark-mode #section-mypatients .delete-patient-btn,
+body.dark-mode #section-usermanagement .delete-patient-btn {
+    background: #b91c1c;
+    border-color: #ef4444;
+    color: #ffe4e4;
+}
+
+body.dark-mode #section-usermanagement .block-user-btn {
+    background: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-usermanagement .block-user-btn[data-disabled="true"] {
+    background: var(--navy);
+    border-color: var(--gold-light);
+    color: #0b1220;
+}
+
+/* =========================================
+   APPOINTMENT REQUEST TAB
+   One button system for the whole Action column:
+   navy for the primary action, red for the
+   destructive one, both the same 38px-tall
+   pill with identical padding, radius and
+   icon size. Scoped to #section-appointments
+   so no other table changes.
+   ========================================= */
+#section-appointments .appt-date-cell {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: #334155;
+}
+
+body.dark-mode #section-appointments .appt-date-cell {
+    color: #cbd5e1;
+}
+
+/* =========================================
+   URGENCY SEVERITY
+   Same pill geometry and typography as the
+   Status column's .badge, so the two read as
+   one system, plus a severity dot so the
+   level is not carried by colour alone.
+   Emergency and Urgent also tint the whole
+   row and add a left edge, which makes a
+   critical request findable while scanning
+   rather than only when read.
+   ========================================= */
+#section-appointments .urg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 12px 5px 10px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+#section-appointments .urg-badge__dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
+}
+
+#section-appointments .urg-badge--emergency {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #ef4444;
+}
+
+#section-appointments .urg-badge--emergency .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+}
+
+#section-appointments .urg-badge--urgent {
+    background: #ffedd5;
+    color: #9a3412;
+    border-color: #f97316;
+}
+
+#section-appointments .urg-badge--urgent .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+/* Normal is the calm majority, so it stays quiet and recedes. */
+#section-appointments .urg-badge--normal {
+    background: #e2e8f0;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+#section-appointments .urg-badge--unset {
+    background: transparent;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    border-style: dashed;
+}
+
+/* Row-level emphasis. Applied on the cells, not the <tr>, because the cells
+   carry the table's own background and would otherwise hide it. */
+#section-appointments tbody tr[data-urgency="emergency"] > td {
+    background: rgba(239, 68, 68, 0.055);
+}
+
+#section-appointments tbody tr[data-urgency="urgent"] > td {
+    background: rgba(249, 115, 22, 0.06);
+}
+
+#section-appointments tbody tr[data-urgency="emergency"] > td:first-child {
+    box-shadow: inset 4px 0 0 0 #ef4444;
+}
+
+#section-appointments tbody tr[data-urgency="urgent"] > td:first-child {
+    box-shadow: inset 4px 0 0 0 #f97316;
+}
+
+/* The table's own hover rule is on the <tr>, so these must restate it or the
+   severity tint would swallow it. */
+#section-appointments tbody tr[data-urgency="emergency"]:hover > td {
+    background: rgba(239, 68, 68, 0.11);
+}
+
+#section-appointments tbody tr[data-urgency="urgent"]:hover > td {
+    background: rgba(249, 115, 22, 0.12);
+}
+
+body.dark-mode #section-appointments .urg-badge--emergency {
+    background: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.55);
+}
+
+body.dark-mode #section-appointments .urg-badge--urgent {
+    background: rgba(249, 115, 22, 0.2);
+    color: #fdba74;
+    border-color: rgba(249, 115, 22, 0.5);
+}
+
+body.dark-mode #section-appointments .urg-badge--normal {
+    background: #334155;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+body.dark-mode #section-appointments .urg-badge--unset {
+    color: #64748b;
+    border-color: #475569;
+}
+
+body.dark-mode #section-appointments .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
+}
+
+body.dark-mode #section-appointments tbody tr[data-urgency="emergency"] > td {
+    background: rgba(239, 68, 68, 0.12);
+}
+
+body.dark-mode #section-appointments tbody tr[data-urgency="urgent"] > td {
+    background: rgba(249, 115, 22, 0.12);
+}
+
+body.dark-mode #section-appointments tbody tr[data-urgency="emergency"]:hover > td {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+body.dark-mode #section-appointments tbody tr[data-urgency="urgent"]:hover > td {
+    background: rgba(249, 115, 22, 0.2);
+}
+
+#section-appointments .appt-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Icon-only, square tap targets: same geometry as the My Patients and User
+   Management row actions so every action column in the dashboard matches. */
+#section-appointments .appt-actions .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease;
+}
+
+#section-appointments .appt-actions .btn-action > .material-symbols-rounded {
+    font-size: 21px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+#section-appointments .appt-accept-btn {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+#section-appointments .appt-decline-btn {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+#section-appointments .appt-accept-btn:hover:not(:disabled) {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.26);
+}
+
+#section-appointments .appt-decline-btn:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+}
+
+#section-appointments .appt-actions .btn-action:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+#section-appointments .appt-actions .btn-action:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+#section-appointments .appt-actions .btn-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+body.dark-mode #section-appointments .appt-accept-btn {
+    background: var(--navy);
+    border-color: var(--gold-light);
+    color: #0b1220;
+}
+
+body.dark-mode #section-appointments .appt-decline-btn {
+    background: #b91c1c;
+    border-color: #ef4444;
+    color: #ffe4e4;
+}
+
+/* Consulting Dentist combobox. The input stays freely typeable; the caret is
+   a real button that opens a listbox popup portalled to <body>, so neither the
+   table's overflow:hidden nor the panel's overflow-x:auto can clip it. */
+#section-appointments .dentist-field {
+    position: relative;
+    width: 100%;
+    min-width: 190px;
+    display: flex;
+    align-items: center;
+}
+
+#section-appointments .dentist-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 9px 38px 9px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background-color: #ffffff;
+    color: #1e293b;
+    font-size: 13.5px;
+    font-family: inherit;
+    line-height: 1.35;
+    appearance: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#section-appointments .dentist-input::placeholder {
+    color: #94a3b8;
+}
+
+#section-appointments .dentist-input:hover:not(:disabled) {
+    border-color: #94a3b8;
+}
+
+#section-appointments .dentist-input:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+#section-appointments .dentist-input[aria-expanded="true"] {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+#section-appointments .dentist-field__toggle {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+#section-appointments .dentist-field__toggle:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+#section-appointments .dentist-field__toggle:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 1px;
+}
+
+#section-appointments .dentist-field__toggle > .material-symbols-rounded {
+    font-size: 22px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    transition: transform 0.18s ease;
+}
+
+/* Chevron flips when the popup is open. */
+#section-appointments .dentist-field__toggle[aria-expanded="true"] > .material-symbols-rounded,
+#section-appointments .dentist-field__toggle.is-open > .material-symbols-rounded {
+    transform: rotate(180deg);
+}
+
+/* The popup lives on <body>, so these rules are global by necessity. */
+.dentist-menu {
+    position: fixed;
+    z-index: 9999;
+    margin: 0;
+    padding: 5px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 11px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.1);
+}
+
+.dentist-menu[hidden] {
+    display: none;
+}
+
+.dentist-menu__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+    cursor: pointer;
+}
+
+.dentist-menu__option:hover,
+.dentist-menu__option.is-active {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.dentist-menu__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Tick only on the keyboard-highlighted option, so hover and keyboard agree. */
+.dentist-menu__tick {
+    display: none;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.dentist-menu.has-active .dentist-menu__option.is-active .dentist-menu__tick {
+    display: inline-flex;
+}
+
+.dentist-menu__empty {
+    padding: 10px;
+    font-size: 12.5px;
+    font-style: italic;
+    color: #64748b;
+}
+
+body.dark-mode #section-appointments .dentist-input {
+    background-color: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-appointments .dentist-input::placeholder {
+    color: #64748b;
+}
+
+body.dark-mode #section-appointments .dentist-input:focus,
+body.dark-mode #section-appointments .dentist-input[aria-expanded="true"] {
+    border-color: var(--gold-light);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+body.dark-mode #section-appointments .dentist-field__toggle {
+    color: #94a3b8;
+}
+
+body.dark-mode #section-appointments .dentist-field__toggle:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .dentist-menu {
+    background: #1f2937;
+    border-color: #475569;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode .dentist-menu__option {
+    color: #e2e8f0;
+}
+
+body.dark-mode .dentist-menu__option:hover,
+body.dark-mode .dentist-menu__option.is-active {
+    background: #334155;
+    color: var(--gold-light);
+}
+
+body.dark-mode .dentist-menu__empty {
+    color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+    #section-appointments .dentist-field {
+        min-width: 160px;
+    }
+}
+
+/* =========================================
+   EDIT PATIENT MODAL
+   ========================================= */
+.ep-modal {
+    background: rgba(15, 23, 42, 0.55);
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.ep-card {
+    background: #ffffff;
+    color: #1a1a1a;
+    border: 2px solid var(--navy);
+    border-radius: 16px;
+    padding: 0;
+    width: 100%;
+    max-width: 620px;
+    max-height: calc(100vh - 48px);
+    margin: auto;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.ep-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    flex: 0 0 auto;
+}
+
+.ep-head h2 {
+    display: block;
+    visibility: visible;
+    margin: 0;
+    color: var(--navy);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+}
+
+.ep-sub {
+    margin: 5px 0 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #6b7280;
+}
+
+.ep-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 18px 24px 4px;
+}
+
+.ep-group + .ep-group {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.ep-group-title {
+    margin: 0 0 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #64748b;
+}
+
+.ep-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.ep-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ep-field--full {
+    grid-column: 1 / -1;
+}
+
+.ep-field label {
+    display: block;
+    visibility: visible;
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.ep-req {
+    color: #dc2626;
+}
+
+.ep-field input[type="text"],
+.ep-field input[type="email"],
+.ep-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.4;
+    box-sizing: border-box;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ep-field input:focus,
+.ep-field select:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+/* ---- Sex dropdown ----
+   The native <select> popup is drawn by the OS and cannot be styled, so the
+   shared .adm-select component replaces it. The page already ships that
+   component for the New Appointment modal; this only styles the trigger so
+   it matches the rest of this dialog. */
+#editPatientModal .adm-select {
+    width: 100%;
+    margin: 0;
+}
+
+#editPatientModal .adm-select > select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 40px;
+    cursor: pointer;
+    background: #ffffff
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 13px center / 18px 18px;
+}
+
+#editPatientModal .adm-select > select:hover {
+    border-color: #94a3b8;
+}
+
+#editPatientModal .adm-select.is-open > select {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+/* Belt-and-braces: if the enhancer script ever fails, these options still
+   render on a white surface rather than the browser default. */
+#editPatientModal .adm-select > select option {
+    background: #ffffff;
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+.ep-field input::placeholder {
+    color: #94a3b8;
+}
+
+.ep-hint {
+    margin: 7px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #64748b;
+}
+
+.ep-actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f8fafc;
+    flex: 0 0 auto;
+}
+
+.ep-actions .btn-action {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 42px;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    box-shadow: none;
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.ep-cancel {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+/* id-scoped: the shared .btn-action.accept rule is two classes and would
+   otherwise outrank a single class here, turning Save light blue. */
+#editPatientModal .ep-save {
+    background-color: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.22);
+}
+
+.ep-save {
+    border: 1px solid var(--navy);
+    box-shadow: none;
+}
+
+.ep-cancel:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
+.ep-save:hover:not(:disabled) {
+    background-color: var(--navy-dark);
+    border-color: var(--navy-dark);
+}
+
+.ep-actions .btn-action:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+.ep-actions .btn-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+body.dark-mode .ep-modal {
+    background: rgba(0, 0, 0, 0.72);
+}
+
+body.dark-mode .ep-card {
+    background: rgba(20, 25, 35, 0.97);
+    color: #e0e0e0;
+    border-color: var(--gold);
+}
+
+body.dark-mode .ep-head {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .ep-head h2 {
+    color: var(--gold);
+}
+
+body.dark-mode .ep-sub,
+body.dark-mode .ep-group-title,
+body.dark-mode .ep-field label,
+body.dark-mode .ep-hint {
+    color: #94a3b8;
+}
+
+body.dark-mode .ep-group + .ep-group {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .ep-field input[type="text"],
+body.dark-mode .ep-field input[type="email"],
+body.dark-mode .ep-field select {
+    background: #131a26;
+    border-color: #33415a;
+    color: #e0e0e0;
+}
+
+body.dark-mode .ep-field input:focus,
+body.dark-mode .ep-field select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+}
+
+body.dark-mode .ep-actions {
+    background: rgba(10, 15, 24, 0.6);
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .ep-cancel {
+    background: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+body.dark-mode .ep-cancel:hover:not(:disabled) {
+    background: #273449;
+    border-color: #64748b;
+    color: #ffffff;
+}
+
+body.dark-mode .ep-save {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+}
+
+@media (max-width: 1024px) {
+    .ep-modal {
+        padding: 16px;
+    }
+
+    #section-mypatients .mp-actions .btn-action,
+    #section-usermanagement .mp-actions .btn-action {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        min-height: 42px;
+    }
+
+    #section-mypatients .mp-actions .btn-action > .material-symbols-rounded,
+    #section-usermanagement .mp-actions .btn-action > .material-symbols-rounded {
+        font-size: 23px;
+    }
+
+    .ep-card {
+        max-height: calc(100vh - 32px);
+    }
+}
+
+@media (max-width: 768px) {
+    .ep-modal {
+        padding: 0;
+    }
+
+    .ep-card {
+        max-width: none;
+        max-height: 100vh;
+        max-height: 100dvh;
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        border-width: 0;
+    }
+
+    .ep-head {
+        padding: 16px;
+    }
+
+    .ep-head h2 {
+        font-size: 18px;
+    }
+
+    .ep-sub {
+        font-size: 12.5px;
+    }
+
+    .ep-body {
+        padding: 16px 16px 4px;
+    }
+
+    .ep-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .ep-field--full {
+        grid-column: auto;
+    }
+
+    .ep-actions {
+        padding: 14px 16px 18px;
+    }
+
+    .ep-actions .btn-action {
+        min-height: 46px;
+    }
+}
+
+@media (max-width: 420px) {
+    .ep-actions {
+        flex-direction: column-reverse;
+    }
+
+    .ep-actions .btn-action {
+        width: 100%;
+    }
 }
 
 /* =========================================

@@ -34,7 +34,7 @@ def init_firebase():
     key_path = os.path.join(basedir, "dentech_key.json")
     if not firebase_admin._apps:
         cred = credentials.Certificate(key_path)
-        firebase_admin.initialize_app(cred, {"projectId": "dentech-c2ee0"})
+        firebase_admin.initialize_app(cred, {"projectId": "capizonda-dentech-dev"})
     return firestore.client()
 
 

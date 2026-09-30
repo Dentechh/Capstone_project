@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=6">
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
                     <style id="doctorCalendarTheme">
@@ -498,21 +498,22 @@
 
 <style>
 .chart-view-modal-overlay {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
 
-    background: rgba(0, 0, 0, 0.75);
+        /* same overlay tone as .ep-modal / .ci-danger-modal */
+        background: rgba(15, 23, 42, 0.55);
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-    z-index: 99999;
-    padding: 20px;
-    box-sizing: border-box;
-}
+        z-index: 99999;
+        padding: 24px;
+        box-sizing: border-box;
+    }
 
 
 /* MODAL */
@@ -527,7 +528,11 @@
 
     background: #fff;
 
-    border-radius: 10px;
+    border: 2px solid var(--navy);
+    border-radius: 16px;
+
+    /* same elevation as .ep-card / .ci-danger-card */
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 
     display: flex;
     flex-direction: column;
@@ -541,14 +546,36 @@
     flex-shrink: 0;
 
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 16px;
 
-    padding: 15px 20px;
+    padding: 20px 24px 16px;
 
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 
     background: #fff;
+}
+
+.chart-view-heading {
+    min-width: 0;
+}
+
+.chart-view-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+}
+
+.chart-view-meta {
+    margin: 5px 0 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #6b7280;
+    overflow-wrap: anywhere;
 }
 
 
@@ -556,30 +583,141 @@
 .chart-modal-close {
     border: none;
     background: transparent;
-
+    color: var(--navy);
     cursor: pointer;
 
     display: flex;
     align-items: center;
     justify-content: center;
+
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.chart-modal-close:hover {
+    background: #eaf2fc;
+    color: var(--navy-dark);
+}
+
+.chart-modal-close .material-symbols-rounded {
+    font-size: 22px;
+}
+
+.chart-modal-close:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+
+/* TOOLBAR */
+.chart-view-toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f8fafc;
+}
+
+.chart-tool-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.chart-tool-sep {
+    width: 1px;
+    height: 22px;
+    background: #d5dde8;
+}
+
+.chart-tool-sep--push {
+    margin-left: auto;
+}
+
+.chart-tool-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #334155;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.chart-tool-btn .material-symbols-rounded {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    user-select: none;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+.chart-tool-btn:hover {
+    background: #eaf2fc;
+    color: var(--navy-dark);
+}
+
+.chart-tool-btn:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+/* Flips latch on, so you can see they are engaged. */
+.chart-tool-btn.is-on {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #fff;
+}
+
+.chart-tool-btn.is-on:hover {
+    background: var(--navy-dark);
+    color: #fff;
+}
+
+.chart-zoom-readout {
+    min-width: 58px;
+    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #fff;
+    color: #0f172a;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
 }
 
 
 /* IMAGE AREA */
 .chart-view-modal-body {
     flex: 1;
+    min-height: 0;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    overflow: auto;
+    overflow: hidden;
 
-    padding: 20px;
+    padding: 16px;
 
-    background: #f5f5f5;
+    /* A dark viewer surface so a white dental chart reads clearly. */
+    background: #0f172a;
 
     box-sizing: border-box;
+    cursor: zoom-in;
 }
 
 
@@ -590,36 +728,223 @@
     width: auto;
     height: auto;
 
-    max-width: 90%;
-    max-height: 80%;
+    max-width: 100%;
+    max-height: 100%;
 
     object-fit: contain;
 
-    border-radius: 8px;
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
 
     margin: auto;
+
+    transform-origin: center center;
+    will-change: transform;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+#viewSavedChartImage.is-panning {
+    cursor: grabbing;
+}
+
+
+/* STATUS BAR */
+.chart-view-status {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f8fafc;
+    font-size: 12.5px;
+    color: #6b7280;
+}
+
+.chart-view-status #chartViewDims {
+    font-weight: 600;
+    color: #334155;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+
+/* LOADING / ERROR PLACEHOLDER
+   The image has no intrinsic size until its data URL decodes, so this
+   reserves the stage and keeps the layout from jumping. */
+.chart-view-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    pointer-events: none;
+}
+
+.chart-view-loading[hidden] {
+    display: none;
+}
+
+.chart-view-spinner {
+    font-size: 38px;
+    line-height: 1;
+    color: #64748b;
+    animation: chart-view-spin 1.1s linear infinite;
+}
+
+.chart-view-spinner.is-error {
+    animation: none;
+    color: #ef4444;
+}
+
+@keyframes chart-view-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.chart-view-loading-text {
+    margin: 0;
+    font-size: 13.5px;
+    color: #94a3b8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chart-view-spinner { animation: none; }
+}
+
+/* Keep a not-yet-decoded image from painting at a stale size. */
+.chart-view-modal-body.is-loading #viewSavedChartImage {
+    opacity: 0;
+}
+
+.chart-view-hint {
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* Dark mode */
+body.dark-mode .chart-view-modal-content {
+    background: rgba(20, 25, 35, 0.97);
+    border-color: var(--gold);
+}
+
+body.dark-mode .chart-view-modal-header {
+    background: transparent;
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .chart-view-modal-header h3 {
+    color: var(--gold);
+}
+
+body.dark-mode .chart-view-meta,
+body.dark-mode .chart-view-status {
+    color: #94a3b8;
+}
+
+body.dark-mode .chart-modal-close {
+    color: var(--gold);
+}
+
+body.dark-mode .chart-modal-close:hover {
+    background: rgba(100, 181, 246, 0.14);
+    color: #fff;
+}
+
+body.dark-mode .chart-view-toolbar,
+body.dark-mode .chart-view-status {
+    background: rgba(10, 15, 24, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .chart-tool-sep {
+    background: rgba(255, 255, 255, 0.16);
+}
+
+body.dark-mode .chart-tool-btn {
+    color: #e2e8f0;
+}
+
+body.dark-mode .chart-tool-btn:hover {
+    background: rgba(100, 181, 246, 0.14);
+    color: #dbeafe;
+}
+
+body.dark-mode .chart-tool-btn.is-on {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+}
+
+body.dark-mode .chart-zoom-readout {
+    background: #131a26;
+    border-color: #33415a;
+    color: #e2e8f0;
+}
+
+body.dark-mode .chart-view-status #chartViewDims {
+    color: #cbd5e1;
 }
 
 
 /* TABLET */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
 
     .chart-view-modal-overlay {
-        padding: 10px;
+        padding: 16px;
     }
 
     .chart-view-modal-content {
-        width: 95vw;
-        height: 90vh;
+        max-height: calc(100vh - 32px);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .chart-view-modal-overlay {
+        padding: 0;
+    }
+
+    .chart-view-modal-content {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        max-width: none;
+        border-radius: 0;
+        border: none;
+    }
+
+    .chart-view-modal-header {
+        padding: 16px;
+    }
+
+    .chart-view-modal-header h3 {
+        font-size: 18px;
+    }
+
+    .chart-view-meta {
+        font-size: 12.5px;
     }
 
     .chart-view-modal-body {
-        padding: 15px;
+        padding: 10px;
     }
 
-    #viewSavedChartImage {
-        max-width: 90%;
-        max-height: 75%;
+    .chart-view-hint {
+        display: none;
+    }
+
+    .chart-view-status {
+        justify-content: flex-start;
+        padding: 12px 16px 14px;
     }
 }
 
@@ -627,25 +952,25 @@
 /* MOBILE */
 @media (max-width: 480px) {
 
-    .chart-view-modal-overlay {
-        padding: 5px;
+    .chart-view-toolbar {
+        padding: 8px 10px;
+        gap: 4px;
     }
 
-    .chart-view-modal-content {
-        width: 100%;
-        height: 95vh;
-        border-radius: 8px;
+    .chart-tool-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .chart-tool-btn .material-symbols-rounded {
+        font-size: 22px;
     }
 
     .chart-view-modal-body {
-        padding: 10px;
-    }
-
-    #viewSavedChartImage {
-        max-width: 95%;
-        max-height: 75%;
+        padding: 8px;
     }
 }
+
 .modal-overlay {
     display:none;
     position:fixed;
@@ -1168,7 +1493,7 @@ body.dark-mode .proc-period-btn.active {
                     </div>
                     <div class="metric-data">
                         <h3 data-target="{{ approved_count }}">0</h3>
-                        <p>Approved Patients</p>
+                        <p>Accepted Patients</p>
                     </div>
                     <div class="metric-bg-icon">&#128101;</div>
                 </div>
@@ -1218,7 +1543,7 @@ body.dark-mode .proc-period-btn.active {
                 <div class="chart-card">
                     <div class="chart-header">
                         <h3>Patient Status</h3>
-                        <p>Approved vs Pending distribution</p>
+                        <p>Accepted vs Pending distribution</p>
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="statusDonut"></canvas>
@@ -1268,7 +1593,7 @@ body.dark-mode .proc-period-btn.active {
             <!-- Recent Approved Patients -->
             <div class="recent-activity">
                 <div class="recent-header">
-                    <h3>Recent Approved Patients</h3>
+                    <h3>Recent Accepted Patients</h3>
                     <a href="javascript:void(0)" onclick="showSection('mypatients')" class="view-all">View All &rarr;</a>
                 </div>
                 <div class="recent-list">
@@ -1360,9 +1685,22 @@ body.dark-mode .proc-period-btn.active {
                 <div id="section-mypatients" class="content-section">
                     <section class="content-panel">
                         <div class="filter-bar">
-                            <input type="text" id="myPatientSearch" placeholder="Search patients..." class="search-input filter-search" onkeyup="filterMyPatients()">
-                            <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn" onclick="sortMyPatients()">A-Z</button>
-                            <button type="button" id="sortMyPatientsDateBtn" class="btn-action filter-btn" onclick="sortMyPatientsByDate()">Newest</button>
+                            <div class="filter-search-wrap">
+                                <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
+                                <input type="text" id="myPatientSearch" placeholder="Search patients by name..." class="search-input filter-search" aria-label="Search patients by name" onkeyup="filterMyPatients()">
+                            </div>
+                            <div class="filter-group">
+                                <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn filter-btn--sort" onclick="sortMyPatients()">
+                                    <span class="material-symbols-rounded" aria-hidden="true">sort_by_alpha</span>
+                                    <span class="filter-btn__label">A-Z</span>
+                                    <span class="material-symbols-rounded filter-btn__dir" aria-hidden="true">arrow_upward</span>
+                                </button>
+                                <button type="button" id="sortMyPatientsDateBtn" class="btn-action filter-btn filter-btn--sort" onclick="sortMyPatientsByDate()">
+                                    <span class="material-symbols-rounded" aria-hidden="true">calendar_today</span>
+                                    <span class="filter-btn__label">Newest</span>
+                                    <span class="material-symbols-rounded filter-btn__dir" aria-hidden="true">arrow_downward</span>
+                                </button>
+                            </div>
                         </div>
                         <div id="myPatientsCursor" data-cursor="{{ my_patients_next_cursor or '' }}" style="display:none;"></div>
                         <table class="appointment-table" id="myPatientsTable">
@@ -1372,6 +1710,7 @@ body.dark-mode .proc-period-btn.active {
                                     <th>Age</th>
                                     <th>Birthday</th>
                                     <th>Sex</th>
+                                    <th>Civil Status</th>
                                     <th>Mobile Number</th>
                                     <th>Action</th>
                                 </tr>
@@ -1379,24 +1718,28 @@ body.dark-mode .proc-period-btn.active {
                             <tbody>
                                 {% for appointment in my_patients %}
                                 <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
-                                    <td>{{ appointment.full_name or appointment.FirstName or '' }}</td>
+                                    <td data-cell="name">{{ appointment.full_name or appointment.FirstName or '' }}</td>
                                     <td>{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
                                     <td>{{ appointment.get('birthday') or '-' }}</td>
-                                    <td>{{ appointment.get('sex') or '-' }}</td>
-                                    <td>{{ appointment.contact_number }}</td>
+                                    <td data-cell="sex">{{ appointment.get('sex') or '-' }}</td>
+                                    <td data-cell="civil">{{ appointment.get('civil_status') or '-' }}</td>
+                                    <td data-cell="mobile">{{ appointment.get('contact_number') or '-' }}</td>
                                     <td>
-                                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                        <div class="mp-actions">
                                             <button
                                                 type="button"
-                                                class="btn-action accept"
-                                                onclick="openCheckInfoModal('{{ appointment.patient_id }}')">
-                                                INFO
+                                                class="btn-action accept mp-info-btn"
+                                                title="Treatment information"
+                                                aria-label="Treatment information"
+                                                onclick="openCheckInfoModal('{{ appointment.patient_id }}', this.closest('tr').querySelector('td').textContent.trim())">
+                                                <span class="material-symbols-rounded" aria-hidden="true">info</span>
                                             </button>
 
                                             <button
                                                 type="button"
                                                 class="btn-action edit-patient-btn"
-                                                style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                                title="Edit patient"
+                                                aria-label="Edit patient"
                                                 data-uid="{{ appointment.uid }}"
                                                 data-patient-id="{{ appointment.patient_id }}"
                                                 data-firstname="{{ appointment.get('firstname', appointment.get('first_name', '')) }}"
@@ -1404,18 +1747,20 @@ body.dark-mode .proc-period-btn.active {
                                                 data-lastname="{{ appointment.get('lastname', appointment.get('last_name', '')) }}"
                                                 data-contact="{{ appointment.get('contact_number', '') }}"
                                                 data-email="{{ appointment.get('email', '') }}"
-                                                data-sex="{{ appointment.get('sex', '') }}">
-                                                EDIT
+                                                data-sex="{{ appointment.get('sex', '') }}"
+                                                data-civilstatus="{{ appointment.get('civil_status', '') }}">
+                                                <span class="material-symbols-rounded" aria-hidden="true">edit</span>
                                             </button>
 
                                             <button
                                                 type="button"
                                                 class="btn-action delete-patient-btn"
-                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                                title="Remove patient"
+                                                aria-label="Remove patient"
                                                 data-uid="{{ appointment.uid }}"
                                                 data-patient-id="{{ appointment.patient_id }}"
                                                 data-name="{{ appointment.full_name or appointment.FirstName or 'this patient' }}">
-                                                REMOVE
+                                                <span class="material-symbols-rounded" aria-hidden="true">delete</span>
                                             </button>
                                         </div>
                                     </td>
@@ -1438,22 +1783,28 @@ function buildMyPatientRow(p) {
     tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
     const ageDisplay = (p.age === null || p.age === undefined) ? '-' : p.age;
     const birthYearDisplay = p.birthday || '-';
-    const sexDisplay = p.sex || '-';
-    tr.innerHTML = `
-        <td>${p.full_name || ''}</td>
-        <td>${ageDisplay}</td>
-        <td>${birthYearDisplay}</td>
-        <td>${sexDisplay}</td>
-        <td>${p.contact_number || ''}</td>
+      const sexDisplay = p.sex || '-';
+      const civilStatusDisplay = p.civil_status || '-';
+      tr.innerHTML = `
+          <td data-cell="name">${p.full_name || ''}</td>
+          <td>${ageDisplay}</td>
+          <td>${birthYearDisplay}</td>
+          <td data-cell="sex">${sexDisplay}</td>
+          <td data-cell="civil">${civilStatusDisplay}</td>
+          <td data-cell="mobile">${p.contact_number || '-'}</td>
+
         <td>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-                <button type="button" class="btn-action accept" onclick="openCheckInfoModal('${p.patient_id}')">INFO</button>
-                <button type="button" class="btn-action edit-patient-btn" style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
+            <div class="mp-actions">
+                <button type="button" class="btn-action accept mp-info-btn" title="Treatment information" aria-label="Treatment information"
+                    onclick="openCheckInfoModal('${p.patient_id}', this.closest('tr').querySelector('td').textContent.trim())"><span class="material-symbols-rounded" aria-hidden="true">info</span></button>
+                <button type="button" class="btn-action edit-patient-btn" title="Edit patient" aria-label="Edit patient"
                     data-uid="${p.uid}" data-patient-id="${p.patient_id}"
                     data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
-                    data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}" data-sex="${p.sex || ''}">EDIT</button>
-                <button type="button" class="btn-action delete-patient-btn" style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
-                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}">REMOVE</button>
+                    data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}"
+                    data-sex="${p.sex || ''}" data-civilstatus="${p.civil_status || ''}">
+<span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
+                <button type="button" class="btn-action delete-patient-btn" title="Remove patient" aria-label="Remove patient"
+                    data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
             </div>
         </td>
     `;
@@ -1468,10 +1819,15 @@ function upsertMyPatientRow(uid, fields) {
     if (existingBtn) {
         const row = existingBtn.closest('tr');
         const fullName = [fields.FirstName, fields.MiddleName, fields.LastName].filter(Boolean).join(' ');
-        const cells = row.querySelectorAll('td');
-        if (cells[0]) cells[0].textContent = fullName;
-        if (cells[3]) cells[3].textContent = fields.Sex || '-';
-        if (cells[4]) cells[4].textContent = fields.ContactNumber || '';
+        // Look cells up by name, not position: adding a column must not
+        // silently redirect these writes.
+        const cellBy = name => row.querySelector('td[data-cell="' + name + '"]');
+        const nameCell = cellBy('name');
+        const sexCell = cellBy('sex');
+        const mobileCell = cellBy('mobile');
+        if (nameCell) nameCell.textContent = fullName;
+        if (sexCell) sexCell.textContent = fields.Sex || '-';
+        if (mobileCell) mobileCell.textContent = fields.ContactNumber || '-';
         existingBtn.setAttribute('data-firstname', fields.FirstName || '');
         existingBtn.setAttribute('data-middlename', fields.MiddleName || '');
         existingBtn.setAttribute('data-lastname', fields.LastName || '');
@@ -1509,7 +1865,7 @@ function buildApprovedCard(a) {
             data-name="${a.FirstName || ''}"
             data-Patient_unq_id="${a.Patient_unq_id || ''}"
             data-uid="${a.uid || ''}"
-            data-sex="${a.Sex || 'Female'}"
+            data-sex="${a.Sex || ''}"
             data-age="${a.Age || 'N/A'}"
             data-lastname="${a.LastName || ''}"
             data-middlename="${a.MiddleName || ''}"
@@ -1596,18 +1952,19 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {% for account in manageable_accounts %}
                                 {% set is_disabled = account.get('disabled', False) %}
                                 <tr{% if is_disabled %} style="opacity:0.6;"{% endif %}>
-                                    <td>
+                                    <td data-cell="name">
                                         {{ account.full_name or account.first_name or '' }}
                                         {% if is_disabled %}<span class="status-badge blocked">Blocked</span>{% endif %}
                                     </td>
-                                    <td>{{ account.contact_number or '-' }}</td>
+                                    <td data-cell="mobile">{{ account.contact_number or '-' }}</td>
                                     <td>{{ account.email or '-' }}</td>
                                     <td>
-                                        <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
+                                        <div class="mp-actions">
                                             <button
                                                 type="button"
                                                 class="btn-action edit-patient-btn"
-                                                style="background:#8ed8ec;color:#1e40af; font-size: 12px; border: solid#93fda5 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                                title="Edit patient"
+                                                aria-label="Edit patient"
                                                 data-uid="{{ account.uid }}"
                                                 data-patient-id="{{ account.patient_id }}"
                                                 data-firstname="{{ account.get('firstname', account.get('first_name', '')) }}"
@@ -1615,28 +1972,31 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 data-lastname="{{ account.get('lastname', account.get('last_name', '')) }}"
                                                 data-contact="{{ account.get('contact_number', '') }}"
                                                 data-email="{{ account.get('email', '') }}"
-                                                data-sex="{{ account.get('sex', '') }}">
-                                                EDIT
+                                                data-sex="{{ account.get('sex', '') }}"
+                                                data-civilstatus="{{ account.get('CivilStatus', '') }}">
+                                                <span class="material-symbols-rounded" aria-hidden="true">edit</span>
                                             </button>
 
                                             <button
                                                 type="button"
                                                 class="btn-action block-user-btn"
-                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#525252 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                                title="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
+                                                aria-label="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
                                                 data-uid="{{ account.uid }}"
                                                 data-name="{{ account.full_name or account.first_name or 'this account' }}"
                                                 data-disabled="{{ 'true' if is_disabled else 'false' }}">
-                                                {{ 'UNBLOCK' if is_disabled else 'BLOCK' }}
+                                                <span class="material-symbols-rounded" aria-hidden="true">{% if is_disabled %}lock_open{% else %}block{% endif %}</span>
                                             </button>
 
                                             <button
                                                 type="button"
                                                 class="btn-action delete-patient-btn"
-                                                style="background:#dbeafe;color:#1e40af; font-size: 12px; border: solid#fd9393 1px; box-shadow: 0px 1px 5px 0.2px;"
+                                                title="Delete account"
+                                                aria-label="Delete account"
                                                 data-uid="{{ account.uid }}"
                                                 data-patient-id="{{ account.patient_id }}"
                                                 data-name="{{ account.full_name or account.first_name or 'this account' }}">
-                                                DELETE
+                                                <span class="material-symbols-rounded" aria-hidden="true">delete</span>
                                             </button>
                                         </div>
                                     </td>
@@ -1679,19 +2039,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     const isDisabled = !!a.disabled;
                     if (isDisabled) tr.style.opacity = '0.6';
                     tr.innerHTML = `
-                        <td>${a.full_name || ''}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
-                        <td>${a.contact_number || '-'}</td>
+                        <td data-cell="name">${a.full_name || ''}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
+                            <td data-cell="mobile">${a.contact_number || '-'}</td>
+
                         <td>${a.email || '-'}</td>
                         <td>
-                            <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center; align-items:center;">
-                                <button type="button" class="btn-action edit-patient-btn;"
+                            <div class="mp-actions">
+                                <button type="button" class="btn-action edit-patient-btn" title="Edit patient" aria-label="Edit patient"
                                     data-uid="${a.uid}" data-patient-id="${a.patient_id}"
                                     data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
-                                    data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}" data-sex="${a.sex || ''}">EDIT</button>
-                                <button type="button" class="btn-action block-user-btn" style="background:${isDisabled ? '#16a34a' : '#6b7280'};color:#fff;"
-                                    data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}">${isDisabled ? 'UNBLOCK' : 'BLOCK'}</button>
-                                <button type="button" class="btn-action delete-patient-btn" style="background:#ef4444;color:#fff;"
-                                    data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${a.full_name}">DELETE</button>
+                                    data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}" data-sex="${a.sex || ''}" data-civilstatus="${a.CivilStatus || ''}"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
+                                <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"
+                                    data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}"><span class="material-symbols-rounded" aria-hidden="true">${isDisabled ? 'lock_open' : 'block'}</span></button>
+                                <button type="button" class="btn-action delete-patient-btn" title="Delete account" aria-label="Delete account"
+                                    data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${a.full_name}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
                             </div>
                         </td>
                     `;
@@ -1716,11 +2077,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-                <div id="editPatientModal" class="modal" style="display:none;">
-    <div class="modal-content" style="width:90%;max-width:500px; background:#fff !important;">
+                <div id="editPatientModal" class="modal ep-modal" style="display:none;">
+    <div class="modal-content ep-card">
 
-        <div style="display:flex !important; justify-content:space-between !important; align-items:center !important; margin-bottom:15px !important;">
-            <h2 style="display:block !important; visibility:visible !important; color:#1a1a1a !important; font-size:20px !important; margin:0 !important;">Edit Patient</h2>
+        <div class="ep-head">
+            <div class="ep-head-text">
+                <h2>Edit Patient</h2>
+                <p class="ep-sub" id="editPatientSubtitle"></p>
+            </div>
             <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeEditPatientModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
         </div>
 
@@ -1728,72 +2092,190 @@ document.addEventListener('DOMContentLoaded', function() {
             <input type="hidden" id="editPatientUid" name="uid">
             <input type="hidden" id="editPatientPatientId" name="patient_id">
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">First Name</label>
-            <input type="text" id="editFirstName" name="first_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;" required>
+            <div class="ep-body">
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Middle Name</label>
-            <input type="text" id="editMiddleName" name="middle_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+                <section class="ep-group">
+                    <h3 class="ep-group-title">Name</h3>
+                    <div class="ep-grid">
+                        <div class="ep-field">
+                            <label for="editFirstName">First Name <span class="ep-req">*</span></label>
+                            <input type="text" id="editFirstName" name="first_name" autocomplete="given-name" required>
+                        </div>
+                        <div class="ep-field">
+                            <label for="editMiddleName">Middle Name</label>
+                            <input type="text" id="editMiddleName" name="middle_name" autocomplete="additional-name">
+                        </div>
+                        <div class="ep-field ep-field--full">
+                            <label for="editLastName">Last Name <span class="ep-req">*</span></label>
+                            <input type="text" id="editLastName" name="last_name" autocomplete="family-name" required>
+                        </div>
+                    </div>
+                </section>
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Last Name</label>
-            <input type="text" id="editLastName" name="last_name" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;" required>
+                <section class="ep-group">
+                    <h3 class="ep-group-title">Contact</h3>
+                    <div class="ep-grid">
+                        <div class="ep-field">
+                            <label for="editContactNumber">Contact Number</label>
+                            <input type="text" id="editContactNumber" name="contact_number" inputmode="tel" autocomplete="tel">
+                        </div>
+                        <div class="ep-field">
+                            <label for="editEmail">Email</label>
+                            <input type="email" id="editEmail" name="email" autocomplete="email">
+                        </div>
+                    </div>
+                </section>
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Contact Number</label>
-            <input type="text" id="editContactNumber" name="contact_number" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+                <section class="ep-group">
+                    <h3 class="ep-group-title">Profile</h3>
+                    <div class="ep-grid">
+                        <div class="ep-field">
+                            <label for="editSex">Sex</label>
+                            <select id="editSex" name="sex">
+                                <option value="">-- Not set --</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="ep-field">
+                            <label for="editCivilStatus">Civil Status</label>
+                            <select id="editCivilStatus" name="civil_status">
+                                <option value="">-- Not set --</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Separated">Separated</option>
+                                <option value="Divorced">Divorced</option>
+                            </select>
+                            <p class="ep-hint">Auto-filled from the patient's most recent appointment. Correct it here if needed.</p>
+                        </div>
+                    </div>
+                </section>
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Email</label>
-            <input type="email" id="editEmail" name="email" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
+            </div>
 
-            <label style="display:block !important; visibility:visible !important; margin-top:10px !important; font-weight:600 !important; color:#1a1a1a !important; font-size:14px !important;">Sex</label>
-            <select id="editSex" name="sex" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;box-sizing:border-box;">
-                <option value="">-- Not set --</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-            <p style="margin:4px 0 0; font-size:12px; color:#777;">Auto-filled from the patient's most recent appointment. Correct it here if needed.</p>
-
-            <button type="submit" class="btn-action accept" style="width:100%;margin-top:20px;padding:12px;">SAVE CHANGES</button>
+            <div class="ep-actions">
+                <button type="button" class="btn-action ep-cancel" onclick="closeEditPatientModal()">Cancel</button>
+                <button type="submit" class="btn-action accept ep-save">Save changes</button>
+            </div>
         </form>
     </div>
 </div>
 
-<div id="confirmModal" class="modal">
-    <div class="modal-content" style="max-width:400px; text-align:center;">
-        <p id="confirmModalMessage" style="font-size:16px; color:#1a1a1a; margin:0 0 24px; line-height:1.5;"></p>
-        <div style="display:flex; gap:12px; justify-content:center;">
-            <button type="button" id="confirmModalCancelBtn" class="btn-action" style="background:#e5e7eb;color:#1a1a1a;flex:1;">Cancel</button>
-            <button type="button" id="confirmModalOkBtn" class="btn-action" style="background:var(--navy, #0d47a1);color:#fff;flex:1;">OK</button>
+<div id="confirmModal" class="modal ci-danger-modal" style="display:none;">
+    <div class="modal-content ci-danger-card">
+        <span class="ci-danger-icon" id="confirmModalIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path>
+                <path d="M12 17h.01"></path>
+            </svg>
+        </span>
+
+        <h3 class="ci-danger-title" id="confirmModalTitle">Please confirm</h3>
+        <ul class="ci-danger-details" id="confirmModalDetails" hidden></ul>
+        <p class="ci-danger-text" id="confirmModalMessage"></p>
+        <p class="ci-danger-note" id="confirmModalNote" hidden></p>
+
+        <div class="ci-danger-actions">
+            <button type="button" id="confirmModalCancelBtn" class="btn-action ci-danger-cancel">Cancel</button>
+            <button type="button" id="confirmModalOkBtn" class="btn-action ci-danger-confirm">Confirm</button>
         </div>
     </div>
 </div>
 
 <script>
+const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path>';
+const CONFIRM_ICON_TRASH = '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>';
+
+// Shared confirmation dialog. opts:
+//   title        - heading text
+//   note         - extra warning line (own tinted strip)
+//   details      - [[label, value], ...] rendered as a summary list
+//   confirmLabel - override the confirm button's label
+//   danger       - red icon + red confirm button
+//   icon         - 'question' (default) | 'trash'
+// Only `message` is required, so the existing callers keep working unchanged.
 function showConfirm(message, opts) {
     opts = opts || {};
     return new Promise(function(resolve) {
         const modal = document.getElementById('confirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
         const msgEl = document.getElementById('confirmModalMessage');
+        const noteEl = document.getElementById('confirmModalNote');
+        const listEl = document.getElementById('confirmModalDetails');
+        const iconEl = document.getElementById('confirmModalIcon');
         const okBtn = document.getElementById('confirmModalOkBtn');
         const cancelBtn = document.getElementById('confirmModalCancelBtn');
 
+        if (!modal || !msgEl || !okBtn || !cancelBtn) {
+            resolve(false);
+            return;
+        }
+
+        const danger = !!opts.danger;
+
+        titleEl.textContent = opts.title || (danger ? 'Are you sure?' : 'Please confirm');
         msgEl.textContent = message;
-        okBtn.style.background = opts.danger ? '#dc2626' : 'var(--navy, #0d47a1)';
+        okBtn.textContent = opts.confirmLabel || (danger ? 'Yes, delete' : 'Confirm');
+
+        // Colour comes from CSS via a data attribute; setting it inline here
+        // used to fight the stylesheet.
+        modal.setAttribute('data-variant', danger ? 'danger' : 'default');
+
+        if (iconEl) {
+            iconEl.innerHTML = (opts.icon === 'trash' || danger)
+                ? CONFIRM_ICON_TRASH
+                : CONFIRM_ICON_QUESTION;
+        }
+
+        if (noteEl) {
+            noteEl.textContent = opts.note || '';
+            noteEl.hidden = !opts.note;
+        }
+
+        if (listEl) {
+            listEl.textContent = '';
+            const details = opts.details || [];
+            details.forEach(function(pair) {
+                const li = document.createElement('li');
+                const key = document.createElement('span');
+                key.className = 'ci-danger-key';
+                key.textContent = pair[0];
+                const val = document.createElement('span');
+                val.className = 'ci-danger-value';
+                val.textContent = pair[1];
+                li.appendChild(key);
+                li.appendChild(val);
+                listEl.appendChild(li);
+            });
+            listEl.hidden = details.length === 0;
+        }
+
         modal.style.display = 'flex';
 
         function cleanup(result) {
             modal.style.display = 'none';
             okBtn.removeEventListener('click', onOk);
             cancelBtn.removeEventListener('click', onCancel);
+            document.removeEventListener('keydown', onKey);
             resolve(result);
         }
         function onOk() { cleanup(true); }
         function onCancel() { cleanup(false); }
+        // No backdrop-to-close: a stray click outside this dialog must not
+        // dismiss a destructive confirmation. Cancel or Escape instead.
+        function onKey(e) { if (e.key === 'Escape') cleanup(false); }
 
         okBtn.addEventListener('click', onOk);
         cancelBtn.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey);
+        // Focus Cancel, not the destructive action.
+        cancelBtn.focus();
     });
 }
 
-function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email, sex) {
+function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email, sex, civilStatus) {
     document.getElementById('editPatientUid').value = uid || '';
     document.getElementById('editPatientPatientId').value = patientId || '';
     document.getElementById('editFirstName').value = firstname || '';
@@ -1802,7 +2284,41 @@ function openEditPatientModal(uid, patientId, firstname, middlename, lastname, c
     document.getElementById('editContactNumber').value = contact || '';
     document.getElementById('editEmail').value = email || '';
     document.getElementById('editSex').value = sex || '';
-    document.getElementById('editPatientModal').style.display = 'flex';
+    document.getElementById('editCivilStatus').value = civilStatus || '';
+
+    // Setting .value does not fire "change", so the custom listboxes would
+    // not move their tick marks. Nothing else listens to these selects.
+    ['editSex', 'editCivilStatus'].forEach(function (id) {
+        const field = document.getElementById(id);
+        if (field) {
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+
+    const fullName = [firstname, middlename, lastname].filter(Boolean).join(' ');
+    const subtitle = document.getElementById('editPatientSubtitle');
+    if (subtitle) {
+        const bits = [];
+        if (fullName) bits.push(fullName);
+        if (patientId) bits.push('Patient ID: ' + patientId);
+        subtitle.textContent = bits.join('   ·   ');
+    }
+
+    const modal = document.getElementById('editPatientModal');
+    modal.style.display = 'flex';
+
+    // No backdrop-to-close: clicking outside used to discard the form.
+    // Use Cancel, the X, or Escape.
+    document.addEventListener('keydown', function onEsc(e) {
+        if (e.key !== 'Escape') return;
+        if (document.getElementById('editPatientModal').style.display === 'flex') {
+            closeEditPatientModal();
+        }
+        document.removeEventListener('keydown', onEsc);
+    });
+
+    const firstNameField = document.getElementById('editFirstName');
+    if (firstNameField) firstNameField.focus();
 }
 
 function closeEditPatientModal() {
@@ -1822,7 +2338,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 editBtn.getAttribute('data-lastname'),
                 editBtn.getAttribute('data-contact'),
                 editBtn.getAttribute('data-email'),
-                editBtn.getAttribute('data-sex')
+                editBtn.getAttribute('data-sex'),
+                editBtn.getAttribute('data-civilstatus')
             );
             return;
         }
@@ -1853,12 +2370,20 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(res => res.json())
             .then(result => {
                 if (result.success) {
-                    blockBtn.setAttribute('data-disabled', result.disabled ? 'true' : 'false');
-                    blockBtn.textContent = result.disabled ? 'UNBLOCK' : 'BLOCK';
-                    blockBtn.style.background = result.disabled ? '#16a34a' : '#6b7280';
+                    const nowDisabled = !!result.disabled;
+                    blockBtn.setAttribute('data-disabled', nowDisabled ? 'true' : 'false');
+
+                    // The button is icon-only, so swap the glyph and the
+                    // tooltip instead of writing text -- setting textContent
+                    // here would delete the icon span.
+                    const icon = blockBtn.querySelector('.material-symbols-rounded');
+                    if (icon) icon.textContent = nowDisabled ? 'lock_open' : 'block';
+                    blockBtn.title = nowDisabled ? 'Unblock account' : 'Block account';
+                    blockBtn.setAttribute('aria-label',
+                        nowDisabled ? 'Unblock account' : 'Block account');
 
                     const row = blockBtn.closest('tr');
-                    row.style.opacity = result.disabled ? '0.6' : '1';
+                    row.style.opacity = nowDisabled ? '0.6' : '1';
 
                     const nameCell = row.querySelector('td');
                     const existingBadge = nameCell.querySelector('.status-badge');
@@ -1884,7 +2409,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const patientId = delBtn.getAttribute('data-patient-id');
             const name = delBtn.getAttribute('data-name') || 'this patient';
 
-            if (!(await showConfirm('Are you sure you want to permanently delete ' + name + '? This cannot be undone.', { danger: true }))) {
+            const confirmed = await showConfirm(
+                'This removes the account along with its booking history and '
+                + 'treatment records.',
+                {
+                    danger: true,
+                    title: 'Delete this patient?',
+                    confirmLabel: 'Delete patient',
+                    icon: 'trash',
+                    note: 'This cannot be undone.',
+                    details: [
+                        ['Patient', name],
+                        ['Patient ID', patientId || '—']
+                    ]
+                }
+            );
+            if (!confirmed) {
                 return;
             }
 
@@ -1938,16 +2478,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     const contact = formData.get('contact_number') || '';
                     const email = formData.get('email') || '';
                     const sex = formData.get('sex') || '';
+                    const civilStatus = formData.get('civil_status') || '';
                     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
 
                     const editBtn = document.querySelector('.edit-patient-btn[data-uid="' + uid + '"]');
                     if (editBtn) {
                         const row = editBtn.closest('tr');
                         if (row) {
-                            const cells = row.querySelectorAll('td');
-                            if (cells[0]) cells[0].textContent = fullName;
-                            if (cells[3]) cells[3].textContent = sex || '-';
-                            if (cells[4]) cells[4].textContent = contact;
+                            // By name, not position - see the note on the
+                            // other in-place row refresh.
+                            const cellBy = name => row.querySelector('td[data-cell="' + name + '"]');
+                            const nameCell = cellBy('name');
+                            const sexCell = cellBy('sex');
+                            const civilCell = cellBy('civil');
+                            const mobileCell = cellBy('mobile');
+                            if (nameCell) nameCell.textContent = fullName;
+                            if (sexCell) sexCell.textContent = sex || '-';
+                            if (civilCell) civilCell.textContent = civilStatus || '-';
+                            if (mobileCell) mobileCell.textContent = contact;
                             const delBtn = row.querySelector('.delete-patient-btn');
                             if (delBtn) delBtn.setAttribute('data-name', fullName);
                         }
@@ -1957,6 +2505,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         editBtn.setAttribute('data-contact', contact);
                         editBtn.setAttribute('data-email', email);
                         editBtn.setAttribute('data-sex', sex);
+                        editBtn.setAttribute('data-civilstatus', civilStatus);
                     }
 
                     closeEditPatientModal();
@@ -2065,36 +2614,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <div id="checkInfoModal" class="modal" style="display:none;">
     <div class="modal-content">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h2>Treatment Information</h2>
+        <div class="ci-head">
+            <div class="ci-head-text">
+                <h2>Treatment Information</h2>
+                <p class="ci-sub" id="ciSubtitle"></p>
+            </div>
             <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeCheckInfoModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span>
         </div>
 
-<table class="treatment-table" style="width:100%;">
-    <thead>
-        <tr>
-            <th>Assigned Dentist</th>
-            <th>Medicine</th>
-            <th>Visit Date</th>
-            <th>Procedure</th>
-            <th>Value</th>
-            <th>Fee Paid</th>
-            <th>Balance</th>
-            <th>Status</th>
-            <th>Next Appointment</th>
-            <th>Chart</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody id="checkInfoBody">
-        <tr><td colspan="11" style="text-align:center;">No treatment information found.</td></tr>
-    </tbody>
-</table>
+        <div class="ci-table-scroll">
+        <table class="treatment-table">
+            <thead>
+                <tr>
+                    <th>Assigned Dentist</th>
+                    <th>Medicine</th>
+                    <th>Visit Date</th>
+                    <th>Procedure</th>
+                    <th>Value</th>
+                    <th>Fee Paid</th>
+                    <th>Balance</th>
+                    <th>Status</th>
+                    <th>Next Appointment</th>
+                    <th>Chart</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="checkInfoBody">
+                <tr><td colspan="11" style="text-align:center;">No treatment information found.</td></tr>
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+<!-- Deliberately separate from the shared #confirmModal used by the patient
+     REMOVE flow, so this one can be styled for treatment records without
+     touching that dialog. -->
+<div id="deleteTreatmentModal" class="modal ci-danger-modal" style="display:none;">
+    <div class="modal-content ci-danger-card">
+        <span class="ci-danger-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                <path d="M10 11v6"></path>
+                <path d="M14 11v6"></path>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+            </svg>
+        </span>
+
+        <h3 class="ci-danger-title">Delete this treatment record?</h3>
+        <p class="ci-danger-text" id="deleteTreatmentMessage">This row will be removed from the patient's history.</p>
+
+        <ul class="ci-danger-details" id="deleteTreatmentDetails"></ul>
+
+        <p class="ci-danger-note">
+            This also subtracts the row from the clinic's income and outstanding totals.
+            It cannot be undone.
+        </p>
+
+        <div class="ci-danger-actions">
+            <button type="button" class="btn-action ci-danger-cancel" id="deleteTreatmentCancelBtn">Cancel</button>
+            <button type="button" class="btn-action ci-danger-confirm" id="deleteTreatmentOkBtn">Delete record</button>
+        </div>
     </div>
 </div>
 
 <script>
 let currentCheckInfoPatientId = "";
+let currentCheckInfoPatientName = "";
+
 
 const CI_PROCEDURE_OPTIONS = [
     "Dental Consultation",
@@ -2140,23 +2728,38 @@ function buildProcedureSelect(selectedValue) {
 
 function statusBadge(status) {
     const isPaid = (status || "").trim().toLowerCase() === "paid";
-    return `<span style="display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;background:${isPaid ? "#22c55e" : "#ef4444"};">${isPaid ? "Paid" : "Not Paid"}</span>`;
+    return `<span class="ci-badge ${isPaid ? "ci-badge--paid" : "ci-badge--unpaid"}">${isPaid ? "Paid" : "Not Paid"}</span>`;
 }
 
-async function openCheckInfoModal(patientId) {
+async function openCheckInfoModal(patientId, patientName) {
     const tbody = document.getElementById("checkInfoBody");
     const modal = document.getElementById("checkInfoModal");
     if (!tbody || !modal) return;
 
+    // Remembered so a re-fetch (e.g. after a delete) keeps the heading.
+    if (patientName !== undefined) {
+        currentCheckInfoPatientName = String(patientName || "").trim();
+    }
+
     patientId = String(patientId).replace("Patient ID:", "").trim();
     currentCheckInfoPatientId = patientId;
 
+    const subtitle = document.getElementById("ciSubtitle");
+    if (subtitle) {
+        const bits = [];
+        if (currentCheckInfoPatientName) bits.push(currentCheckInfoPatientName);
+        if (patientId) bits.push("Patient ID: " + patientId);
+        subtitle.textContent = bits.join("   ·   ");
+    }
+
     if (!patientId) {
         modal.style.display = "flex";
+        ciDestroyRowWidgets();
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">This patient has no booking history yet.</td></tr>`;
         return;
     }
 
+    ciDestroyRowWidgets();
     tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">Loading...</td></tr>`;
     modal.style.display = "flex";
 
@@ -2177,8 +2780,54 @@ async function openCheckInfoModal(patientId) {
     }
 }
 
+// Treatment rows are rebuilt constantly (edit, cancel, save, delete), so
+// both widget libraries are torn down before the markup is replaced.
+function ciDestroyRowWidgets() {
+    const tbody = document.getElementById("checkInfoBody");
+    if (!tbody) return;
+
+    if (typeof window.admDestroySelects === "function") {
+        window.admDestroySelects(tbody);
+    }
+
+    tbody.querySelectorAll("input[type='date']").forEach(function (input) {
+        if (input._flatpickr && typeof input._flatpickr.destroy === "function") {
+            input._flatpickr.destroy();
+        }
+    });
+}
+
+// Swap the native <select> popups and <input type="date"> pickers for the
+// same .adm-select listbox and flatpickr calendar the rest of the admin uses.
+// The original elements keep their classes and Y-m-d values, so
+// saveTreatmentEdit() reads them exactly as before.
+function ciEnhanceRow(row) {
+    if (!row) return;
+
+    if (typeof window.admEnhanceSelects === "function") {
+        // The Treatment Information body scrolls, so its panels always open
+        // downwards rather than flipping over the column headers.
+        window.admEnhanceSelects(row, ".ci-table-scroll", false);
+    }
+
+    if (typeof flatpickr !== "function") return;
+
+    row.querySelectorAll("input[type='date']").forEach(function (input) {
+        if (input._flatpickr) return;
+        flatpickr(input, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "F j, Y",
+            altInputClass: "adm-date-alt",
+            className: "adm-datepicker",
+            allowInput: true
+        });
+    });
+}
+
 function renderCheckInfoTable() {
     const tbody = document.getElementById("checkInfoBody");
+    ciDestroyRowWidgets();
     tbody.innerHTML = "";
 
     window.currentProcedures.forEach((item, index) => {
@@ -2188,17 +2837,20 @@ function renderCheckInfoTable() {
         tr.dataset.procIndex = item.proc_index;
 
         tr.innerHTML = `
-            <td>${item.dentist || "-"}</td>
-            <td>${item.medicine || "-"}</td>
-            <td>${item.date || "-"}</td>
-            <td>${item.procedure || "-"}</td>
-            <td>₱${item.value || 0}</td>
-            <td>₱${item.paid || 0}</td>
-            <td>₱${item.balance || 0}</td>
-            <td>${statusBadge(item.status)}</td>
-            <td>${item.next_appointment || "-"}</td>
-            <td><button type="button" class="btn-action" onclick="openChartViewModal(${index})">View</button></td>
-            <td><button type="button" class="btn-action" style="background:#f5a623;color:#1a1a1a;" onclick="enterEditMode(${index})">Edit</button></td>
+            <td data-label="Assigned Dentist">${item.dentist || "-"}</td>
+            <td data-label="Medicine">${item.medicine || "-"}</td>
+            <td data-label="Visit Date">${item.date || "-"}</td>
+            <td data-label="Procedure">${item.procedure || "-"}</td>
+            <td data-label="Value">₱${item.value || 0}</td>
+            <td data-label="Fee Paid">₱${item.paid || 0}</td>
+            <td data-label="Balance">₱${item.balance || 0}</td>
+            <td data-label="Status">${statusBadge(item.status)}</td>
+            <td data-label="Next Appointment">${item.next_appointment || "-"}</td>
+            <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
+            <td data-label="" class="ci-actions">
+                <button type="button" class="btn-action ci-btn--edit ci-ico" title="Edit record" aria-label="Edit record" onclick="enterEditMode(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
+                <button type="button" class="btn-action ci-btn--delete ci-delete-btn ci-ico" title="Delete record" aria-label="Delete record" onclick="deleteTreatmentRecord(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -2210,28 +2862,57 @@ function enterEditMode(index) {
     if (!row) return;
 
     const isPaid = (item.status || "").trim().toLowerCase() === "paid";
-
     row.innerHTML = `
-        <td><input type="text" class="ci-dentist" value="${escAttr(item.dentist)}"></td>
-        <td><input type="text" class="ci-medicine" value="${escAttr(item.medicine)}"></td>
-        <td><input type="date" class="ci-date" value="${escAttr(item.date)}"></td>
-        <td>${buildProcedureSelect(item.procedure)}</td>
-        <td><input type="number" class="ci-value" value="${item.value || 0}" step="0.01"></td>
-        <td><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01"></td>
-        <td><input type="number" class="ci-balance" value="${item.balance || 0}" step="0.01" readonly></td>
-        <td>
+        <td data-label="Assigned Dentist">
+            <input type="text" class="ci-dentist" value="${escAttr(item.dentist)}">
+        </td>
+        <td data-label="Medicine"><input type="text" class="ci-medicine" value="${escAttr(item.medicine)}"></td>
+        <td data-label="Visit Date"><input type="date" class="ci-date" value="${escAttr(item.date)}"></td>
+        <td data-label="Procedure">${buildProcedureSelect(item.procedure)}</td>
+        <td data-label="Value"><input type="number" class="ci-value" value="${item.value || 0}" step="0.01"></td>
+        <td data-label="Fee Paid"><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01"></td>
+        <td data-label="Balance"><input type="number" class="ci-balance" value="${item.balance || 0}" step="0.01" readonly></td>
+        <td data-label="Status">
             <select class="ci-status">
                 <option value="Not Paid" ${!isPaid ? "selected" : ""}>Not Paid</option>
                 <option value="Paid" ${isPaid ? "selected" : ""}>Paid</option>
             </select>
         </td>
-        <td><input type="date" class="ci-next-appt" value="${escAttr(item.next_appointment)}"></td>
-        <td><button type="button" class="btn-action" onclick="openChartViewModal(${index})">View</button></td>
-        <td>
-            <button type="button" class="btn-action accept" onclick="saveTreatmentEdit(${index})">Save</button>
-            <button type="button" class="btn-action" style="background:#6b7280;color:#fff;" onclick="renderCheckInfoTable()">Cancel</button>
+        <td data-label="Next Appointment"><input type="date" class="ci-next-appt" value="${escAttr(item.next_appointment)}"></td>
+        <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
+        <td data-label="" class="ci-actions">
+            <button type="button" class="btn-action accept ci-btn--save ci-ico" title="Save changes" aria-label="Save changes" onclick="saveTreatmentEdit(${index})"><span class="material-symbols-rounded" aria-hidden="true">check</span></button>
+            <button type="button" class="btn-action ci-btn--cancel ci-ico" title="Discard changes" aria-label="Discard changes" onclick="renderCheckInfoTable()"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
+            <button type="button" class="btn-action ci-btn--delete ci-delete-btn ci-ico" title="Delete record" aria-label="Delete record" onclick="deleteTreatmentRecord(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
         </td>
     `;
+
+    ciEnhanceRow(row);
+}
+
+// Save is icon-only like the rest of the action cluster, so the pending
+// state is shown by swapping the glyph for a spinner rather than by writing
+// text (which would destroy the icon).
+function ciSetSaveState(btn, saving) {
+    if (!btn) return;
+    const icon = btn.querySelector(".material-symbols-rounded");
+    btn.disabled = saving;
+    if (saving) {
+        btn.setAttribute("data-saving", "true");
+        btn.setAttribute("aria-busy", "true");
+        btn.title = "Saving…";
+        if (icon) {
+            if (icon.dataset.idleGlyph === undefined) icon.dataset.idleGlyph = icon.textContent;
+            icon.textContent = "progress_activity";
+        }
+    } else {
+        btn.removeAttribute("data-saving");
+        btn.removeAttribute("aria-busy");
+        btn.title = "Save changes";
+        if (icon && icon.dataset.idleGlyph !== undefined) {
+            icon.textContent = icon.dataset.idleGlyph;
+        }
+    }
 }
 
 // Live balance recalculation while editing
@@ -2270,7 +2951,7 @@ async function saveTreatmentEdit(index) {
     formData.append("next_appointment", row.querySelector(".ci-next-appt").value.trim());
     formData.append("status", row.querySelector(".ci-status").value.trim());
 
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
+    ciSetSaveState(saveBtn, true);
 
     try {
         const response = await fetch("/admin/update_treatment_record", { method: "POST", body: formData });
@@ -2291,17 +2972,152 @@ async function saveTreatmentEdit(index) {
             renderCheckInfoTable();
         } else {
             showToast(result.message || "Failed to update.");
-            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save"; }
+            ciSetSaveState(saveBtn, false);
         }
     } catch (error) {
         console.error("Update treatment record error:", error);
         showToast("Failed to update treatment record. Please try again.");
-        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save"; }
+        ciSetSaveState(saveBtn, false);
     }
 }
 
 function closeCheckInfoModal() {
     document.getElementById("checkInfoModal").style.display = "none";
+    ciDestroyRowWidgets();
+}
+
+
+let isDeletingTreatmentRecord = false;
+
+function peso(value) {
+    const n = parseFloat(value);
+    return "₱" + (isFinite(n) ? n.toFixed(2) : "0.00");
+}
+
+// Dedicated confirm dialog for treatment records. Kept apart from the shared
+// showConfirm()/#confirmModal that the patient REMOVE flow uses, so the two
+// can be styled and worded independently.
+function showDeleteTreatmentConfirm(item) {
+    return new Promise(function (resolve) {
+        const modal = document.getElementById("deleteTreatmentModal");
+        const msgEl = document.getElementById("deleteTreatmentMessage");
+        const listEl = document.getElementById("deleteTreatmentDetails");
+        const okBtn = document.getElementById("deleteTreatmentOkBtn");
+        const cancelBtn = document.getElementById("deleteTreatmentCancelBtn");
+
+        if (!modal || !msgEl || !listEl || !okBtn || !cancelBtn) {
+            resolve(false);
+            return;
+        }
+
+        const rows = [
+            ["Procedure", (item.procedure || "").trim() || "—"],
+            ["Assigned dentist", (item.dentist || "").trim() || "—"],
+            ["Visit date", (item.date || "").trim() || "—"],
+            ["Value", peso(item.value)],
+            ["Fee paid", peso(item.paid)],
+            ["Balance", peso(item.balance)],
+        ];
+
+        // Built with DOM nodes, not innerHTML: these are free-text fields
+        // from Firestore and must never be parsed as markup.
+        listEl.textContent = "";
+        rows.forEach(function (pair) {
+            const li = document.createElement("li");
+            const key = document.createElement("span");
+            key.className = "ci-danger-key";
+            key.textContent = pair[0];
+            const val = document.createElement("span");
+            val.className = "ci-danger-value";
+            val.textContent = pair[1];
+            li.appendChild(key);
+            li.appendChild(val);
+            listEl.appendChild(li);
+        });
+
+        const who = currentCheckInfoPatientName || "this patient";
+        msgEl.textContent = "This row will be removed from " + who + "'s treatment history.";
+
+        modal.style.display = "flex";
+
+        function cleanup(result) {
+            modal.style.display = "none";
+            okBtn.removeEventListener("click", onOk);
+            cancelBtn.removeEventListener("click", onCancel);
+            document.removeEventListener("keydown", onKey);
+            resolve(result);
+        }
+        function onOk() { cleanup(true); }
+        function onCancel() { cleanup(false); }
+        // Deliberately no backdrop-to-close: a confirmation must be
+        // answered with a button, or dismissed with Escape. A stray click
+        // outside used to close it and look like the action was skipped.
+        function onKey(e) { if (e.key === "Escape") cleanup(false); }
+
+        okBtn.addEventListener("click", onOk);
+        cancelBtn.addEventListener("click", onCancel);
+        document.addEventListener("keydown", onKey);
+        cancelBtn.focus();
+    });
+}
+
+async function deleteTreatmentRecord(index) {
+    // Same in-flight guard as the Submit Information button: this posts a
+    // destructive request, so a double click must never send two DELETEs.
+    if (isDeletingTreatmentRecord) {
+        showToast("A deletion is already in progress. Please wait.");
+        return;
+    }
+
+    const item = (window.currentProcedures || [])[index];
+    if (!item) {
+        showToast("Procedure not found.");
+        return;
+    }
+
+    const confirmed = await showDeleteTreatmentConfirm(item);
+
+    if (!confirmed) return;
+
+    if (!currentCheckInfoPatientId || !item.done_doc_id || item.proc_index === undefined) {
+        showToast("Missing information needed to delete this record.");
+        return;
+    }
+
+    isDeletingTreatmentRecord = true;
+
+    const formData = new FormData();
+    formData.append("patient_id", currentCheckInfoPatientId);
+    formData.append("done_doc_id", item.done_doc_id);
+    formData.append("proc_index", item.proc_index);
+
+    try {
+        const response = await fetch("/admin/delete_treatment_record", {
+            method: "POST",
+            body: formData
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            showToast(result.message || "Treatment record deleted successfully.");
+
+            // Re-fetch from the server instead of splicing the local array.
+            // proc_index is relative to its own Done_procedure document, so
+            // every later row in that same document shifts down by one after
+            // a delete. A fresh load is the only way to guarantee that View
+            // and Edit on the remaining rows still target the right row.
+            if (currentCheckInfoPatientId) {
+                await openCheckInfoModal(currentCheckInfoPatientId);
+            }
+        } else {
+            showToast(result.message || "Failed to delete treatment record.");
+        }
+    } catch (error) {
+        console.error("Delete treatment record error:", error);
+        showToast("Failed to delete treatment record. Please try again.");
+    } finally {
+        isDeletingTreatmentRecord = false;
+    }
 }
 </script>
 
@@ -2455,7 +3271,7 @@ window.onclick = function(e) {
 
         <div id="section-WeeklyClients" class="content-section">
             <div class="filter-bar">
-                <input type="text" id="weeklyClientSearch" placeholder="Search approved patients..." class="search-input filter-search" onkeyup="filterWeeklyClients()">
+                <input type="text" id="weeklyClientSearch" placeholder="Search accepted patients..." class="search-input filter-search" onkeyup="filterWeeklyClients()">
                 <button type="button" id="sortWeeklyClientsBtn" class="btn-action filter-btn" onclick="sortWeeklyClients()">
                     A-Z
                 </button>
@@ -2568,7 +3384,10 @@ window.onclick = function(e) {
         <div id="section-appointments" class="content-section">
     <section class="content-panel">
         <div class="filter-bar">
-            <button type="button" id="newAppointmentBtn" class="btn-action accept">+ New Appointment</button>
+            <button type="button" id="newAppointmentBtn" class="btn-action accept">
+                <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                <span>New Appointment</span>
+            </button>
         </div>
         <div id="appointmentsCursor" data-cursor="{{ appointment_list_next_cursor or '' }}" style="display:none;"></div>
         <table class="appointment-table" id="appointmentsTable">
@@ -2603,7 +3422,11 @@ window.onclick = function(e) {
                     </thead>
                         <tbody>
                         {% for appointment in Appointment_clients %}
-                        <tr data-appointment='{{ appointment|tojson|safe }}'>
+                        {% set urgency_raw = (appointment.UrgencyLevel or '')|trim %}
+                        {% set urgency_lc = urgency_raw|lower %}
+                        {% set urgency_key = 'emergency' if urgency_lc == 'emergency' else ('urgent' if urgency_lc == 'urgent' else ('normal' if urgency_lc == 'normal' else 'unset')) %}
+                        {% set urgency_label = urgency_raw if urgency_raw else 'Unspecified' %}
+                        <tr data-appointment='{{ appointment|tojson|safe }}' data-urgency="{{ urgency_key }}">
                             <td>{{ appointment.FirstName }}</td>
                             <td style="display:none;">{{ appointment.uid }}</td>
                             <td style="display:none;">{{ appointment.id }}</td>
@@ -2622,25 +3445,46 @@ window.onclick = function(e) {
                             <td style="display:none;">{{ appointment.Birthday }}</td>
                             <td style="display:none;">{{ appointment.Occupation }}</td>
                             <td style="display:none;">{{ appointment.CivilStatus }}</td>
-                            <td>{{ appointment.UrgencyLevel }}</td>
-                            <td>{{ appointment.appointment_date }}</td>
+                            <td data-cell="urgency">
+                                <span class="urg-badge urg-badge--{{ urgency_key }}" title="Urgency level: {{ urgency_label }}">
+                                    <span class="urg-badge__dot" aria-hidden="true"></span>
+                                    <span class="urg-badge__label">{{ urgency_label }}</span>
+                                </span>
+                            </td>
+                            <td class="appt-date-cell" data-raw="{{ appointment.appointment_date }}">{{ appointment.appointment_date }}</td>
                             <td>{{ appointment.Service }}</td>
                             <td>
-                                <input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <div class="dentist-field">
+                                    <input type="text" name="dentist_name" class="dentist-input"
+                                        placeholder="Select or type a dentist"
+                                        autocomplete="off" autocapitalize="off" spellcheck="false"
+                                        role="combobox" aria-autocomplete="list" aria-expanded="false"
+                                        aria-controls="dentistMenu" aria-label="Consulting dentist">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1"
+                                        aria-hidden="true" title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </div>
                             </td>
                             
                             <td>
                                 <span class="badge pending">pending</span>
                             </td>
                             <td>
-                                <button class="btn-action"
-                                    onclick="updateStatus(this.closest('tr'), 'accept')">
-                                    Accept
-                                </button>
-                                <button class="btn-action"
-                                    onclick="updateStatus(this.closest('tr'), 'decline')">
-                                    Decline
-                                </button>
+                                <div class="appt-actions">
+                                    <button type="button" class="btn-action appt-accept-btn"
+                                        title="Accept this appointment"
+                                        aria-label="Accept this appointment"
+                                        onclick="updateStatus(this.closest('tr'), 'accept')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                    </button>
+                                    <button type="button" class="btn-action appt-decline-btn"
+                                        title="Decline this appointment"
+                                        aria-label="Decline this appointment"
+                                        onclick="updateStatus(this.closest('tr'), 'decline')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -2655,6 +3499,320 @@ window.onclick = function(e) {
             </section>
         </div>
 
+<script>
+/* ---- Appointment request tab: shared helpers ---- */
+
+/* Display-only. Firestore stores "YYYY-MM-DD HH:MM" because that string is
+   what order_by, the cursor pagination and the blocked-slot lookups compare
+   against, so it must never be rewritten -- only rendered differently. */
+function formatApptDateTime(raw) {
+    const value = String(raw == null ? '' : raw).trim();
+    if (!value) return '';
+
+    const match = value.match(
+        /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/
+    );
+    if (!match) return value;
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthName = months[Number(match[2]) - 1];
+    if (!monthName) return value;
+
+    const datePart = monthName + ' ' + Number(match[3]) + ', ' + match[1];
+    if (match[4] === undefined) return datePart;
+
+    const hours = String(match[4]).padStart(2, '0');
+    return datePart + ' - ' + hours + ':' + match[5] + 'AM';
+}
+
+/* One entry for now. Add more names here and every Consulting Dentist box in
+   the table (server-rendered and loaded on demand) picks them up. */
+const APPOINTMENT_DENTIST_OPTIONS = ['Dr. Capizonda'];
+
+/* Matching is against the name plus these generic words, so someone who types
+   "dentist" or "dr" still finds the list instead of an empty popup. Typing
+   anything else is unaffected: the input is never overwritten by a match. */
+const APPOINTMENT_DENTIST_KEYWORDS = ' dr doctor dentist';
+
+function dentistMatches(query) {
+    const needle = String(query || '').trim().toLowerCase();
+    if (!needle) return APPOINTMENT_DENTIST_OPTIONS.slice();
+
+    return APPOINTMENT_DENTIST_OPTIONS.filter(function(name) {
+        return (name + APPOINTMENT_DENTIST_KEYWORDS).toLowerCase().indexOf(needle) !== -1;
+    });
+}
+
+/* Rewrites the server-rendered cells that carry the raw stored value. */
+function formatApptDateCells(root) {
+    (root || document).querySelectorAll('.appt-date-cell[data-raw]').forEach(function(cell) {
+        cell.textContent = formatApptDateTime(cell.getAttribute('data-raw'));
+    });
+}
+
+/* Local escapers so these helpers never depend on load order between the
+   separate <script> blocks in this template. */
+function apptText(value) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(value == null ? '' : value)));
+    return div.innerHTML;
+}
+
+function apptAttr(value) {
+    return apptText(value).replace(/"/g, '&quot;');
+}
+
+/* The header carries 17 hidden columns before "Urgency Level". A row built in
+   JS has to emit the same 24 cells or every value after the patient name
+   shifts one column left of its heading. */
+const APPOINTMENT_HIDDEN_FIELDS = ['uid', 'id', 'MiddleName', 'LastName',
+    'HouseNo', 'Street', 'Brgy', 'Municipality', 'Province', 'ContactNumber',
+    'Nationality', 'Religion', 'Age', 'Sex', 'Birthday', 'Occupation',
+    'CivilStatus'];
+
+function apptHiddenCells(appt) {
+    return APPOINTMENT_HIDDEN_FIELDS.map(function(field) {
+        return '<td style="display:none;">' + apptText(appt[field]) + '</td>';
+    }).join('');
+}
+
+/* ---- Urgency severity ----
+   Mirrors the Jinja whitelist above so a server-rendered row and a
+   "Load More" row are styled identically. Only the whitelisted key ever
+   reaches a class name or attribute; the raw value is display text. */
+const APPOINTMENT_URGENCY_KEYS = {
+    emergency: 'emergency',
+    urgent: 'urgent',
+    normal: 'normal'
+};
+
+function apptUrgency(raw) {
+    const text = String(raw == null ? '' : raw).trim();
+    const key = APPOINTMENT_URGENCY_KEYS[text.toLowerCase()] || 'unset';
+    return {
+        key: key,
+        label: text || 'Unspecified'
+    };
+}
+
+function apptUrgencyCell(raw) {
+    const urgency = apptUrgency(raw);
+    return '<td data-cell="urgency">'
+        + '<span class="urg-badge urg-badge--' + urgency.key + '" title="Urgency level: ' + apptAttr(urgency.label) + '">'
+        + '<span class="urg-badge__dot" aria-hidden="true"></span>'
+        + '<span class="urg-badge__label">' + apptText(urgency.label) + '</span>'
+        + '</span></td>';
+}
+
+/* ---- Consulting Dentist combobox ----
+   A native <datalist> cannot be styled, so this is a real listbox popup.
+   The table sets overflow:hidden and the panel sets overflow-x:auto, either
+   of which would clip an in-cell menu, so the popup is a single shared
+   <ul> portalled to <body> and positioned with fixed coordinates.
+   All interaction is delegated from document, so rows added later by
+   "Load More" work with no extra wiring. */
+const DENTIST_MENU_ID = 'dentistMenu';
+const DENTIST_MENU_GAP = 6;
+const DENTIST_MENU_MAX_HEIGHT = 220;
+
+let dentistMenuEl = null;
+let dentistOpenInput = null;
+
+function getDentistMenu() {
+    if (dentistMenuEl && dentistMenuEl.isConnected) return dentistMenuEl;
+
+    dentistMenuEl = document.createElement('ul');
+    dentistMenuEl.id = DENTIST_MENU_ID;
+    dentistMenuEl.className = 'dentist-menu';
+    dentistMenuEl.setAttribute('role', 'listbox');
+    dentistMenuEl.hidden = true;
+    document.body.appendChild(dentistMenuEl);
+    return dentistMenuEl;
+}
+
+function setDentistToggleOpen(input, isOpen) {
+    const field = input && input.closest ? input.closest('.dentist-field') : null;
+    const toggle = field ? field.querySelector('.dentist-field__toggle') : null;
+    if (toggle) toggle.classList.toggle('is-open', isOpen);
+}
+
+function closeDentistMenu() {
+    if (dentistMenuEl) dentistMenuEl.hidden = true;
+    if (dentistOpenInput) {
+        dentistOpenInput.setAttribute('aria-expanded', 'false');
+        dentistOpenInput.removeAttribute('aria-activedescendant');
+        setDentistToggleOpen(dentistOpenInput, false);
+        dentistOpenInput = null;
+    }
+}
+
+function positionDentistMenu(input) {
+    const menu = getDentistMenu();
+    const rect = input.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const placeAbove = spaceBelow < DENTIST_MENU_MAX_HEIGHT && rect.top > spaceBelow;
+    const available = placeAbove ? rect.top : spaceBelow;
+
+    menu.style.left = rect.left + 'px';
+    menu.style.width = rect.width + 'px';
+    menu.style.maxHeight = Math.max(96, Math.min(DENTIST_MENU_MAX_HEIGHT, available - DENTIST_MENU_GAP - 12)) + 'px';
+
+    if (placeAbove) {
+        menu.style.top = 'auto';
+        menu.style.bottom = (window.innerHeight - rect.top + DENTIST_MENU_GAP) + 'px';
+        menu.classList.add('is-above');
+    } else {
+        menu.style.bottom = 'auto';
+        menu.style.top = (rect.bottom + DENTIST_MENU_GAP) + 'px';
+        menu.classList.remove('is-above');
+    }
+}
+
+function openDentistMenu(input) {
+    /* Always start from a clean slate: only one popup and one chevron can be
+       open, and any previously highlighted option is stale after a re-filter. */
+    closeDentistMenu();
+
+    const menu = getDentistMenu();
+    const matches = dentistMatches(input.value);
+
+    /* An empty list still opens, so typing a name that is not on the list
+       never looks broken -- the field stays a plain free-text input. */
+    menu.innerHTML = matches.length
+        ? matches.map(function(name, index) {
+            return '<li class="dentist-menu__option" role="option" id="dentistOpt-' + index + '" data-value="' + apptAttr(name) + '">'
+                + '<span class="dentist-menu__name">' + apptText(name) + '</span>'
+                + '<span class="material-symbols-rounded dentist-menu__tick" aria-hidden="true">check</span>'
+                + '</li>';
+        }).join('')
+        : '<li class="dentist-menu__empty">No matching dentist &mdash; your text will be used</li>';
+
+    menu.hidden = false;
+    menu.classList.remove('has-active');
+    dentistOpenInput = input;
+    input.setAttribute('aria-expanded', 'true');
+    input.removeAttribute('aria-activedescendant');
+    setDentistToggleOpen(input, true);
+    positionDentistMenu(input);
+}
+
+function setActiveDentistOption(input, direction) {
+    const menu = getDentistMenu();
+    const options = Array.prototype.slice.call(
+        menu.querySelectorAll('.dentist-menu__option')
+    );
+    if (!options.length) return;
+
+    let index = options.findIndex(function(el) {
+        return el.classList.contains('is-active');
+    });
+
+    if (index === -1) {
+        index = direction === 'up' ? options.length - 1 : 0;
+    } else {
+        index = direction === 'up'
+            ? (index - 1 + options.length) % options.length
+            : (index + 1) % options.length;
+    }
+
+    options.forEach(function(el, i) {
+        el.classList.toggle('is-active', i === index);
+        el.setAttribute('aria-selected', i === index ? 'true' : 'false');
+    });
+
+    const active = options[index];
+    menu.classList.add('has-active');
+    input.setAttribute('aria-activedescendant', active.id);
+    active.scrollIntoView({ block: 'nearest' });
+}
+
+function commitActiveDentistOption(input) {
+    const active = getDentistMenu().querySelector('.dentist-menu__option.is-active');
+    if (!active) return false;
+    input.value = active.getAttribute('data-value') || '';
+    closeDentistMenu();
+    return true;
+}
+
+function selectDentistOption(input, option) {
+    input.value = option.getAttribute('data-value') || '';
+    closeDentistMenu();
+    input.focus();
+}
+
+function isDentistTarget(target, selector) {
+    return !!(target && target.closest && target.closest(selector));
+}
+
+document.addEventListener('click', function(event) {
+    const target = event.target;
+    if (!target || !target.closest) return;
+
+    if (isDentistTarget(target, '.dentist-menu__option')) {
+        const option = target.closest('.dentist-menu__option');
+        if (dentistOpenInput) selectDentistOption(dentistOpenInput, option);
+        return;
+    }
+
+    if (isDentistTarget(target, '.dentist-field__toggle')) {
+        const input = target.closest('.dentist-field').querySelector('.dentist-input');
+        if (dentistOpenInput === input) {
+            closeDentistMenu();
+        } else if (input) {
+            openDentistMenu(input);
+        }
+        event.preventDefault();
+        return;
+    }
+
+    if (!isDentistTarget(target, '.dentist-field') && !isDentistTarget(target, '#' + DENTIST_MENU_ID)) {
+        closeDentistMenu();
+    }
+});
+
+document.addEventListener('input', function(event) {
+    if (!isDentistTarget(event.target, '.dentist-input')) return;
+    openDentistMenu(event.target.closest('.dentist-input'));
+});
+
+document.addEventListener('keydown', function(event) {
+    if (!isDentistTarget(event.target, '.dentist-input')) return;
+
+    const input = event.target.closest('.dentist-input');
+    const menuOpen = dentistOpenInput === input && !getDentistMenu().hidden;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (!menuOpen) {
+            openDentistMenu(input);
+            return;
+        }
+        setActiveDentistOption(input, event.key === 'ArrowUp' ? 'up' : 'down');
+        return;
+    }
+
+    if (event.key === 'Enter') {
+        if (menuOpen && commitActiveDentistOption(input)) event.preventDefault();
+        return;
+    }
+
+    if (event.key === 'Escape') {
+        if (menuOpen) {
+            event.preventDefault();
+            closeDentistMenu();
+        }
+    }
+});
+
+/* A fixed-position popup cannot follow its anchor once the page moves. */
+window.addEventListener('resize', closeDentistMenu);
+window.addEventListener('scroll', closeDentistMenu, true);
+
+document.addEventListener('DOMContentLoaded', function() {
+    formatApptDateCells();
+});
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ---- Appointments Load More ----
@@ -2679,16 +3837,36 @@ document.addEventListener('DOMContentLoaded', function() {
                     result.rows.forEach(function(appt) {
                         const tr = document.createElement('tr');
                         tr.setAttribute('data-appointment', JSON.stringify(appt));
+                        tr.setAttribute('data-urgency', apptUrgency(appt.UrgencyLevel).key);
                         tr.innerHTML = `
-                            <td>${appt.FirstName || ''}</td>
-                            <td>${appt.UrgencyLevel || ''}</td>
-                            <td>${appt.appointment_date || ''}</td>
-                            <td>${appt.Service || ''}</td>
-                            <td><input type="text" placeholder="Dentist Name" name="dentist_name" class="dentist-input" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></td>
+                            <td>${apptText(appt.FirstName)}</td>
+                            ${apptHiddenCells(appt)}
+                            ${apptUrgencyCell(appt.UrgencyLevel)}
+                            <td class="appt-date-cell" data-raw="${apptAttr(appt.appointment_date)}">${apptText(formatApptDateTime(appt.appointment_date))}</td>
+                            <td>${apptText(appt.Service)}</td>
+                            <td>
+                                <div class="dentist-field">
+                                    <input type="text" name="dentist_name" class="dentist-input"
+                                        placeholder="Select or type a dentist"
+                                        autocomplete="off" autocapitalize="off" spellcheck="false"
+                                        role="combobox" aria-autocomplete="list" aria-expanded="false"
+                                        aria-controls="dentistMenu" aria-label="Consulting dentist">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1"
+                                        aria-hidden="true" title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </div>
+                            </td>
                             <td><span class="badge pending">pending</span></td>
                             <td>
-                                <button class="btn-action" onclick="updateStatus(this.closest('tr'), 'accept')">Accept</button>
-                                <button class="btn-action" onclick="updateStatus(this.closest('tr'), 'decline')">Decline</button>
+                                <div class="appt-actions">
+                                    <button type="button" class="btn-action appt-accept-btn" title="Accept this appointment" aria-label="Accept this appointment" onclick="updateStatus(this.closest('tr'), 'accept')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                    </button>
+                                    <button type="button" class="btn-action appt-decline-btn" title="Decline this appointment" aria-label="Decline this appointment" onclick="updateStatus(this.closest('tr'), 'decline')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+                                    </button>
+                                </div>
                             </td>
                         `;
                         apptTbody.appendChild(tr);
@@ -3451,7 +4629,9 @@ function openPatientDashboard(
     (name || 'Unknown') + " " + (lastname || '');
     document.getElementById('pd-id').innerText = 'Account No: ' + (uid || 'N/A');
 
-    document.getElementById('pd-gender').innerText = sex || 'Female';
+    // Never default a missing Sex to a real gender value -- showing an
+    // unknown patient's sex as "Female" is wrong data, not a placeholder.
+    document.getElementById('pd-gender').innerText = sex || 'Not set';
     document.getElementById('pd-age').innerText = age || 'N/A';
 
     document.getElementById('pd-disp-fullname').innerText =
@@ -3607,14 +4787,25 @@ function setCheckbox(id, value) {
             });
         }
 
-        function sortMyPatients() {
+            // Sort buttons now contain an icon plus a label, so write the
+            // label into its own span. textContent would delete the icon.
+            function setFilterSortLabel(btn, label) {
+                var el = btn.querySelector('.filter-btn__label');
+                if (el) {
+                    el.textContent = label;
+                    return;
+                }
+                btn.textContent = label;
+            }
+
+            function sortMyPatients() {
             var table = document.getElementById('myPatientsTable');
             var tbody = table.querySelector('tbody');
             var rows = Array.from(tbody.querySelectorAll('tr'));
             var sortBtn = document.getElementById('sortMyPatientsBtn');
             var isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
             sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
-            sortBtn.textContent = isAsc ? 'A-Z' : 'Z-A';
+            setFilterSortLabel(sortBtn, isAsc ? 'A-Z' : 'Z-A');
             rows.sort(function(a, b) {
                 var aName = a.querySelector('td') ? a.querySelector('td').textContent.toLowerCase() : '';
                 var bName = b.querySelector('td') ? b.querySelector('td').textContent.toLowerCase() : '';
@@ -3634,7 +4825,7 @@ function setCheckbox(id, value) {
             var sortBtn = document.getElementById('sortMyPatientsDateBtn');
             var isNewest = sortBtn.getAttribute('data-sort') !== 'asc';
             sortBtn.setAttribute('data-sort', isNewest ? 'asc' : 'desc');
-            sortBtn.textContent = isNewest ? 'Newest' : 'Oldest';
+            setFilterSortLabel(sortBtn, isNewest ? 'Newest' : 'Oldest');
             rows.sort(function(a, b) {
                 var aVal = a.getAttribute('data-recent-appointment');
                 var bVal = b.getAttribute('data-recent-appointment');
@@ -3668,7 +4859,7 @@ function setCheckbox(id, value) {
             var sortBtn = document.getElementById('sortWeeklyClientsBtn');
             var isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
             sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
-            sortBtn.textContent = isAsc ? 'A-Z' : 'Z-A';
+            setFilterSortLabel(sortBtn, isAsc ? 'A-Z' : 'Z-A');
             cards.sort(function(a, b) {
                 var aName = (a.getAttribute('data-name') || '').toLowerCase();
                 var bName = (b.getAttribute('data-name') || '').toLowerCase();
@@ -3687,7 +4878,7 @@ function setCheckbox(id, value) {
             var sortBtn = document.getElementById('sortWeeklyClientsDateBtn');
             var isNewest = sortBtn.getAttribute('data-sort') !== 'asc';
             sortBtn.setAttribute('data-sort', isNewest ? 'asc' : 'desc');
-            sortBtn.textContent = isNewest ? 'Newest' : 'Oldest';
+            setFilterSortLabel(sortBtn, isNewest ? 'Newest' : 'Oldest');
             cards.sort(function(a, b) {
                 var aDate = new Date(a.getAttribute('data-accepted-at') || '');
                 var bDate = new Date(b.getAttribute('data-accepted-at') || '');
@@ -4176,8 +5367,26 @@ function setCheckbox(id, value) {
 // SAVE DENTAL RECORD
 // =========================
 
+let isDentalRecordSaving = false;
 
 async function saveDentalRecord(uid) {
+
+    // ---- RE-ENTRY GUARD: block duplicate submissions ----
+    if (isDentalRecordSaving) {
+        showToast("Submission already in progress. Please wait.");
+        return;
+    }
+
+    isDentalRecordSaving = true;
+
+    const submitBtn = document.getElementById('td-save-btn');
+    const submitBtnText = submitBtn ? submitBtn.textContent : null;
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "SUBMITTING...";
+    }
+
+    let saveSucceeded = false;
 
     try {
 
@@ -4569,6 +5778,8 @@ async function saveDentalRecord(uid) {
 
         if (result.success) {
 
+            saveSucceeded = true;
+
             showToast(
                 "Dental record saved successfully!"
             );
@@ -4606,6 +5817,18 @@ async function saveDentalRecord(uid) {
                 "Unknown error"
             )
         );
+
+    }
+
+    finally {
+
+        isDentalRecordSaving = false;
+
+        // Keep the button locked on success (page is reloading).
+        if (submitBtn && !saveSucceeded) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = submitBtnText;
+        }
 
     }
 
@@ -4752,7 +5975,362 @@ function openLiveChartModal() {
     }
 }
 
+/* ============================================================
+   SAVED DENTAL CHART VIEWER
+   Zoom / pan / rotate / flip / fullscreen / download.
+   The public entry points keep their original names and
+   signatures so the four existing View buttons are unaffected.
+   ============================================================ */
+const chartView = {
+    scale: 1,        // user multiplier on top of the fit scale
+    baseScale: 1,    // scale that makes the image fit the viewport
+    x: 0,
+    y: 0,
+    rot: 0,          // degrees
+    flipH: false,
+    flipV: false,
+    fitMode: true,   // true = "fit", false = "1:1"
+    ready: false,    // true only once the image has real pixel dimensions
+    failed: false,
+    drag: null,
+    prevBodyOverflow: null
+};
+
+const CHART_VIEW_MIN = 0.25;
+const CHART_VIEW_MAX = 8;
+
+function chartViewEls() {
+    return {
+        modal: document.getElementById('chartViewModal'),
+        img: document.getElementById('viewSavedChartImage'),
+        viewport: document.getElementById('chartViewViewport'),
+        zoom: document.getElementById('chartZoomReadout'),
+        dims: document.getElementById('chartViewDims'),
+        meta: document.getElementById('chartViewMeta'),
+        loading: document.getElementById('chartViewLoading'),
+        loadingIcon: document.getElementById('chartViewLoadingIcon'),
+        loadingText: document.getElementById('chartViewLoadingText')
+    };
+}
+
+/* Loading / error placeholder. The image has no intrinsic size until its
+   data URL decodes, so without this the stage collapses and then jumps. */
+function chartViewerSetLoading(loading, failed) {
+    const els = chartViewEls();
+    if (els.loading) els.loading.hidden = !loading;
+    if (els.viewport) els.viewport.classList.toggle('is-loading', !!loading);
+    if (els.loadingIcon) {
+        els.loadingIcon.textContent = failed ? 'broken_image' : 'progress_activity';
+        els.loadingIcon.classList.toggle('is-error', !!failed);
+    }
+    if (els.loadingText) {
+        els.loadingText.textContent = failed
+            ? 'This chart image could not be loaded.'
+            : 'Loading chart…';
+    }
+    // Re-apply so the transform, cursor and readouts are all reset to their
+    // inert pre-load state in one place.
+    chartViewerApply();
+}
+
+function chartViewerReset() {
+    chartView.scale = 1;
+    chartView.x = 0;
+    chartView.y = 0;
+    chartView.rot = 0;
+    chartView.flipH = false;
+    chartView.flipV = false;
+    chartView.fitMode = true;
+
+    const els = chartViewEls();
+    if (els.img) els.img.classList.remove('is-panning');
+
+    const fh = document.getElementById('chartFlipHBtn');
+    const fv = document.getElementById('chartFlipVBtn');
+    if (fh) fh.classList.remove('is-on');
+    if (fv) fv.classList.remove('is-on');
+
+    chartViewerFit();
+}
+
+// Scale that makes the whole image visible inside the viewport.
+function chartViewerComputeFit() {
+    const els = chartViewEls();
+    if (!els.img || !els.viewport) return 1;
+
+    const iw = els.img.naturalWidth || 0;
+    const ih = els.img.naturalHeight || 0;
+
+    // Before the data URL decodes the image is 0x0. Guessing here produced an
+    // enormous scale that got painted for a frame, which read as a flicker.
+    if (!iw || !ih) return 1;
+    const vw = els.viewport.clientWidth || 1;
+    const vh = els.viewport.clientHeight || 1;
+
+    // A 90/270 degree rotation swaps the axes.
+    const swapped = Math.abs(chartView.rot % 180) === 90;
+    const boxW = swapped ? ih : iw;
+    const boxH = swapped ? iw : ih;
+
+    const pad = 32;
+    return Math.min((vw - pad) / boxW, (vh - pad) / boxH) || 1;
+}
+
+function chartViewerClamp() {
+    const els = chartViewEls();
+    if (!els.img || !els.viewport || !chartView.ready) return;
+
+    const iw = els.img.naturalWidth || 1;
+    const ih = els.img.naturalHeight || 1;
+    const total = chartView.baseScale * chartView.scale;
+
+    const swapped = Math.abs(chartView.rot % 180) === 90;
+    const halfW = (swapped ? ih : iw) * total / 2;
+    const halfH = (swapped ? iw : ih) * total / 2;
+
+    // Let the image travel at most its own half-diagonal, so it can never
+    // be flung completely out of view.
+    const maxX = halfW + els.viewport.clientWidth / 2;
+    const maxY = halfH + els.viewport.clientHeight / 2;
+
+    chartView.x = Math.max(-maxX, Math.min(maxX, chartView.x));
+    chartView.y = Math.max(-maxY, Math.min(maxY, chartView.y));
+}
+
+function chartViewerApply() {
+    const els = chartViewEls();
+    if (!els.img) return;
+
+    // Until the image reports real dimensions there is nothing meaningful to
+    // transform. Leaving the transform empty also stops the browser from
+    // painting a stale one.
+    if (!chartView.ready) {
+        els.img.style.transform = '';
+        els.img.style.cursor = 'default';
+        if (els.zoom) els.zoom.textContent = '—';
+        if (els.dims) els.dims.textContent = '';
+        return;
+    }
+
+    const total = chartView.baseScale * chartView.scale;
+    const parts = [];
+    if (chartView.x || chartView.y) parts.push('translate(' + chartView.x + 'px,' + chartView.y + 'px)');
+    if (chartView.rot) parts.push('rotate(' + chartView.rot + 'deg)');
+    if (chartView.flipH) parts.push('scaleX(-1)');
+    if (chartView.flipV) parts.push('scaleY(-1)');
+    parts.push('scale(' + total + ')');
+
+    els.img.style.transform = parts.join(' ');
+    els.img.style.cursor = total > 1 ? 'grab' : 'default';
+
+    if (els.zoom) {
+        // Fit mode reports the user's multiplier; 1:1 reports true pixels.
+        els.zoom.textContent = Math.round(
+            (chartView.fitMode ? chartView.scale : total) * 100
+        ) + '%';
+    }
+
+    if (els.dims) {
+        const nw = els.img.naturalWidth || 0;
+        const nh = els.img.naturalHeight || 0;
+        els.dims.textContent = nw ? nw + ' × ' + nh + ' px' : '';
+    }
+}
+
+function chartViewerRelayout() {
+    const els = chartViewEls();
+    if (!els.img || !els.viewport || !chartView.ready) return;
+    if (chartView.fitMode) {
+        chartView.baseScale = chartViewerComputeFit();
+    }
+    chartViewerClamp();
+    chartViewerApply();
+}
+
+function chartViewerFit() {
+    const els = chartViewEls();
+    if (!els.img) return;
+    chartView.fitMode = true;
+    chartView.scale = 1;
+    chartView.x = 0;
+    chartView.y = 0;
+    chartViewerRelayout();
+}
+
+function chartViewerActualSize() {
+    const els = chartViewEls();
+    if (!els.img) return;
+    chartView.fitMode = false;
+    chartView.baseScale = 1;      // natural pixels
+    chartView.scale = 1;
+    chartView.x = 0;
+    chartView.y = 0;
+    chartViewerApply();
+}
+
+function chartViewerZoomBy(factor) {
+    if (!chartView.ready) return;
+    const next = chartView.scale * factor;
+    chartView.scale = Math.max(CHART_VIEW_MIN, Math.min(CHART_VIEW_MAX, next));
+    if (chartView.scale !== 1) chartView.fitMode = false;
+    chartViewerClamp();
+    chartViewerApply();
+}
+
+function chartViewerZoomAt(factor, originX, originY) {
+    const els = chartViewEls();
+    if (!chartView.ready) return;
+    if (!els.img || !els.viewport) { chartViewerZoomBy(factor); return; }
+
+    const box = els.viewport.getBoundingClientRect();
+    const cx = originX - box.left - box.width / 2;
+    const cy = originY - box.top - box.height / 2;
+
+    const before = chartView.scale;
+    const next = Math.max(CHART_VIEW_MIN, Math.min(CHART_VIEW_MAX, before * factor));
+    if (next === before) return;
+
+    // keep the point under the cursor fixed
+    const ratio = next / before;
+    chartView.x = cx - (cx - chartView.x) * ratio;
+    chartView.y = cy - (cy - chartView.y) * ratio;
+    chartView.scale = next;
+    if (next !== 1) chartView.fitMode = false;
+
+    chartViewerClamp();
+    chartViewerApply();
+}
+
+function chartViewerRotate(deg) {
+    chartView.rot = (chartView.rot + deg) % 360;
+    if (chartView.rot < 0) chartView.rot += 360;
+    chartViewerRelayout();
+}
+
+function chartViewerFlip(axis) {
+    if (axis === 'h') {
+        chartView.flipH = !chartView.flipH;
+        const b = document.getElementById('chartFlipHBtn');
+        if (b) b.classList.toggle('is-on', chartView.flipH);
+    } else {
+        chartView.flipV = !chartView.flipV;
+        const b = document.getElementById('chartFlipVBtn');
+        if (b) b.classList.toggle('is-on', chartView.flipV);
+    }
+    chartViewerApply();
+}
+
+function chartViewerToggleFullscreen() {
+    const els = chartViewEls();
+    if (!els.modal) return;
+    const btn = document.getElementById('chartFullscreenBtn');
+    const icon = btn ? btn.querySelector('.material-symbols-rounded') : null;
+
+    if (document.fullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(function () {});
+        if (icon) icon.textContent = 'fullscreen';
+    } else if (els.modal.requestFullscreen) {
+        els.modal.requestFullscreen().catch(function () {});
+        if (icon) icon.textContent = 'fullscreen_exit';
+    }
+}
+
+function chartViewerDownload() {
+    const els = chartViewEls();
+    if (!els.img || !els.img.src) return;
+
+    const name = (els.meta && els.meta.dataset.name) || 'dental-chart';
+    const a = document.createElement('a');
+    a.href = els.img.src;
+    a.download = name.replace(/[^\w\-]+/g, '-').replace(/-+/g, '-') + '.jpg';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+}
+
+/* ---- pointer panning ---- */
+function chartViewerBindPanning() {
+    const els = chartViewEls();
+    if (!els.viewport || !els.img) return;
+
+    els.viewport.addEventListener('mousedown', function (e) {
+        if (e.button !== 0) return;
+        chartView.drag = { startX: e.clientX, startY: e.clientY, origX: chartView.x, origY: chartView.y };
+        els.img.classList.add('is-panning');
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function (e) {
+        if (!chartView.drag) return;
+        chartView.x = chartView.drag.origX + (e.clientX - chartView.drag.startX);
+        chartView.y = chartView.drag.origY + (e.clientY - chartView.drag.startY);
+        chartViewerClamp();
+        chartViewerApply();
+    });
+
+    window.addEventListener('mouseup', function () {
+        if (!chartView.drag) return;
+        chartView.drag = null;
+        if (els.img) els.img.classList.remove('is-panning');
+    });
+
+    // Scroll to zoom, anchored on the pointer.
+    els.viewport.addEventListener('wheel', function (e) {
+        if (!e.ctrlKey && Math.abs(e.deltaY) < 2) return;
+        e.preventDefault();
+        chartViewerZoomAt(e.deltaY < 0 ? 1.12 : 0.89, e.clientX, e.clientY);
+    }, { passive: false });
+
+    // Double click toggles between fit and 1:1.
+    els.viewport.addEventListener('dblclick', function () {
+        if (chartView.fitMode) chartViewerActualSize(); else chartViewerFit();
+    });
+}
+
+function chartViewerBindKeys() {
+    document.addEventListener('keydown', function (e) {
+        const els = chartViewEls();
+        if (!els.modal || els.modal.style.display !== 'flex') return;
+
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        let handled = true;
+        switch (e.key) {
+            case 'Escape': closeChartViewModal(); break;
+            case '+': case '=': chartViewerZoomBy(1.25); break;
+            case '-': case '_': chartViewerZoomBy(0.8); break;
+            case '0': chartViewerFit(); break;
+            case '1': chartViewerActualSize(); break;
+            case 'r': case 'R': chartViewerRotate(90); break;
+            case 'l': case 'L': chartViewerRotate(-90); break;
+            case 'h': case 'H': chartViewerFlip('h'); break;
+            case 'v': case 'V': chartViewerFlip('v'); break;
+            case 'f': case 'F': chartViewerToggleFullscreen(); break;
+            case 'ArrowLeft': chartView.x += 40; chartViewerClamp(); chartViewerApply(); break;
+            case 'ArrowRight': chartView.x -= 40; chartViewerClamp(); chartViewerApply(); break;
+            case 'ArrowUp': chartView.y += 40; chartViewerClamp(); chartViewerApply(); break;
+            case 'ArrowDown': chartView.y -= 40; chartViewerClamp(); chartViewerApply(); break;
+            default: handled = false;
+        }
+        if (handled) e.preventDefault();
+    });
+}
+
+let chartViewerBound = false;
+
+// Panning and key handling are global listeners, so bind them exactly once,
+// lazily, the first time the viewer is opened.
+function chartViewerEnsureBound() {
+    if (chartViewerBound) return;
+    chartViewerBound = true;
+    chartViewerBindPanning();
+    chartViewerBindKeys();
+}
+
 function openChartViewModal(index) {
+    chartViewerEnsureBound();
+
     if (window._chartInModal && window._chartSectionRef && window._chartOriginalParent) {
         window._chartOriginalParent.insertBefore(window._chartSectionRef, window._chartOriginalNextSibling);
         window._chartInModal = false;
@@ -4766,11 +6344,76 @@ function openChartViewModal(index) {
         return;
     }
 
-    const chartImage = window.currentProcedures[index].chart_image;
+    const item = window.currentProcedures[index];
+    const chartImage = item.chart_image;
 
-    document.getElementById("viewSavedChartImage").src = "data:image/jpeg;base64," + chartImage;
+    const els = chartViewEls();
+    if (!els.modal || !els.img) return;
 
-    document.getElementById("chartViewModal").style.display = "flex";
+    if (!chartImage) {
+        showToast("No saved chart image for this record.");
+        return;
+    }
+
+    els.img.src = "data:image/jpeg;base64," + chartImage;
+
+    // Show what the admin is actually looking at.
+    if (els.meta) {
+        const bits = [];
+        if (item.procedure) bits.push(item.procedure);
+        if (item.dentist) bits.push(item.dentist);
+        if (item.date) bits.push(item.date);
+        els.meta.textContent = bits.join('   ·   ');
+        els.meta.dataset.name = item.procedure || item.dentist || 'dental-chart';
+    }
+
+    // Start from a clean, inert state: the previous record's transform must
+    // not be painted against the new, not-yet-decoded image.
+    chartView.ready = false;
+    chartView.failed = false;
+    chartViewerSetLoading(true, false);
+    chartViewerReset();
+
+    els.modal.style.display = 'flex';
+
+    // Lock the page behind while the viewer is open, and restore exactly
+    // what was there before.
+    chartView.prevBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // naturalWidth is only known once the data URL has decoded. Lay out once,
+    // on whichever of these comes first, and not before.
+    function settle() {
+        if (!els.img.naturalWidth) {
+            chartView.failed = true;
+            chartView.ready = false;
+            chartViewerSetLoading(true, true);
+            chartViewerApply();
+            return;
+        }
+        chartView.ready = true;
+        chartViewerSetLoading(false, false);
+        chartViewerRelayout();
+    }
+
+    if (els.img.complete) {
+        // complete + no naturalWidth means a cached failure, not a pending load
+        settle();
+    } else {
+        els.img.onload = function () {
+            els.img.onload = null;
+            els.img.onerror = null;
+            settle();
+        };
+        els.img.onerror = function () {
+            els.img.onload = null;
+            els.img.onerror = null;
+            chartView.failed = true;
+            chartView.ready = false;
+            chartViewerSetLoading(true, true);
+            chartViewerApply();
+        };
+    }
 }
 
 function closeLiveChartModal() {
@@ -4799,12 +6442,45 @@ function closeLiveChartModal() {
 }
 
 function closeChartViewModal() {
-    const modal = document.getElementById('chartViewModal');
-    if (modal) {
-        modal.style.display = 'none';
-        const img = document.getElementById('viewSavedChartImage');
-        if (img) img.src = '';
+    const els = chartViewEls();
+    if (!els.modal) return;
+
+    els.modal.style.display = 'none';
+
+    // Drop the handlers first, so a decode that lands after close cannot
+    // re-run the layout against a hidden modal.
+    if (els.img) {
+        els.img.onload = null;
+        els.img.onerror = null;
+        els.img.src = '';
+        els.img.style.transform = '';
     }
+
+    chartView.ready = false;
+    chartView.failed = false;
+    chartViewerSetLoading(false, false);
+
+    if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+    }
+    const fsBtn = document.getElementById('chartFullscreenBtn');
+    const fsIcon = fsBtn ? fsBtn.querySelector('.material-symbols-rounded') : null;
+    if (fsIcon) fsIcon.textContent = 'fullscreen';
+
+    if (chartView.prevBodyOverflow !== null) {
+        document.body.style.overflow = chartView.prevBodyOverflow;
+        chartView.prevBodyOverflow = null;
+    }
+
+    chartView.drag = null;
+    chartView.scale = 1;
+    chartView.baseScale = 1;
+    chartView.x = 0;
+    chartView.y = 0;
+    chartView.rot = 0;
+    chartView.flipH = false;
+    chartView.flipV = false;
+    chartView.fitMode = true;
 }
 
 // Close live chart modal on backdrop click
@@ -4815,10 +6491,14 @@ window.addEventListener('click', function(e) {
     }
 });
 
-// Close chart view modal on backdrop click
-window.addEventListener('click', function(e) {
-    const modal = document.getElementById('chartViewModal');
-    if (e.target === modal) {
+// Saved chart viewer: deliberately NOT closable by a backdrop click. The
+// panel is a body-level popup, so a click anywhere - including the modal
+// behind it - would otherwise dismiss the viewer mid-zoom. Use the X, the
+// Escape key, or (for a fullscreen viewer) the browser's own Escape.
+document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    const viewer = document.getElementById('chartViewModal');
+    if (viewer && viewer.style.display === 'flex') {
         closeChartViewModal();
     }
 });
@@ -5081,6 +6761,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (newApptBtn) {
         newApptBtn.addEventListener('click', () => {
             document.getElementById('newApptModal').style.display = 'flex';
+            // Always reopen on the first step of the two-step wizard.
+            if (typeof window.admResetWizard === 'function') window.admResetWizard();
         });
     }
 
@@ -5295,6 +6977,138 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // ---------------------------------------------------------------
+    // Two-step wizard for the appointment modal.
+    // Step 1 holds the appointment fields, step 2 the informed consent
+    // and the signature. Both live inside #newApptForm, so submitting
+    // still posts one FormData with every field.
+    // ---------------------------------------------------------------
+    (function () {
+        const modal = document.getElementById('newApptModal');
+        const form = document.getElementById('newApptForm');
+        const pages = modal ? Array.from(modal.querySelectorAll('.adm-page')) : [];
+        const tabs = modal ? Array.from(modal.querySelectorAll('.adm-step')) : [];
+        const backBtn = document.getElementById('admStepBack');
+        const nextBtn = document.getElementById('admStepNext');
+        const submitBtn = document.getElementById('admSubmitBtn');
+        const statusText = document.getElementById('admStepStatus');
+        const signDate = document.getElementById('admSignDate');
+        const signName = document.getElementById('admSignPatientName');
+        const TOTAL = pages.length || 1;
+
+        if (!modal || !form || !pages.length || !backBtn || !nextBtn) return;
+
+        function currentStep() {
+            const active = pages.find(function (p) { return p.classList.contains('is-active'); });
+            return active ? Number(active.getAttribute('data-adm-step')) || 1 : 1;
+        }
+
+        function showStep(step) {
+            /* Clamp: an out-of-range value would leave every page hidden and
+               strand the admin in a blank modal. */
+            step = Math.min(TOTAL, Math.max(1, step || 1));
+
+            pages.forEach(function (page) {
+                const on = Number(page.getAttribute('data-adm-step')) === step;
+                page.classList.toggle('is-active', on);
+                page.hidden = !on;
+            });
+
+            tabs.forEach(function (tab) {
+                const n = Number(tab.getAttribute('data-adm-step-tab'));
+                tab.classList.toggle('is-active', n === step);
+                tab.classList.toggle('is-done', n < step);
+            });
+
+            const last = step >= TOTAL;
+            backBtn.hidden = step <= 1;
+            nextBtn.hidden = last;
+            submitBtn.hidden = !last;
+            if (statusText) statusText.textContent = 'Step ' + step + ' of ' + TOTAL;
+
+            // The custom <select> panels are children of step 1 and must not
+            // stay open behind a page that is now hidden.
+            modal.querySelectorAll('.adm-select-panel, .custom-select-dropdown')
+                .forEach(function (panel) { panel.style.display = 'none'; });
+
+            // Keep the signature metadata in step with what was booked.
+            if (!last) return;
+
+            if (signDate) {
+                signDate.textContent = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+            }
+            if (signName) {
+                const mode = document.querySelector('input[name="patientMode"]:checked');
+                const pick = document.getElementById('admPatientSelect');
+                let name = '';
+                if (mode && mode.value === 'existing') {
+                    name = pick && pick.selectedIndex > 0 ? pick.options[pick.selectedIndex].text : '';
+                } else {
+                    const first = document.getElementById('admFirstName');
+                    const lastName = document.getElementById('admLastName');
+                    name = [first && first.value, lastName && lastName.value]
+                        .filter(Boolean).join(' ').trim();
+                }
+                signName.textContent = name || 'this patient';
+            }
+        }
+
+        /* Step 1 only. #admConsentCheck lives on step 2, so it is briefly
+           taken out of native validation - otherwise the browser would try
+           to focus a checkbox the admin cannot see yet. */
+        function validateStepOne() {
+            const dateInput = document.getElementById('admApptDate');
+            const timeInput = document.getElementById('admApptTime');
+            if (dateInput && !dateInput.value) {
+                showToast('Please select the appointment date.');
+                dateInput.focus();
+                return false;
+            }
+            if (timeInput && !timeInput.value) {
+                showToast('Please select the appointment time.');
+                timeInput.focus();
+                return false;
+            }
+
+            const consent = document.getElementById('admConsentCheck');
+            const wasRequired = consent ? consent.required : false;
+            if (consent) consent.required = false;
+            const ok = form.reportValidity();
+            if (consent) consent.required = wasRequired;
+
+            if (!ok) {
+                showToast('Please complete the required fields before continuing.');
+                return false;
+            }
+            return true;
+        }
+
+        function advance() {
+            if (validateStepOne()) showStep(currentStep() + 1);
+        }
+
+        nextBtn.addEventListener('click', advance);
+        backBtn.addEventListener('click', function () {
+            showStep(Math.max(1, currentStep() - 1));
+        });
+
+        /* Enter inside a step-1 field would otherwise submit the form while
+           the consent and signature are still hidden. Advance instead. */
+        pages[0].addEventListener('keydown', function (e) {
+            if (e.key !== 'Enter' || e.shiftKey) return;
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'textarea' || tag === 'button') return;
+            e.preventDefault();
+            advance();
+        });
+
+        // Reopening the modal always starts from step 1.
+        window.admResetWizard = function () { showStep(1); };
+        showStep(1);
+    })();
+
     // These are called from inline onchange/onclick attributes in the HTML,
     // which resolve names on `window` — so expose them explicitly since they
     // are now declared inside this DOMContentLoaded callback's local scope.
@@ -5310,8 +7124,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // browser popup from opening and draw our own listbox instead.
     // ---------------------------------------------------------------
     (function () {
+        // The custom listbox is used by more than one modal now. Each root
+        // names the scroll container the panel should size itself against.
         const modal = document.getElementById('newApptModal');
-        if (!modal) return;
+        const roots = [
+            // Short side pane: flipping keeps the panel on screen.
+            { el: modal, scroller: '.adm-form-side', allowFlip: true },
+            // Tall scrolling bodies: always open downwards.
+            { el: document.getElementById('editPatientModal'), scroller: '.ep-body', allowFlip: false },
+            { el: document.getElementById('checkInfoModal'), scroller: '.ci-table-scroll', allowFlip: false }
+        ].filter(function (r) { return r.el; });
+
+        if (!roots.length) return;
 
         const CHECK_SVG =
             '<svg class="adm-select-check" viewBox="0 0 24 24" fill="none" ' +
@@ -5320,42 +7144,138 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let openWrap = null;
 
+        function menuOf(wrap) {
+            return wrap.admMenu || wrap.querySelector('.adm-select-menu');
+        }
+
+        // Put the panel back inside its wrapper. It is moved to <body> while
+        // open (see positionMenu) so the modal's scroll container cannot
+        // clip it, which is the same reason flatpickr's calendar escapes the
+        // dialog. Restoring it keeps the DOM and the scoped CSS intact.
+        function parkMenu(wrap) {
+            const menu = menuOf(wrap);
+            if (!menu) return;
+            menu.classList.remove('is-open', 'is-open-up');
+            // Already home - nothing to undo.
+            if (menu.parentNode === wrap) return;
+            menu.style.position = '';
+            menu.style.left = '';
+            menu.style.top = '';
+            menu.style.width = '';
+            menu.style.minWidth = '';
+            menu.style.maxWidth = '';
+            menu.style.maxHeight = '';
+            wrap.appendChild(menu);
+        }
+
         function closeAll() {
             if (!openWrap) return;
             openWrap.classList.remove('is-open', 'is-open-up');
+            parkMenu(openWrap);
             const s = openWrap.querySelector('select');
             if (s) s.setAttribute('aria-expanded', 'false');
             openWrap = null;
         }
 
-        // The form pane scrolls, so the panel must fit the visible space and
-        // flip upward when there is not enough room below the trigger.
-        function positionMenu(wrap) {
+        // Position the panel as a body-level popup. Because it no longer
+        // lives inside the trigger's wrapper, it is anchored to the trigger's
+        // viewport rect and simply cannot be clipped by the modal.
+        function positionMenu(wrap, keepScroll) {
             const select = wrap.querySelector('select');
-            const menu = wrap.querySelector('.adm-select-menu');
-            const scroller = wrap.closest('.adm-form-side');
+            const menu = menuOf(wrap);
             if (!select || !menu) return;
 
-            if (!scroller) {
-                menu.style.maxHeight = '';
-                return;
-            }
+            // Only nudge the trigger into view when the panel is opening;
+            // doing it on every reposition would fight the user's scroll.
+            if (!keepScroll) wrap.scrollIntoView({ block: 'nearest' });
 
-            wrap.scrollIntoView({ block: 'nearest' });
+            if (menu.parentNode !== document.body) {
+                document.body.appendChild(menu);
+            }
+            menu.classList.add('is-open');
+            menu.style.position = 'fixed';
 
             const trigger = select.getBoundingClientRect();
-            const box = scroller.getBoundingClientRect();
-            const gap = 10;
-            const below = box.bottom - trigger.bottom - gap;
-            const above = trigger.top - box.top - gap;
+            const gap = 6;
 
-            wrap.classList.toggle('is-open-up', below < 170 && above > below);
-            const room = wrap.classList.contains('is-open-up') ? above : below;
-            menu.style.maxHeight = Math.max(110, Math.min(230, room)) + 'px';
+            const below = window.innerHeight - trigger.bottom - gap;
+            const above = trigger.top - gap;
+
+            const natural = menu.scrollHeight || 0;
+            const need = Math.min(natural, 230) || 150;
+
+            // Only flip when there is genuinely more room above, otherwise
+            // stay below and let the panel be short.
+            const mayFlip = below < need && above > below;
+            wrap.classList.toggle('is-open-up', mayFlip);
+            menu.classList.toggle('is-open-up', mayFlip);
+
+            // At least as wide as the trigger, but free to grow so long
+            // procedure names are readable, capped so it stays on screen.
+            const vw = window.innerWidth;
+            const maxW = Math.min(440, vw - 16);
+            menu.style.minWidth = trigger.width + 'px';
+            menu.style.width = 'max-content';
+            menu.style.maxWidth = maxW + 'px';
+
+            // Never let it hang off either edge.
+            let left = Math.max(8, trigger.left);
+            const width = menu.offsetWidth || trigger.width;
+            if (left + width > vw - 8) left = Math.max(8, vw - 8 - width);
+            menu.style.left = left + 'px';
+
+            if (mayFlip) {
+                const room = Math.max(110, Math.min(230, above));
+                menu.style.maxHeight = room + 'px';
+                menu.style.top = Math.max(gap, trigger.top - gap - room) + 'px';
+            } else {
+                const room = Math.max(110, Math.min(230, below));
+                menu.style.maxHeight = room + 'px';
+                menu.style.top = (trigger.bottom + gap) + 'px';
+            }
+        }
+
+        // Follow the trigger when the page or the table scrolls. The panel
+        // is anchored to viewport coordinates, so without this it would
+        // detach; and scrolling INSIDE the panel must be left alone.
+        function repositionOpenMenu() {
+            if (!openWrap) return;
+            const menu = menuOf(openWrap);
+            const select = openWrap.querySelector('select');
+            if (!select) {
+                closeAll();
+                return;
+            }
+            const r = select.getBoundingClientRect();
+            // Trigger scrolled out of sight - nothing useful left to show.
+            if (r.bottom < 0 || r.top > window.innerHeight) {
+                closeAll();
+                return;
+            }
+            positionMenu(openWrap, true);
         }
 
         document.addEventListener('click', function (e) {
-            if (openWrap && !openWrap.contains(e.target)) closeAll();
+            if (!openWrap) return;
+            // The panel is parked on <body> while open, so it is no longer
+            // inside the wrapper: a click on an option must NOT count as
+            // "outside" and close the list before the option is chosen.
+            const menu = menuOf(openWrap);
+            if (openWrap.contains(e.target)) return;
+            if (menu && menu.contains(e.target)) return;
+            closeAll();
+        });
+        // The panel is positioned against viewport coordinates, so a scroll
+        // has to move it with its trigger. Scrolling inside the panel is
+        // ignored: that is the panel's own long option list being read.
+        window.addEventListener('scroll', function (e) {
+            if (!openWrap) return;
+            const menu = menuOf(openWrap);
+            if (menu && (e.target === menu || (menu.contains && menu.contains(e.target)))) return;
+            repositionOpenMenu();
+        }, true);
+        window.addEventListener('resize', function () {
+            if (openWrap) closeAll();
         });
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && openWrap) {
@@ -5367,7 +7287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function render(wrap) {
             const select = wrap.querySelector('select');
-            const menu = wrap.querySelector('.adm-select-menu');
+            const menu = menuOf(wrap);
             if (!select || !menu) return;
 
             menu.textContent = '';
@@ -5404,7 +7324,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function move(step) {
             const wrap = openWrap;
             if (!wrap) return;
-            const menu = wrap.querySelector('.adm-select-menu');
+            const menu = menuOf(wrap);
             const select = wrap.querySelector('select');
             const items = Array.from(menu.querySelectorAll('.adm-select-option:not(.is-disabled)'));
             if (!items.length) return;
@@ -5416,19 +7336,27 @@ document.addEventListener('DOMContentLoaded', function() {
             select.setAttribute('aria-activedescendant', next.dataset.index);
         }
 
-        modal.querySelectorAll('select').forEach(function (select) {
-            if (select.dataset.admEnhanced === '1') return;
-            select.dataset.admEnhanced = '1';
+        // Enhance every <select> inside a container. Exposed so the
+        // Treatment Information table can re-use this component for the rows
+        // it builds on demand; the admEnhanced flag keeps it idempotent.
+        function enhanceSelectsIn(container, scroller, allowFlip) {
+            if (!container) return;
+            container.querySelectorAll('select').forEach(function (select) {
+                if (select.dataset.admEnhanced === '1') return;
+                select.dataset.admEnhanced = '1';
 
-            const wrap = document.createElement('div');
-            wrap.className = 'adm-select';
-            select.parentNode.insertBefore(wrap, select);
-            wrap.appendChild(select);
+                const wrap = document.createElement('div');
+                wrap.className = 'adm-select';
+                wrap.admScroller = scroller || '.adm-form-side';
+                wrap.admAllowFlip = allowFlip;
+                select.parentNode.insertBefore(wrap, select);
+                wrap.appendChild(select);
 
             const menu = document.createElement('ul');
             menu.className = 'adm-select-menu';
             menu.setAttribute('role', 'listbox');
             wrap.appendChild(menu);
+            wrap.admMenu = menu;
 
             select.setAttribute('aria-haspopup', 'listbox');
             select.setAttribute('aria-expanded', 'false');
@@ -5494,7 +7422,35 @@ document.addEventListener('DOMContentLoaded', function() {
                 select.dispatchEvent(new Event('change', { bubbles: true }));
                 closeAll();
                 select.focus();
+                });
             });
+        }
+
+        // Undo enhanceSelectsIn() for a subtree that is about to be removed.
+        function destroySelectsIn(container) {
+            if (!container) return;
+            if (openWrap && container.contains(openWrap)) closeAll();
+            container.querySelectorAll('.adm-select').forEach(function (wrap) {
+                const select = wrap.querySelector('select');
+                const menu = menuOf(wrap);
+                // A panel left on <body> would otherwise outlive its row.
+                if (menu && menu.parentNode === document.body) {
+                    menu.classList.remove('is-open', 'is-open-up');
+                    document.body.removeChild(menu);
+                }
+                if (select) {
+                    select.dataset.admEnhanced = '0';
+                    if (select.parentNode === wrap) wrap.parentNode.insertBefore(select, wrap);
+                }
+                wrap.remove();
+            });
+        }
+
+        window.admEnhanceSelects = enhanceSelectsIn;
+        window.admDestroySelects = destroySelectsIn;
+
+        roots.forEach(function (root) {
+            enhanceSelectsIn(root.el, root.scroller, root.allowFlip);
         });
 
         // ---------------------------------------------------------------
@@ -5533,10 +7489,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // The visible control is now flatpickr's alt input; keep the
             // real inputs out of sight but still holding their values.
-            modal.querySelectorAll('.adm-date-native').forEach(function (input) {
-                input.style.display = 'none';
-                input.removeAttribute('required');
-            });
+            if (modal) {
+                modal.querySelectorAll('.adm-date-native').forEach(function (input) {
+                    input.style.display = 'none';
+                    input.removeAttribute('required');
+                });
+            }
         }
     })();
 });
@@ -5660,56 +7618,60 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* ===== Custom option panel (native popup is not stylable) ===== */
-#newApptModal .adm-select {
+.adm-select {
     position: relative;
     width: 100%;
     margin: 5px 0;
 }
-#newApptModal .adm-select > select:not([type="radio"]):not([type="checkbox"]) {
+.adm-select > select:not([type="radio"]):not([type="checkbox"]) {
     margin: 0;
 }
-#newApptModal .adm-select.is-open > select {
+.adm-select.is-open > select {
     border-color: #0d47a1;
     background-color: #e8f2ff;
     box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
 }
-#newApptModal .adm-select-menu {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(100% + 6px);
-    z-index: 60;
-    display: none;
-    margin: 0;
-    padding: 6px;
-    list-style: none;
-    max-height: 230px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    background: #ffffff;
-    border: 1px solid #d5dde8;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
-    -webkit-overflow-scrolling: touch;
-}
-#newApptModal .adm-select.is-open .adm-select-menu {
-    display: block;
-}
-#newApptModal .adm-select.is-open-up .adm-select-menu {
-    top: auto;
-    bottom: calc(100% + 6px);
-}
-#newApptModal .adm-select-menu::-webkit-scrollbar {
+    /* The panel is moved to <body> while open (same reason flatpickr's
+       calendar escapes the dialog) and anchored to the trigger's viewport
+       rect by positionMenu(). It therefore must not be positioned by its
+       wrapper, and it has to sit above every modal. */
+    .adm-select-menu {
+        position: fixed;
+        z-index: 100050;
+        display: none;
+        margin: 0;
+        padding: 6px;
+        list-style: none;
+        max-height: 230px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        background: #ffffff;
+        border: 1px solid #d5dde8;
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
+        -webkit-overflow-scrolling: touch;
+    }
+    /* Driven by the panel's own class, because the panel is not a child of
+       the wrapper while it is open. */
+    .adm-select-menu.is-open,
+    .adm-select.is-open .adm-select-menu {
+        display: block;
+    }
+
+/* Flipped panels get their top/bottom from positionMenu(), which writes
+   inline styles against the viewport rect, so nothing is needed here. */
+
+.adm-select-menu::-webkit-scrollbar {
     width: 8px;
 }
-#newApptModal .adm-select-menu::-webkit-scrollbar-thumb {
+.adm-select-menu::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 999px;
 }
-#newApptModal .adm-select-menu::-webkit-scrollbar-track {
+.adm-select-menu::-webkit-scrollbar-track {
     background: transparent;
 }
-#newApptModal .adm-select-option {
+.adm-select-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -5721,58 +7683,63 @@ document.addEventListener('DOMContentLoaded', function() {
     color: #1f2937;
     cursor: pointer;
     transition: background-color 0.12s ease, color 0.12s ease;
+    /* Procedure names are long words. positionMenu() sizes the panel, so
+       wrap here rather than clip or spill out of it. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-height: 36px;
 }
-#newApptModal .adm-select-option:hover,
-#newApptModal .adm-select-option.is-active {
+.adm-select-option:hover,
+.adm-select-option.is-active {
     background: #eff6ff;
     color: #0d47a1;
 }
-#newApptModal .adm-select-option.is-selected {
+.adm-select-option.is-selected {
     background: #dbeafe;
     color: #0d47a1;
     font-weight: 700;
 }
-#newApptModal .adm-select-option.is-disabled {
+.adm-select-option.is-disabled {
     color: #9aa6b6;
     cursor: not-allowed;
     background: transparent;
 }
-#newApptModal .adm-select-option .adm-select-check {
+.adm-select-option .adm-select-check {
     flex: 0 0 auto;
     width: 15px;
     height: 15px;
     opacity: 0;
 }
-#newApptModal .adm-select-option.is-selected .adm-select-check {
+.adm-select-option.is-selected .adm-select-check {
     opacity: 1;
 }
-#newApptModal .adm-select-empty {
+.adm-select-empty {
     padding: 12px;
     font-size: 13px;
     color: #94a3b8;
     text-align: center;
 }
-body.dark-mode #newApptModal .adm-select-menu {
+body.dark-mode .adm-select-menu {
     background: #1e293b;
     border-color: #334155;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
-body.dark-mode #newApptModal .adm-select-menu::-webkit-scrollbar-thumb {
+body.dark-mode .adm-select-menu::-webkit-scrollbar-thumb {
     background: #475569;
 }
-body.dark-mode #newApptModal .adm-select-option {
+body.dark-mode .adm-select-option {
     color: #cbd5e1;
 }
-body.dark-mode #newApptModal .adm-select-option:hover,
-body.dark-mode #newApptModal .adm-select-option.is-active {
+body.dark-mode .adm-select-option:hover,
+body.dark-mode .adm-select-option.is-active {
     background: #1e3a8a;
     color: #dbeafe;
 }
-body.dark-mode #newApptModal .adm-select-option.is-selected {
+body.dark-mode .adm-select-option.is-selected {
     background: #1d4ed8;
     color: #ffffff;
 }
-body.dark-mode #newApptModal .adm-select-empty {
+body.dark-mode .adm-select-empty {
     color: #94a3b8;
 }
 
@@ -5840,7 +7807,7 @@ body.dark-mode #newApptModal .adm-select-empty {
     outline: none;
     box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
 }
-#newApptModal .adm-select .flatpickr-input {
+.adm-select .flatpickr-input {
     margin: 0;
 }
 #newApptModal .adm-form-side .flatpickr {
@@ -5941,6 +7908,331 @@ body.dark-mode #newApptModal .adm-form-side .flatpickr-input:focus {
     background: #d0d0d0;
     border-color: #999;
 }
+
+/* =========================================
+   TWO-STEP APPOINTMENT WIZARD
+   The consent text and signature used to sit in
+   a second column beside the form. They now live
+   on step 2 so the modal is one focused task at a
+   time. The inner panes keep their original class
+   names, so every existing input style above still
+   applies without modification.
+   ========================================= */
+
+/* --- Step indicator --- */
+#newApptModal .adm-steps {
+    display: flex;
+    align-items: stretch;
+    margin: 0;
+    padding: 0 30px;
+    list-style: none;
+    background: #f8fafc;
+    border-bottom: 1px solid #dee2e6;
+    flex-shrink: 0;
+}
+#newApptModal .adm-step {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
+    margin-right: 28px;
+    color: #64748b;
+    transition: color 0.2s ease;
+}
+#newApptModal .adm-step:last-child { margin-right: 0; }
+#newApptModal .adm-step + .adm-step { padding-left: 28px; }
+/* Connector between the two steps. */
+#newApptModal .adm-step + .adm-step::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 50%;
+    width: 28px; height: 2px;
+    transform: translateY(-50%);
+    background: #cbd5e1;
+    transition: background-color 0.2s ease;
+}
+#newApptModal .adm-step__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px; height: 30px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+#newApptModal .adm-step__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+#newApptModal .adm-step__title { font-size: 14px; font-weight: 700; }
+#newApptModal .adm-step__hint { font-size: 11.5px; opacity: 0.85; }
+
+#newApptModal .adm-step.is-active { color: #0d47a1; }
+#newApptModal .adm-step.is-active .adm-step__num {
+    background: #0d47a1;
+    border-color: #0d47a1;
+    color: #ffffff;
+}
+/* Completed step: filled, but calmer than the current one. */
+#newApptModal .adm-step.is-done { color: #15803d; }
+#newApptModal .adm-step.is-done .adm-step__num {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #ffffff;
+}
+#newApptModal .adm-step.is-done + .adm-step::before { background: #22c55e; }
+
+/* --- Page switching --- */
+#newApptModal .adm-modal-body { flex-direction: column; }
+#newApptModal .adm-wizard {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+#newApptModal .adm-page { display: none; flex-direction: column; }
+#newApptModal .adm-page.is-active { display: flex; flex: 1; min-height: 0; }
+#newApptModal .adm-page[hidden] { display: none; }
+
+/* Each pane is now the full width of the modal rather than one column. */
+#newApptModal .adm-page[data-adm-step="1"] .adm-form-side,
+#newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+    flex: 1 1 auto;
+    min-height: 0;
+    border-right: none;
+    overflow-y: auto;
+}
+
+/* Consent text is a reading column: cap the measure so the lines stay
+   legible on a 1600px-wide modal. */
+#newApptModal .adm-page[data-adm-step="2"] .adm-consent-side { background: #f8fafc; }
+#newApptModal .adm-page[data-adm-step="2"] .adm-consent-side > * {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* --- Wizard navigation --- */
+#newApptModal .adm-wizard-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 30px;
+    background: #ffffff;
+    border-top: 1px solid #dee2e6;
+    flex-shrink: 0;
+}
+#newApptModal .adm-wizard-nav__spacer { flex: 1; }
+#newApptModal .adm-wizard-nav__status {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+}
+
+#newApptModal .adm-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 11px 20px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #334155;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+#newApptModal .adm-nav-btn > .material-symbols-rounded {
+    font-size: 19px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+#newApptModal .adm-nav-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+#newApptModal .adm-nav-btn:active { transform: translateY(1px); }
+#newApptModal .adm-nav-btn:focus-visible { outline: 2px solid #0d47a1; outline-offset: 2px; }
+
+#newApptModal .adm-nav-btn--primary,
+#newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+    background: #0d47a1;
+    border: 1px solid #0d47a1;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.28);
+}
+#newApptModal .adm-nav-btn--primary:hover,
+#newApptModal .adm-wizard-nav button[type="submit"].btn-primary:hover {
+    background: #0b3c8c;
+    border-color: #0b3c8c;
+    filter: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 71, 161, 0.34);
+}
+#newApptModal .adm-nav-btn--primary:active,
+#newApptModal .adm-wizard-nav button[type="submit"].btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+}
+
+/* The legacy submit rule above is width:100% for a button at the foot of the
+   form column; inside the nav it becomes one of two equal-weight actions. */
+#newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+    display: inline-flex;
+    width: auto;
+    margin-top: 0;
+    padding: 11px 22px;
+    font-size: 14px;
+    border-radius: 9px;
+}
+
+/* --- Signature block (last thing on step 2) --- */
+#newApptModal .adm-consent-ack { margin-top: 22px; }
+#newApptModal .adm-sign-block {
+    margin-top: 22px;
+    padding: 18px 20px 16px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+#newApptModal .adm-sign-block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-bottom: 12px;
+}
+#newApptModal .adm-sign-block__label {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d47a1;
+}
+#newApptModal .adm-sign-block__meta {
+    margin: 0;
+    font-size: 12.5px;
+    color: #64748b;
+}
+#newApptModal .adm-sign-block__sep { margin: 0 6px; }
+#newApptModal .adm-sign-block__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+#newApptModal .adm-sign-block__actions .adm-sig-clear { margin-top: 0; }
+#newApptModal .adm-sign-block__hint { font-size: 12px; color: #64748b; }
+#newApptModal .adm-sign-block__line { margin-top: 18px; }
+#newApptModal .adm-sign-block__rule {
+    display: block;
+    height: 1px;
+    background: #cbd5e1;
+}
+#newApptModal .adm-sign-block__caption {
+    display: block;
+    margin-top: 6px;
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+    color: #94a3b8;
+}
+/* Dashed edge reads as a fill-in area rather than a disabled control. */
+#newApptModal .adm-sign-block .adm-sig-canvas {
+    display: block;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #fdfdfd;
+}
+
+/* --- Dark mode --- */
+body.dark-mode #newApptModal .adm-steps {
+    background: #16202e;
+    border-bottom-color: #2b3646;
+}
+body.dark-mode #newApptModal .adm-step { color: #8b98a9; }
+body.dark-mode #newApptModal .adm-step__num {
+    background: #1f2937;
+    border-color: #475569;
+    color: #8b98a9;
+}
+body.dark-mode #newApptModal .adm-step + .adm-step::before { background: #475569; }
+body.dark-mode #newApptModal .adm-step.is-active { color: #64b5f6; }
+body.dark-mode #newApptModal .adm-step.is-active .adm-step__num {
+    background: #0d47a1;
+    border-color: #64b5f6;
+    color: #ffffff;
+}
+body.dark-mode #newApptModal .adm-step.is-done { color: #4ade80; }
+body.dark-mode #newApptModal .adm-step.is-done .adm-step__num {
+    background: #15803d;
+    border-color: #4ade80;
+    color: #ffffff;
+}
+body.dark-mode #newApptModal .adm-step.is-done + .adm-step::before { background: #15803d; }
+
+body.dark-mode #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side { background: #16202e; }
+body.dark-mode #newApptModal .adm-wizard-nav {
+    background: #1a2433;
+    border-top-color: #2b3646;
+}
+body.dark-mode #newApptModal .adm-wizard-nav__status { color: #8b98a9; }
+body.dark-mode #newApptModal .adm-nav-btn {
+    background: #1f2937;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+body.dark-mode #newApptModal .adm-nav-btn:hover { background: #334155; border-color: #64748b; }
+body.dark-mode #newApptModal .adm-nav-btn:focus-visible { outline-color: #64b5f6; }
+body.dark-mode #newApptModal .adm-nav-btn--primary,
+body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+    background: #0d47a1;
+    border-color: #d4af37;
+    color: #0b1220;
+}
+body.dark-mode #newApptModal .adm-nav-btn--primary:hover,
+body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary:hover {
+    background: #164e9e;
+    border-color: #d4af37;
+}
+body.dark-mode #newApptModal .adm-sign-block {
+    background: #1f2937;
+    border-color: #475569;
+    box-shadow: none;
+}
+body.dark-mode #newApptModal .adm-sign-block__label { color: #64b5f6; }
+body.dark-mode #newApptModal .adm-sign-block__meta,
+body.dark-mode #newApptModal .adm-sign-block__hint { color: #94a3b8; }
+body.dark-mode #newApptModal .adm-sign-block__rule { background: #475569; }
+body.dark-mode #newApptModal .adm-sign-block__caption { color: #64748b; }
+body.dark-mode #newApptModal .adm-sign-block .adm-sig-canvas {
+    border-color: #475569;
+    background: #111827;
+}
+
 #newApptModal .adm-patient-toggle {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -6311,6 +8603,35 @@ body.dark-mode #newApptModal .adm-yn label:has(input[value="No"]:checked) {
     #newApptModal button[type="submit"].btn-primary {
         margin-bottom: max(18px, env(safe-area-inset-bottom));
     }
+
+    /* Wizard on small screens: the wizard itself scrolls and the nav bar
+       sticks to its bottom, instead of each pane scrolling separately. */
+    #newApptModal .adm-modal-body { overflow: hidden; }
+    #newApptModal .adm-wizard {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    #newApptModal .adm-page.is-active { display: block; flex: none; }
+    #newApptModal .adm-page[data-adm-step="1"] .adm-form-side,
+    #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+        width: 100%;
+        min-height: 0;
+        overflow: visible;
+        border-right: none;
+    }
+    #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side > * { max-width: none; }
+    #newApptModal .adm-wizard-nav {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        padding: 12px 16px;
+        padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+    #newApptModal .adm-wizard-nav button[type="submit"].btn-primary { margin-bottom: 0; }
+    #newApptModal .adm-steps { padding: 0 16px; }
+    #newApptModal .adm-step { margin-right: 18px; }
+    #newApptModal .adm-step + .adm-step { padding-left: 18px; }
+    #newApptModal .adm-step + .adm-step::before { width: 18px; }
 }
 
 @media (max-width: 480px) {
@@ -6318,6 +8639,13 @@ body.dark-mode #newApptModal .adm-yn label:has(input[value="No"]:checked) {
     #newApptModal .adm-form-side {
         padding: 12px;
     }
+    /* Not enough width for title + hint side by side. */
+    #newApptModal .adm-step__hint { display: none; }
+    #newApptModal .adm-wizard-nav { gap: 8px; padding: 10px 12px; }
+    #newApptModal .adm-wizard-nav__status { display: none; }
+    #newApptModal .adm-nav-btn { padding: 10px 14px; font-size: 13.5px; }
+    #newApptModal .adm-wizard-nav button[type="submit"].btn-primary { padding: 10px 16px; }
+    #newApptModal .adm-sign-block { padding: 14px 14px 12px; }
     #newApptModal .adm-modal-header {
         padding: 14px 16px;
     }
@@ -6417,7 +8745,7 @@ body.dark-mode #newApptModal .adm-form-side .adm-date-alt {
    and the arrow cannot tile across the field. Matches the patient-side rules
    for #appointmentForm .adm-select > select. */
 body.dark-mode #newApptModal .adm-form-side select,
-body.dark-mode #newApptModal .adm-select > select {
+body.dark-mode .adm-select > select {
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -6428,7 +8756,7 @@ body.dark-mode #newApptModal .adm-select > select {
 }
 body.dark-mode #newApptModal .adm-form-side select:hover,
 body.dark-mode #newApptModal .adm-form-side select:focus,
-body.dark-mode #newApptModal .adm-select.is-open > select {
+body.dark-mode .adm-select.is-open > select {
     border-color: #64b5f6;
     box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
     background: #262626
@@ -6686,32 +9014,33 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
         <button type="button" class="modal-x" aria-label="Close" onclick="document.getElementById('newApptModal').style.display='none'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
 
+    <!-- Step indicator -->
+    <ol class="adm-steps" id="admSteps">
+        <li class="adm-step is-active" data-adm-step-tab="1">
+            <span class="adm-step__num" aria-hidden="true">1</span>
+            <span class="adm-step__text">
+                <span class="adm-step__title">Appointment Details</span>
+                <span class="adm-step__hint">Patient, schedule &amp; medical history</span>
+            </span>
+        </li>
+        <li class="adm-step" data-adm-step-tab="2">
+            <span class="adm-step__num" aria-hidden="true">2</span>
+            <span class="adm-step__text">
+                <span class="adm-step__title">Consent &amp; Signature</span>
+                <span class="adm-step__hint">Read the consent, then sign</span>
+            </span>
+        </li>
+    </ol>
+
     <div class="adm-modal-body">
-        <div class="adm-consent-side">
-        <h3>Informed Consent</h3>
-        <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits &amp; cost have been fully explained. These include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics &amp; surgical cases.</p>
-        <p><strong>DRUGS &amp; MEDICATIONS:</strong> I understand that antibiotics, analgesics, &amp; other medications can cause allergic reactions like redness &amp; swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
-        <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be necessary to change/add procedures because of conditions found while working on the teeth that were not discovered during examination.</p>
-        <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or radiograph may be necessary as part of diagnostic aid, but that will not give a 100% assurance for the accuracy of the treatment.</p>
-        <p><strong>REMOVAL OF TEETH:</strong> I understand alternatives to tooth removal exist and I authorize the dentist to proceed after these have been explained to me.</p>
-        <p><strong>CROWNS (CAPS) &amp; BRIDGES:</strong> Preparing a tooth may irritate the nerve tissue, leaving it sensitive to heat, cold &amp; pressure.</p>
-        <p><strong>ENDODONTICS (ROOT CANAL):</strong> There is no guarantee that a root canal treatment will save a tooth.</p>
-        <p><strong>PERIODONTAL DISEASE:</strong> This is a serious condition causing gum &amp; bone inflammation and/or loss.</p>
-        <p><strong>FILLINGS:</strong> Care must be exercised in chewing on a new filling, especially during the first 24 hours.</p>
-        <p><strong>DENTURES:</strong> Wearing dentures can be difficult at first — sore spots, altered speech &amp; difficulty eating are common.</p>
-        <hr>
-        <p style="font-style:italic;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
+      <!-- One form spans both steps so the consent checkbox and the signature
+           are submitted together with the appointment fields. -->
+      <form id="newApptForm" class="adm-wizard">
 
-        <p style="font-weight:600;margin-top:16px;">Patient Signature:</p>
-        <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
-        <div style="margin-top:6px;">
-            <button type="button" class="adm-sig-clear" onclick="admClearSignature()">Clear</button>
-        </div>
-    </div>
-
+        <!-- ============ STEP 1 : APPOINTMENT DETAILS ============ -->
+        <section class="adm-page is-active" data-adm-step="1" aria-label="Appointment details">
         <div class="adm-form-side">
         <h2>Appointment Details</h2>
-        <form id="newApptForm">
 
             <!-- Patient Type -->
             <div class="form-group">
@@ -7114,29 +9443,84 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
                     </label>
                 </div>
             </div>
+        </div><!-- /.adm-form-side -->
+        </section><!-- /step 1 -->
 
+        <!-- ============ STEP 2 : INFORMED CONSENT + SIGNATURE ============ -->
+        <section class="adm-page" data-adm-step="2" aria-label="Informed consent and signature" hidden>
+        <div class="adm-consent-side">
+        <h3>Informed Consent</h3>
+        <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment done by the dentist after the procedure, risk, benefits &amp; cost have been fully explained. These include, but are not limited to, X-rays, cleaning, periodontal treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or dentures, local anesthetics &amp; surgical cases.</p>
+        <p><strong>DRUGS &amp; MEDICATIONS:</strong> I understand that antibiotics, analgesics, &amp; other medications can cause allergic reactions like redness &amp; swelling of tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
+        <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be necessary to change/add procedures because of conditions found while working on the teeth that were not discovered during examination.</p>
+        <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or radiograph may be necessary as part of diagnostic aid, but that will not give a 100% assurance for the accuracy of the treatment.</p>
+        <p><strong>REMOVAL OF TEETH:</strong> I understand alternatives to tooth removal exist and I authorize the dentist to proceed after these have been explained to me.</p>
+        <p><strong>CROWNS (CAPS) &amp; BRIDGES:</strong> Preparing a tooth may irritate the nerve tissue, leaving it sensitive to heat, cold &amp; pressure.</p>
+        <p><strong>ENDODONTICS (ROOT CANAL):</strong> There is no guarantee that a root canal treatment will save a tooth.</p>
+        <p><strong>PERIODONTAL DISEASE:</strong> This is a serious condition causing gum &amp; bone inflammation and/or loss.</p>
+        <p><strong>FILLINGS:</strong> Care must be exercised in chewing on a new filling, especially during the first 24 hours.</p>
+        <p><strong>DENTURES:</strong> Wearing dentures can be difficult at first — sore spots, altered speech &amp; difficulty eating are common.</p>
+        <hr>
+        <p style="font-style:italic;">I understand that dentistry is not an exact science and that no dentist can properly guarantee accurate results all the time.</p>
 
-            <!-- Consent -->
-            <div class="form-group">
-                <label class="adm-consent-label">
-                    <input type="checkbox"
-                        id="admConsentCheck"
-                        required>
-                    <span class="adm-consent-check-text">
-                        I confirm that the patient information is correct.
-                    </span>
-                </label>
+        <!-- Consent acknowledgement -->
+        <div class="form-group adm-consent-ack">
+            <label class="adm-consent-label">
+                <input type="checkbox"
+                    id="admConsentCheck"
+                    required>
+                <span class="adm-consent-check-text">
+                    I confirm that the patient information is correct, and that the
+                    risks, benefits and costs of the proposed treatment have been explained to me.
+                </span>
+            </label>
+        </div>
+
+        <!-- Signature: last block on the page -->
+        <div class="adm-sign-block">
+            <div class="adm-sign-block__head">
+                <p class="adm-sign-block__label">Patient Signature</p>
+                <p class="adm-sign-block__meta">
+                    Signed on <span id="admSignDate">—</span>
+                    <span class="adm-sign-block__sep">&middot;</span>
+                    <span id="admSignPatientName">this patient</span>
+                </p>
             </div>
 
+            <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
 
-            <!-- Confirm -->
-            <button type="submit"
-                    class="btn btn-primary">
+            <div class="adm-sign-block__actions">
+                <button type="button" class="adm-sig-clear" onclick="admClearSignature()">Clear</button>
+                <span class="adm-sign-block__hint">Sign inside the box with a mouse, stylus or finger.</span>
+            </div>
+
+            <div class="adm-sign-block__line">
+                <span class="adm-sign-block__rule" aria-hidden="true"></span>
+                <span class="adm-sign-block__caption">Signature of Patient / Authorized Representative</span>
+            </div>
+        </div>
+        </div><!-- /.adm-consent-side -->
+        </section><!-- /step 2 -->
+
+        <!-- Wizard navigation -->
+        <footer class="adm-wizard-nav">
+            <button type="button" id="admStepBack" class="adm-nav-btn" hidden>
+                <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+                Back
+            </button>
+            <span class="adm-wizard-nav__status" id="admStepStatus">Step 1 of 2</span>
+            <span class="adm-wizard-nav__spacer"></span>
+            <button type="button" id="admStepNext" class="adm-nav-btn adm-nav-btn--primary">
+                Next
+                <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+            </button>
+            <button type="submit" id="admSubmitBtn" class="btn btn-primary adm-nav-btn adm-nav-btn--primary" hidden>
+                <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
                 Confirm Appointment
             </button>
+        </footer>
 
-        </form>
-      </div>
+      </form>
     </div>
   </div>
 </div>
@@ -7167,21 +9551,88 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
     <div class="chart-view-modal-content">
 
         <div class="chart-view-modal-header">
-            <h3>Saved Dental Chart</h3>
-
+            <div class="chart-view-heading">
+                <h3>Saved Dental Chart</h3>
+                <p class="chart-view-meta" id="chartViewMeta"></p>
+            </div>
             <button
                 class="chart-modal-close"
                 onclick="closeChartViewModal()"
-                title="Close">
-                <span class="material-symbols-rounded">close</span>
+                title="Close chart viewer"
+                aria-label="Close chart viewer">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
             </button>
         </div>
 
-        <div class="chart-view-modal-body">
+        <div class="chart-view-toolbar" role="toolbar" aria-label="Chart viewer controls">
+            <div class="chart-tool-group">
+                <button type="button" class="chart-tool-btn" id="chartZoomOutBtn" onclick="chartViewerZoomBy(0.8)" title="Zoom out (-)" aria-label="Zoom out">
+                    <span class="material-symbols-rounded" aria-hidden="true">zoom_out</span>
+                </button>
+                <output class="chart-zoom-readout" id="chartZoomReadout" aria-live="polite" aria-label="Zoom level">100%</output>
+                <button type="button" class="chart-tool-btn" id="chartZoomInBtn" onclick="chartViewerZoomBy(1.25)" title="Zoom in (+)" aria-label="Zoom in">
+                    <span class="material-symbols-rounded" aria-hidden="true">zoom_in</span>
+                </button>
+            </div>
+
+            <span class="chart-tool-sep" aria-hidden="true"></span>
+
+            <div class="chart-tool-group">
+                <button type="button" class="chart-tool-btn" onclick="chartViewerFit()" title="Fit to window (0)" aria-label="Fit to window">
+                    <span class="material-symbols-rounded" aria-hidden="true">fit_screen</span>
+                </button>
+                <button type="button" class="chart-tool-btn" onclick="chartViewerActualSize()" title="Actual size 1:1 (1)" aria-label="Actual size">
+                    <span class="material-symbols-rounded" aria-hidden="true">looks_one</span>
+                </button>
+                <button type="button" class="chart-tool-btn" onclick="chartViewerReset()" title="Reset all transforms" aria-label="Reset viewer">
+                    <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
+                </button>
+            </div>
+
+            <span class="chart-tool-sep" aria-hidden="true"></span>
+
+            <div class="chart-tool-group">
+                <button type="button" class="chart-tool-btn" onclick="chartViewerRotate(-90)" title="Rotate left" aria-label="Rotate left">
+                    <span class="material-symbols-rounded" aria-hidden="true">rotate_left</span>
+                </button>
+                <button type="button" class="chart-tool-btn" onclick="chartViewerRotate(90)" title="Rotate right" aria-label="Rotate right">
+                    <span class="material-symbols-rounded" aria-hidden="true">rotate_right</span>
+                </button>
+                <button type="button" class="chart-tool-btn" id="chartFlipHBtn" onclick="chartViewerFlip('h')" title="Flip horizontal" aria-label="Flip horizontal">
+                    <span class="material-symbols-rounded" aria-hidden="true">flip</span>
+                </button>
+                <button type="button" class="chart-tool-btn" id="chartFlipVBtn" onclick="chartViewerFlip('v')" title="Flip vertical" aria-label="Flip vertical">
+                    <span class="material-symbols-rounded" aria-hidden="true">swap_vert</span>
+                </button>
+            </div>
+
+            <span class="chart-tool-sep chart-tool-sep--push" aria-hidden="true"></span>
+
+            <div class="chart-tool-group">
+                <button type="button" class="chart-tool-btn" id="chartFullscreenBtn" onclick="chartViewerToggleFullscreen()" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+                    <span class="material-symbols-rounded" aria-hidden="true">fullscreen</span>
+                </button>
+                <button type="button" class="chart-tool-btn" onclick="chartViewerDownload()" title="Download image" aria-label="Download image">
+                    <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="chart-view-modal-body" id="chartViewViewport">
+            <div class="chart-view-loading" id="chartViewLoading" hidden>
+                <span class="material-symbols-rounded chart-view-spinner" id="chartViewLoadingIcon" aria-hidden="true">progress_activity</span>
+                <p class="chart-view-loading-text" id="chartViewLoadingText">Loading chart…</p>
+            </div>
             <img
                 id="viewSavedChartImage"
                 alt="Saved Dental Chart"
+                draggable="false"
             >
+        </div>
+
+        <div class="chart-view-status">
+            <span id="chartViewDims">—</span>
+            <span class="chart-view-hint">Drag to pan · Scroll to zoom · +/− zoom · 0 fit · 1 actual size · R rotate · F fullscreen</span>
         </div>
 
     </div>
