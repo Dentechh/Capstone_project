@@ -66,6 +66,8 @@ class DentalClinicApp(BaseFlaskApp):
         self._setup_constants()
         self._setup_paymongo()
         self._setup_session()
+        self._setup_error_handlers()
+        self._setup_security_headers()
         self._register_routes()
         print("🦷 Capizonda Dental Clinic Initialized")
 
@@ -84,6 +86,9 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
         self.app.permanent_session_lifetime = timedelta(hours=8)
         self.app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
+        self.app.config["SESSION_COOKIE_HTTPONLY"] = True
+        self.app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+        self.app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
         
 
     def _setup_mail(self):
@@ -108,6 +113,19 @@ class DentalClinicApp(BaseFlaskApp):
         else:
             self._db = firestore.client()
             print("♻️ Firebase already initialized")
+
+        # DEV ONLY: point Firestore at the local emulator (zero billed reads).
+        # Start it with:  firebase emulators:start --only firestore
+        # then run the app with:  USE_FIRESTORE_EMULATOR=1 python main.py
+        # (PowerShell:  $env:USE_FIRESTORE_EMULATOR="1"; python main.py)
+        if os.getenv("USE_FIRESTORE_EMULATOR") == "1":
+            os.environ.setdefault("FIRESTORE_EMULATOR_HOST", "127.0.0.1:8080")
+            from google.auth.credentials import AnonymousCredentials
+            from google.cloud import firestore as gc_firestore
+            self._db = gc_firestore.Client(
+                project="dentech-c2ee0", credentials=AnonymousCredentials()
+            )
+            print(f"🧪 Firestore EMULATOR at {os.environ['FIRESTORE_EMULATOR_HOST']} (no real reads)")
 
     def _setup_constants(self):
         self.Customer_Account = "Customer_Account"
@@ -142,7 +160,12 @@ class DentalClinicApp(BaseFlaskApp):
         # In-memory cache to cut Firestore reads on hot admin endpoints.
         # See cache_store.py for how it works and its single-process caveat.
         self.cache = SimpleCache()
-        self.CACHE_TTL_SECONDS = 300  # 5 min safety-net expiry
+        self.CACHE_TTL_SECONDS = 1800  # 30 min safety-net expiry
+
+        # One lock per cache so only one request refills it at a time
+        self._done_procedures_lock = threading.Lock()
+        self._accounts_lock = threading.Lock()
+        self._patients_lock = threading.Lock()
 
     # ============================================================
     # CACHE HELPERS
@@ -159,9 +182,13 @@ class DentalClinicApp(BaseFlaskApp):
         cached = self.cache.get("done_procedures_all")
         if cached is not None:
             return cached
-        docs = [doc.to_dict() for doc in self.db.collection_group("Done_procedure").stream()]
-        self.cache.set("done_procedures_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
-        return docs
+        with self._done_procedures_lock:
+            cached = self.cache.get("done_procedures_all")
+            if cached is not None:
+                return cached
+            docs = [doc.to_dict() for doc in self.db.collection_group("Done_procedure").stream()]
+            self.cache.set("done_procedures_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
+            return docs
 
     def _invalidate_financial_cache(self):
         self.cache.invalidate("done_procedures_all")
@@ -176,10 +203,14 @@ class DentalClinicApp(BaseFlaskApp):
         cached = self.cache.get("manageable_accounts_all")
         if cached is not None:
             return cached
-        query = self.db.collection(self.Customer_Account).where("provider", "in", ["google", "password"])
-        docs = [(doc.id, doc.to_dict()) for doc in query.stream()]
-        self.cache.set("manageable_accounts_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
-        return docs
+        with self._accounts_lock:
+            cached = self.cache.get("manageable_accounts_all")
+            if cached is not None:
+                return cached
+            query = self.db.collection(self.Customer_Account).where("provider", "in", ["google", "password"])
+            docs = [(doc.id, doc.to_dict()) for doc in query.stream()]
+            self.cache.set("manageable_accounts_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
+            return docs
 
     def _invalidate_accounts_cache(self):
         self.cache.invalidate("manageable_accounts_all")
@@ -195,9 +226,13 @@ class DentalClinicApp(BaseFlaskApp):
         cached = self.cache.get("patients_all")
         if cached is not None:
             return cached
-        docs = [(doc.id, doc.to_dict()) for doc in self.db.collection(self.Doc_Patients).stream()]
-        self.cache.set("patients_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
-        return docs
+        with self._patients_lock:
+            cached = self.cache.get("patients_all")
+            if cached is not None:
+                return cached
+            docs = [(doc.id, doc.to_dict()) for doc in self.db.collection(self.Doc_Patients).stream()]
+            self.cache.set("patients_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
+            return docs
 
     def _invalidate_patients_cache(self):
         self.cache.invalidate("patients_all")
@@ -217,15 +252,15 @@ class DentalClinicApp(BaseFlaskApp):
         Fallback lookup for the two identity fields that are NOT guaranteed
         to exist on Customer_Account/{uid}:
 
-          contact_number - only written by password sign-up, the patient
-                           profile update, and the admin EDIT save. The
-                           Google sign-in path (which never sees a phone
-                           number) and the admin walk-in account creator
-                           never write it, so those accounts rendered a
-                           blank "Mobile Number" forever.
-          last_sex       - only written when an appointment actually
-                           answered the Sex question, so any booking that
-                           left it blank leaves the account with no sex.
+        contact_number - only written by password sign-up, the patient
+                        profile update, and the admin EDIT save. The
+                        Google sign-in path (which never sees a phone
+                        number) and the admin walk-in account creator
+                        never write it, so those accounts rendered a
+                        blank "Mobile Number" forever.
+        last_sex       - only written when an appointment actually
+                        answered the Sex question, so any booking that
+                        left it blank leaves the account with no sex.
 
         Both values ARE recorded on every appointment/Approve document, so
         fall back to the most recent one instead of rendering an empty cell.
@@ -485,13 +520,10 @@ class DentalClinicApp(BaseFlaskApp):
         pending requests can compete for the same slot, and the conflict
         only matters once one of them actually gets accepted.
 
-        NOTE: this scans the Approve collection group in Python rather
-        than filtering with a Firestore .where() clause, because a
-        filtered collection-group query requires a composite index to be
-        created in the Firebase console first. Scanning in Python avoids
-        that extra deployment step (same approach adminDashboard() already
-        uses to read this same collection), at the cost of being less
-        efficient at very large scale.
+        NOTE: the query filters on appointment_date server-side, which
+        needs a collection-group index on Approve.appointment_date. If that
+        index is missing the check fails loudly in the console (see the
+        except block below) instead of scanning the whole collection.
         """
 
         dentist_name = self.normalize_dentist_name(dentist_name)
@@ -514,7 +546,15 @@ class DentalClinicApp(BaseFlaskApp):
                 .stream()
             )
         except Exception as e:
-            print("FIND APPOINTMENT CONFLICT ERROR:", e)
+            # Returning None means "no conflict", so a failure here (most
+            # often a missing collection-group index on Approve.appointment_date)
+            # would silently allow double-booking. Make it impossible to miss.
+            print("=" * 60)
+            print("!! FIND APPOINTMENT CONFLICT FAILED -- DOUBLE-BOOKING CHECK IS OFF !!")
+            print("   Create a collection-group index on Approve.appointment_date")
+            print("   (Firebase console > Firestore > Indexes > Single field > Collection group).")
+            print("   Error:", e)
+            print("=" * 60)
             return None
 
         for doc in approve_docs:
@@ -721,7 +761,7 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify(result)
         except Exception as e:
             print("GET BLOCKED SLOTS ERROR:", e)
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
 
 
     def admin_block_slot(self):
@@ -755,7 +795,7 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify({"success": True, "message": "Slot blocked successfully"})
         except Exception as e:
             print("ADMIN BLOCK SLOT ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
 
     def admin_unblock_slot(self):
@@ -772,7 +812,7 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify({"success": True, "message": "Slot unblocked successfully"})
         except Exception as e:
             print("ADMIN UNBLOCK SLOT ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def create_patient(
         self,
@@ -958,9 +998,48 @@ class DentalClinicApp(BaseFlaskApp):
                 session['admin_last_activity'] = datetime.now(UTC).isoformat()
                 # No session.modified needed — assigning a value already marks it dirty
 
+
     def _register_routes(self):
         """Polymorphism: Register all routes"""
         pass
+    
+    def _setup_error_handlers(self):
+        @self.app.errorhandler(404)
+        def handle_404(e):
+            if request.path.startswith("/admin"):
+                return jsonify({"success": False, "message": "Not found"}), 404
+            return render_template("error.html", message="Page not found"), 404
+
+        @self.app.errorhandler(500)
+        def handle_500(e):
+            if request.path.startswith("/admin"):
+                return jsonify({"success": False, "message": "Something went wrong"}), 500
+            return render_template("error.html", message="Something went wrong. Please try again."), 500
+        
+    def _setup_security_headers(self):
+        csp = "; ".join([
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://accounts.google.com",
+            "font-src 'self' https://fonts.gstatic.com",
+            "img-src 'self' data: blob: https:",
+            "connect-src 'self' https://accounts.google.com",
+            "frame-src https://accounts.google.com https://www.google.com",
+            "frame-ancestors 'none'",
+            "object-src 'none'",
+            "base-uri 'self'",
+        ])
+
+        @self.app.after_request
+        def add_security_headers(response):
+            response.headers["Content-Security-Policy"] = csp
+            response.headers["X-Frame-Options"] = "DENY"
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+            if request.endpoint != "static":
+                response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+                response.headers["Pragma"] = "no-cache"
+            return response
 
 
     def require_firebase(self):
@@ -1865,7 +1944,7 @@ class DentalClinicApp(BaseFlaskApp):
             print("========================================")
 
             return {
-                "error": str(e)
+                "error": "Something went wrong. Please try again."
             }
     def refresh_session(self):
         session.permanent = True
@@ -2124,7 +2203,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         except Exception as e:
             print("Signup error:", e)
-            return str(e), 500
+            return "Sign-up failed. Please try again.", 500
 
 
     def logout(self):
@@ -2178,7 +2257,7 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify({"success": True, "linked": True})
         except Exception as e:
             print("LINK PATIENT ACCOUNT ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
     
 
     def p_forms(self):
@@ -3039,7 +3118,7 @@ class DentalClinicApp(BaseFlaskApp):
 
             print(f"{action.capitalize()} error: {e}")
 
-            return f"Failed to {action} appointment: {e}", 500
+            return f"Failed to {action} appointment. Please try again.", 500
     
     
     def admin_create_appointment(self):
@@ -3712,7 +3791,7 @@ class DentalClinicApp(BaseFlaskApp):
 
             return jsonify({
                 "success": False,
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
             }), 500
 
 
@@ -3976,14 +4055,19 @@ class DentalClinicApp(BaseFlaskApp):
         cursor = request.args.get("cursor", "").strip() or None
         rows, next_cursor = self._fetch_appointments_page(cursor=cursor)
 
+        # Same within-page urgency ordering the dashboard used to apply to page 1.
+        urgency_order = {"Emergency": 0, "Urgent": 1, "Normal": 2}
+        rows.sort(key=lambda x: urgency_order.get(x.get("UrgencyLevel", ""), 99))
+
         return jsonify({
             "success": True,
             "rows": rows,
             "next_cursor": next_cursor
         })
 
-    def _fetch_approved_page(self, cursor=None):
+    def _fetch_approved_page(self, cursor=None, page_size=None):
         """Approved appointments, newest accepted_at first."""
+        page_size = page_size or self.PATIENTS_PAGE_SIZE
         query = (
             self.db.collection_group("Approve")
             .order_by("accepted_at", direction="DESCENDING")
@@ -3992,11 +4076,11 @@ class DentalClinicApp(BaseFlaskApp):
         if cursor:
             query = query.start_after({"accepted_at": cursor})
 
-        query = query.limit(self.PATIENTS_PAGE_SIZE + 1)
+        query = query.limit(page_size + 1)
         docs = list(query.stream())
 
-        has_more = len(docs) > self.PATIENTS_PAGE_SIZE
-        docs = docs[:self.PATIENTS_PAGE_SIZE]
+        has_more = len(docs) > page_size
+        docs = docs[:page_size]
 
         rows = []
         for doc in docs:
@@ -4030,44 +4114,42 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return redirect(url_for("adminLogin"))
 
-        # =========================
-        # APPOINTMENTS (pending) — paginated, page 1 only
-        # =========================
-        appointment_list, appointment_list_next_cursor = self._fetch_appointments_page()
+        # The four big lists (pending appointments, approved patients,
+        # My Patients, User Management) are NOT fetched here anymore. The
+        # page loads them from their /admin/*_page endpoints the first time
+        # their tab is opened (see showSection in admin_dashboard.html).
+        # Opening the dashboard now only needs the cheap summary below.
 
         # =========================
-        # APPROVED APPOINTMENTS — paginated, page 1 only
-        # =========================
-        approve_list, approve_list_next_cursor = self._fetch_approved_page()
-
-        # Step 5: render only page 1 of My Patients, not the full list.
-        my_patients, my_patients_next_cursor = self._fetch_my_patients_page()
-
-        # Step 5: paginate User Management too, sourced directly from
-        # Customer_Account instead of via the Patients collection. This
-        # also fixes a pre-existing bug: real accounts with no linked
-        # Patients doc now correctly appear here.
-        manageable_accounts, manageable_accounts_next_cursor = self._fetch_manageable_accounts_page()
-
-        # =========================
-        # COUNTS (true totals via server-side aggregation, not full scans)
+        # COUNTS (server-side aggregation, ~1 read per 1000 index entries)
         # =========================
         total_patients = self.db.collection(self.Doc_Patients).count().get()[0][0].value
         pending_count = self.db.collection_group("appointments").count().get()[0][0].value
         approved_count = self.db.collection_group("Approve").count().get()[0][0].value
 
-        urgency_order = {"Emergency": 0, "Urgent": 1, "Normal": 2}
-        appointment_list.sort(
-            key=lambda x: urgency_order.get(x.get("UrgencyLevel", ""), 99)
-        )
-
+        # Urgency cards: one count() per level. Needs a collection-group
+        # index on UrgencyLevel; if it is missing, fall back to counting
+        # page 1 of pending appointments (the old behaviour) and say so.
         urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
-        for appt in appointment_list:
-            level = appt.get("UrgencyLevel", "Normal")
-            if level in urgency_counts:
-                urgency_counts[level] += 1
+        try:
+            for level in urgency_counts:
+                urgency_counts[level] = (
+                    self.db.collection_group("appointments")
+                    .where("UrgencyLevel", "==", level)
+                    .count().get()[0][0].value
+                )
+        except Exception as e:
+            print(f"URGENCY COUNT FALLBACK (create a collection-group index on "
+                  f"appointments.UrgencyLevel to fix): {e}")
+            urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
+            first_page, _ = self._fetch_appointments_page()
+            for appt in first_page:
+                level = appt.get("UrgencyLevel", "Normal")
+                if level in urgency_counts:
+                    urgency_counts[level] += 1
 
-        recent_approve = approve_list[:3]
+        # Only the 3 newest accepted patients are needed for the overview card.
+        recent_approve, _ = self._fetch_approved_page(page_size=3)
 
         # =========================
         # FINANCIAL CALCULATIONS (Step 2: cached, no full scan)
@@ -4089,10 +4171,10 @@ class DentalClinicApp(BaseFlaskApp):
         # =========================
         return render_template(
             "admin_dashboard.html",
-            Appointment_clients=appointment_list,
-            Approve=approve_list,
-            manageable_accounts=manageable_accounts,
-            my_patients=my_patients,
+            Appointment_clients=[],
+            Approve=[],
+            manageable_accounts=[],
+            my_patients=[],
             pending_count=pending_count,
             approved_count=approved_count,
             total_patients=total_patients,
@@ -4101,10 +4183,10 @@ class DentalClinicApp(BaseFlaskApp):
             total_income=total_income,
             total_outstanding=total_outstanding,
             unpaid_procedures=unpaid_procedures,
-            my_patients_next_cursor=my_patients_next_cursor,
-            manageable_accounts_next_cursor=manageable_accounts_next_cursor,
-            appointment_list_next_cursor=appointment_list_next_cursor,
-            approve_list_next_cursor=approve_list_next_cursor,
+            my_patients_next_cursor="",
+            manageable_accounts_next_cursor="",
+            appointment_list_next_cursor="",
+            approve_list_next_cursor="",
         )
 
     def search_patients(self):
@@ -4158,7 +4240,7 @@ class DentalClinicApp(BaseFlaskApp):
             if len(results) >= MAX_RESULTS:
                 break
 
-            return jsonify(results)
+        return jsonify(results)
     
     def check_duplicate_patient(self):
         if not session.get('admin_logged_in'):
@@ -4333,7 +4415,7 @@ class DentalClinicApp(BaseFlaskApp):
 
             return jsonify({
                 "success": False,
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
             }), 500
 
     def toggle_user_block(self):
@@ -4386,9 +4468,10 @@ class DentalClinicApp(BaseFlaskApp):
             })
 
         except Exception as e:
+            print("TOGGLE USER BLOCK ERROR:", e)
             return jsonify({
                 "success": False,
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
             }), 500
 
     def delete_patient(self):
@@ -4449,10 +4532,10 @@ class DentalClinicApp(BaseFlaskApp):
             except auth.UserNotFoundError:
                 pass  # Already gone from Auth - nothing to do.
             except Exception as auth_err:
+                print("AUTH DELETE ERROR:", auth_err)
                 auth_warning = (
-                    "Patient data was deleted, but the Firebase "
-                    "Authentication account could not be removed: "
-                    f"{auth_err}"
+                    "Patient data was deleted, but the login account "
+                    "could not be removed."
                 )
 
             if patient_id:
@@ -4476,7 +4559,7 @@ class DentalClinicApp(BaseFlaskApp):
 
             return jsonify({
                 "success": False,
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
             }), 500
             
     def update_treatment_record(self):
@@ -4606,7 +4689,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         except Exception as e:
             print("UPDATE TREATMENT RECORD ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def delete_treatment_record(self):
         """
@@ -4732,7 +4815,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         except Exception as e:
             print("DELETE TREATMENT RECORD ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def get_patient(self, uid):
         """
@@ -5160,7 +5243,7 @@ class DentalClinicApp(BaseFlaskApp):
             
         except Exception as e:
             print(f"Upload profile pic error: {e}")
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
         
     
 
@@ -5559,7 +5642,7 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "success": False,
 
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
 
             }), 500
     
@@ -5696,7 +5779,7 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "success": False,
 
-                "message": str(e)
+                "message": "Something went wrong. Please try again."
 
             }), 500
     
@@ -5747,6 +5830,8 @@ class DentalClinicApp(BaseFlaskApp):
 
         source_ref = self.db.collection(self.Doc_Patients).document(source_patient_id)
         target_ref = self.db.collection(self.Doc_Patients).document(target_patient_id)
+        source_doc = source_ref.get()
+        target_doc = target_ref.get()
         
         if not source_doc.exists or not target_doc.exists:
             return jsonify({"success": False, "message": "One of the patient records does not exist"}), 404
@@ -5887,7 +5972,7 @@ class DentalClinicApp(BaseFlaskApp):
                                 pass
             except Exception as e:
                 print("FINANCIAL CHART DATA ERROR:", e)
-                return jsonify({"success": False, "message": str(e)}), 500
+                return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
                 
             values = [round(income_by_month[k], 2) for k in income_by_month.keys()]
             return jsonify({
@@ -5916,7 +6001,7 @@ class DentalClinicApp(BaseFlaskApp):
                             unpaid_procedures += 1
             except Exception as e:
                 print("FINANCIAL CHART DATA ERROR:", e)
-                return jsonify({"success": False, "message": str(e)}), 500
+                return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
             return jsonify({
                 "success": True,
                 "period": period,
@@ -5963,7 +6048,7 @@ class DentalClinicApp(BaseFlaskApp):
                             unpaid_procedures += 1
         except Exception as e:
             print("FINANCIAL CHART DATA ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
             
         if period == "today":
             labels = ["Today"]
@@ -6012,7 +6097,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         except Exception as e:
             print(e)
-            return jsonify({"error": str(e)}), 500
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
     
     def find_unlinked_patient_match(self, first_name, last_name, middle_name="", birthday=""):
         match = self.find_patient(
@@ -6134,7 +6219,7 @@ class DentalClinicApp(BaseFlaskApp):
                     revenue[key] = revenue.get(key, 0) + self.safe_float(p.get("paid", 0))
         except Exception as e:
             print("PROCEDURE CHART DATA ERROR:", e)
-            return jsonify({"success": False, "message": str(e)}), 500
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
         def top_n(metric_dict, limit=10):
             sorted_keys = sorted(metric_dict.keys(), key=lambda k: metric_dict[k], reverse=True)
@@ -6221,4 +6306,4 @@ app = app_instance.app
 
 if __name__ == "__main__":
     print("🦷 Capizonda Dental Clinic Server Starting...")
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000, use_reloader=False)

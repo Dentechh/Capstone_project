@@ -1837,12 +1837,26 @@ function upsertMyPatientRow(uid, fields) {
         return;
     }
 
+    // This refresh is itself the first page load; stop the lazy loader duplicating it.
+    window._lazyLoaded = window._lazyLoaded || {};
+    window._lazyLoaded.mypatients = true;
+
     fetch('/admin/my_patients_page')
         .then(res => res.json())
         .then(result => {
             if (!result.success) return;
             tbody.innerHTML = '';
             result.rows.forEach(function(p) { tbody.appendChild(buildMyPatientRow(p)); });
+
+            // Keep Load More working after a refresh.
+            const cur = document.getElementById('myPatientsCursor');
+            const btn = document.getElementById('myPatientsLoadMoreBtn');
+            if (cur) cur.setAttribute('data-cursor', result.next_cursor || '');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = 'Load More';
+                btn.style.display = result.next_cursor ? '' : 'none';
+            }
         })
         .catch(function(err) { console.error('Refresh my patients error:', err); });
 }
@@ -4589,6 +4603,34 @@ async function downloadDentalChartPDF() {
                 'usermanagement': 'User Management',
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
+
+            // Lazy-load the four big lists the first time their tab is opened,
+            // so opening the dashboard itself doesn't read them from Firestore.
+            loadSectionOnce(sectionId);
+        }
+
+        // section id -> [load-more button, cursor holder, container to clear]
+        const LAZY_SECTIONS = {
+            appointments:   ['appointmentsLoadMoreBtn', 'appointmentsCursor', '#appointmentsTable tbody'],
+            WeeklyClients:  ['weeklyClientsLoadMoreBtn', 'weeklyClientsCursor', '#weeklyClientsGrid'],
+            mypatients:     ['myPatientsLoadMoreBtn', 'myPatientsCursor', '#myPatientsTable tbody'],
+            usermanagement: ['userMgmtLoadMoreBtn', 'userMgmtCursor', '#userManagementTable tbody']
+        };
+        window._lazyLoaded = window._lazyLoaded || {};
+
+        function loadSectionOnce(sectionId) {
+            const cfg = LAZY_SECTIONS[sectionId];
+            if (!cfg || window._lazyLoaded[sectionId]) return;
+            const btn = document.getElementById(cfg[0]);
+            const cursor = document.getElementById(cfg[1]);
+            const container = document.querySelector(cfg[2]);
+            if (!btn || !cursor || !container) return;
+
+            window._lazyLoaded[sectionId] = true;
+            container.innerHTML = '';            // drop anything inserted locally before the first load
+            cursor.setAttribute('data-cursor', '');   // empty cursor = first page
+            btn.style.display = '';
+            btn.click();                         // reuses the existing Load More handler
         }
 
 function openPatientDashboard(
@@ -10008,9 +10050,7 @@ function loadProcedureCharts() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('procedureCountChart')) {
-        loadProcedureCharts();
-    }
+       // Procedure charts are loaded by the DOMContentLoaded handler further down.
 
 });
 
