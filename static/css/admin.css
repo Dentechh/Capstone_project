@@ -329,23 +329,1056 @@ body.dark-mode .p-info{
     color: #000000;
 }
 
-.patient-profile-header {
-    background: var(--grad-navy);
-    padding: 25px;
-    border-radius: 12px;
-    display: flex;
+/* =========================================================
+   PATIENT DASHBOARD -- back button + identity header
+
+   Follows the same recipe as the Treatment Info / Edit Patient
+   modals so the dashboard reads as part of the new design set:
+   white surface, 1px slate border, 16px radius, a 4px navy
+   left accent, navy 700 / -0.01em heading, 13.5px #6b7280
+   secondary text, 0.18s ease transitions and a 2px
+   :focus-visible ring. Every colour comes from the token set
+   (or the body.dark-mode twins below) instead of inline styles,
+   so dark mode is a real theme rather than a patch.
+
+   These replace the old .patient-profile-header, which was a
+   hardcoded margin-left: 500px flex row with no base rules.
+   ========================================================= */
+
+/* ---------- back button ---------- */
+.pd-back {
+    display: inline-flex;
     align-items: center;
-    gap: 30px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-    color: #000000;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 18px;
+    padding: 10px 18px 10px 13px;
+    background: #ffffff;
+    color: var(--navy);
+    border: 1px solid rgba(13, 71, 161, 0.30);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
 }
 
-body.dark-mode .patient-profile-header {
-    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-    color: #e0e0e0;
-    border-radius: 12px;
+.pd-back__label {
+    display: inline-block;
 }
+
+.pd-back .pd-back__icon {
+    font-size: 19px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    transition: transform 0.18s ease;
+}
+
+.pd-back:hover {
+    background: #eaf2fc;
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(13, 71, 161, 0.14);
+    transform: translateY(-1px);
+}
+
+.pd-back:hover .pd-back__icon {
+    transform: translateX(-2px);
+}
+
+.pd-back:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.pd-back:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+body.dark-mode .pd-back {
+    background: #1e1e1a;
+    color: var(--navy);
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-back:hover {
+    background: #1e3a8a;
+    border-color: var(--navy);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- identity header ---------- */
+.pd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px 28px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid var(--navy);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+    text-align: left;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05),
+                0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.pd-header__identity {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+}
+
+.pd-header__text {
+    min-width: 0;
+}
+
+.pd-header__name {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+    overflow-wrap: break-word;
+}
+
+/* Account no: muted 13.5px line, mirroring .ci-sub, so the uid reads as
+   supporting metadata under the name instead of competing with it. */
+.pd-header__account {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 0;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #6b7280;
+}
+
+.pd-header__account .pd-header__account-icon {
+    font-size: 15px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    opacity: 0.75;
+}
+
+.pd-header__account-label {
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.pd-header__account-no {
+    font-weight: 700;
+    color: #1a1a1a;
+    overflow-wrap: break-word;
+}
+
+/* ---------- avatar ---------- */
+.pd-avatar {
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: var(--grad-navy2);
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(13, 71, 161, 0.18),
+                0 4px 12px rgba(13, 71, 161, 0.18);
+    overflow: hidden;
+    color: #ffffff;
+}
+
+.pd-avatar__initials {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+/* The image is absolutely stacked over the initials badge, so the badge is
+   the always-there fallback: an account with no picture, a failed lookup or a
+   broken image URL all simply leave it showing. */
+.pd-avatar__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- gender / age pills ---------- */
+.pd-header__stats {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.pd-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 104px;
+    padding: 9px 16px;
+    background: #f1f6fd;
+    border: 1px solid #d8e4f5;
+    border-radius: 10px;
+}
+
+.pd-stat__label {
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.pd-stat__value {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--navy);
+    overflow-wrap: break-word;
+}
+
+/* ---------- dark mode ---------- */
+body.dark-mode .pd-header {
+    background: #1e1e1a;
+    border-color: #33415a;
+    border-left-color: var(--navy);
+    color: #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4),
+                0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .pd-header__name {
+    color: var(--navy);
+}
+
+body.dark-mode .pd-header__account {
+    color: #94a3b8;
+}
+
+body.dark-mode .pd-header__account-no {
+    color: #e2e8f0;
+}
+
+body.dark-mode .pd-avatar {
+    border-color: #33415a;
+    box-shadow: 0 0 0 1px rgba(100, 181, 246, 0.35),
+                0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .pd-stat {
+    background: #131a26;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-stat__label {
+    color: #94a3b8;
+}
+
+body.dark-mode .pd-stat__value {
+    color: var(--navy);
+}
+
+/* Stack the stats under the identity instead of overflowing on phones,
+   where the old fixed 500px offset used to run off the screen. */
+@media (max-width: 768px) {
+    .pd-back {
+        padding: 9px 15px 9px 11px;
+        font-size: 13px;
+    }
+
+    .pd-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 18px;
+    }
+
+    .pd-header__stats {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .pd-stat {
+        flex: 1 1 120px;
+        min-width: 0;
+        padding: 8px 14px;
+    }
+
+    .pd-avatar {
+        width: 54px;
+        height: 54px;
+    }
+
+    .pd-avatar__initials {
+        font-size: 19px;
+    }
+
+    .pd-header__name {
+        font-size: 19px;
+    }
+}
+
+/* The hover lift and the arrow nudge are decorative motion only. */
+@media (prefers-reduced-motion: reduce) {
+    .pd-back,
+    .pd-back__icon {
+        transition: none;
+    }
+
+    .pd-back:hover,
+    .pd-back:hover .pd-back__icon {
+        transform: none;
+    }
+}
+
+/* =========================================================
+   VISIT HISTORY PANEL
+
+   Same card language as the Patient Information panel above:
+   white body card inside the tinted .content-panel, navy
+   micro-labels, hairline row separators, no heavy black borders.
+
+   Every rule here is scoped under .pd-visits / .pd-visits__table
+   because .appointment-table is shared with four other tables in
+   this page (My Patients, User Management, Appointments, Records)
+   and its base rules appear LATER in this file -- an unscoped
+   .pd-visit rule would lose on specificity.
+   ========================================================= */
+.pd-panel-head__count {
+    margin-left: auto;
+    padding: 4px 11px;
+    background: #eaf2fc;
+    border: 1px solid #d8e4f5;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--navy);
+    white-space: nowrap;
+}
+
+.pd-visits {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    /* Clips the table to the rounded corners. */
+    overflow: hidden;
+}
+
+/* Narrow viewports scroll the table sideways instead of squashing it. */
+.pd-visits__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pd-visits .pd-visits__table {
+    min-width: 720px;
+}
+
+.pd-visits .pd-visits__table th {
+    padding: 12px 16px;
+    text-align: left;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.pd-visits .pd-visits__table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #eef2f7;
+    color: #1f2937;
+    font-size: 13.5px;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+
+.pd-visits .pd-visits__table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.pd-visits .pd-visits__table tbody tr:hover {
+    background: #f8fafc;
+}
+
+/* Money and the chart action are the two things worth spotting instantly. */
+.pd-visits .pd-visits__table .pd-visits__fee {
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+}
+
+.pd-visits .pd-visits__table .pd-visits__chart {
+    width: 72px;
+    text-align: center;
+}
+
+.pd-visits .pd-visits__table .pd-visits__chart-col {
+    width: 72px;
+    text-align: center;
+}
+
+/* ---------- icon-only chart button ---------- */
+.pd-visits .pd-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background: #eaf2fc;
+    border: 1px solid #d8e4f5;
+    border-radius: 10px;
+    color: var(--navy);
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.pd-visits .pd-icon-btn > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.pd-visits .pd-icon-btn:hover {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(13, 71, 161, 0.25);
+    transform: translateY(-1px);
+}
+
+.pd-visits .pd-icon-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.pd-visits .pd-icon-btn:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+/* ---------- empty / error state ---------- */
+.pd-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 34px 16px;
+    text-align: center;
+}
+
+.pd-empty .pd-empty__icon {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    color: #cbd5e1;
+}
+
+.pd-empty__text {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #64748b;
+}
+
+/* ---------- dark mode ---------- */
+body.dark-mode .pd-panel-head__count {
+    background: #1e3a8a;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-visits {
+    background: #1e1e1a;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-visits .pd-visits__table th {
+    background: #131a26;
+    border-bottom-color: #33415a;
+    color: #94a3b8;
+}
+
+body.dark-mode .pd-visits .pd-visits__table td {
+    border-bottom-color: #26303f;
+    color: #e2e8f0;
+}
+
+body.dark-mode .pd-visits .pd-visits__table tbody tr:hover {
+    background: #131a26;
+}
+
+body.dark-mode .pd-visits .pd-icon-btn {
+    background: #1e3a8a;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-visits .pd-icon-btn:hover {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #131a26;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .pd-empty__icon {
+    color: #475569;
+}
+
+body.dark-mode .pd-empty__text {
+    color: #94a3b8;
+}
+
+/* =========================================================
+   PATIENT INFORMATION PANEL
+
+   Reads as part of the same card system as the identity header
+   above: navy accents, the 10/14/16px radius scale, slate
+   hairlines instead of hard black borders, uppercase micro-labels
+   and a white body card inside the tinted .content-panel frame.
+
+   Yes/No is a pill, not coloured inline text: "No" is an answer,
+   not an error, so it stays neutral slate instead of red.
+   ========================================================= */
+.pd-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(13, 71, 161, 0.16);
+}
+
+.pd-panel-head .pd-panel-head__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #eaf2fc;
+    color: var(--navy);
+    font-size: 19px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.pd-panel-head__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+}
+
+/* .panel-content is shared with the Visit History panel, so the softer
+   border and radius are scoped to .pd-info only. */
+.pd-info {
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: none;
+}
+
+/* ---------- field grid ---------- */
+.pd-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.pd-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.pd-field__label {
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.pd-field__value {
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #1a1a1a;
+    overflow-wrap: break-word;
+}
+
+/* ---------- subsections ---------- */
+.pd-subsection {
+    margin-top: 22px;
+}
+
+.pd-subsection__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #334155;
+}
+
+.pd-subsection__title .pd-subsection__icon {
+    font-size: 17px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    color: var(--navy);
+}
+
+/* ---------- medical history / women's health rows ---------- */
+.pd-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.pd-check {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 9px 14px;
+    /* Tinted like .pd-field so the rows separate from the white card
+       behind them without needing a heavy border. */
+    background: #f8fafc;
+    border: 1px solid #e8edf5;
+    border-radius: 10px;
+}
+
+.pd-check__text {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* Keeps the Q number from the intake form so the answers stay traceable
+   back to the questions the patient actually saw. */
+.pd-check__q {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    background: #eaf2fc;
+    border-radius: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0.5px;
+    color: var(--navy);
+}
+
+.pd-check__label {
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #1a1a1a;
+}
+
+.pd-check__spec {
+    font-size: 12.5px;
+    font-weight: 400;
+    font-style: italic;
+    color: #6b7280;
+    overflow-wrap: break-word;
+}
+
+/* setSpec() writes an empty string when the patient left it blank. */
+.pd-check__spec:empty {
+    display: none;
+}
+
+.pd-check__value {
+    flex: 0 0 auto;
+    min-width: 64px;
+    padding: 4px 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.pd-check__value.is-yes {
+    background: #e7f6ec;
+    border-color: #bfe5cb;
+    color: #15803d;
+}
+
+.pd-check__value.is-no {
+    background: #f1f5f9;
+    border-color: #dbe3ee;
+    color: #64748b;
+}
+
+/* ---------- dark mode ---------- */
+body.dark-mode .pd-panel-head {
+    border-bottom-color: #33415a;
+}
+
+body.dark-mode .pd-panel-head__icon {
+    background: #1e3a8a;
+}
+
+body.dark-mode .pd-info {
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-field {
+    background: #131a26;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-field__value {
+    color: #e2e8f0;
+}
+
+body.dark-mode .pd-subsection__title {
+    color: #cbd5e1;
+}
+
+body.dark-mode .pd-check {
+    background: #131a26;
+    border-color: #33415a;
+}
+
+body.dark-mode .pd-check__q {
+    background: #1e3a8a;
+}
+
+body.dark-mode .pd-check__label {
+    color: #e2e8f0;
+}
+
+body.dark-mode .pd-check__spec {
+    color: #94a3b8;
+}
+
+body.dark-mode .pd-check__value.is-yes {
+    background: #12331f;
+    border-color: #1f6f3d;
+    color: #4ade80;
+}
+
+body.dark-mode .pd-check__value.is-no {
+    background: #1a2333;
+    border-color: #33415a;
+    color: #94a3b8;
+}
+
+/* Three columns only fits on a wide viewport; below that the panels get
+   progressively narrower, so drop to two and then one. */
+@media (max-width: 1100px) {
+    .pd-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .pd-panel-head {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .pd-panel-head__title {
+        font-size: 15px;
+    }
+
+    /* Stay at two columns: nine stacked fields is a very long scroll on a
+       phone, and two still leave ~150px per card at this width. Only very
+       small screens drop to one -- see the 420px query below. */
+    .pd-fields {
+        gap: 8px;
+    }
+
+    .pd-field {
+        padding: 9px 12px;
+    }
+
+    .pd-subsection {
+        margin-top: 18px;
+    }
+
+    .pd-check {
+        padding: 8px 12px;
+    }
+}
+
+/* Narrow phones (and landscape phones with a sidebar overlay): one field
+   per row, because two cards no longer leave room for the labels. */
+@media (max-width: 420px) {
+    .pd-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .pd-header {
+        padding: 16px;
+    }
+
+    .pd-stat {
+        flex: 1 1 100px;
+        padding: 8px 12px;
+    }
+
+    .pd-panel-head__count {
+        font-size: 10px;
+        padding: 3px 9px;
+    }
+}
+
+/* =========================================================
+   OPEN DENTAL CHART LAUNCH
+
+   The inline chart is hidden on a phone, so this button is the ONLY
+   way to reach the odontogram there -- which is why it goes full width
+   and grows a taller tap target under 768px instead of shrinking.
+   Sized as the panel's primary action rather than a utility link.
+   ========================================================= */
+.pd-chart-launch {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0 8px;
+}
+
+.pd-open-chart {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 30px;
+    border: 1px solid var(--navy);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #1565c0 0%, var(--navy) 100%);
+    color: #ffffff;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.26);
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.pd-open-chart .pd-open-chart__icon {
+    font-size: 30px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    flex: 0 0 auto;
+}
+
+.pd-open-chart__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.pd-open-chart__title {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.pd-open-chart__hint {
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pd-open-chart:hover {
+    background: linear-gradient(180deg, #1976d2 0%, var(--navy-dark) 100%);
+    border-color: var(--navy-dark);
+    box-shadow: 0 8px 22px rgba(13, 71, 161, 0.34);
+    transform: translateY(-2px);
+}
+
+.pd-open-chart:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(13, 71, 161, 0.26);
+}
+
+.pd-open-chart:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 3px;
+}
+
+/* ---------- dark mode ---------- */
+body.dark-mode .pd-open-chart {
+    background: linear-gradient(180deg, #1e88e5 0%, #1565c0 100%);
+    border-color: #1e88e5;
+    color: #ffffff;
+}
+
+body.dark-mode .pd-open-chart:hover {
+    background: linear-gradient(180deg, #42a5f5 0%, #1e88e5 100%);
+    border-color: #42a5f5;
+}
+
+body.dark-mode .pd-open-chart__hint {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pd-open-chart {
+        transition: none;
+    }
+
+    .pd-open-chart:hover,
+    .pd-open-chart:active {
+        transform: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .pd-chart-launch {
+        margin: 16px 0 4px;
+    }
+
+    /* Full width and tall: on a phone this is the only route to the chart,
+       so it gets the whole row and a comfortable thumb target. */
+    .pd-open-chart {
+        width: 100%;
+        gap: 12px;
+        padding: 18px 20px;
+        border-radius: 14px;
+    }
+
+    .pd-open-chart .pd-open-chart__icon {
+        font-size: 28px;
+    }
+
+    .pd-open-chart__title {
+        font-size: 16px;
+        white-space: normal;
+    }
+
+    .pd-open-chart__hint {
+        font-size: 12px;
+    }
+}
+
 /* DASHBOARD COMPONENTS */
 .metric-cards {
     display: grid;
@@ -941,14 +1974,21 @@ body.dark-mode .panel-content {
 }
 .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), NOT 1fr: a bare 1fr is minmax(auto, 1fr), whose
+       automatic minimum is the content's min-content width. The Visit History
+       table has a min-width so it can scroll on a phone, and with 1fr that
+       min-content pushed the track wider than the viewport and dragged the
+       Patient Information panel out with it. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
 }
 
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px 20px;
+/* Grid items default to min-width:auto, which stops them shrinking below
+   their content's min-content width. The panels hold a deliberately wide
+   table that is meant to scroll inside itself, so they have to be allowed
+   to shrink or the whole page overflows sideways on a phone. */
+#section-patientdashboard .content-panel {
+    min-width: 0;
 }
 
 .action-grid {
@@ -1237,6 +2277,557 @@ body.dark-mode .btn-add-row {
     background: var(--gold-light);
     border-color: var(--gold-light);
     color: #fff;
+}
+
+/* =========================================================
+   TREATMENT RECORDS (Patient Dashboard)
+
+   Reads as the form that pairs with the Dental Record Chart: the
+   same icon-tile title treatment as the other panels, a hairline
+   table inside a white card, and controls matched field-for-field
+   to the Treatment Information modal in My Patients (36px tall,
+   6px radius, #cbd5e1 border, navy 3px focus ring, slate chevron
+   on the selects).
+
+   Scoped to .td-records because .treatment-table is shared with
+   the My Patients treatment modal, which styles its own copy.
+   ========================================================= */
+.td-records .td-records__head {
+    margin-bottom: 16px;
+}
+
+.td-records__head-text {
+    min-width: 0;
+}
+
+/* Header actions: Add Row is secondary (adds a blank row), Submit is the
+   primary action for the form. */
+.td-records__actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.td-records__sub {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: #6b7280;
+}
+
+/* Add Row lives in the panel header, top right. Secondary: it only appends a
+   blank row, so it stays a bordered outline rather than competing with
+   Submit. */
+.td-records .td-records__add {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 0;
+    margin-left: 0;
+    padding: 9px 15px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    color: var(--navy);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, transform 0.12s ease;
+}
+
+.td-records .td-records__add > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.td-records .td-records__add:hover {
+    background: #eaf2fc;
+    border-color: var(--navy);
+    transform: translateY(-1px);
+}
+
+.td-records .td-records__add:active {
+    transform: translateY(0);
+}
+
+.td-records .td-records__add:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+/* Submit: the primary action of the panel, so it carries the navy fill and a
+   save glyph. Kept on .btn-save-td because the JS disables it while the save
+   is in flight and the disabled treatment has to survive. */
+.td-records .td-records__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border: 1px solid var(--navy);
+    border-radius: 10px;
+    background: var(--navy);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.22);
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.td-records .td-records__submit > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+.td-records .td-records__submit:hover {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.32);
+    transform: translateY(-1px);
+}
+
+.td-records .td-records__submit:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.td-records .td-records__submit:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+/* The JS disables this while saving. Styled here as well as in the shared
+   .btn-save-td rule so the disabled state still matches the new button. */
+.td-records .td-records__submit:disabled,
+.td-records .td-records__submit:disabled:hover {
+    background: #9aa5b1;
+    border-color: #9aa5b1;
+    color: #f0f2f5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.8;
+}
+
+.td-records__scroll {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.td-records .td-records__table {
+    margin-bottom: 0;
+}
+
+.td-records .td-records__table thead th {
+    padding: 11px 10px;
+    text-align: left;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    color: #64748b;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.td-records .td-records__table tbody td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eef2f7;
+    vertical-align: middle;
+}
+
+.td-records .td-records__table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.td-records .td-records__table tbody tr:hover td {
+    background: #fbfdff;
+}
+
+/* ---------- controls: matched to the Treatment Information modal ---------- */
+.td-records .td-records__table td input[type="text"],
+.td-records .td-records__table td input[type="number"],
+.td-records .td-records__table td input[type="date"],
+.td-records .td-records__table td select {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 36px;
+    margin: 0;
+    padding: 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    /* Native pickers draw their own icon; without this it goes invisible on
+       the dark surface. */
+    color-scheme: light;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.td-records .td-records__table td input::placeholder {
+    color: #94a3b8;
+}
+
+.td-records .td-records__table td input:hover,
+.td-records .td-records__table td select:hover {
+    border-color: #94a3b8;
+}
+
+.td-records .td-records__table td input:focus,
+.td-records .td-records__table td select:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+.td-records .td-records__table td input[readonly]:not(.adm-date-alt) {
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+/* flatpickr sets readonly on the visible alt input when allowInput is false.
+   That is "pick a date from the calendar", not a computed/locked value, so it
+   must not get the disabled treatment above. */
+
+.td-records .td-records__table td input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+/* Native steppers are a browser artefact, not part of this design: they are a
+   grey spinner in a compact money field and read as clutter. Typing is the
+   normal way to enter an amount. */
+.td-records .td-records__table td input[type="number"]::-webkit-outer-spin-button,
+.td-records .td-records__table td input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+/* Money reads faster right-aligned, and the decimal points line up. */
+.td-records .td-records__table td input[type="number"] {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.td-records .td-records__table td select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 15px 15px;
+}
+
+.td-records__msg {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #15803d;
+}
+
+/* ---------- dropdown option panels ----------
+   The selects are wrapped in the shared .adm-select listbox by
+   refreshTreatmentControls(), which is what makes the options a real styled
+   list. Native <option> popups are OS-drawn, so this only styles what the
+   browser does honour on a plain select (used if the enhancement is skipped,
+   e.g. the CDN component fails to load). */
+.td-records .td-records__table td select option {
+    background: #ffffff;
+    color: #1a1a1a;
+    font-weight: 500;
+    font-family: inherit;
+}
+
+/* The enhancement wraps each select in .adm-select, which carries its own
+   vertical margin. Inside a 6px table cell that would double-space the row. */
+.td-records .td-records__table td .adm-select {
+    margin: 0;
+}
+
+/* ---------- date pickers ----------
+   flatpickr inserts this alt input in front of the real date field, so it is
+   what the clinician actually clicks. It has to match the other controls or
+   the row will look like two different things. */
+.td-records .td-records__table td input.adm-date-alt {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-left: 32px;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' fill='none' stroke='%2364748b' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 11h18' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 9px center;
+    background-size: 15px 15px;
+}
+
+.td-records .td-records__table td input.adm-date-alt::placeholder {
+    color: #94a3b8;
+}
+
+/* ---------- dentist combobox ----------
+   Same component as the Appointments table, scoped under .td-records because
+   the originals are pinned to #section-appointments / #newApptModal. The
+   selector chain is deliberately longer than the generic control rule above,
+   which would otherwise win on specificity. */
+.td-records .td-records__table td .dentist-field {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.td-records .td-records__table td .dentist-field .dentist-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0 34px 0 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.td-records .td-records__table td .dentist-field .dentist-input:hover:not(:disabled) {
+    border-color: #94a3b8;
+}
+
+.td-records .td-records__table td .dentist-field .dentist-input:focus,
+.td-records .td-records__table td .dentist-field .dentist-input[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+.td-records .td-records__table td .dentist-field__toggle {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.td-records .td-records__table td .dentist-field__toggle:hover {
+    background: #e2e8f0;
+    color: #1a1a1a;
+}
+
+.td-records .td-records__table td .dentist-field__toggle:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 1px;
+}
+
+.td-records .td-records__table td .dentist-field__toggle > .material-symbols-rounded {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    transition: transform 0.18s ease;
+}
+
+.td-records .td-records__table td .dentist-field__toggle[aria-expanded="true"] > .material-symbols-rounded,
+.td-records .td-records__table td .dentist-field__toggle.is-open > .material-symbols-rounded {
+    transform: rotate(180deg);
+}
+
+/* ---------- dark mode ---------- */
+body.dark-mode .td-records__sub {
+    color: #94a3b8;
+}
+
+body.dark-mode .td-records .td-records__add {
+    background: #131a26;
+    border-color: #33415a;
+    color: var(--navy);
+}
+
+body.dark-mode .td-records .td-records__add:hover {
+    background: #1e3a8a;
+    border-color: var(--navy);
+}
+
+body.dark-mode .td-records .td-records__submit {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #131a26;
+}
+
+body.dark-mode .td-records .td-records__submit:hover {
+    background: #1e88e5;
+    border-color: #1e88e5;
+}
+
+body.dark-mode .td-records .td-records__submit:disabled,
+body.dark-mode .td-records .td-records__submit:disabled:hover {
+    background: #5c6670;
+    border-color: #5c6670;
+    color: #cfd4da;
+}
+
+body.dark-mode .td-records__scroll {
+    background: #1e1e1a;
+    border-color: #33415a;
+}
+
+body.dark-mode .td-records .td-records__table thead th {
+    background: #131a26;
+    border-bottom-color: #33415a;
+    color: #94a3b8;
+}
+
+body.dark-mode .td-records .td-records__table tbody td {
+    border-bottom-color: #26303f;
+}
+
+body.dark-mode .td-records .td-records__table tbody tr:hover td {
+    background: #131a26;
+}
+
+body.dark-mode .td-records .td-records__table td input,
+body.dark-mode .td-records .td-records__table td select {
+    background-color: #131a26;
+    border-color: #33415a;
+    color: #e2e8f0;
+    color-scheme: dark;
+}
+
+body.dark-mode .td-records .td-records__table td input::placeholder {
+    color: #64748b;
+}
+
+body.dark-mode .td-records .td-records__table td input:hover,
+body.dark-mode .td-records .td-records__table td select:hover {
+    border-color: #475569;
+}
+
+body.dark-mode .td-records .td-records__table td input[readonly]:not(.adm-date-alt) {
+    background: #1e1e1a;
+    color: #94a3b8;
+}
+
+body.dark-mode .td-records__msg {
+    color: #4ade80;
+}
+
+body.dark-mode .td-records .td-records__table td select option {
+    background: #131a26;
+    color: #e2e8f0;
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-date-alt {
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' fill='none' stroke='%2394a3b8' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 11h18' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-date-alt::placeholder {
+    color: #64748b;
+}
+
+body.dark-mode .td-records .td-records__table td .dentist-field .dentist-input {
+    background-color: #131a26;
+    border-color: #33415a;
+    color: #e2e8f0;
+}
+
+body.dark-mode .td-records .td-records__table td .dentist-field__toggle {
+    color: #94a3b8;
+}
+
+body.dark-mode .td-records .td-records__table td .dentist-field__toggle:hover {
+    background: #33415a;
+    color: #e2e8f0;
+}
+
+/* The header wraps to two rows on narrow screens so the button keeps its
+   full label instead of being squeezed. */
+@media (max-width: 768px) {
+    .td-records .td-records__head {
+        flex-wrap: wrap;
+        row-gap: 12px;
+    }
+
+    .td-records__head-text {
+        flex: 1 1 160px;
+    }
+
+    .td-records__actions {
+        margin-left: 0;
+        flex: 1 1 100%;
+        justify-content: flex-end;
+    }
 }
 
 /* Status Badge */
@@ -1530,11 +3121,6 @@ body:not(.dark-mode) .patient-card {
     color: #000000;
 }
 
-body:not(.dark-mode) .patient-profile-header {
-    background: var(--grad-navy);
-    color: #000000;
-}
-
 body:not(.dark-mode) .nav-item {
     color: #000000;
 }
@@ -1617,24 +3203,6 @@ body:not(.dark-mode) .nav-item {
             font-size: 24px;
             margin-bottom: 15px;
         }
-
-        .info-group label {
-            display: block;
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 5px;
-            font-weight: 700;
-        }
-
-.info-group p {
-    font-size: 15px;
-    color: #000000;
-}
-
-body.dark-mode .info-group p {
-    color: #e0e0e0;
-}
 
         .profile-footer {
             margin-top: 25px;
@@ -1749,58 +3317,22 @@ body.dark-mode .info-group p {
 
 .chart-container {
     display: flex;
-    flex-direction: column; /* ← Stack palette ON TOP of chart */
+    /* Palette on the LEFT of the chart, as a narrow portrait column. */
+    flex-direction: row;
     padding: 20px;
     gap: 20px;
     width: 100%;
     margin-left: 0;
     margin-top: 10px;
+    /* Centre the rail vertically against the chart rather than stretching it to
+       the chart's height. Mismatch shows up as symmetric space instead of
+       one card growing to match the other. */
     align-items: center;
 }
 
-.action-palette {
-    width: 100%; /* ← Full width horizontal bar */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 15px 25px;
-    display: flex; /* ← Horizontal layout */
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap; /* Wrap if screen too narrow */
-    margin-left: 0;
-}
-
-.palette-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: white;
-    margin-bottom: 0; /* Remove bottom margin since it's now horizontal */
-    margin-right: 15px; /* Space between title and tools */
-    opacity: 0.8;
-    letter-spacing: 1px;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
-.tool {
-    display: flex;
-    flex-direction: row; /* ← Icon and label side by side */
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 14px;
-    margin-bottom: 0; /* Remove vertical margin */
-    cursor: pointer;
-    border-radius: 10px;
-    color: white;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-
+/* Global icon base for the admin page. Keep this: the media queries below
+   only shrink it (16px, 11px, ...) and several components rely on the base
+   20px + FILL 0 default. Palette icons override it via .tool > .... */
 .material-symbols-rounded {
     font-size: 20px; /* Slightly smaller in horizontal layout */
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -1808,27 +3340,269 @@ body.dark-mode .info-group p {
     transition: 0.3s;
 }
 
-.tool span:not(.material-symbols-rounded) {
-    font-size: 13px;
+/* =========================================================
+   ACTION PALETTE
+
+   Same card language as the Patient Dashboard panels -- an
+   accent bar on the left, a hairline border, pill buttons that
+   fill when selected. The pills are deliberately larger than the
+   rest of the dashboard controls: this is the primary control
+   surface for painting a chart.
+
+   The surface is an opaque deep navy rather than the old
+   translucent white. The palette sits above the odontogram, whose
+   own surface is a light gradient, so translucent-white-on-white
+   left white labels and icons with almost no contrast.
+
+   Note on tokens: --gold is #0d47a1 here (it is not a gold), so the
+   accent uses --gold-light, the pale blue.
+
+   The tools are real <button>s now, so the browser handles focus
+   and keyboard activation; setTool() keeps .active and aria-pressed
+   in sync.
+   ========================================================= */
+.action-palette {
+    /* Narrow portrait rail pinned to the left of the chart. Narrow on
+       purpose: square tiles only need ~80px, so the odontogram keeps
+       nearly all of the width it had when the palette sat on top. */
+    flex: 0 0 134px;
+    width: 134px;
+    padding: 16px 10px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: linear-gradient(180deg, #14406f 0%, #0d2a52 100%);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-left: 4px solid var(--gold-light);
+    border-radius: 16px;
+    margin-left: 0;
+}
+
+.palette-head {
+    display: flex;
+    /* Stacked, because the rail is too narrow for icon + label side by side. */
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-align: center;
+}
+
+.palette-head .palette-head__icon {
+    font-size: 18px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    color: var(--gold-light);
+}
+
+.palette-title {
+    font-size: 10.5px;
     font-weight: 700;
-    text-align: left;
-    line-height: 1.2;
+    line-height: 1.25;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #ffffff;
+    opacity: 0.85;
+    margin-bottom: 0;
+    margin-right: 0;
+    /* Wraps to two lines inside the narrow rail instead of overflowing. */
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
-
-.tool:hover { 
-    background: rgba(255, 255, 255, 0.1); 
-    transform: translateY(-2px); 
+.palette-tools {
+    display: flex;
+    /* Portrait: one square tool per row. Gap is deliberately tight so that
+       eight tiles stay close to the chart's natural height -- the container
+       centres them now, so no card is stretched, but a tall rail still
+       pushes the row height up. */
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    min-height: 0;
 }
 
-.tool.active { 
-    background: var(--grad-gold); 
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(255, 162, 173, 0.4);
+.tool {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Fixed square: width AND height, so the tiles stay square instead of
+       following the column's aspect ratio. */
+    flex: 0 0 80px;
+    width: 80px;
+    height: 80px;
+    gap: 4px;
+    padding: 6px 4px;
+    margin-bottom: 0;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+                box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+/* Scoped so it does not fight the global .material-symbols-rounded rule,
+   which sizes icons across the whole admin page. */
+.tool > .material-symbols-rounded {
+    font-size: 28px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    user-select: none;
+    margin-bottom: 0;
+    transition: font-variation-settings 0.18s ease;
+}
+
+.tool__label {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: 0.1px;
+    text-align: center;
+    /* Longest label is "Extraction": sized so that single word fits the tile
+       on one line, and the two-word ones wrap between words rather than
+       mid-word. */
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.tool:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.tool:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.tool.active {
+    background: var(--grad-navy2);
+    border-color: #ffffff;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
 }
 
 .tool.active .material-symbols-rounded {
     font-variation-settings: 'FILL' 1;
+}
+
+.tool:active {
+    transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tool,
+    .tool > .material-symbols-rounded {
+        transition: none;
+    }
+
+    .tool:hover,
+    .tool.active,
+    .tool:active {
+        transform: none;
+    }
+}
+
+/* The chart lives in a full-screen modal on a phone, so this only needs to
+   survive a narrow viewport. The rail pairs its tiles into two columns here:
+   eight stacked tiles are taller than the compact chart on a small screen,
+   which would leave a large empty area under the chart. */
+@media (max-width: 768px) {
+    .action-palette {
+        flex: 0 0 182px;
+        width: 182px;
+        padding: 14px 12px 16px;
+        gap: 10px;
+        border-radius: 14px;
+    }
+
+    .palette-tools {
+        display: grid;
+        /* Two tile columns on a phone: eight stacked tiles would be taller
+           than the compact chart and push the row height up. */
+        grid-template-columns: repeat(2, 80px);
+        justify-content: center;
+        align-content: start;
+        gap: 6px;
+    }
+
+    .palette-title {
+        font-size: 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .tool {
+        flex: 0 0 80px;
+        width: 80px;
+        height: 80px;
+        padding: 6px 4px;
+        gap: 4px;
+        border-radius: 13px;
+    }
+
+    .tool > .material-symbols-rounded {
+        font-size: 28px;
+    }
+
+    .tool__label {
+        font-size: 11.5px;
+    }
+}
+
+@media (max-width: 420px) {
+    .action-palette {
+        flex: 0 0 152px;
+        width: 152px;
+        padding: 12px 6px 14px;
+    }
+
+    .palette-tools {
+        grid-template-columns: repeat(2, 66px);
+        gap: 5px;
+    }
+
+    .tool {
+        flex: 0 0 66px;
+        width: 66px;
+        height: 66px;
+    }
+
+    .tool > .material-symbols-rounded {
+        font-size: 24px;
+    }
+
+    .tool__label {
+        font-size: 10px;
+    }
 }
 
 /* =========================
@@ -1836,6 +3610,15 @@ body.dark-mode .info-group p {
 ========================== */
 .dental-chart {
     flex: 1;
+    /* min-width:0 lets the card shrink to the space left after the palette
+       column. Without it the flex item's automatic minimum is the
+       odontogram's min-content width, so the chart stayed ~200px wider than
+       its slot and body{overflow-x:hidden} silently clipped the right side.
+       The overflow-x puts that extra width into a scrollbar on the card
+       instead, which is what the mobile rules were already doing. */
+    min-width: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     width: 100%;
     background: var(--grad-navy);
     backdrop-filter: blur(15px);
@@ -1846,16 +3629,17 @@ body.dark-mode .info-group p {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
-.chart-title { 
-    margin-bottom: 25px; 
-    letter-spacing: 2px; 
-    color: black;
-
+.chart-title {
+    margin: 0 0 22px;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--navy);
 }
 
-body.dark-mode .chart-title{
-    color: white;
-}
+/* var(--navy) flips to the pale blue in dark mode, so the explicit
+   dark-mode override that used to force white is no longer needed. */
 
 .odontogram-container {
     display: flex;
@@ -1877,9 +3661,9 @@ body.dark-mode .chart-title{
     display: grid;
     grid-template-rows: repeat(2, 34px);
     grid-auto-flow: column;
-    gap: 0px; 
-    border: 1px solid white;
-    background: white;
+    gap: 0px;
+    border: 1px solid #000000;
+    background: #ffffff;
     width: 480px;
 }
 
@@ -1887,12 +3671,20 @@ body.dark-mode .chart-title{
     width: 780px;
 }
 
+/* White cells with a black stroke. Deliberately NOT themed: the odontogram
+   is a printable chart surface, so it stays black-on-white in light and
+   dark mode alike. */
 .grid-box {
     width: 48px; height: 34px;
     border: 0.8px solid #000000;
-    background: white;
+    background: #ffffff;
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
+    transition: background-color 0.18s ease;
+}
+
+.grid-box:hover {
+    background: #f2f2f2;
 }
 
 .grid-box input[type="text"].grid-input {
@@ -1902,45 +3694,95 @@ body.dark-mode .chart-title{
     background: transparent;
     font-size: 13px;
     text-align: center;
-    padding: 0;
+    padding: 0 2px;
     margin: 0;
     outline: none;
-    font-weight: bold;
-    color: #000;
-}
-
-.grid-box input[type="checkbox"].grid-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    appearance: none;
-    border: 2px solid #0d47a1;
+    font-weight: 600;
+    color: #000000;
     border-radius: 4px;
-    background: white;
-    position: relative;
-    transition: all 0.2s ease;
 }
 
+/* Empty until the clinician types: a faint inset outline reads as "this
+   cell is active" without adding a border to every box. */
+.grid-box input[type="text"].grid-input:focus {
+    background: #e8f0fb;
+    box-shadow: inset 0 0 0 2px #000000;
+}
+
+/* A cell that holds a checkbox carries the "markable" tint, so the checkbox
+   itself can be pure tick with no box of its own. */
+.grid-box--mark {
+    background: #fafafa;
+}
+
+.grid-box--mark:hover {
+    background: #f0f0f0;
+}
+
+body.tool-check-active .grid-box--mark {
+    background: #ececec;
+}
+
+body.tool-check-active .grid-box--mark:hover {
+    background: #e2e2e2;
+}
+
+/* The check is a CSS mask rather than a background-image. A mask means the
+   tick's shape lives in the mask and only its COLOUR is the background, so
+   checking can actually animate -- a background-image cannot be transitioned
+   from `none` to a URL, which is why the previous mark simply appeared.
+   The element stays a transparent square until checked, so there is still no
+   visible box. Size derives from the cell height, so it tracks the mobile
+   rules that shrink .grid-box without needing its own breakpoints. */
+.grid-box input[type="checkbox"].grid-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 58%;
+    width: auto;
+    aspect-ratio: 1 / 1;
+    min-height: 11px;
+    max-height: 20px;
+    margin: 0;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 6.75 9.75 17.5 3.75 11.5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20.5 6.75 9.75 17.5 3.75 11.5'/%3E%3C/svg%3E");
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: 82%;
+    mask-size: 82%;
+    transition: background-color 0.18s ease,
+                transform 0.24s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* Only the Check tool can mark a cell; the cursor says so. */
+body:not(.tool-check-active) .grid-box input[type="checkbox"].grid-checkbox {
+    cursor: not-allowed;
+}
+
+/* Marked: the masked shape fades to black and eases up past 1, then settles.
+   The slight overshoot is what makes it read as a deliberate tick. */
 .grid-box input[type="checkbox"].grid-checkbox:checked {
-    background: #0d47a1;
-    border-color: #0d47a1;
+    background-color: #0a0a0a;
+    transform: scale(1.12);
 }
 
-.grid-box input[type="checkbox"].grid-checkbox:checked::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 1px;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
+.grid-box input[type="checkbox"].grid-checkbox:focus-visible {
+    outline: 2px solid #000000;
+    outline-offset: 1px;
 }
 
-.grid-box input[type="checkbox"].grid-checkbox:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 5px rgba(13, 71, 161, 0.3);
+@media (prefers-reduced-motion: reduce) {
+    .grid-box input[type="checkbox"].grid-checkbox {
+        transition: none;
+    }
+
+    .grid-box input[type="checkbox"].grid-checkbox:checked {
+        transform: none;
+    }
 }
 
 .teeth-row {
@@ -1979,16 +3821,34 @@ body.dark-mode .chart-title{
 .reverse-layout .tooth-svg { order: 1; }
 .reverse-layout .tooth-label { order: 2; margin-top: 4px; margin-bottom: 0; }
 
+/* Wrapper for the permanent section. fit-content makes it shrink-wrap
+   .permanent-block, so the rotated label sits a fixed distance beside the
+   teeth and status boxes at any width. It used to be width:100%, which
+   made the label drift further from the block as the container got wider
+   (the block is centred, the label was not). */
+.permanent-wrap {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+/* Rotation is intentional: it reads bottom-to-top alongside the column of
+   teeth. Kept exactly as-is, only the offset and typography changed. */
 .label-side.rotated {
-    position: absolute; 
-    left: -30px; 
+    position: absolute;
+    /* Hugging the teeth and status boxes. Measured gap is a constant ~4px
+       at every viewport width, so it cannot drift away on a large screen
+       the way a percentage or viewport-relative offset would. */
+    left: -11px;
     top: 50%;
     transform: rotate(-90deg) translateX(-50%);
     transform-origin: left;
     white-space: nowrap;
-    font-size: 14px;
-    font-weight: bold;
-    color: black;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #475569;
 }
 
 .permanent-block {
@@ -1996,8 +3856,12 @@ body.dark-mode .chart-title{
     margin: 0 auto;
 }
 body.dark-mode .label-side.rotated{
-    color: white;
+    color: #cbd5e1;
 }
+
+/* No dark-mode overrides for .unified-grid / .grid-box / .grid-input /
+   .grid-checkbox: the odontogram is a printable chart surface and is meant
+   to stay black-on-white in both themes. */
 
 .axis-v {
     position: absolute;
@@ -2005,22 +3869,34 @@ body.dark-mode .label-side.rotated{
     top: 0;
     bottom: 0;
     width: 1px;
-    background: white;
+    background: rgba(13, 71, 161, 0.22);
     z-index: 10;
 }
 
-.axis-h { 
-    width: 100%; 
-    height: 1px; 
-    background: rgba(255, 255, 255, 0.3); 
+.axis-h {
+    width: 100%;
+    height: 1px;
+    background: rgba(13, 71, 161, 0.14);
     margin: 15px 0;
 }
 
-.axis-h-mid { 
-    width: 100%; 
-    height: 1px; 
-    background: white; 
+.axis-h-mid {
+    width: 100%;
+    height: 1px;
+    background: rgba(13, 71, 161, 0.22);
     margin: 10px 0;
+}
+
+body.dark-mode .axis-v {
+    background: rgba(148, 163, 184, 0.4);
+}
+
+body.dark-mode .axis-h {
+    background: rgba(148, 163, 184, 0.24);
+}
+
+body.dark-mode .axis-h-mid {
+    background: rgba(148, 163, 184, 0.34);
 }
 
 .section-label {
@@ -2246,9 +4122,23 @@ body.dark-mode #logoutModal .btn-logout-cancel:hover {
     overflow: auto;
     padding: 20px;
     display: flex;
+    /* flex-start, not center: openLiveChartModal() moves #section-chart in
+       here, and with no width constraint it sized to the odontogram's
+       min-content width. Centring an oversized flex item pushes the same
+       overflow off BOTH sides with no scrollbar, which put the Action
+       Palette off the left edge and out of reach on a phone. */
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Belt and braces for the same bug: the moved section now fills the modal
+   body exactly, and the chart's own min-width:0/overflow-x handles the
+   wide odontogram by scrolling inside its card. */
+.chart-modal-body > .chart-section {
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 auto;
 }
 
 .chart-modal-body .chart-container {
@@ -2484,14 +4374,6 @@ body.dark-mode .profile-modal-content {
     transition: background 0.4s ease;
 }
 
-body.dark-mode .info-group label {
-    color: var(--gold);
-}
-
-body.dark-mode .info-group p {
-    color: #e0e0e0;
-}
-
 body.dark-mode .medical-dashboard-style {
     background: #1a1f2e;
     color: #e0e0e0;
@@ -2516,13 +4398,20 @@ body.dark-mode .med-list li::before {
 }
 
 body.dark-mode .tool {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
     color: #e0e0e0;
-    transition: all 0.3s ease;
 }
 
 body.dark-mode .tool:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.34);
+}
+
+body.dark-mode .tool.active {
+    background: var(--grad-navy2);
+    border-color: #ffffff;
+    color: #ffffff;
 }
 
 body.dark-mode .dental-chart {
@@ -2540,11 +4429,11 @@ body:not(.dark-mode) .tooth-label {
 }
 
 body:not(.dark-mode) .section-label {
-    color: #000000;
+    color: #475569;
 }
 
 body:not(.dark-mode) .label-inline {
-    color: #000000;
+    color: #475569;
 }
 
 body:not(.dark-mode) .axis-v,
@@ -2573,34 +4462,7 @@ body.dark-mode .segment {
     stroke: #000000;
 }
 
-body.dark-mode .grid-box {
-    background: #ffffff;
-    border-color: #000000;
-}
-
-body:not(.dark-mode) .grid-box {
-    background: #ffffff;
-    border-color: #000000;
-}
-
 /* Inline color overrides for dark mode */
-body.dark-mode #pd-id {
-    color: #e0e0e0 !important;
-}
-
-body.dark-mode #pd-meds {
-    color: #aaa !important;
-}
-
-body.dark-mode #section-patientdashboard .p-main-info h2 {
-    color: #e0e0e0 !important;
-}
-
-body.dark-mode #section-patientdashboard .pd-stat label,
-body.dark-mode .patient-profile-header .pd-stat label {
-    color: var(--gold) !important;
-}
-
 body.dark-mode .metric-data h3,
 body.dark-mode .metric-data p,
 body.dark-mode .appointment-table th,
@@ -2672,30 +4534,6 @@ body.dark-mode .datetime-text {
 }
 
 
-    #download-pdf-btn {
-        background: linear-gradient(135deg, #6ec6ff, #42a5f5);
-        color: white;
-        border: none;
-        padding: 14px 28px;
-        font-size: 16px;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(66, 165, 245, 0.35);
-        transition: all 0.3s ease;
-        letter-spacing: 0.5px;
-    }
-
-    #download-pdf-btn:hover {
-        background: linear-gradient(135deg, #42a5f5, #1e88e5);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(30, 136, 229, 0.45);
-    }
-
-    #download-pdf-btn:active {
-        transform: scale(0.98);
-    }
-
 /* =========================================
    RESPONSIVE MEDIA QUERIES
    ========================================= */
@@ -2729,7 +4567,7 @@ body.dark-mode .datetime-text {
     }
     
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 15px;
     }
     
@@ -2861,7 +4699,7 @@ body.dark-mode .datetime-text {
     }
     
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
     }
     
     /* Hide dental chart on mobile - use modal instead */
@@ -2873,58 +4711,15 @@ body.dark-mode .datetime-text {
         grid-template-columns: 1fr;
         margin-right: 0;
     }
-    
-    .patient-profile-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-    }
-    
-    .patient-profile-header > div:last-child {
-        margin-left: 0 !important;
-        padding-left: 0 !important;
-        border-left: none !important;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
-    }
-    
-    .pd-stat {
-        min-width: 80px;
-        height: 60px;
-        font-size: 22px;
-        font-size: 20px !important;
-    }
-    
-    .pd-id {
-        font-size: 12px !important;
-    }
-    
+
     .content-panel {
         padding: 15px;
         border-radius: 15px;
     }
     
     .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 15px;
-    }
-    
-    /* Patient info grid - single column on mobile */
-    #section-patientdashboard .info-grid {
-        grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    #section-patientdashboard .panel-header h3 {
-        font-size: 18px;
-        margin: 20px;
-       
-    }
-    
-    #section-patientdashboard .panel-header p {
-        font-size: 12px;
     }
     
     /* Patient Information first, Visit History second on mobile */
@@ -2934,21 +4729,20 @@ body.dark-mode .datetime-text {
         width: 100%;
     }
     
+    /* The table scrolls sideways inside .pd-visits__scroll. The panel itself
+       must NOT scroll, or it would clip the title row and the rounded card. */
     #section-patientdashboard .content-panel:nth-child(2) {
         width: 100%;
         max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
     
-    #section-patientdashboard .appointment-table {
-        min-width: 500px;
-        font-size: 12px;
+    #section-patientdashboard .pd-visits .pd-visits__table {
+        min-width: 560px;
     }
     
-    #section-patientdashboard .appointment-table th,
-    #section-patientdashboard .appointment-table td {
-        padding: 8px 10px;
+    #section-patientdashboard .pd-visits .pd-visits__table th,
+    #section-patientdashboard .pd-visits .pd-visits__table td {
+        padding: 9px 12px;
         font-size: 12px;
     }
     
@@ -2956,46 +4750,9 @@ body.dark-mode .datetime-text {
     #section-patientdashboard .panel-content {
         padding: 12px;
     }
-    
-    #section-patientdashboard .info-group {
-        margin-bottom: 10px;
-    }
-    
-    #section-patientdashboard .info-group label {
-        font-size: 10px;
-    }
-    
-    #section-patientdashboard .info-group p {
-        font-size: 12px;
-    }
-    
+
     #section-patientdashboard hr {
         margin: 10px 0;
-    }
-    
-    #section-patientdashboard #pd-meds {
-        font-size: 12px;
-        padding-left: 15px;
-    }
-    
-    .info-group {
-        margin-bottom: 12px;
-    }
-    
-    .info-group label {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .info-group p {
-        font-size: 13px;
-    }
-    
-    #download-pdf-btn {
-        display: none !important;
-        font-size: 14px;
-        padding: 10px 20px;
     }
     
     /* Dental Chart Mobile */
@@ -3057,33 +4814,9 @@ body.dark-mode .datetime-text {
     
     .label-side.rotated {
         font-size: 11px;
-        left: -20px;
+        left: -11px;
     }
-    
-    .action-palette {
-        padding: 10px 15px;
-        gap: 6px;
-    }
-    
-    .tool {
-        padding: 6px 10px;
-        font-size: 11px;
-        gap: 4px;
-    }
-    
-    .palette-title {
-        font-size: 11px;
-        margin-right: 8px;
-    }
-    
-    .material-symbols-rounded {
-        font-size: 16px;
-    }
-    
-    .tool span:not(.material-symbols-rounded) {
-        font-size: 11px;
-    }
-    
+
     /* Treatment Notes Mobile */
     #section-patientdashboard .treatment-section {
         margin-top: 20px;
@@ -3371,30 +5104,11 @@ body.dark-mode .datetime-text {
     .chart-container {
         padding: 8px;
         gap: 8px;
-        align-items: stretch;
+        align-items: center;
     }
 
-    .action-palette {
-        padding: 8px 12px;
-        gap: 6px;
-        border-radius: 10px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .tool {
-        padding: 6px 10px;
-        font-size: 12px;
-        gap: 4px;
-        border-radius: 8px;
-        white-space: nowrap;
-    }
-
-    .palette-title {
-        font-size: 11px;
-        margin-right: 8px;
-    }
-
+    /* Palette sizing lives with the base component now; only the icon base
+       needs shrinking here. */
     .material-symbols-rounded {
         font-size: 16px;
     }
@@ -3438,11 +5152,6 @@ body.dark-mode .datetime-text {
 
     .grid-box input[type="text"].grid-input {
         font-size: 11px;
-    }
-
-    .grid-box input[type="checkbox"].grid-checkbox {
-        width: 14px;
-        height: 14px;
     }
 
     .tooth-unit {
@@ -3538,28 +5247,7 @@ body.dark-mode .datetime-text {
     .chart-container {
         padding: 2px;
         gap: 4px;
-        align-items: stretch;
-    }
-
-    .action-palette {
-        padding: 3px 6px;
-        gap: 2px;
-        border-radius: 6px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-
-    .tool {
-        padding: 2px 4px;
-        font-size: 8px;
-        gap: 1px;
-        border-radius: 3px;
-        white-space: nowrap;
-    }
-
-    .palette-title {
-        font-size: 7px;
-        margin-right: 3px;
+        align-items: center;
     }
 
     .material-symbols-rounded {
@@ -3608,8 +5296,9 @@ body.dark-mode .datetime-text {
     }
 
     .grid-box input[type="checkbox"].grid-checkbox {
-        width: 10px;
-        height: 10px;
+        /* Sizing is inherited from .grid-box via height:60% + aspect-ratio,
+           so the cell can shrink without breaking the square. */
+        min-height: 9px;
     }
 
     .tooth-unit {
@@ -3678,24 +5367,6 @@ body.dark-mode .datetime-text {
         padding: 8px;
         gap: 8px;
         margin-top: 5px;
-    }
-
-    #section-chart .action-palette {
-        padding: 8px 12px;
-        gap: 6px;
-        border-radius: 12px;
-    }
-
-    #section-chart .tool {
-        padding: 6px 10px;
-        font-size: 12px;
-        gap: 4px;
-        border-radius: 8px;
-    }
-
-    #section-chart .palette-title {
-        font-size: 11px;
-        margin-right: 8px;
     }
 
     #section-chart .material-symbols-rounded {
@@ -3804,28 +5475,6 @@ body.dark-mode .datetime-text {
         padding: 8px;
         gap: 8px;
         margin-top: 5px;
-    }
-
-    #section-chart .action-palette {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        padding: 8px 12px;
-        gap: 6px;
-        border-radius: 12px;
-    }
-
-    #section-chart .tool {
-        flex-direction: row;
-        padding: 6px 10px;
-        font-size: 12px;
-        gap: 4px;
-        border-radius: 8px;
-    }
-
-    #section-chart .palette-title {
-        font-size: 11px;
-        margin-right: 8px;
     }
 
     #section-chart .material-symbols-rounded {
@@ -4050,39 +5699,20 @@ body.dark-mode .datetime-text {
         font-size: 11px;
         width: 70px;
     }
-    
-    .tool {
-        padding: 5px 8px;
-        font-size: 10px;
-    }
-    
-    .palette-title {
-        font-size: 10px;
-    }
-    
-    .material-symbols-rounded {
-        font-size: 14px;
-    }
-    
-    .tool span:not(.material-symbols-rounded) {
-        font-size: 10px;
-    }
-    
+
     .profile-modal-content {
         width: 98%;
         padding: 15px;
         margin: 5% auto;
     }
     
-    .info-group label {
-        font-size: 10px;
-    }
-    
-    .info-group p {
-        font-size: 13px;
-    }
-    
     .section-label {
+        font-size: 11px;
+    }
+    
+    /* Keep the rotated label the same size as .section-label at this width
+       too, so PERMANENT TEETH and TEMPORARY TEETH always match. */
+    .label-side.rotated {
         font-size: 11px;
     }
     
@@ -6213,6 +7843,12 @@ body.dark-mode #section-appointments .appt-decline-btn {
     display: none;
 }
 
+/* Opened from inside a modal: .modal is z-index 99999, so the popup has to
+   clear it. The toggle adds this class from JS. */
+.dentist-menu.is-over-modal {
+    z-index: 100060;
+}
+
 .dentist-menu__option {
     display: flex;
     align-items: center;
@@ -6308,6 +7944,87 @@ body.dark-mode .dentist-menu__option.is-active {
 
 body.dark-mode .dentist-menu__empty {
     color: #94a3b8;
+}
+
+/* ---- Dentist Name combobox inside the appointment modal ----
+   The appointments table version is scoped to #section-appointments above.
+   These repeat the essentials for #newApptModal, because the modal styles
+   generic inputs by element selector and would otherwise win on specificity. */
+#newApptModal .adm-form-side .dentist-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Only the right padding changes here; the modal's own rule keeps the rest
+   of the control looking like every other field in the form. */
+#newApptModal .adm-form-side .dentist-field .dentist-input {
+    padding-right: 38px;
+}
+
+#newApptModal .adm-form-side .dentist-field .dentist-input:focus,
+#newApptModal .adm-form-side .dentist-field .dentist-input[aria-expanded="true"] {
+    outline: none;
+}
+
+#newApptModal .adm-form-side .dentist-field__toggle {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+#newApptModal .adm-form-side .dentist-field__toggle:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+#newApptModal .adm-form-side .dentist-field__toggle:focus-visible {
+    outline: 2px solid #0d47a1;
+    outline-offset: 1px;
+}
+
+#newApptModal .adm-form-side .dentist-field__toggle > .material-symbols-rounded {
+    font-size: 22px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+    transition: transform 0.18s ease;
+}
+
+#newApptModal .adm-form-side .dentist-field__toggle.is-open > .material-symbols-rounded {
+    transform: rotate(180deg);
+}
+
+body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle {
+    color: #94a3b8;
+}
+
+body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle:hover {
+    background: #334155;
+    color: #e2e8f0;
 }
 
 @media (max-width: 768px) {

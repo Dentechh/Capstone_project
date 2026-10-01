@@ -1,4 +1,4 @@
-﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, session, jsonify
+﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, get_flashed_messages, session, jsonify
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from google.oauth2 import id_token
@@ -14,6 +14,7 @@ import smtplib
 from email.message import EmailMessage
 import requests
 import base64
+import re
 from datetime import timedelta
 import random
 from dotenv import load_dotenv
@@ -23,6 +24,12 @@ from cache_store import SimpleCache
 from google.cloud.firestore_v1.base_query import FieldFilter
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
+
+# Admin-scoped flash text must never surface on a patient page. The dashboard
+# greeting now travels through admin_welcome_toast instead of the flash queue,
+# so anything carrying the "Dr. " honorific is admin-only. This also clears the
+# greeting already queued in sessions created before that change.
+ADMIN_ONLY_FLASH = re.compile(r"\bDr\.\s")
 
 
 class BaseFlaskApp:
@@ -74,6 +81,15 @@ class DentalClinicApp(BaseFlaskApp):
     def _setup_app(self):
         self._app = Flask(__name__)
         import read_meter; read_meter.install(self._app)
+
+        def patient_flashed_messages():
+            messages = get_flashed_messages(with_categories=True)
+            return [
+                m for m in messages
+                if m[0] != "admin" and not ADMIN_ONLY_FLASH.search(m[1])
+            ]
+
+        self._app.jinja_env.globals["patient_flashed_messages"] = patient_flashed_messages
 
     def _setup_config(self):
         self.app.config["MAIL_SERVER"] = "smtp.gmail.com"
@@ -4083,10 +4099,37 @@ class DentalClinicApp(BaseFlaskApp):
         docs = docs[:page_size]
 
         rows = []
+        identity_cache = {}
+
         for doc in docs:
             data = doc.to_dict()
             data["id"] = doc.id
-            data["uid"] = doc.reference.parent.parent.id
+            account_uid = doc.reference.parent.parent.id
+            data["uid"] = account_uid
+
+            # This list's data-sex is what the Patient Dashboard header
+            # displays, so it has to agree with the editable value shown in
+            # My Patients / User Management. Serving the Sex snapshotted on
+            # this particular appointment instead made an admin's correction
+            # look like it never saved: the account got the new value but
+            # this list kept returning the old one.
+            try:
+                account_doc = (
+                    self.db.collection(self.Customer_Account)
+                    .document(account_uid)
+                    .get()
+                )
+                account_data = (
+                    account_doc.to_dict() if account_doc.exists else {}
+                )
+                _, resolved_sex, _ = self._resolve_account_identity(
+                    account_uid, account_data, identity_cache
+                )
+                if resolved_sex:
+                    data["Sex"] = resolved_sex
+            except Exception as e:
+                print("APPROVED LIST SEX RESOLVE FAILED:", e)
+
             rows.append(data)
 
         next_cursor = None
@@ -4107,12 +4150,54 @@ class DentalClinicApp(BaseFlaskApp):
             "rows": rows,
             "next_cursor": next_cursor
         })
-    
-    
+
+
+    def admin_patient_avatar(self):
+        """
+        Profile picture URL for a single patient, fetched on demand when the
+        Patient Dashboard opens.
+
+        Deliberately NOT folded into the list payloads (approved_page,
+        my_patients_page): those are paginated, so adding it there would cost
+        one extra account read per row on every page of every list. The
+        dashboard only ever shows one patient at a time, so a single lookup
+        per open is the cheapest correct place for it.
+
+        Returns an empty profile_pic for a missing account or an account that
+        never picked a picture, which the dashboard renders as its default
+        avatar. Never raises -- a broken avatar must not break the page.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        uid = (request.args.get("uid") or "").strip()
+        if not uid:
+            return jsonify({"success": True, "profile_pic": ""})
+
+        try:
+            account_doc = (
+                self.db.collection(self.Customer_Account)
+                .document(uid)
+                .get()
+            )
+            account_data = account_doc.to_dict() if account_doc.exists else {}
+            return jsonify({
+                "success": True,
+                "profile_pic": (account_data or {}).get("profile_pic", "") or ""
+            })
+        except Exception as e:
+            print("PATIENT AVATAR READ FAILED:", e)
+            return jsonify({"success": True, "profile_pic": ""})
+
+
 
     def adminDashboard(self):
         if not session.get('admin_logged_in'):
             return redirect(url_for("adminLogin"))
+
+        # One-shot: pop it so the greeting is shown on this visit only, and so it
+        # can never survive into a patient page render.
+        admin_welcome_toast = session.pop('admin_welcome_toast', '')
 
         # The four big lists (pending appointments, approved patients,
         # My Patients, User Management) are NOT fetched here anymore. The
@@ -4175,6 +4260,7 @@ class DentalClinicApp(BaseFlaskApp):
             Approve=[],
             manageable_accounts=[],
             my_patients=[],
+            admin_welcome_toast=admin_welcome_toast,
             pending_count=pending_count,
             approved_count=approved_count,
             total_patients=total_patients,
@@ -4870,6 +4956,14 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "email": patient_data.get("email", ""),
 
+                # Normalised sex key -- see the note in the account-uid
+                # branch below. Prefer the account's latest accepted value.
+                "sex": str(
+                    patient_data.get("sex")
+                    or patient_data.get("Sex")
+                    or ""
+                ).strip(),
+
                 "full_name": (
                     f"{patient_data.get('first_name', '')} "
                     f"{patient_data.get('middle_name', '')} "
@@ -4911,6 +5005,15 @@ class DentalClinicApp(BaseFlaskApp):
                         or account_data.get("ContactNumber")
                         or ""
                     )
+
+                    # The account keeps the most recently accepted
+                    # appointment's sex as "last_sex", which is fresher than
+                    # whatever the patient document still holds.
+                    data["sex"] = str(
+                        account_data.get("last_sex")
+                        or data.get("sex")
+                        or ""
+                    ).strip()
 
             visit_history = []
             if account_uid:
@@ -5041,6 +5144,20 @@ class DentalClinicApp(BaseFlaskApp):
         data["account_type"] = (
             data.get("provider", "password").capitalize()
         )
+
+        # Expose the patient's sex under one stable key. It is stored under
+        # three different names depending on where you look: "last_sex" on the
+        # account (the latest accepted appointment), "Sex" on individual
+        # Approve records, and "sex" on the patient document. Callers had to
+        # know which document a value came from, and a patient whose Approve
+        # record predates the field simply got nothing back.
+        data["sex"] = str(
+            data.get("last_sex")
+            or data.get("sex")
+            or data.get("Sex")
+            or ""
+        ).strip()
+
         visit_history = []
         done_docs = (
             self.db.collection(self.Customer_Account)
@@ -5107,7 +5224,7 @@ class DentalClinicApp(BaseFlaskApp):
                 session['admin_uid'] = uid
                 session['admin_last_activity'] = datetime.now(UTC).isoformat()
                 
-                flash(f"Welcome back, Dr. {name}!", "success")
+                session['admin_welcome_toast'] = f"Welcome back, Dr. {name}!"
                 return redirect(url_for("adminDashboard"))
                 
             except ValueError as e:
@@ -6269,6 +6386,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
         self.app.route("/admin/approved_page")(self.admin_approved_page)
+        self.app.route("/admin/patient_avatar")(self.admin_patient_avatar)
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
         self.app.route("/get_patient/<uid>")(self.get_patient)
         self.app.route("/admin_login", methods=["GET", "POST"])(self.adminLogin)

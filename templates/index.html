@@ -13,7 +13,7 @@
 </head>
 <body>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+{% with messages = patient_flashed_messages() %}
   {% if messages %}
     <div class="flash-container" id="flash-container">
       {% for category, message in messages %}

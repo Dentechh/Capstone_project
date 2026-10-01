@@ -191,7 +191,7 @@
 
     <!-- Flash Messages Display - Fixed Position with Close Button -->
     <div class="flash-container" id="flashContainer">
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages = patient_flashed_messages() %}
         {% if messages %}
             {% for category, message in messages %}
             <div class="flash {{ category }}" id="flash-{{ loop.index }}">

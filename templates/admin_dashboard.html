@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=6">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=25">
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
                     <style id="doctorCalendarTheme">
@@ -1416,6 +1416,24 @@ body.dark-mode .proc-period-btn.active {
     };
 })();
 </script>
+
+{% if admin_welcome_toast %}
+<!-- The message travels in a data attribute rather than being interpolated
+     straight into the script. A Jinja expression renders to valid JS here,
+     but the editor parses the *template source*, where braces in an argument
+     position are not JavaScript, so it flagged the line as a syntax error.
+     Attribute context is also the correct escaping context here -- showToast()
+     writes the message with textContent, never innerHTML. -->
+<div id="adminWelcomeToast" data-message="{{ admin_welcome_toast }}" hidden></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var holder = document.getElementById('adminWelcomeToast');
+        if (holder) {
+            showToast(holder.getAttribute('data-message'), 'success', 4500);
+        }
+    });
+</script>
+{% endif %}
 
     <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -3651,8 +3669,20 @@ function setDentistToggleOpen(input, isOpen) {
     if (toggle) toggle.classList.toggle('is-open', isOpen);
 }
 
+/* The popup is portalled to <body>, so it needs a different stacking level
+   depending on what opened it: .modal sits at z-index 99999 and the modal
+   box clips its own overflow. */
+function setDentistMenuContext(input) {
+    const menu = getDentistMenu();
+    menu.classList.toggle('is-over-modal',
+        !!(input && input.closest && input.closest('#newApptModal')));
+}
+
 function closeDentistMenu() {
-    if (dentistMenuEl) dentistMenuEl.hidden = true;
+    if (dentistMenuEl) {
+        dentistMenuEl.hidden = true;
+        dentistMenuEl.classList.remove('is-over-modal');
+    }
     if (dentistOpenInput) {
         dentistOpenInput.setAttribute('aria-expanded', 'false');
         dentistOpenInput.removeAttribute('aria-activedescendant');
@@ -3708,6 +3738,7 @@ function openDentistMenu(input) {
     input.setAttribute('aria-expanded', 'true');
     input.removeAttribute('aria-activedescendant');
     setDentistToggleOpen(input, true);
+    setDentistMenuContext(input);
     positionDentistMenu(input);
 }
 
@@ -3946,32 +3977,53 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
         <div id="section-patientdashboard" class="content-section">
-            
-            <button onclick="showSection('WeeklyClients'); document.getElementById('nav-patientdashboard').style.display='none';" class="btn-back" style="margin-bottom: 20px; background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">&larr; Back to Patients</button>
+
+            <button type="button" class="pd-back"
+                onclick="showSection('WeeklyClients'); document.getElementById('nav-patientdashboard').style.display='none';">
+                <span class="material-symbols-rounded pd-back__icon" aria-hidden="true">arrow_back</span>
+                <span class="pd-back__label">Back to Patients</span>
+            </button>
 
             <!-- Hidden Approve data for JS access -->
             <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
 
-            <div class="patient-profile-header">
-                <div class="p-main-info">
-                    <h2 id="pd-name" style="margin: 0; font-size: 24px;">Patient Name</h2>
-                    <p id="pd-id" style="margin: 0; font-size: 14px;">#ID-0000</p>
-
-                    
+            <!-- Identity header: avatar (uploaded picture, or the default
+                 one when the patient has none), name, account no, gender
+                 and age. Styled by the .pd-* block in admin.css. -->
+            <header class="pd-header" id="pd-header">
+                <div class="pd-header__identity">
+                    <span class="pd-avatar" id="pd-avatar" aria-hidden="true">
+                        <span class="pd-avatar__initials" id="pd-avatar-initials">?</span>
+                        <img class="pd-avatar__img" id="pd-avatar-img" alt="" style="display: none;">
+                    </span>
+                    <div class="pd-header__text">
+                        <h2 class="pd-header__name" id="pd-name">Patient Name</h2>
+                        <p class="pd-header__account">
+                            <span class="material-symbols-rounded pd-header__account-icon" aria-hidden="true">badge</span>
+                            <span class="pd-header__account-label">Account No</span>
+                            <span class="pd-header__account-no" id="pd-id"></span>
+                        </p>
+                    </div>
                 </div>
-                <div style="display: flex; gap: 40px; margin-left: 500px; padding-right: 20px; border-left: 1px solid rgba(0,0,0,0.2); padding-left: 40px;">
-                    
-                    <div class="pd-stat"><label style="display: block; font-size: 15px; text-transform: uppercase;">Gender</label><span id="pd-gender" style="font-weight: 1500;">-</span></div>
-<div class="pd-stat" style="display: none;">
-    <label style="display: block; font-size: 15px; text-transform: uppercase;">Age</label>
-    <span id="pd-age" style="font-weight: 1500;">-</span>
-</div>
 
-<div class="pd-stat" style="display: none;">
-    <label style="display: block; font-size: 15px; text-transform: uppercase;">Blood Type</label>
-    <span id="pd-blood" style="font-weight: 1500;">-</span>
-</div>                </div>
-            </div>
+                <div class="pd-header__stats">
+                    <div class="pd-stat">
+                        <span class="pd-stat__label">Sex</span>
+                        <span class="pd-stat__value" id="pd-gender">-</span>
+                    </div>
+                    <div class="pd-stat">
+                        <span class="pd-stat__label">Age</span>
+                        <span class="pd-stat__value" id="pd-age">-</span>
+                    </div>
+                    <!-- Blood type is not real patient data yet (see the
+                         hardcoded value in openPatientDashboard), so it stays
+                         hidden instead of showing a fabricated "O+". -->
+                    <div class="pd-stat" style="display: none;">
+                        <span class="pd-stat__label">Blood Type</span>
+                        <span class="pd-stat__value" id="pd-blood">-</span>
+                    </div>
+                </div>
+            </header>
 
             <div id="pd-details" style="display:none;">
                 <span id="pd-fullname"></span>
@@ -3996,101 +4048,203 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span id="pd-w-pill"></span>
             </div>
 
-            <div class="dashboard-grid" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-                <div class="content-panel">
-                    <div class="panel-header"><h3>Patient Information</h3></div>
-                    <div class="panel-content">
-                        <div class="info-grid">
-                            <div class="info-group">
-                                <label>Full Name</label>
-                                <p id="pd-disp-fullname"></p>
+            <!-- Layout lives in .dashboard-grid in admin.css. An inline
+                 grid-template-columns here would beat the stylesheet (and its
+                 media queries), which is what previously kept this grid at
+                 `1fr` = minmax(auto, 1fr) on phones. -->
+            <div class="dashboard-grid">
+                <div class="content-panel pd-info-panel">
+                    <div class="pd-panel-head">
+                        <span class="material-symbols-rounded pd-panel-head__icon" aria-hidden="true">assignment_ind</span>
+                        <h3 class="pd-panel-head__title">Patient Information</h3>
+                    </div>
+                    <div class="panel-content pd-info">
+                        <div class="pd-fields">
+                            <div class="pd-field">
+                                <span class="pd-field__label">Full Name</span>
+                                <span class="pd-field__value" id="pd-disp-fullname"></span>
                             </div>
-                            <div class="info-group">
-                                <label>Middle Name</label>
-                                <p id="pd-disp-middlename">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Middle Name</span>
+                                <span class="pd-field__value" id="pd-disp-middlename">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Birthday</label>
-                                <p id="pd-disp-birthday">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Birthday</span>
+                                <span class="pd-field__value" id="pd-disp-birthday">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Nationality</label>
-                                <p id="pd-disp-nationality">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Nationality</span>
+                                <span class="pd-field__value" id="pd-disp-nationality">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Religion</label>
-                                <p id="pd-disp-religion">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Religion</span>
+                                <span class="pd-field__value" id="pd-disp-religion">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Occupation</label>
-                                <p id="pd-disp-occupation">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Occupation</span>
+                                <span class="pd-field__value" id="pd-disp-occupation">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Civil Status</label>
-                                <p id="pd-disp-civilstatus">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Civil Status</span>
+                                <span class="pd-field__value" id="pd-disp-civilstatus">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Contact Number</label>
-                                <p id="pd-disp-contact">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Contact Number</span>
+                                <span class="pd-field__value" id="pd-disp-contact">-</span>
                             </div>
-                            <div class="info-group">
-                                <label>Service</label>
-                                <p id="pd-disp-service">-</p>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Service</span>
+                                <span class="pd-field__value" id="pd-disp-service">-</span>
                             </div>
-                        <div class="info-group" style="display: none;"> <label>Patient ID</label> <p id="pd-disp-Patient_unq_id">-</p> </div>
+                            <div class="pd-field" style="display: none;">
+                                <span class="pd-field__label">Patient ID</span>
+                                <span class="pd-field__value" id="pd-disp-Patient_unq_id">-</span>
+                            </div>
                         </div>
-                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                        <p><strong>Medical History:</strong></p>
-                        <ul id="pd-meds" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
-                            <li id="q1-check">Q1 (In Good Health): <span>-</span></li>
-                            <li id="q2-check">Q2 (Under Medical Treatment): <span>-</span> <span id="q2-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                            <li id="q3-check">Q3 (Serious Illness / Surgical Operation): <span>-</span> <span id="q3-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                            <li id="q4-check">Q4 (Have been hospitalized before): <span>-</span> <span id="q4-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                            <li id="q5-check">Q5 (Taking any medication): <span>-</span> <span id="q5-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                            <li id="q6-check">Q6 (Using Tobacco Products): <span>-</span></li>
-                            <li id="q7-check">Q7 (Have any Allergy): <span>-</span> <span id="q7-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                            <li id="q9-check">Q9 (Medical Conditon): <span>-</span> <span id="q9-spec" style="font-weight: normal; color: #666; margin-left: 8px;"></span></li>
-                        </ul>
-                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-                        <p><strong>Women's Health:</strong></p>
-                        <ul id="pd-womens" style="font-size: 14px; padding-left: 20px; list-style: none; margin-top: 5px;">
-                            <li id="w-preg-check">Currently Pregnant: <span>-</span></li>
-                            <li id="w-nurse-check">Nursing Mother: <span>-</span></li>
-                            <li id="w-pill-check">Taking Birth Control Pills: <span>-</span></li>
-                        </ul>
+
+                        <section class="pd-subsection">
+                            <h4 class="pd-subsection__title">
+                                <span class="material-symbols-rounded pd-subsection__icon" aria-hidden="true">medical_services</span>
+                                Medical History
+                            </h4>
+                            <ul class="pd-checks" id="pd-meds">
+                                <li class="pd-check" id="q1-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q1</span>
+                                        <span class="pd-check__label">In Good Health</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q2-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q2</span>
+                                        <span class="pd-check__label">Under Medical Treatment</span>
+                                        <span class="pd-check__spec" id="q2-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q3-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q3</span>
+                                        <span class="pd-check__label">Serious Illness / Surgical Operation</span>
+                                        <span class="pd-check__spec" id="q3-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q4-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q4</span>
+                                        <span class="pd-check__label">Have been hospitalized before</span>
+                                        <span class="pd-check__spec" id="q4-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q5-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q5</span>
+                                        <span class="pd-check__label">Taking any medication</span>
+                                        <span class="pd-check__spec" id="q5-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q6-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q6</span>
+                                        <span class="pd-check__label">Using Tobacco Products</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q7-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q7</span>
+                                        <span class="pd-check__label">Have any Allergy</span>
+                                        <span class="pd-check__spec" id="q7-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q9-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q9</span>
+                                        <span class="pd-check__label">Medical Condition</span>
+                                        <span class="pd-check__spec" id="q9-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <!-- Hidden for a male patient; see syncWomensHealthVisibility(). -->
+                        <section class="pd-subsection" id="pd-womens-block">
+                            <h4 class="pd-subsection__title">
+                                <span class="material-symbols-rounded pd-subsection__icon" aria-hidden="true">favorite</span>
+                                Women's Health
+                            </h4>
+                            <ul class="pd-checks" id="pd-womens">
+                                <li class="pd-check" id="w-preg-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Currently Pregnant</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="w-nurse-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Nursing Mother</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="w-pill-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Taking Birth Control Pills</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                            </ul>
+                        </section>
                     </div>
                 </div>
 
-                <div class="content-panel">
-                    <div class="panel-header"><h3>Visit History <p hidden id="td-history-uid" style="margin: 0; font-size: 14px;"></p></h3></div>
-                    <table class="appointment-table">
-    <thead>
-        <tr>
-            <th>Assigned Dentist</th>
-                            <th>Chart</th>
-            <th>Visit Date</th>
-            <th>Procedure</th>
-            <th>Fee Paid</th>
-            <th>Next Appointmnet</th>
-        </tr>
-    </thead>
-<tbody id="pd-visit-history">
-    <tr>
-        <td colspan="6" style="text-align:center;">
-            Select a patient to view visit history.
-        </td>
-    </tr>
-</tbody>
-</table>
-</div>
+                <div class="content-panel pd-visits-panel">
+                    <div class="pd-panel-head">
+                        <span class="material-symbols-rounded pd-panel-head__icon" aria-hidden="true">history</span>
+                        <h3 class="pd-panel-head__title">Visit History</h3>
+                        <span class="pd-panel-head__count" id="pd-visits-count" hidden></span>
+                        <p hidden id="td-history-uid" style="margin: 0;"></p>
+                    </div>
+                    <div class="pd-visits">
+                        <div class="pd-visits__scroll">
+                            <table class="appointment-table pd-visits__table">
+                                <thead>
+                                    <tr>
+                                        <th>Assigned Dentist</th>
+                                        <th class="pd-visits__chart-col">Chart</th>
+                                        <th>Visit Date</th>
+                                        <th>Procedure</th>
+                                        <th>Fee Paid</th>
+                                        <th>Next Appointment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pd-visit-history">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="pd-empty">
+                                                <span class="material-symbols-rounded pd-empty__icon" aria-hidden="true">person_search</span>
+                                                <span class="pd-empty__text">Select a patient to view visit history.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-                                <div style="text-align: center; margin: 12px 0;">
-                <button id="open-chart-btn" type="button" onclick="openLiveChartModal()" style="background: var(--navy); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
-                    <span class="material-symbols-rounded" style="font-size: 20px;">dentistry</span>
-                    Open Dental Chart
-                </button>
-                <button id="download-pdf-btn" onclick="downloadDentalChartPDF()">
-                    ⬇ Download Dental Chart as PDF
+            <div class="pd-chart-launch">
+                <button type="button" id="open-chart-btn" class="pd-open-chart" onclick="openLiveChartModal()">
+                    <span class="material-symbols-rounded pd-open-chart__icon" aria-hidden="true">dentistry</span>
+                    <span class="pd-open-chart__text">
+                        <span class="pd-open-chart__title">Open Dental Chart</span>
+                        <span class="pd-open-chart__hint">Full odontogram, treatments and chart tools</span>
+                    </span>
                 </button>
             </div>
 
@@ -4098,38 +4252,43 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="section-chart" class="chart-section">
                 <div class="chart-container">
                     <aside class="action-palette">
-                        <div class="palette-title">ACTION PALETTE</div>
-                        <div class="tool active" data-tool="healthy" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">verified</span>
-                            <span>Healthy</span>
+                        <div class="palette-head">
+                            <span class="material-symbols-rounded palette-head__icon" aria-hidden="true">edit_note</span>
+                            <span class="palette-title">Action Palette</span>
                         </div>
-                        <div class="tool" data-tool="caries" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">brush</span>
-                            <span>Caries</span>
-                        </div>
-                        <div class="tool" data-tool="filling" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">format_color_fill</span>
-                            <span>Filling</span>
-                        </div>
-                        <div class="tool" data-tool="crown" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">workspace_premium</span>
-                            <span>Crown</span>
-                        </div>
-                        <div class="tool" data-tool="rootcanal" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">medical_services</span>
-                            <span>Root Canal</span>
-                        </div>
-                        <div class="tool" data-tool="missing" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">cancel</span>
-                            <span>Missing Tooth</span>
-                        </div>
-                        <div class="tool" data-tool="extraction" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">content_cut</span>
-                            <span>Extraction</span>
-                        </div>
-                        <div class="tool" data-tool="check" onclick="setTool(this)">
-                            <span class="material-symbols-rounded">task_alt</span>
-                            <span>Check</span>
+                        <div class="palette-tools" role="group" aria-label="Chart action tools">
+                            <button type="button" class="tool active" data-tool="healthy" aria-pressed="true" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+                                <span class="tool__label">Healthy</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="caries" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">brush</span>
+                                <span class="tool__label">Caries</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="filling" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">format_color_fill</span>
+                                <span class="tool__label">Filling</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="crown" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
+                                <span class="tool__label">Crown</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="rootcanal" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                <span class="tool__label">Root Canal</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="missing" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">cancel</span>
+                                <span class="tool__label">Missing Tooth</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="extraction" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">content_cut</span>
+                                <span class="tool__label">Extraction</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="check" aria-pressed="false" onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">task_alt</span>
+                                <span class="tool__label">Check</span>
+                            </button>
                         </div>
                     </aside>
 
@@ -4147,7 +4306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="teeth-row" id="teeth-temp-top"></div>
                             <div class="section-label">TEMPORARY TEETH</div>
                             <div class="axis-h"></div>
-                            <div style="position: relative; width: 100%;">
+                            <div class="permanent-wrap">
                                 <div class="label-side rotated">PERMANENT TEETH</div>
                                 <div class="permanent-block">
                                     <div class="unified-grid wide" id="grid-perm-upper"></div>
@@ -4170,27 +4329,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
 
-            <!-- Treatment Notes -->
-            <div id="td-treatment-section" class="treatment-section" style="display:none;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h3  style="margin:0;">Treatment Notes </h3>
-        <p hidden>
+            <!-- Treatment Records -->
+            <div id="td-treatment-section" class="treatment-section td-records" style="display:none;">
+                    <p hidden>
     Patient Record ID:
     <span id="td-Patient_unq_id">-</span>
 </p>
+                    <div class="pd-panel-head td-records__head">
+                        <span class="material-symbols-rounded pd-panel-head__icon" aria-hidden="true">assignment</span>
+                        <div class="td-records__head-text">
+                            <h3 class="pd-panel-head__title">Treatment Records</h3>
+                            <p class="td-records__sub">One row per treatment for this patient. Fill these in alongside the Dental Record Chart above.</p>
+                        </div>
+                        <div class="td-records__actions">
+                            <button type="button" id="td-add-row-btn" class="btn-add-row td-records__add">
+                                <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                                <span>Add Row</span>
+                            </button>
+                            <!-- Lives inside the panel now: this form owns the
+                                 records, so its save action belongs with it
+                                 rather than floating below. -->
+                            <button id="td-save-btn" type="button"
+                                class="btn-action accept btn-save-td td-records__submit">
+                                <span class="material-symbols-rounded" aria-hidden="true">save</span>
+                                <span>Submit Information</span>
+                            </button>
+                        </div>
                     </div>
-                    <div style="overflow-x:auto;">
-                    <table class="treatment-table" id="td-treatment-table" style="min-width:1250px; table-layout:fixed;">
+                    <div class="td-records__scroll">
+                    <table class="treatment-table td-records__table" id="td-treatment-table" style="min-width:1270px; table-layout:fixed;">
                         <colgroup>
-                            <col style="width:120px;">  <!-- Date -->
+                            <col style="width:134px;">  <!-- Date -->
                             <col style="width:80px;">   <!-- Tooth# -->
                             <col style="width:170px;">  <!-- Procedure -->
                             <col style="width:150px;">  <!-- Dentist/s -->
                             <col style="width:110px;">  <!-- Value of Work -->
                             <col style="width:110px;">  <!-- Amount Paid -->
                             <col style="width:100px;">  <!-- Balance -->
-                            <col style="width:140px;">  <!-- Next Appointment -->
-                            <col style="width:160px;">  <!-- Medicine -->
+                            <col style="width:156px;">  <!-- Next Appointment -->
+                            <col style="width:150px;">  <!-- Medicine -->
                             <col style="width:110px;">  <!-- Status -->
                         </colgroup>
                         <thead>
@@ -4209,12 +4386,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </thead>
 
 <tbody>
+    <!-- One empty row. loadTreatmentNotes() rebuilds this tbody when a patient
+         is opened, so this is only the pre-selection placeholder. It carries
+         the same ten cells as appendRow() builds at runtime, so the Medicine
+         and Status columns are never left orphaned. -->
     <tr>
-        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
+        <td><input type="date" class="td-date adm-date-native" required /></td>
         <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
         <td>
-            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
-                <option value="" disabled selected>Select Procedure</option>
+            <select class="td-procedure" required>
+                <option value="Select Procedure">Select Procedure</option>
                 <option value="Dental Consultation">Dental Consultation</option>
                 <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
                 <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
@@ -4230,136 +4411,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 <option value="Other">Other</option>
             </select>
         </td>
-        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
+        <td>
+            <div class="dentist-field">
+                <input type="text" class="dentist-input td-dentist" placeholder="Select or type a dentist"
+                    autocomplete="off" autocapitalize="off" spellcheck="false"
+                    role="combobox" aria-autocomplete="list" aria-expanded="false"
+                    aria-controls="dentistMenu" aria-label="Treating dentist" />
+                <button type="button" class="dentist-field__toggle" tabindex="-1"
+                    aria-hidden="true" title="Show dentists">
+                    <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                </button>
+            </div>
+        </td>
         <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
         <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
         <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-    </tr>
-
-    <tr>
-        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+        <td><input type="date" class="td-next-appt adm-date-native" required /></td>
         <td>
-            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
-                <option value="" disabled selected>Select Procedure</option>
-                <option value="Dental Consultation">Dental Consultation</option>
-                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
-                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                <option value="Crowns and Bridges">Crowns and Bridges</option>
-                <option value="Teeth Whitening">Teeth Whitening</option>
-                <option value="Fluoride Treatment">Fluoride Treatment</option>
-                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                <option value="Root Canal Treatment">Root Canal Treatment</option>
-                <option value="Periapical Xray">Periapical Xray</option>
-                <option value="Other">Other</option>
+            <select class="td-medicine">
+                    <option value="Select Medicine">Select Medicine</option>
+                    <option value="Mefenamic Acid">Mefenamic Acid</option>
+                    <option value="Tranexamic Acid">Tranexamic Acid</option>
+                    <option value="Amoxicillin">Amoxicillin</option>
+                    <option value="Co- amoxiclav">Co- amoxiclav</option>
+                    <option value="Other">Other</option>
             </select>
         </td>
-        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
-        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-    </tr>
-
-    <tr>
-        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
         <td>
-            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
-                <option value="" disabled selected>Select Procedure</option>
-                <option value="Dental Consultation">Dental Consultation</option>
-                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
-                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                <option value="Crowns and Bridges">Crowns and Bridges</option>
-                <option value="Teeth Whitening">Teeth Whitening</option>
-                <option value="Fluoride Treatment">Fluoride Treatment</option>
-                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                <option value="Root Canal Treatment">Root Canal Treatment</option>
-                <option value="Periapical Xray">Periapical Xray</option>
-                <option value="Other">Other</option>
+            <select class="td-status">
+                <option value="Not Paid" selected>Not Paid</option>
+                <option value="Paid">Paid</option>
             </select>
         </td>
-        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
-        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-    </tr>
-
-    <tr>
-        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td>
-            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
-                <option value="" disabled selected>Select Procedure</option>
-                <option value="Dental Consultation">Dental Consultation</option>
-                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
-                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                <option value="Crowns and Bridges">Crowns and Bridges</option>
-                <option value="Teeth Whitening">Teeth Whitening</option>
-                <option value="Fluoride Treatment">Fluoride Treatment</option>
-                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                <option value="Root Canal Treatment">Root Canal Treatment</option>
-                <option value="Periapical Xray">Periapical Xray</option>
-                <option value="Other">Other</option>
-            </select>
-        </td>
-        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
-        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-    </tr>
-
-    <tr>
-        <td><input type="date" class="td-date" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
-        <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
-        <td>
-            <select class="td-procedure" required style="width:100%;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;">
-                <option value="" disabled selected>Select Procedure</option>
-                <option value="Dental Consultation">Dental Consultation</option>
-                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
-                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                <option value="Crowns and Bridges">Crowns and Bridges</option>
-                <option value="Teeth Whitening">Teeth Whitening</option>
-                <option value="Fluoride Treatment">Fluoride Treatment</option>
-                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                <option value="Root Canal Treatment">Root Canal Treatment</option>
-                <option value="Periapical Xray">Periapical Xray</option>
-                <option value="Other">Other</option>
-            </select>
-        </td>
-        <td><input type="text" class="td-dentist" placeholder="Dentist name..." required /></td>
-        <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
-        <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
-        <td><input type="date" class="td-next-appt" required style="padding:7px 10px; border:1px solid var(--navy); border-radius:6px; background:var(--white); color:#222; font-size:14px; outline:none; width:100%; box-sizing:border-box;" /></td>
     </tr>
 </tbody>
 
 
                     </table>
                     </div>
-                    <button type="button" id="td-add-row-btn" class="btn-add-row">+ Add Row</button>
-                    <div id="td-save-msg" style="margin-top:8px; font-size:14px; color:#4CAF50; display:none;"></div>
+                    <div id="td-save-msg" class="td-records__msg" style="display:none;"></div>
                 </div>
 
-            <div style="margin-top: 20px; text-align: center;">
-                <button id="td-save-btn" type="button" class="btn-action accept btn-save-td" style="font-size: 18px; padding: 14px 32px; border-radius: 10px; width: 100%; max-width: 400px;">SUBMIT INFORMATION</button>
-            </div>
             </div>
 
 <script>
@@ -4432,7 +4524,10 @@ document.addEventListener("input", function(e) {
 <script>
 async function downloadDentalChartPDF() {
     const { jsPDF } = window.jspdf;
-    const btn = document.getElementById('modal-download-pdf-btn') || document.getElementById('download-pdf-btn');
+    // Only the chart modal's own button is left; the dashboard-level
+    // Download button was removed. Null-guarded because it is hidden and
+    // restored around the render below.
+    const btn = document.getElementById('modal-download-pdf-btn');
     const modalContent = document.getElementById('live-modal-chart-content');
     const chartSection = (modalContent && modalContent.querySelector('.dental-chart')) || document.querySelector('.dental-chart');
 
@@ -4442,7 +4537,7 @@ async function downloadDentalChartPDF() {
     }
 
     // Hide button so it won't appear in PDF
-    btn.style.display = 'none';
+    if (btn) btn.style.display = 'none';
 
     // Show loading state
     const loadingMsg = document.createElement('div');
@@ -4569,7 +4664,7 @@ async function downloadDentalChartPDF() {
         console.error('PDF generation failed:', err);
         showToast('Could not generate PDF. Please try again.');
     } finally {
-        btn.style.display = '';
+        if (btn) btn.style.display = '';
         const msg = document.getElementById('pdf-loading');
         if (msg) msg.remove();
     }
@@ -4667,14 +4762,23 @@ function openPatientDashboard(
     w_pill
 ) {
 
-    document.getElementById('pd-name').innerText =
-    (name || 'Unknown') + " " + (lastname || '');
-    document.getElementById('pd-id').innerText = 'Account No: ' + (uid || 'N/A');
+    var pdFullName = (name || 'Unknown') + " " + (lastname || '');
+
+    document.getElementById('pd-name').innerText = pdFullName;
+    // The "Account No" wording now lives in the markup, so #pd-id holds only
+    // the uid. Anything that reads it must not expect the old prefixed string.
+    document.getElementById('pd-id').innerText = uid || '';
+
+    // Avatar: show initials straight away, then upgrade to the uploaded
+    // picture if this account has one. A patient with no account document,
+    // or one that never chose a picture, keeps the default avatar.
+    renderPatientAvatar(pdFullName, uid);
 
     // Never default a missing Sex to a real gender value -- showing an
     // unknown patient's sex as "Female" is wrong data, not a placeholder.
     document.getElementById('pd-gender').innerText = sex || 'Not set';
     document.getElementById('pd-age').innerText = age || 'N/A';
+    syncWomensHealthVisibility(sex);
 
     document.getElementById('pd-disp-fullname').innerText =
     (name || 'Unknown') + " " + (lastname || '');
@@ -4697,7 +4801,8 @@ function openPatientDashboard(
     window.currentPatientUid = uid;
 
     // Blood type - hardcoded
-    document.getElementById('pd-blood').innerText = 'O+';
+    var pdBloodEl = document.getElementById('pd-blood');
+    if (pdBloodEl) pdBloodEl.innerText = 'O+';
 
     // Medical History
     setCheckbox('q1-check', q1);
@@ -4739,20 +4844,26 @@ fetch(`/get_patient/${uid}`)
 .then(res => res.json())
 .then(data => {
 
+    // Sex can be missing on the button that opened this dashboard: it comes
+    // from the Approve record, and older records predate that field. The
+    // account keeps the latest accepted value, which get_patient now exposes
+    // as "sex", so use it as the fallback. Women's Health visibility has to
+    // follow the resolved value, not the earlier possibly-empty one.
+    var fetchedSex = (data && data.sex ? String(data.sex) : '').trim();
+    if (fetchedSex && !(sex || '').trim()) {
+        document.getElementById('pd-gender').innerText = fetchedSex;
+        syncWomensHealthVisibility(fetchedSex);
+    }
+
     const history = document.getElementById("pd-visit-history");
     history.innerHTML = "";
 
     const procedures = data.Done_procedure || [];
+    setVisitCount(procedures.length);
 
     if (procedures.length === 0) {
 
-        history.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align:center;">
-                    No visit history found.
-                </td>
-            </tr>
-        `;
+        renderVisitHistoryEmpty(history, 'event_busy', 'No visit history found.');
         return;
     }
 
@@ -4763,37 +4874,146 @@ procedures.forEach(function(p, index){
     history.innerHTML += `
         <tr>
             <td>${p.dentist || ""}</td>
-            <td>
-                <button class="btn-action"
-                    onclick="openChartViewModal(${index})">
-                    View
+            <td class="pd-visits__chart">
+                <button type="button" class="pd-icon-btn"
+                    onclick="openChartViewModal(${index})"
+                    title="View dental chart"
+                    aria-label="View dental chart for visit ${index + 1}">
+                    <span class="material-symbols-rounded" aria-hidden="true">visibility</span>
                 </button>
             </td>
             <td>${p.date || ""}</td>
             <td>${p.procedure || ""}</td>
-            <td>₱${p.paid || 0}</td>
+            <td class="pd-visits__fee">₱${p.paid || 0}</td>
             <td>${p.next_appointment || ""}</td>
         </tr>
     `;
 
 });
+})
+.catch(function() {
+    renderVisitHistoryEmpty(
+        document.getElementById("pd-visit-history"),
+        'error',
+        'Could not load visit history. Please try again.'
+    );
+    setVisitCount(null);
 });
 }
-        
+
+/**
+ * Empty/error row for the Visit History table.
+ *
+ * All three states (nothing selected, no visits, load failed) go through here
+ * so they look the same instead of being a bare centred sentence.
+ */
+function renderVisitHistoryEmpty(tbody, icon, message) {
+    if (!tbody) return;
+    // Static strings only -- no patient data is interpolated into markup.
+    tbody.innerHTML =
+        '<tr><td colspan="6">' +
+            '<div class="pd-empty">' +
+                '<span class="material-symbols-rounded pd-empty__icon" aria-hidden="true">' + icon + '</span>' +
+                '<span class="pd-empty__text">' + message + '</span>' +
+            '</div>' +
+        '</td></tr>';
+}
+
+/**
+ * Visit count badge in the Visit History panel header.
+ *
+ * null clears it back to hidden, which is what a failed load should show --
+ * "0 visits" would claim the patient has no history, and we do not know that.
+ */
+function setVisitCount(count) {
+    var badge = document.getElementById('pd-visits-count');
+    if (!badge) return;
+    if (count === null || count === undefined) {
+        badge.hidden = true;
+        badge.textContent = '';
+        return;
+    }
+    badge.textContent = count === 1 ? '1 visit' : count + ' visits';
+    badge.hidden = count === 0;
+}
+
+
+/**
+ * Avatar for the Patient Dashboard header.
+ *
+ * Starts on the initials badge (always available, never waits on the
+ * network), then asks the server for the patient's uploaded picture and
+ * swaps it in only if one exists. An account with no picture, a missing
+ * account document, a failed request, or a broken image URL all keep the
+ * initials badge, so the header is never left blank or broken.
+ */
+function renderPatientAvatar(fullName, uid) {
+    var img = document.getElementById('pd-avatar-img');
+    var initialsEl = document.getElementById('pd-avatar-initials');
+
+    var initials = (fullName || '').trim().split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(function(part) { return part.charAt(0); })
+        .join('')
+        .toUpperCase();
+
+    if (initialsEl) initialsEl.textContent = initials || '?';
+
+    if (!img) return;
+
+    img.style.display = 'none';
+    img.onerror = function() {
+        img.style.display = 'none';
+    };
+
+    if (!uid) return;
+
+    fetch('/admin/patient_avatar?uid=' + encodeURIComponent(uid))
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data && data.profile_pic) {
+                img.src = data.profile_pic;
+                img.style.display = 'block';
+            }
+        })
+        .catch(function() { /* keep the initials badge */ });
+}
+
 
 
 
 function setCheckbox(id, value) {
             var el = document.getElementById(id);
             if (el) {
-                var span = el.querySelector('span');
+                var span = el.querySelector('.pd-check__value') || el.querySelector('span');
                 if (span) {
                     var yes = (value === 'Y' || value === 'Yes' || value === 'yes');
                     span.innerText = yes ? 'Yes' : 'No';
-                    span.style.color = yes ? '#4CAF50' : '#ff4d4d';
+                    // State comes from these classes now; the inline colour is
+                    // cleared so it can't keep overriding them.
+                    span.classList.toggle('is-yes', yes);
+                    span.classList.toggle('is-no', !yes);
+                    span.style.color = '';
                 }
             }
         }
+
+/**
+ * Hide the Women's Health block for a male patient.
+ *
+ * Those questions (pregnant / nursing / birth control) can't apply to a male
+ * patient, so showing them just adds noise. Anything that is not explicitly
+ * Male -- Female, blank, or an unexpected value -- keeps the block visible,
+ * because a section we can't prove is irrelevant may still hold real answers.
+ */
+function syncWomensHealthVisibility(sex) {
+    var block = document.getElementById('pd-womens-block');
+    if (!block) return;
+    var isMale = /^(m|male)$/i.test((sex || '').trim());
+    block.hidden = isMale;
+    block.style.display = isMale ? 'none' : '';
+}
 
         function setSpec(id, value) {
             var el = document.getElementById(id);
@@ -4978,6 +5198,18 @@ function setCheckbox(id, value) {
             var addBtn  = document.getElementById('td-add-row-btn');
             if (addBtn)  addBtn.addEventListener('click', addTreatmentRow);
 
+            // The placeholder row that ships in the markup needs the same
+            // listboxes and date pickers before any patient is opened.
+            refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
+
+            // The shared .adm-select component exports itself from a LATER
+            // script block, so on this first pass it is still undefined and the
+            // dropdowns stay native selects. Retry once the whole document has
+            // run. enhanceSelectsIn() is idempotent, so doing it twice is safe.
+            window.addEventListener('load', function () {
+                refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
+            });
+
             initUnifiedGrid('grid-upper', 10, 'checkbox', 'input');
             initUnifiedGrid('grid-perm-upper', 16, 'checkbox', 'input');
             initUnifiedGrid('grid-perm-lower', 16, 'input', 'checkbox');
@@ -4997,10 +5229,23 @@ function setCheckbox(id, value) {
         var currentTool = 'healthy';
         var lastClickedTooth = null;
 
+        // Mirrored on window because initUnifiedGrid() lives in a different
+        // scope and needs to know which tool is armed before it lets a status
+        // cell receive a check mark. The body class lets CSS show that the
+        // cells are only markable while Check is selected.
+        window.currentChartTool = currentTool;
+        document.body.classList.remove('tool-check-active');
+
         function setTool(el) {
-            document.querySelectorAll('.tool').forEach(function(t) { t.classList.remove('active'); });
+            document.querySelectorAll('.tool').forEach(function(t) {
+                t.classList.remove('active');
+                t.setAttribute('aria-pressed', 'false');
+            });
             el.classList.add('active');
+            el.setAttribute('aria-pressed', 'true');
             currentTool = el.getAttribute('data-tool');
+            window.currentChartTool = currentTool;
+            document.body.classList.toggle('tool-check-active', currentTool === 'check');
         }
 
         function createToothSVG(id) {
@@ -5072,8 +5317,13 @@ function setCheckbox(id, value) {
         function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
 
             function saveTreatmentNotes() {
-                var uidEl = document.getElementById('pd-id');
-                var uid = uidEl.innerText.replace('Patient ID: ', '').trim();
+                // Key must match what loadTreatmentNotes() is called with in
+                // openPatientDashboard -- that is Patient_unq_id, not the
+                // account uid shown in the header, so use the stored value
+                // rather than re-parsing the header text.
+                var uid = window.currentPatientId
+                    || (document.getElementById('pd-id')?.textContent || '').trim();
+                if (!uid) return;
                 var rows = [];
                 var rowEls = document.querySelectorAll('#td-treatment-table tbody tr');
                 rowEls.forEach(function(tr) {
@@ -5092,7 +5342,7 @@ function setCheckbox(id, value) {
                 storage[uid] = rows;
                 localStorage.setItem('td_notes', JSON.stringify(storage));
                 var msg = document.getElementById('td-save-msg');
-                if (msg) { msg.style.display = 'block'; msg.innerText = 'Treatment notes saved!'; setTimeout(function() { msg.style.display = 'none'; }, 2000); }
+                if (msg) { msg.style.display = 'block'; msg.innerText = 'Treatment records saved!'; setTimeout(function() { msg.style.display = 'none'; }, 2000); }
             }
 
         function loadTreatmentNotes(uid) {
@@ -5100,12 +5350,70 @@ function setCheckbox(id, value) {
             var rows = storage[uid] || [];
             var tableBody = document.querySelector('#td-treatment-table tbody');
             if (!tableBody) return;
+            // Drop the enhanced wrappers first: their option panels can be
+            // portalled to <body>, and a row wiped with innerHTML would
+            // otherwise leave one orphaned on the page.
+            if (typeof window.admDestroySelects === 'function') {
+                window.admDestroySelects(tableBody);
+            }
             tableBody.innerHTML = '';
             if (rows.length === 0) {
                 appendRow({ date: '', tooth: '', procedure: '', dentist: '', valueOfWork: '', amountPaid: '', balance: '', nextAppt: '' });
             } else {
                 rows.forEach(function(r) { appendRow(r); });
             }
+            refreshTreatmentControls(tableBody);
+        }
+
+        /**
+         * Gives the Treatment Records rows the same controls the My Patients
+         * treatment modal uses:
+         *   - the shared .adm-select listbox, so the option panel is a real
+         *     styled list rather than an OS-drawn popup;
+         *   - flatpickr, so both date fields share one themed calendar.
+         * Both helpers are idempotent, so this is safe to call after every
+         * rebuild of the tbody and after Add Row appends a row.
+         */
+        function refreshTreatmentControls(tbody) {
+            if (!tbody) return;
+
+            if (typeof window.admEnhanceSelects === 'function') {
+                // allowFlip: the table scrolls horizontally, so a panel near
+                // the bottom of the viewport should open upwards.
+                window.admEnhanceSelects(tbody, '.td-records__scroll', true);
+            }
+
+            initTreatmentDatePickers(tbody);
+        }
+
+        /**
+         * flatpickr keeps the original input (and its Y-m-d value) in place and
+         * inserts a visible alt input in front of it, so saveTreatmentNotes(),
+         * the FormData submit and the validation all keep reading the same
+         * element they always did. The calendar is appended to <body> because
+         * .td-records__scroll clips anything overflowing the table.
+         */
+        function initTreatmentDatePickers(scope) {
+            if (typeof flatpickr !== 'function') return;
+            var root = scope || document;
+            root.querySelectorAll('input.adm-date-native').forEach(function (input) {
+                if (input._flatpickr) return;
+                flatpickr(input, {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'M j, Y',
+                    altInputClass: 'adm-date-alt',
+                    className: 'adm-datepicker',
+                    allowInput: false,
+                    monthSelectorType: 'static',
+                    appendTo: document.body
+                });
+                // The visible control is flatpickr's alt input, so the real
+                // input must not keep `required` or validation would block on
+                // a field the user cannot even see.
+                input.style.display = 'none';
+                input.removeAttribute('required');
+            });
         }
 
         function appendRow(data) {
@@ -5115,12 +5423,12 @@ function setCheckbox(id, value) {
             var tr = document.createElement('tr');
 
             tr.innerHTML =
-                '<td><input type="date" class="td-date" value="' + escHtml(data.date || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+                '<td><input type="date" class="td-date adm-date-native" value="' + escHtml(data.date || '') + '"></td>' +
 
                 '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18"></td>' +
 
                 '<td>' +
-                    '<select class="td-procedure" style="width:100%;min-width:130px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;box-sizing:border-box;">' +
+                    '<select class="td-procedure">' +
                     '<option value="" disabled' + (!data.procedure ? ' selected' : '') + '>Select Procedure</option>' +
                     '<option value="Dental Consultation"' + (data.procedure === "Dental Consultation" ? " selected" : "") + '>Dental Consultation</option>' +
                     '<option value="Oral Prophylaxis (Cleaning)"' + (data.procedure === "Oral Prophylaxis (Cleaning)" ? " selected" : "") + '>Oral Prophylaxis (Cleaning)</option>' +
@@ -5138,7 +5446,22 @@ function setCheckbox(id, value) {
                 '</select>' +
                 '</td>' +
 
-                '<td><input type="text" class="td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Dentist name..."></td>' +
+                /* Same Consulting Dentist combobox as the Appointments table, driven by the
+                   same delegated handlers keyed on .dentist-field / .dentist-input,
+                   so no extra wiring is needed here. The td-dentist class stays
+                   on the input: that is what saveTreatmentNotes(), the
+                   FormData submit and the row validation all read. */
+                '<td>' +
+                    '<div class="dentist-field">' +
+                    '<input type="text" class="dentist-input td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Select or type a dentist"' +
+                    ' autocomplete="off" autocapitalize="off" spellcheck="false"' +
+                    ' role="combobox" aria-autocomplete="list" aria-expanded="false"' +
+                    ' aria-controls="dentistMenu" aria-label="Treating dentist">' +
+                    '<button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true" title="Show dentists">' +
+                    '<span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>' +
+                    '</button>' +
+                    '</div>' +
+                '</td>' +
 
                 '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork || '') + '" placeholder="0.00" step="0.01"></td>' +
 
@@ -5146,10 +5469,10 @@ function setCheckbox(id, value) {
 
                 '<td><input type="text" class="td-balance" value="' + escHtml(data.balance || '') + '" placeholder="Balance" readonly></td>' +
 
-                '<td><input type="date" class="td-next-appt" value="' + escHtml(data.nextAppt || '') + '" style="padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:var(--white);color:#222;font-size:14px;outline:none;width:100%;box-sizing:border-box;"></td>' +
+                '<td><input type="date" class="td-next-appt adm-date-native" value="' + escHtml(data.nextAppt || '') + '"></td>' +
 
                 '<td>' +
-                    '<select class="td-medicine" style="width:100%;min-width:130px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                    '<select class="td-medicine">' +
                     '<option value="">Select Medicine</option>' +
                     '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
                     '<option value="Tranexamic Acid"' + (data.medicine === "Tranexamic Acid" ? " selected" : "") + '>Tranexamic Acid</option>' +
@@ -5160,7 +5483,7 @@ function setCheckbox(id, value) {
                 '</td>' +
 
                 '<td>' +
-                    '<select class="td-status" style="width:100%;min-width:100px;padding:7px 10px;border:1px solid var(--navy);border-radius:6px;background:white;color:#222;font-size:14px;outline:none;">' +
+                    '<select class="td-status">' +
                     '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
                     '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
                 '</select>' +
@@ -5182,6 +5505,9 @@ function setCheckbox(id, value) {
                     medicine: '',
                     status: 'Not Paid'
                 });
+                // Give the new row the same listboxes and date pickers as the
+                // rows already on screen.
+                refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
             }
 
             function escHtml(s) {
@@ -5319,27 +5645,68 @@ function setCheckbox(id, value) {
         function initUnifiedGrid(id, cols, topType, bottomType) {
             var grid = document.getElementById(id);
             if (!grid) return;
+            // Defensive default, so a cell is never markable merely because
+            // the chart init has not published the current tool yet.
+            if (typeof window.currentChartTool !== 'string') {
+                window.currentChartTool = 'healthy';
+            }
             grid.innerHTML = '';
             for (var i = 0; i < cols; i++) {
                 var topBox = document.createElement('div');
                 topBox.className = 'grid-box';
                 if (topType === 'input') {
-                    topBox.innerHTML = '<input type="text" class="grid-input" placeholder="text">';
+                    // No placeholder: an empty cell should read as "not
+                    // recorded yet", not as sample data.
+                    topBox.innerHTML = '<input type="text" class="grid-input" aria-label="Upper status">';
                 } else {
-                    topBox.innerHTML = '<input type="checkbox" class="grid-checkbox">';
+                    // grid-box--mark carries the empty "markable" tint, so the
+                    // input itself can be pure tick with no box of its own.
+                    topBox.className = 'grid-box grid-box--mark';
+                    topBox.innerHTML = '<input type="checkbox" class="grid-checkbox" aria-label="Upper status marked">';
+                    guardCheckboxForCheckTool(topBox);
                 }
                 
                 var bottomBox = document.createElement('div');
                 bottomBox.className = 'grid-box';
                 if (bottomType === 'input') {
-                    bottomBox.innerHTML = '<input type="text" class="grid-input" placeholder="text">';
+                    bottomBox.innerHTML = '<input type="text" class="grid-input" aria-label="Lower status">';
                 } else {
-                    bottomBox.innerHTML = '<input type="checkbox" class="grid-checkbox">';
+                    bottomBox.className = 'grid-box grid-box--mark';
+                    bottomBox.innerHTML = '<input type="checkbox" class="grid-checkbox" aria-label="Lower status marked">';
+                    guardCheckboxForCheckTool(bottomBox);
                 }
                 
                 grid.appendChild(topBox);
                 grid.appendChild(bottomBox);
             }
+        }
+
+        /**
+         * A status cell may only receive its check mark while the Check tool
+         * is armed. Under any other tool the click is reverted, so a mark on
+         * the chart always came from the Check action and nothing else.
+         * The input keeps its own checked state, so anything reading or
+         * saving the grid later is unaffected.
+         */
+        function guardCheckboxForCheckTool(box) {
+            var cb = box.querySelector('.grid-checkbox');
+            if (!cb) return;
+            // Belt and braces: if the chart init that publishes
+            // window.currentChartTool has not run for some reason, fall back
+            // to reading the active tool straight off the palette, and treat
+            // "can't tell" as not-armed rather than silently allowing a mark.
+            function armedTool() {
+                if (typeof window.currentChartTool === 'string') {
+                    return window.currentChartTool;
+                }
+                var active = document.querySelector('.tool.active');
+                return active ? active.getAttribute('data-tool') : null;
+            }
+            cb.addEventListener('click', function (e) {
+                if (armedTool() !== 'check') {
+                    e.preventDefault();
+                }
+            });
         }
 
         // Theme Toggle
@@ -5881,8 +6248,12 @@ async function saveDentalRecord(uid) {
 // =========================
 document.getElementById("td-save-btn").addEventListener("click", () => {
 
-    const uidText = document.getElementById("pd-id")?.innerText || "";
-    const uid = uidText.replace("Account No:", "").trim();
+    // #pd-id now holds the bare uid (the "Account No" label is in the
+    // markup), so no string stripping is needed here. currentPatientUid is
+    // the fallback for the empty initial state of the header.
+    const uid = (document.getElementById("pd-id")?.textContent || "").trim()
+        || window.currentPatientUid
+        || "";
 
     if (!uid) {
     showToast("No patient selected!");
@@ -7072,6 +7443,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // stay open behind a page that is now hidden.
             modal.querySelectorAll('.adm-select-panel, .custom-select-dropdown')
                 .forEach(function (panel) { panel.style.display = 'none'; });
+
+            // Same for the Dentist Name dropdown: its anchor lives on step 1,
+            // so leaving it open would float the popup over step 2.
+            if (typeof closeDentistMenu === 'function') closeDentistMenu();
 
             // Keep the signature metadata in step with what was booked.
             if (!last) return;
@@ -9343,7 +9718,17 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
 
             <div class="form-group">
                 <label for="admDentistName">Dentist Name</label>
-                <input type="text" id="admDentistName" name="dentist_name" class="form-control">
+                <div class="dentist-field">
+                    <input type="text" id="admDentistName" name="dentist_name" class="dentist-input"
+                        placeholder="Select or type a dentist"
+                        autocomplete="off" autocapitalize="off" spellcheck="false"
+                        role="combobox" aria-autocomplete="list" aria-expanded="false"
+                        aria-controls="dentistMenu" aria-label="Dentist name">
+                    <button type="button" class="dentist-field__toggle" tabindex="-1"
+                        aria-hidden="true" title="Show dentists">
+                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                    </button>
+                </div>
             </div>
 
             <!-- Medical History -->

@@ -12,7 +12,7 @@
 </head>
 <body>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+{% with messages = patient_flashed_messages() %}
     {% if messages %}
         <div class="flash-container" id="flash-container">
         {% for category, message in messages %}
@@ -1141,7 +1141,7 @@ resetPasswordBtn.addEventListener("click", async () => {
 
      // 4. Appointment Modal Logic
     const modal = document.getElementById("appointmentModal");
-    onst paymentModal = document.getElementById("paymentModal");
+    const paymentModal = document.getElementById("paymentModal");
     
     document.getElementById("openAppointment").onclick = (e) => {
         e.preventDefault();
