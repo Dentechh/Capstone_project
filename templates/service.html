@@ -369,7 +369,7 @@
                 </svg>
             </button>
             <h2>Welcome Back</h2>
-           <form action="/login" method="POST" id="loginForm">
+            <form action="/login" method="POST" id="loginForm">
             <div class="login-error" id="loginError"></div>
             <input type="email" name="email" placeholder="Email" required>
             <div class="password-wrapper">
@@ -463,7 +463,7 @@
                 </svg>
             </button>
         <h2>Create Account</h2>
-               <form id="signupForm" action="/sign-up" method="POST">
+                <form id="signupForm" action="/sign-up" method="POST">
 
     <div style="display:flex; gap:10px;">
         <input type="text" name="FirstName" placeholder="First Name" required>
@@ -604,6 +604,12 @@ function handleCredentialResponse(response) {
     form.appendChild(input);
     document.body.appendChild(form);
     form.submit();
+
+    const csrf = document.createElement("input");
+    csrf.type = "hidden";
+    csrf.name = "csrf_token";
+    csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+    form.appendChild(csrf);
 }
     </script>
 

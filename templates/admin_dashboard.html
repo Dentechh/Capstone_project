@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Capizonda | Admin Panel</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
@@ -16,12 +17,12 @@
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
                     <style id="doctorCalendarTheme">
     /* ==========================================================
-       DOCTORS CALENDAR - flatpickr theme
-       VERIFIED (headless browser): in inline mode flatpickr inserts
-       .flatpickr-calendar as a SIBLING of the target element, and the
-       className option does NOT land on the calendar. Both picker and
-       calendar are children of .doctor-cal-panel, so that panel is the
-       only reliable scope root. No JS class-tagging required.
+        DOCTORS CALENDAR - flatpickr theme
+        VERIFIED (headless browser): in inline mode flatpickr inserts
+        .flatpickr-calendar as a SIBLING of the target element, and the
+        className option does NOT land on the calendar. Both picker and
+        calendar are children of .doctor-cal-panel, so that panel is the
+        only reliable scope root. No JS class-tagging required.
        */
 
     /* ---- Card shell ---- */
@@ -59,16 +60,16 @@
     }
 
     /* Month dropdown.
-       This calendar does NOT set monthSelectorType, so flatpickr renders a
-       native <select>. Its opened <option> list is drawn with OS chrome and
-       CSS cannot restyle it (Chrome ignores option backgrounds), so the native
-       select is hidden and a real listbox (.adm-month-dd) takes its place.
-       flatpickr keeps maintaining the hidden select, which stays the source of
+        This calendar does NOT set monthSelectorType, so flatpickr renders a
+        native <select>. Its opened <option> list is drawn with OS chrome and
+        CSS cannot restyle it (Chrome ignores option backgrounds), so the native
+        select is hidden and a real listbox (.adm-month-dd) takes its place.
+        flatpickr keeps maintaining the hidden select, which stays the source of
        truth for the available months. */
     /* Only hide the native select once the custom listbox has actually been
-       built - buildMonthDropdown() adds .has-custom-month when it succeeds.
-       If that JS ever fails, the native control stays visible and usable
-       rather than leaving a blank header with no way to change month. */
+        built - buildMonthDropdown() adds .has-custom-month when it succeeds.
+        If that JS ever fails, the native control stays visible and usable
+        rather than leaving a blank header with no way to change month. */
     .doctor-cal-panel .flatpickr-calendar.has-custom-month .flatpickr-monthDropdown-months {
         display: none !important;
     }
@@ -123,8 +124,8 @@
     }
 
     /* flatpickr sets overflow:hidden on .flatpickr-month (the prev/next arrow
-       box) and nests .flatpickr-current-month inside it, which clips the
-       dropdown list completely. Let it overflow, and lift the whole header
+        box) and nests .flatpickr-current-month inside it, which clips the
+        dropdown list completely. Let it overflow, and lift the whole header
        subtree above the day grid so the open list is not painted behind it. */
     .doctor-cal-panel .flatpickr-month,
     .doctor-cal-panel .flatpickr-calendar .flatpickr-month {
@@ -7731,8 +7732,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function scrollActiveIntoView(menu) {
-            const active = menu.querySelector('.adm-select-option.is-selected') ||
-                           menu.querySelector('.adm-select-option.is-active');
+            const active =  menu.querySelector('.adm-select-option.is-selected') ||
+                            menu.querySelector('.adm-select-option.is-active');
             if (active) {
                 active.scrollIntoView({ block: 'nearest' });
             }
@@ -9450,9 +9451,9 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
     </ol>
 
     <div class="adm-modal-body">
-      <!-- One form spans both steps so the consent checkbox and the signature
-           are submitted together with the appointment fields. -->
-      <form id="newApptForm" class="adm-wizard">
+        <!-- One form spans both steps so the consent checkbox and the signature
+            are submitted together with the appointment fields. -->
+        <form id="newApptForm" class="adm-wizard">
 
         <!-- ============ STEP 1 : APPOINTMENT DETAILS ============ -->
         <section class="adm-page is-active" data-adm-step="1" aria-label="Appointment details">
@@ -10224,8 +10225,8 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
     }
 
     /* Display-only date format.
-       selectedDate deliberately stays in Y-m-d: that is what the
-       /admin/block_slot and /admin/unblock_slot endpoints and the blockedMap
+    selectedDate deliberately stays in Y-m-d: that is what the
+    /admin/block_slot and /admin/unblock_slot endpoints and the blockedMap
        keys expect, so only the heading text is reformatted. */
     function formatBlockDate(iso) {
         const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
@@ -10774,9 +10775,25 @@ function filterUserManagement() {
             if (btn) btn.disabled = false;
         }
     }
+
+    (function () {
+        const _fetch = window.fetch;
+        window.fetch = function (input, opts) {
+            opts = opts || {};
+            const url = typeof input === 'string' ? input : ((input && input.url) || '');
+            const sameOrigin = url.startsWith('/') || url.startsWith(location.origin);
+            const method = (opts.method || (input && input.method) || 'GET').toUpperCase();
+            if (sameOrigin && method !== 'GET' && method !== 'HEAD') {
+                const meta = document.querySelector('meta[name="csrf-token"]');
+                opts.headers = new Headers(opts.headers || {});
+                if (meta) opts.headers.set('X-CSRFToken', meta.content);
+            }
+            return _fetch.call(this, input, opts);
+        };
+    })();
+
+
 </script>
-
-
 
 </body>
 </html>

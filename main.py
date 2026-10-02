@@ -1,12 +1,13 @@
 ﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, get_flashed_messages, session, jsonify
 import firebase_admin
-from firebase_admin import credentials, firestore, auth
+from firebase_admin import credentials, auth
+from google.cloud import firestore
+from firebase_admin import firestore as fb_firestore
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
-from datetime import datetime, UTC
+from datetime import datetime,timedelta, UTC
 import bleach
 from flask_mail import Mail, Message
-from flask import jsonify
 import sys
 import os
 import threading
@@ -15,13 +16,15 @@ from email.message import EmailMessage
 import requests
 import base64
 import re
-from datetime import timedelta
 import random
 from dotenv import load_dotenv
 import firebase
 import uuid
 from cache_store import SimpleCache
 from google.cloud.firestore_v1.base_query import FieldFilter
+import hmac
+import hashlib
+from flask_wtf.csrf import CSRFProtect, CSRFError
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
@@ -74,8 +77,11 @@ class DentalClinicApp(BaseFlaskApp):
         self._setup_paymongo()
         self._setup_session()
         self._setup_error_handlers()
+        self._setup_csrf()
         self._setup_security_headers()
         self._register_routes()
+        self.csrf.exempt(self.paymongo_webhook)
+        self.PATIENTS_PAGE_SIZE = 25
         print("🦷 Capizonda Dental Clinic Initialized")
 
     def _setup_app(self):
@@ -121,13 +127,13 @@ class DentalClinicApp(BaseFlaskApp):
                     raise FileNotFoundError(f"Firebase key not found at: {key_path}")
                 cred = credentials.Certificate(key_path)
                 firebase_admin.initialize_app(cred, {"projectId": "dentech-c2ee0"})
-                self._db = firestore.client()
+                self._db = fb_firestore.client()
                 print("✅ Firebase initialized successfully")
             except Exception as e:
                 print("❌ Firebase initialization failed:", e)
                 self._db = None
         else:
-            self._db = firestore.client()
+            self._db = fb_firestore.client()
             print("♻️ Firebase already initialized")
 
         # DEV ONLY: point Firestore at the local emulator (zero billed reads).
@@ -171,7 +177,7 @@ class DentalClinicApp(BaseFlaskApp):
         if not self.CLIENT_ID:
             print("⚠️  GOOGLE_CLIENT_ID is missing; Google login will be disabled until it's set in .env")
             
-        self.PATIENTS_PAGE_SIZE = 25
+        self.ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
         # In-memory cache to cut Firestore reads on hot admin endpoints.
         # See cache_store.py for how it works and its single-process caveat.
@@ -983,10 +989,37 @@ class DentalClinicApp(BaseFlaskApp):
             created_by=created_by
         )
 
+    def _is_admin(self):
+        return bool(session.get('admin_logged_in'))
+
+    def _is_owner_or_admin(self, uid):
+        return self._is_admin() or (bool(uid) and session.get('uid') == uid)
+
+    def _setup_csrf(self):
+        self.app.config["WTF_CSRF_TIME_LIMIT"] = None
+        self.csrf = CSRFProtect(self.app)
+
+        @self.app.errorhandler(CSRFError)
+        def handle_csrf(e):
+            if request.headers.get("X-CSRFToken") or request.headers.get("X-Requested-With"):
+                return jsonify({"success": False, "message": "Session expired. Please refresh the page."}), 400
+            return render_template("error.html", message="Your session expired. Please go back, refresh the page and try again."), 400
+
+    def _verify_paymongo_signature(self):
+        if not self.PAYMONGO_WEBHOOK_SECRET:
+            return False
+        header = request.headers.get("Paymongo-Signature", "")
+        parts = dict(p.split("=", 1) for p in header.split(",") if "=" in p)
+        timestamp = parts.get("t", "")
+        provided = parts.get("li") or parts.get("te") or ""
+        signed = f"{timestamp}.{request.get_data(as_text=True)}".encode()
+        expected = hmac.new(self.PAYMONGO_WEBHOOK_SECRET.encode(), signed, hashlib.sha256).hexdigest()
+        return bool(timestamp and provided) and hmac.compare_digest(expected, provided)
+    
     def _setup_paymongo(self):
-        self.pay_mongo_secret_key = "sk_live_FsYAsKA47Wg6HzcSzbxWWYwW"
-        self.pay_mongo_public_key = "pk_live_ZaZrhPCe8d6fz7n5dZXNEebc"
-        self.PAYMONGO_WEBHOOK_SECRET="whsk_SDS3prtXoFa8MCg5FPh9wfEc"
+        self.pay_mongo_secret_key = os.getenv("PAYMONGO_SECRET_KEY", "")
+        self.pay_mongo_public_key = os.getenv("PAYMONGO_PUBLIC_KEY", "")
+        self.PAYMONGO_WEBHOOK_SECRET = os.getenv("PAYMONGO_WEBHOOK_SECRET", "")
 
     def _setup_session(self):
         @self.app.before_request
@@ -1015,9 +1048,7 @@ class DentalClinicApp(BaseFlaskApp):
                 # No session.modified needed — assigning a value already marks it dirty
 
 
-    def _register_routes(self):
-        """Polymorphism: Register all routes"""
-        pass
+
     
     def _setup_error_handlers(self):
         @self.app.errorhandler(404)
@@ -1059,10 +1090,33 @@ class DentalClinicApp(BaseFlaskApp):
 
 
     def require_firebase(self):
-        if db is None:
+        """Checks if Firebase is initialized before running a database operation."""
+        if self._db is None:
             raise RuntimeError("Firebase is not initialized. Check dentech_key.json")
+        
+        
+    def _get_amount_due(self, patient_uid, procedure):
+        """Unpaid amount in pesos for this patient's procedure, or None."""
+        target = str(procedure).strip().lower()
+        user_ref = self.db.collection(self.Customer_Account).document(str(patient_uid))
+        for proc_doc in user_ref.collection("Done_procedure").stream():
+            procs = proc_doc.to_dict().get("procedures", [])
+            if not isinstance(procs, list):
+                continue
+            for p in procs:
+                if not isinstance(p, dict):
+                    continue
+                if str(p.get("procedure", "")).strip().lower() != target:
+                    continue
+                if str(p.get("status", "")).strip().lower() == "paid":
+                    return None
+                value = self.safe_float(p.get("value", 0))
+                paid = self.safe_float(p.get("paid", 0))
+                balance = self.safe_float(p.get("balance", 0))
+                return balance if balance > 0 else max(value - paid, 0)
+        return None
     
-    def update_payment_status(self, patient_uid, procedure):
+    def update_payment_status(self, patient_uid, procedure, paid_centavos=None):
 
         try:
 
@@ -1239,6 +1293,11 @@ class DentalClinicApp(BaseFlaskApp):
                         old_paid = self.safe_float(p.get("paid", 0))
                         old_balance = self.safe_float(p.get("balance", 0))
                         
+                        due = old_balance if old_balance > 0 else max(value - old_paid, 0)
+                        if paid_centavos is not None and paid_centavos < int(round(due * 100)):
+                            self.app.logger.warning("Payment amount too low for procedure; not marking paid")
+                            return False
+                        
                         print(
                             "PROCEDURE VALUE:",
                             value
@@ -1316,44 +1375,16 @@ class DentalClinicApp(BaseFlaskApp):
         # GET DATA FROM URL
         # =========================================================
 
-        checkout_session_id = request.args.get(
-            "checkout_session_id",
-            ""
-        ).strip()
-
-        patient_uid = request.args.get(
-            "uid",
-            ""
-        ).strip()
-
-        procedure = request.args.get(
-            "procedure",
-            ""
-        ).strip()
-
-        # =========================================================
-        # FALLBACK TO FLASK SESSION
-        # =========================================================
-
-        if not checkout_session_id:
-
-            checkout_session_id = session.get(
-                "paymongo_checkout_session_id",
-                ""
+        checkout_session_id = session.get(
+            "paymongo_checkout_session_id", ""
             )
-
-        if not patient_uid:
-
-            patient_uid = session.get(
-                "paymongo_patient_uid",
-                ""
+        
+        patient_uid = session.get(
+            "paymongo_patient_uid", ""
             )
-
-        if not procedure:
-
-            procedure = session.get(
-                "paymongo_procedure",
-                ""
+        
+        procedure = session.get(
+            "paymongo_procedure", ""
             )
 
         print("========================================")
@@ -1468,6 +1499,7 @@ class DentalClinicApp(BaseFlaskApp):
             )
 
             payment_paid = False
+            paid_centavos = 0
 
             for payment in payments:
 
@@ -1498,6 +1530,7 @@ class DentalClinicApp(BaseFlaskApp):
                 if payment_status == "paid":
 
                     payment_paid = True
+                    paid_centavos = int(payment_attributes.get("amount", 0))
 
                     break
 
@@ -1512,11 +1545,12 @@ class DentalClinicApp(BaseFlaskApp):
                 print("PATIENT UID:", patient_uid)
                 print("PROCEDURE:", procedure)
                 print("========================================")
-
+                
+                
                 updated = self.update_payment_status(
                     patient_uid,
-                    procedure
-                )
+                    procedure,
+                    paid_centavos)
 
                 if updated:
 
@@ -1594,6 +1628,9 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def paymongo_webhook(self):
+        
+        if not self._verify_paymongo_signature():
+            return "", 400
 
         try:
 
@@ -1692,10 +1729,12 @@ class DentalClinicApp(BaseFlaskApp):
                 # UPDATE FIRESTORE
                 # ========================================
 
-                updated = self.update_payment_status(
-                    patient_uid,
-                    procedure
+                payments = session_attrs.get("payments", [])
+                paid_centavos = sum(
+                    int(p.get("attributes", {}).get("amount", 0)) for p in payments
                 )
+
+                updated = self.update_payment_status(patient_uid, procedure, paid_centavos)
 
                 if updated:
 
@@ -1742,9 +1781,6 @@ class DentalClinicApp(BaseFlaskApp):
 
             data = request.json
 
-            amount = int(
-                float(data.get("amount", 0)) * 100
-            )
 
             procedure = str(
                 data.get("procedure", "")
@@ -1758,7 +1794,6 @@ class DentalClinicApp(BaseFlaskApp):
             print("CREATING GCASH PAYMENT")
             print("PATIENT UID:", patient_uid)
             print("PROCEDURE:", procedure)
-            print("AMOUNT:", amount / 100)
             print("========================================")
 
             # =====================================================
@@ -1771,8 +1806,14 @@ class DentalClinicApp(BaseFlaskApp):
             if not procedure:
                 return {"error": "Procedure is required"}
 
-            if amount <= 0:
-                return {"error": "Invalid payment amount"}
+            
+            if not self._is_owner_or_admin(patient_uid):
+                return {"error": "Unauthorized"}, 403
+            
+            due = self._get_amount_due(patient_uid, procedure)
+            if not due or due <= 0:
+                return {"error": "No unpaid balance found for this procedure"}, 400
+            amount = int(round(due * 100))
 
             # =====================================================
             # PATIENT INFORMATION
@@ -1794,11 +1835,7 @@ class DentalClinicApp(BaseFlaskApp):
 
             base_url = request.host_url.rstrip("/")
 
-            success_url = (
-                f"{base_url}/payment-success"
-                f"?uid={patient_uid}"
-                f"&procedure={procedure}"
-            )
+            success_url = f"{base_url}/payment-success"
 
             cancel_url = (
                 f"{base_url}/payment-cancel"
@@ -2931,6 +2968,9 @@ class DentalClinicApp(BaseFlaskApp):
 
         if action not in ("accept", "decline"):
             return "Invalid action", 400
+        
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
 
 
         # FIND USER COLLECTION
@@ -4912,6 +4952,9 @@ class DentalClinicApp(BaseFlaskApp):
         - If the supplied value is a Patient ID such as P-000001,
         load Patients/{patient_id} and then use account_uid when available.
         """
+        
+        if not self._is_admin():
+            return jsonify({"error": "Unauthorized"}), 403
 
         # ============================================================
         # 1. CHECK IF THIS IS A PATIENT ID
@@ -5207,6 +5250,10 @@ class DentalClinicApp(BaseFlaskApp):
                     flash("Unable to get email from Google account.", "error")
                     return redirect(url_for("adminLogin"))
                 
+                if not google_account.get("email_verified") or email.lower() not in self.ADMIN_EMAILS:
+                    flash("This account is not authorized.", "error")
+                    return redirect(url_for("adminLogin"))
+                
                 
                 self.db.collection("Admin").document(uid).set({
                     "uid": uid,
@@ -5244,14 +5291,14 @@ class DentalClinicApp(BaseFlaskApp):
 
     def update_profile(self):
         try:
-            uid = request.form.get("uid", "").strip()
+            uid = session.get("uid", "")
             new_firstname = request.form.get("new_firstname", "").strip()
             new_lastname = request.form.get("new_lastname", "").strip()
             new_phone = request.form.get("new_phone", "").strip()
 
             if not uid:
                 flash("Unable to identify your account.", "error")
-                return redirect(request.referrer)
+                return redirect(url_for("index"))
 
             if not new_firstname:
                 flash("First name is required.", "error")
@@ -5442,6 +5489,9 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def save_dental_record(self):
+        
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
 
         try:
 
@@ -5766,6 +5816,10 @@ class DentalClinicApp(BaseFlaskApp):
     
 
     def get_treatment_info(self, patient_id):
+        
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        
         try:
 
             # ==========================================
@@ -6187,6 +6241,10 @@ class DentalClinicApp(BaseFlaskApp):
         })
 
     def get_approve(self, uid):
+        
+        if not self._is_owner_or_admin(uid):
+            return jsonify({"error": "Unauthorized"}), 403
+        
         try:
             print("Searching UID:", uid)
 

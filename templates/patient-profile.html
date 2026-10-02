@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <title>Patient Profile | Capizona Dental</title>
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
         <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -1084,33 +1085,30 @@ async function payGCash(amount, procedure) {
         <div class="modal-body">
             <form class="modal-form" action="/update-profile" method="POST">
 
-    <input type="hidden"
-           name="uid"
-           value="{{ user.get('uid', '') }}">
 
     <div class="info-item">
         <label>First Name</label>
         <input type="text"
-               name="new_firstname"
-               value="{% if user.get('provider') == 'google' %}{{ user.get('name', '').split()[0] }}{% else %}{{ user.get('firstname', '') }}{% endif %}"
-               placeholder="Enter your first name"
-               required>
+                name="new_firstname"
+                value="{% if user.get('provider') == 'google' %}{{ user.get('name', '').split()[0] }}{% else %}{{ user.get('firstname', '') }}{% endif %}"
+                placeholder="Enter your first name"
+                required>
     </div>
 
     <div class="info-item">
         <label>Last Name</label>
         <input type="text"
-               name="new_lastname"
-               value="{% if user.get('provider') == 'google' %}{% set name_parts = user.get('name', '').split() %}{% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}{% else %}{{ user.get('lastname', '') }}{% endif %}"
-               placeholder="Enter your last name">
+                name="new_lastname"
+                value="{% if user.get('provider') == 'google' %}{% set name_parts = user.get('name', '').split() %}{% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}{% else %}{{ user.get('lastname', '') }}{% endif %}"
+                placeholder="Enter your last name">
     </div>
 
     <div class="info-item">
         <label>Phone Number</label>
         <input type="text"
-               name="new_phone"
-               value="{{ user.get('contact_number', '') }}"
-               placeholder="+63 9XX XXX XXXX">
+                name="new_phone"
+                value="{{ user.get('contact_number', '') }}"
+                placeholder="+63 9XX XXX XXXX">
     </div>
 
     <div class="modal-actions">
@@ -1126,12 +1124,12 @@ async function payGCash(amount, procedure) {
 
     <script>
         const modal = document.getElementById('updateModal');
-        function openUpdateModal() { 
-            modal.style.display = 'flex'; 
+        function openUpdateModal() {
+            modal.style.display = 'flex';
             modal.classList.add("show");
         }
-        function closeUpdateModal() { 
-            modal.style.display = 'none'; 
+        function closeUpdateModal() {
+            modal.style.display = 'none';
             modal.classList.remove("show");
         }
 

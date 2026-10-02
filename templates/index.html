@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Capizonda Dental Clinic</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -14,13 +15,13 @@
 <body>
 
 {% with messages = patient_flashed_messages() %}
-  {% if messages %}
-    <div class="flash-container" id="flash-container">
-      {% for category, message in messages %}
+    {% if messages %}
+        <div class="flash-container" id="flash-container">
+        {% for category, message in messages %}
         <div class="flash-box flash-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    </div>
-  {% endif %}
+        {% endfor %}
+        </div>
+    {% endif %}
 {% endwith %}
 
 <div class="toast-container" id="toast-container"></div>
@@ -301,6 +302,7 @@
             <h2>Patient Information </h2>
 
             <form action="/booked_customer" id="appointmentForm" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="personal-info-grid">
 
                     <div class="form-group">
@@ -993,6 +995,13 @@ resetPasswordBtn.addEventListener("click", async () => {
         input.value = response.credential;
 
         form.appendChild(input);
+
+        const csrf = document.createElement("input");
+        csrf.type = "hidden";
+        csrf.name = "csrf_token";
+        csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+        form.appendChild(csrf);
+
         document.body.appendChild(form);
         form.submit();
     }
@@ -1591,8 +1600,8 @@ function respondPatientMatch(confirmed) {
     }
 
     function scrollActiveIntoView(menu) {
-        const active = menu.querySelector('.adm-select-option.is-selected') ||
-                       menu.querySelector('.adm-select-option.is-active');
+        const active =  menu.querySelector('.adm-select-option.is-selected') ||
+                        menu.querySelector('.adm-select-option.is-active');
         if (active) active.scrollIntoView({ block: 'nearest' });
     }
 
@@ -1700,6 +1709,23 @@ function respondPatientMatch(confirmed) {
         });
     });
 })();
+
+
+    (function () {
+            const _fetch = window.fetch;
+            window.fetch = function (input, opts) {
+                opts = opts || {};
+                const url = typeof input === 'string' ? input : ((input && input.url) || '');
+                const sameOrigin = url.startsWith('/') || url.startsWith(location.origin);
+                const method = (opts.method || (input && input.method) || 'GET').toUpperCase();
+                if (sameOrigin && method !== 'GET' && method !== 'HEAD') {
+                    const meta = document.querySelector('meta[name="csrf-token"]');
+                    opts.headers = new Headers(opts.headers || {});
+                    if (meta) opts.headers.set('X-CSRFToken', meta.content);
+                }
+                return _fetch.call(this, input, opts);
+            };
+        })();
 </script>
 
 </body>

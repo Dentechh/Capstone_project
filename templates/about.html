@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>About Dr. Capizonda - Capizonda Dental Clinic</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -13,8 +14,8 @@
 <body>
 
     <div id="g_id_onload"
-     data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
-     data-callback="handleCredentialResponse">
+        data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+        data-callback="handleCredentialResponse">
     </div>
 
 <div class="toast-container" id="toast-container"></div>
@@ -71,7 +72,7 @@
             {% endif %}
         </ul>
 
-          <div class="nav-actions">
+        <div class="nav-actions">
 
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
@@ -119,7 +120,7 @@
                 <span></span>
                 <span></span>
             </button>
-          </div>
+        </div>
     </nav>
 </header>
 
@@ -367,6 +368,7 @@
         <h2>Welcome Back</h2>
         
         <form action="/login" method="POST" id="loginForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="login-error" id="loginError"></div>
             <input type="email" name="email" placeholder="Email" required>
             <div class="password-wrapper">
@@ -429,7 +431,7 @@
         </div>
 
         <p class="footer-text">
-            Don't have an account yet? 
+            Don't have an account yet?
             <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
         </p>
     </div>
@@ -460,7 +462,7 @@
                 </svg>
             </button>
         <h2>Create Account</h2>
-              <form id="signupForm" action="/sign-up" method="POST">
+                <form id="signupForm">
 
     <div style="display:flex; gap:10px;">
         <input type="text" name="FirstName" placeholder="First Name" required>
@@ -512,7 +514,7 @@
 <div class="divider">OR</div>
 
 <p class="footer-text">
-    Already have an account? 
+    Already have an account?
     <a href="javascript:void(0)" onclick="closeAuthModal('registerModal'); openAuthModal('loginModal');">Log In</a>
 </p>
 
@@ -522,43 +524,68 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail
+    getAuth,
+    createUserWithEmailAndPassword,
+    sendEmailVerification,
+    sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
-  authDomain: "capizonda-dentech-dev.firebaseapp.com",
-  projectId: "capizonda-dentech-dev",
-  storageBucket: "capizonda-dentech-dev.firebasestorage.app",
-  messagingSenderId: "938908117708",
-  appId: "1:938908117708:web:77d10befb2f8917ccf3069"
+    apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
+    authDomain: "capizonda-dentech-dev.firebaseapp.com",
+    projectId: "capizonda-dentech-dev",
+    storageBucket: "capizonda-dentech-dev.firebasestorage.app",
+    messagingSenderId: "938908117708",
+    appId: "1:938908117708:web:77d10befb2f8917ccf3069"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("signupBtn").addEventListener("click", () => {
 
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+const signupForm = document.getElementById("signupForm");
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-          alert("Account created!");
-          console.log(userCredential.user);
+    const firstName = document.querySelector('#signupForm input[name="FirstName"]').value;
+    const lastName = document.querySelector('#signupForm input[name="LastName"]').value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value;
 
-      })
-      .catch((error) => {
+    if (password !== confirmPassword) {
+        alert("Passwords do not match.");
+        return;
+    }
 
-          console.log(error.code);
-          console.log(error.message);
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+        await auth.signOut();
 
-          alert(error.message);
-      });
+        const response = await fetch('/sign-up', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                FirstName: firstName,
+                LastName: lastName,
+                UserName: email,
+                MobileNumber: mobileNumber,
+                Password: password
+            })
+        });
 
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        alert("Verification email sent. Please check your spam folder.");
+        window.location.href = "/";
+    } catch (error) {
+        alert(error.message);
+    }
 });
 
 const sendResetBtn = document.getElementById("sendResetBtn");
@@ -583,14 +610,15 @@ if (sendResetBtn) {
         }
     });
 }
+
 </script>
 
 
 
 
-      <script>
-        function handleCredentialResponse(response) {
+<script>
 
+function handleCredentialResponse(response) {
     const form = document.createElement("form");
     form.method = "POST";
     form.action = "/google-auth";
@@ -599,12 +627,38 @@ if (sendResetBtn) {
     input.type = "hidden";
     input.name = "token";
     input.value = response.credential;
-
     form.appendChild(input);
+
+    const csrf = document.createElement("input");
+    csrf.type = "hidden";
+    csrf.name = "csrf_token";
+    csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+    form.appendChild(csrf);
+
     document.body.appendChild(form);
     form.submit();
 }
-    </script>
+
+</script>
+
+
+<script>
+(function () {
+    const _fetch = window.fetch;
+    window.fetch = function (input, opts) {
+        opts = opts || {};
+        const url = typeof input === 'string' ? input : ((input && input.url) || '');
+        const sameOrigin = url.startsWith('/') || url.startsWith(location.origin);
+        const method = (opts.method || (input && input.method) || 'GET').toUpperCase();
+        if (sameOrigin && method !== 'GET' && method !== 'HEAD') {
+            const meta = document.querySelector('meta[name="csrf-token"]');
+            opts.headers = new Headers(opts.headers || {});
+            if (meta) opts.headers.set('X-CSRFToken', meta.content);
+        }
+        return _fetch.call(this, input, opts);
+    };
+})();
+</script>
 
 </body>
 </html>
