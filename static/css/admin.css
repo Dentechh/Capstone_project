@@ -322,12 +322,6 @@ body.dark-mode .p-info{
     
     transform: translateY(-5px); 
     border-color: var(--gold); }
-.p-card-header { 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 10px; 
-    color: #000000;
-}
 
 /* =========================================================
    PATIENT DASHBOARD -- back button + identity header
@@ -3089,16 +3083,10 @@ body.dark-mode .filter-btn {
     }
 
 
-.patient-card .accepted-at {
-    font-size: 14px;
-    margin-bottom: 8px;
-    opacity: 0.8;
-    color: #444;
-}
-
-body.dark-mode .patient-card .accepted-at {
-    color: #b0bec5;
-}
+/* .p-card-header and .patient-card .accepted-at were retired with the old
+   Accepted Patients card, which is now built from .appt-card__* (see the
+   #section-WeeklyClients block further down). Nothing renders those classes
+   any more, so they were dropped rather than left to rot. */
 
 /* Light mode text visibility - only applied when NOT dark mode */
 body:not(.dark-mode) {
@@ -7772,6 +7760,25 @@ body.dark-mode #section-appointments .appt-decline-btn {
     box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
 }
 
+/* Marks the Consulting Dentist column as required, next to the "Required"
+   hint the Appointments panel already shows. */
+#section-appointments .appt-req {
+    color: #dc2626;
+}
+
+/* Set by requireDentistInput() when Accept is clicked with no dentist named,
+   and cleared again by the first keystroke. Kept above the :focus rule so the
+   red ring stays put while the admin types into the flagged box. */
+#section-appointments .dentist-input--invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16);
+}
+
+body.dark-mode #section-appointments .dentist-input--invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
 #section-appointments .dentist-field__toggle {
     position: absolute;
     right: 3px;
@@ -7968,6 +7975,24 @@ body.dark-mode .dentist-menu__empty {
     outline: none;
 }
 
+/* Required marker on the Dentist Name label. */
+#newApptModal .adm-req {
+    color: #dc2626;
+}
+
+/* Same flagged-empty state the Appointments table uses. Scoped tightly because
+   the modal styles generic inputs by element selector, so anything looser here
+   would lose on specificity. */
+#newApptModal .adm-form-side .dentist-field .dentist-input--invalid {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16);
+}
+
+body.dark-mode #newApptModal .adm-form-side .dentist-field .dentist-input--invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
 #newApptModal .adm-form-side .dentist-field__toggle {
     position: absolute;
     right: 3px;
@@ -8025,6 +8050,495 @@ body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle {
 body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle:hover {
     background: #334155;
     color: #e2e8f0;
+}
+
+/* =========================================================
+   ACCEPTED PATIENTS (#section-WeeklyClients)
+
+   Same recipe as the Appointments table above: a 4px navy left
+   accent so a critical booking is findable while scanning, white
+   surface with a 1px slate border, navy 700 headings, 13.5px
+   secondary text and 0.18s ease transitions, plus body.dark-mode
+   twins so dark mode is a real theme rather than an override.
+
+   Replaces the old card, which stacked a hardcoded "NAME:" label,
+   an Account No. line and two inline-styled <p> rows, and left the
+   dentist as static "Not Assigned" text that could never be filled
+   in after the fact.
+   ========================================================= */
+#section-WeeklyClients .patient-card-grid {
+    gap: 16px;
+    margin-right: 0;
+    align-items: stretch;
+}
+
+#section-WeeklyClients .appt-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 4px 0 0 0 var(--navy);
+    color: #1e293b;
+    transition: transform 0.18s ease, box-shadow 0.18s ease,
+        border-color 0.18s ease;
+}
+
+/* Emergency and urgent keep the accent; the calm majority goes grey so the
+   card colour still means something when the grid is scanned. */
+#section-WeeklyClients .appt-card--emergency {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 4px 0 0 0 #ef4444;
+}
+
+#section-WeeklyClients .appt-card--urgent {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 4px 0 0 0 #f97316;
+}
+
+#section-WeeklyClients .appt-card--normal,
+#section-WeeklyClients .appt-card--unset {
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 4px 0 0 0 #cbd5e1;
+}
+
+#section-WeeklyClients .appt-card:hover {
+    border-color: var(--navy);
+    box-shadow: 0 6px 18px rgba(13, 71, 161, 0.14);
+}
+
+#section-WeeklyClients .appt-card__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0;
+    padding: 0 0 12px;
+    border: 0;
+    border-bottom: 1px solid #e2e8f0;
+    color: inherit;
+}
+
+#section-WeeklyClients .appt-card__name {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+    overflow-wrap: anywhere;
+}
+
+#section-WeeklyClients .appt-card__service {
+    display: block;
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: #64748b;
+}
+
+#section-WeeklyClients .appt-card__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    flex: 1 1 auto;
+}
+
+#section-WeeklyClients .appt-card__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 24px;
+}
+
+#section-WeeklyClients .appt-card__key {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+#section-WeeklyClients .appt-card__key > .material-symbols-rounded {
+    font-size: 17px;
+    line-height: 1;
+    color: var(--navy);
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#section-WeeklyClients .appt-card__val {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+#section-WeeklyClients .appt-card__val--date {
+    font-variant-numeric: tabular-nums;
+}
+
+/* An unassigned dentist must not read as a value, so it is styled as a
+   pending state rather than plain bold text. */
+#section-WeeklyClients .appt-card__val--dentist {
+    color: var(--navy);
+}
+
+#section-WeeklyClients .appt-card__actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 4px;
+}
+
+#section-WeeklyClients .check-profile-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 16px;
+    background: #ffffff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    transition: background-color 0.18s ease, color 0.18s ease,
+        border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+#section-WeeklyClients .check-profile-btn > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#section-WeeklyClients .check-profile-btn:hover:not(:disabled) {
+    background: #eaf2fc;
+    border-color: var(--navy);
+    color: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.16);
+}
+
+#section-WeeklyClients .check-profile-btn:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+/* ---- inline "assign a dentist" editor ----
+   Shown only while an accepted appointment has no dentist. The combobox
+   itself is the shared one from the Appointments table (delegated from
+   document, popup portalled to <body>), so only the field needs styling
+   here -- these repeat the table's essentials for the same reason the
+   modal's do: nothing else gives .dentist-input a look in this section. */
+#section-WeeklyClients .appt-dentist {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+#section-WeeklyClients .dentist-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+#section-WeeklyClients .dentist-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 7px 32px 7px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background-color: #ffffff;
+    color: #1e293b;
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1.35;
+    appearance: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#section-WeeklyClients .dentist-input::placeholder {
+    color: #94a3b8;
+}
+
+#section-WeeklyClients .dentist-input:hover:not(:disabled) {
+    border-color: #94a3b8;
+}
+
+#section-WeeklyClients .dentist-input:focus,
+#section-WeeklyClients .dentist-input[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+}
+
+#section-WeeklyClients .dentist-field__toggle {
+    position: absolute;
+    right: 3px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+#section-WeeklyClients .dentist-field__toggle:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+#section-WeeklyClients .dentist-field__toggle:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 1px;
+}
+
+#section-WeeklyClients .dentist-field__toggle > .material-symbols-rounded {
+    font-size: 19px;
+    line-height: 1;
+    transition: transform 0.18s ease;
+}
+
+#section-WeeklyClients .dentist-field__toggle.is-open > .material-symbols-rounded {
+    transform: rotate(180deg);
+}
+
+/* Icon-only square, matching every other row action in the dashboard. */
+#section-WeeklyClients .appt-dentist-save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 0;
+    margin: 0;
+    background: var(--navy);
+    color: #ffffff;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+    transition: background-color 0.18s ease, border-color 0.18s ease,
+        box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+#section-WeeklyClients .appt-dentist-save > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+
+#section-WeeklyClients .appt-dentist-save:hover:not(:disabled) {
+    background: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.24);
+}
+
+#section-WeeklyClients .appt-dentist-save:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+#section-WeeklyClients .appt-dentist-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ---- urgency badge ----
+   Same markup as the Appointments table, but those rules are scoped to
+   #section-appointments, so the badge needs its own set here or it would
+   render as unstyled inline text. */
+#section-WeeklyClients .urg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    padding: 5px 12px 5px 10px;
+    border: 1px solid transparent;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+#section-WeeklyClients .urg-badge__dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06);
+}
+
+#section-WeeklyClients .urg-badge--emergency {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #ef4444;
+}
+
+#section-WeeklyClients .urg-badge--emergency .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22);
+}
+
+#section-WeeklyClients .urg-badge--urgent {
+    background: #ffedd5;
+    color: #9a3412;
+    border-color: #f97316;
+}
+
+#section-WeeklyClients .urg-badge--urgent .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+}
+
+#section-WeeklyClients .urg-badge--normal {
+    background: #e2e8f0;
+    color: #334155;
+    border-color: #cbd5e1;
+}
+
+#section-WeeklyClients .urg-badge--unset {
+    background: transparent;
+    color: #94a3b8;
+    border-color: #cbd5e1;
+    border-style: dashed;
+}
+
+/* ---- dark mode ---- */
+body.dark-mode #section-WeeklyClients .appt-card {
+    background: rgba(30, 35, 45, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-WeeklyClients .appt-card__head {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+body.dark-mode #section-WeeklyClients .appt-card__name {
+    color: #f1f5f9;
+}
+
+body.dark-mode #section-WeeklyClients .appt-card__service,
+body.dark-mode #section-WeeklyClients .appt-card__key {
+    color: #94a3b8;
+}
+
+body.dark-mode #section-WeeklyClients .appt-card__val {
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-WeeklyClients .appt-card__val--dentist {
+    color: var(--gold);
+}
+
+body.dark-mode #section-WeeklyClients .check-profile-btn {
+    background: rgba(19, 26, 38, 0.9);
+    color: #dbeafe;
+    border-color: rgba(100, 181, 246, 0.4);
+}
+
+body.dark-mode #section-WeeklyClients .check-profile-btn:hover:not(:disabled) {
+    background: #1e3a8a;
+    border-color: var(--gold);
+    color: #ffffff;
+}
+
+body.dark-mode #section-WeeklyClients .dentist-input {
+    background-color: #131a26;
+    border-color: #33415a;
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-WeeklyClients .dentist-input:focus,
+body.dark-mode #section-WeeklyClients .dentist-input[aria-expanded="true"] {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+}
+
+body.dark-mode #section-WeeklyClients .dentist-field__toggle {
+    color: #94a3b8;
+}
+
+body.dark-mode #section-WeeklyClients .dentist-field__toggle:hover {
+    background: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode #section-WeeklyClients .appt-dentist-save {
+    background: var(--gold);
+    color: #0f172a;
+}
+
+body.dark-mode #section-WeeklyClients .appt-dentist-save:hover:not(:disabled) {
+    background: var(--gold-light);
+}
+
+body.dark-mode #section-WeeklyClients .urg-badge--emergency {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+body.dark-mode #section-WeeklyClients .urg-badge--urgent {
+    background: rgba(249, 115, 22, 0.18);
+    color: #fdba74;
+    border-color: rgba(249, 115, 22, 0.5);
+}
+
+body.dark-mode #section-WeeklyClients .urg-badge--normal {
+    background: #334155;
+    color: #cbd5e1;
+    border-color: #475569;
+}
+
+body.dark-mode #section-WeeklyClients .urg-badge--unset {
+    color: #64748b;
+    border-color: #475569;
+}
+
+body.dark-mode #section-WeeklyClients .urg-badge__dot {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 768px) {
+    #section-WeeklyClients .appt-card__row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    #section-WeeklyClients .appt-card__val {
+        text-align: left;
+        width: 100%;
+    }
+
+    #section-WeeklyClients .appt-dentist {
+        width: 100%;
+    }
 }
 
 @media (max-width: 768px) {

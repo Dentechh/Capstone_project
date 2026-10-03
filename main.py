@@ -2961,7 +2961,9 @@ class DentalClinicApp(BaseFlaskApp):
         uid = request.form.get("user_id", "").strip()
         appointment_id = request.form.get("appointment_id", "").strip()
         action = request.form.get("action", "").strip().lower()
-        dentist_name = bleach.clean(request.form.get("dentist_name", ""))
+        dentist_name = bleach.clean(
+            request.form.get("dentist_name", "")
+        ).strip()
 
         if not uid or not appointment_id:
             return "Missing user_id or appointment_id", 400
@@ -2971,6 +2973,24 @@ class DentalClinicApp(BaseFlaskApp):
         
         if not self._is_admin():
             return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        # ---------------------------------------------------------
+        # CONSULTING DENTIST REQUIRED ON ACCEPT
+        # ---------------------------------------------------------
+        #
+        # Accepting is what actually assigns the appointment to a dentist, so
+        # a name has to come with it. Declining assigns nobody, so it stays
+        # allowed without one.
+
+        if action == "accept" and not dentist_name:
+
+            return jsonify({
+                "success": False,
+                "message": (
+                    "Consulting dentist is required. "
+                    "Please select or type a dentist before accepting."
+                )
+            }), 400
 
 
         # FIND USER COLLECTION
@@ -3188,6 +3208,28 @@ class DentalClinicApp(BaseFlaskApp):
             "patientMode",
             "existing"
         )
+
+        # ---------------------------------------------------------
+        # CONSULTING DENTIST REQUIRED
+        # ---------------------------------------------------------
+        #
+        # An appointment is never created without one. Read and checked up
+        # front, before any write -- the walk-in branch below creates a
+        # customer account partway through this handler, so validating
+        # later would leave a half-created record behind.
+
+        dentist_name = bleach.clean(
+            request.form.get("dentist_name", "")
+        ).strip()
+
+        if not dentist_name:
+            return jsonify({
+                "success": False,
+                "message": (
+                    "Consulting dentist is required. "
+                    "Please select or type a dentist."
+                )
+            }), 400
 
         # ---------------------------------------------------------
         # PATIENT INFORMATION
@@ -3528,12 +3570,7 @@ class DentalClinicApp(BaseFlaskApp):
             # DENTIST
             # -----------------------------------------------------
 
-            "DentistName": bleach.clean(
-                request.form.get(
-                    "dentist_name",
-                    ""
-                )
-            ),
+            "DentistName": dentist_name,
 
             # -----------------------------------------------------
             # ADDRESS
@@ -4190,6 +4227,119 @@ class DentalClinicApp(BaseFlaskApp):
             "rows": rows,
             "next_cursor": next_cursor
         })
+
+
+    def admin_assign_dentist(self):
+        """
+        Set the consulting dentist on an already-accepted appointment that does
+        not have one yet.
+
+        The Accepted Patients list only offers this editor while DentistName is
+        blank, so that blank is enforced here too -- otherwise a crafted request
+        could silently overwrite an existing assignment, which is a different
+        action with different consequences (it would need its own conflict and
+        audit story).
+
+        Accepted appointments are exactly the set the double-booking check
+        cares about, so this runs the same check instead of writing a name that
+        would collide with another patient's confirmed slot.
+        """
+
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        uid = request.form.get("uid", "").strip()
+        appointment_id = request.form.get("appointment_id", "").strip()
+        dentist_name = bleach.clean(
+            request.form.get("dentist_name", "")
+        ).strip()
+
+        if not uid or not appointment_id:
+            return jsonify({
+                "success": False,
+                "message": "Missing uid or appointment_id"
+            }), 400
+
+        if not dentist_name:
+            return jsonify({
+                "success": False,
+                "message": (
+                    "Consulting dentist is required. "
+                    "Please select or type a dentist."
+                )
+            }), 400
+
+        approve_ref = (
+            self.db.collection(self.Customer_Account)
+            .document(uid)
+            .collection("Approve")
+            .document(appointment_id)
+        )
+
+        try:
+
+            appt_doc = approve_ref.get()
+
+            if not appt_doc.exists:
+                return jsonify({
+                    "success": False,
+                    "message": "Appointment not found"
+                }), 404
+
+            appt_data = appt_doc.to_dict() or {}
+
+            if self.normalize_dentist_name(appt_data.get("DentistName", "")):
+                return jsonify({
+                    "success": False,
+                    "message": (
+                        "This appointment already has a dentist assigned."
+                    )
+                }), 409
+
+            # No exclude_doc_id on purpose. The appointment being edited has an
+            # empty DentistName, so it can never match the dentist being set
+            # and would skip nothing -- whereas find_appointment_conflict
+            # compares exclude_doc_id by doc id alone, so passing one could
+            # wave through a genuine conflict with another patient's document
+            # that happens to share an id.
+
+            conflict = self.find_appointment_conflict(
+                dentist_name=dentist_name,
+                appointment_date=appt_data.get("appointment_date", "")
+            )
+
+            if conflict:
+                return jsonify({
+                    "success": False,
+                    "message": (
+                        f"{conflict['dentist_name'] or 'This dentist'} already "
+                        f"has an accepted appointment with "
+                        f"{conflict['patient_name'] or 'another patient'} at "
+                        f"{conflict['appointment_date']}. Please choose a "
+                        f"different dentist."
+                    )
+                }), 409
+
+            approve_ref.update({
+                "DentistName": dentist_name,
+                "dentist_assigned_at": datetime.now(UTC).isoformat(),
+                "dentist_assigned_by": session.get('admin_uid', '')
+            })
+
+            return jsonify({
+                "success": True,
+                "message": "Dentist assigned successfully",
+                "dentist_name": dentist_name
+            })
+
+        except Exception as e:
+
+            print("ADMIN ASSIGN DENTIST ERROR:", e)
+
+            return jsonify({
+                "success": False,
+                "message": "Something went wrong. Please try again."
+            }), 500
 
 
     def admin_patient_avatar(self):
@@ -6445,6 +6595,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
         self.app.route("/admin/approved_page")(self.admin_approved_page)
+        self.app.route("/admin/assign_dentist", methods=["POST"])(self.admin_assign_dentist)
         self.app.route("/admin/patient_avatar", methods=["POST"])(self.admin_patient_avatar)
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
         self.app.route("/get_patient/<uid>")(self.get_patient)
