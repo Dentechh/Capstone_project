@@ -1,30 +1,49 @@
-﻿from flask import Flask, abort, render_template, request, redirect, url_for, flash, get_flashed_messages, session, jsonify
-import firebase_admin
-from firebase_admin import credentials, auth
-from google.cloud import firestore
-from firebase_admin import firestore as fb_firestore
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from datetime import datetime,timedelta, UTC
-import bleach
-from flask_mail import Mail, Message
-import sys
-import os
-import threading
-import smtplib
-from email.message import EmailMessage
-import requests
-import base64
-import re
-import random
-from dotenv import load_dotenv
-import firebase
-import uuid
-from cache_store import SimpleCache
-from google.cloud.firestore_v1.base_query import FieldFilter
-import hmac
+﻿import base64
 import hashlib
-from flask_wtf.csrf import CSRFProtect, CSRFError
+import hmac
+import os
+import random
+import re
+import smtplib
+import sys
+import threading
+import uuid
+from datetime import UTC, datetime, timedelta, timezone
+from email.message import EmailMessage
+
+import bleach
+import firebase_admin
+import requests
+from dotenv import load_dotenv
+from firebase_admin import auth, credentials
+from firebase_admin import firestore as fb_firestore
+from flask import (
+    Flask,
+    abort,
+    flash,
+    get_flashed_messages,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+from flask_mail import Mail, Message
+from flask_wtf.csrf import CSRFError, CSRFProtect
+from google.auth.transport import requests as google_requests
+from google.cloud import firestore
+from google.cloud.firestore_v1.base_query import FieldFilter
+from google.oauth2 import id_token
+
+import firebase
+from cache_store import SimpleCache
+
+# The clinic runs on Philippine time (UTC+8, no daylight saving). Used by the
+# Financial Reports chart so "today" / "this month" flip at local midnight
+# instead of 8 AM.
+PH_TZ = timezone(timedelta(hours=8))
+
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
@@ -223,7 +242,16 @@ class DentalClinicApp(BaseFlaskApp):
             cached = self.cache.get("done_procedures_all")
             if cached is not None:
                 return cached
-            docs = [doc.to_dict() for doc in self.db.collection_group("Done_procedure").stream()]
+            docs = []
+            for doc in self.db.collection_group("Done_procedure").stream():
+                d = doc.to_dict() or {}
+                # Which account this record lives under; used to look up the
+                # patient's name when the record itself has no usable uid.
+                try:
+                    d["_account_uid"] = doc.reference.parent.parent.id
+                except Exception:
+                    d["_account_uid"] = ""
+                docs.append(d)
             self.cache.set("done_procedures_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
             return docs
 
@@ -251,6 +279,7 @@ class DentalClinicApp(BaseFlaskApp):
 
     def _invalidate_accounts_cache(self):
         self.cache.invalidate("manageable_accounts_all")
+        self.cache.invalidate("unpaid_account_names")
 
     def _get_patients_cached(self):
         """
@@ -819,6 +848,64 @@ class DentalClinicApp(BaseFlaskApp):
                 "message": "Select full day or at least one time slot"
             }), 400
 
+        # Warn before blocking time that already has appointments. The admin
+        # can still go ahead (emergencies happen): the page re-sends the same
+        # request with force=true after they confirm. Only newly blocked times
+        # are checked, so re-saving an existing block does not nag again.
+        if request.form.get("force", "false") != "true":
+            try:
+                existing_doc = self.db.collection(self.Blocked_Slots).document(date).get()
+                existing = existing_doc.to_dict() if existing_doc.exists else {}
+                existing_full = bool(existing.get("full_day", False))
+                existing_times = set(existing.get("blocked_times", []))
+
+                if existing_full:
+                    newly_blocked = set()
+                elif full_day:
+                    newly_blocked = None  # every time on the day, minus nothing
+                else:
+                    newly_blocked = set(blocked_times) - existing_times
+
+                if newly_blocked is None or newly_blocked:
+                    hits = [
+                        a for a in self._appointments_on_day(date)
+                        if newly_blocked is None or a["time"] in newly_blocked
+                    ]
+                    if newly_blocked is None and existing_times:
+                        hits = [a for a in hits if a["time"] not in existing_times]
+
+                    if hits:
+                        slots = {}
+                        for a in hits:
+                            slot = slots.setdefault(a["time"], {
+                                "time": a["time"], "count": 0,
+                                "accepted": 0, "pending": 0, "name": ""
+                            })
+                            slot["count"] += 1
+                            if a["status"] == "Accepted":
+                                slot["accepted"] += 1
+                            else:
+                                slot["pending"] += 1
+                            slot["name"] = a["patient_name"]
+
+                        slot_list = sorted(slots.values(), key=lambda x: x["time"])
+                        for slot in slot_list:
+                            if slot["count"] != 1:
+                                slot["name"] = ""  # names only for single bookings
+
+                        return jsonify({
+                            "success": False,
+                            "conflict": True,
+                            "message": "Some of these times already have scheduled appointments.",
+                            "total": len(hits),
+                            "accepted": sum(1 for a in hits if a["status"] == "Accepted"),
+                            "pending": sum(1 for a in hits if a["status"] != "Accepted"),
+                            "slots": slot_list
+                        }), 409
+            except Exception as e:
+                # Never block saving because the warning check failed.
+                print("ADMIN BLOCK SLOT CONFLICT CHECK ERROR:", e)
+
         try:
             self.db.collection(self.Blocked_Slots).document(date).set({
                 "date": date,
@@ -849,6 +936,194 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify({"success": True, "message": "Slot unblocked successfully"})
         except Exception as e:
             print("ADMIN UNBLOCK SLOT ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def _appointments_on_day(self, day):
+        """
+        Accepted (Approve) and pending (appointments) records whose
+        appointment_date -- stored as "YYYY-MM-DD HH:MM" -- falls on `day`
+        ("YYYY-MM-DD"). Shared by the Doctors Calendar day schedule and the
+        block-slot conflict check so both count exactly the same records.
+        """
+        start = day + " 00:00"
+        end = day + " 23:59"
+        items = []
+
+        for group, status in (("Approve", "Accepted"), ("appointments", "Pending")):
+            query = (
+                self.db.collection_group(group)
+                .where(filter=FieldFilter("appointment_date", ">=", start))
+                .where(filter=FieldFilter("appointment_date", "<=", end))
+            )
+            for doc in query.stream():
+                data = doc.to_dict()
+                appt_date = str(data.get("appointment_date", "")).strip()
+                parts = appt_date.split(" ", 1)
+                name = f"{data.get('FirstName', '')} {data.get('LastName', '')}".strip()
+                items.append({
+                    "time": parts[1] if len(parts) > 1 else "",
+                    "patient_name": name or "Unknown patient",
+                    "service": data.get("Service", ""),
+                    "dentist": data.get("DentistName", ""),
+                    "status": status,
+                    # Needed to reschedule the record from the Doctors Calendar.
+                    "id": doc.id,
+                    "uid": doc.reference.parent.parent.id if doc.reference.parent.parent else "",
+                    "appointment_date": appt_date,
+                    "source": "accepted" if status == "Accepted" else "pending"
+                })
+
+        items.sort(key=lambda x: x["time"])
+        return items
+
+    def admin_day_schedule(self):
+        """Appointments booked on one calendar day (Doctors Calendar side panel)."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        day = bleach.clean(request.args.get("date", "").strip())
+        try:
+            datetime.strptime(day, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"success": False, "message": "Invalid date"}), 400
+
+        try:
+            items = self._appointments_on_day(day)
+            return jsonify({"success": True, "date": day, "appointments": items})
+        except Exception as e:
+            print("ADMIN DAY SCHEDULE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    RESCHEDULE_TIME_SLOTS = (
+        "09:00", "10:00", "11:00", "12:00", "13:00",
+        "14:00", "15:00", "16:00", "17:00"
+    )
+
+    def admin_reschedule_appointment(self):
+        """
+        Move an appointment to a new date/time. `source` says where it lives:
+        "pending" (the appointments subcollection, default) or "accepted"
+        (the Approve subcollection).
+
+        Pending requests are moved from the Appointments tab; accepted ones
+        from the Doctors Calendar day schedule.
+
+        Used when the dentist blocks a day/time that already has requests:
+        instead of accepting into a blocked slot (which /approve refuses) or
+        declining, the admin picks an open slot. The new slot must be in the
+        future, not blocked, and (when a dentist is known) not already taken by
+        an accepted appointment for that dentist -- the same rules /approve
+        enforces on accept, so the request can be accepted afterwards.
+        """
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        uid = request.form.get("user_id", "").strip()
+        appointment_id = request.form.get("appointment_id", "").strip()
+        new_date = bleach.clean(request.form.get("new_date", "").strip())
+        new_time = bleach.clean(request.form.get("new_time", "").strip())
+        dentist_name = bleach.clean(request.form.get("dentist_name", "")).strip()
+        source = request.form.get("source", "pending").strip().lower()
+
+        if source not in ("pending", "accepted"):
+            return jsonify({"success": False, "message": "Invalid appointment type."}), 400
+
+        if not uid or not appointment_id:
+            return jsonify({"success": False, "message": "Missing appointment details"}), 400
+
+        try:
+            datetime.strptime(new_date, "%Y-%m-%d")
+        except ValueError:
+            return jsonify({"success": False, "message": "Please pick a valid date."}), 400
+
+        if new_time not in self.RESCHEDULE_TIME_SLOTS:
+            return jsonify({"success": False, "message": "Please pick a valid time slot."}), 400
+
+        today_ph = datetime.now(PH_TZ).strftime("%Y-%m-%d")
+        if new_date < today_ph:
+            return jsonify({"success": False, "message": "The new date cannot be in the past."}), 400
+
+        new_dt = f"{new_date} {new_time}"
+
+        blocked, block_reason = self.is_slot_blocked(new_dt)
+        if blocked:
+            return jsonify({
+                "success": False,
+                "message": f"That slot is blocked by the dentist ({block_reason}). Please pick another."
+            }), 409
+
+        try:
+            main_collection = None
+            if self.db.collection("google_create_account").document(uid).get().exists:
+                main_collection = "google_create_account"
+            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+                main_collection = self.Customer_Account
+
+            if not main_collection:
+                return jsonify({"success": False, "message": "Patient account not found."}), 404
+
+            user_ref = self.db.collection(main_collection).document(uid)
+            sub_name = "Approve" if source == "accepted" else self.Appointment_cliets
+            appt_ref = user_ref.collection(sub_name).document(appointment_id)
+            appt_doc = appt_ref.get()
+
+            if not appt_doc.exists:
+                return jsonify({
+                    "success": False,
+                    "message": "This appointment could not be found. It may have been moved, declined or removed. Refresh the page."
+                }), 404
+
+            appt_data = appt_doc.to_dict()
+            old_dt = str(appt_data.get("appointment_date", "")).strip()
+
+            if old_dt == new_dt:
+                return jsonify({"success": False, "message": "That is already the current schedule."}), 400
+
+            check_dentist = dentist_name or appt_data.get("DentistName", "")
+            if check_dentist:
+                conflict = self.find_appointment_conflict(
+                    dentist_name=check_dentist,
+                    appointment_date=new_dt,
+                    exclude_doc_id=appointment_id if source == "accepted" else None
+                )
+                if conflict:
+                    return jsonify({
+                        "success": False,
+                        "message": (
+                            f"{conflict['dentist_name'] or 'This dentist'} already has an "
+                            f"accepted appointment with {conflict['patient_name'] or 'another patient'} "
+                            f"at {conflict['appointment_date']}. Please pick another slot."
+                        )
+                    }), 409
+
+            appt_ref.update({
+                "appointment_date": new_dt,
+                "previous_appointment_date": old_dt,
+                "rescheduled_at": datetime.now(UTC).isoformat(),
+                "rescheduled_by": session.get("admin_uid", "")
+            })
+
+            user_doc = user_ref.get()
+            patient_email = user_doc.to_dict().get("email") if user_doc.exists else None
+            fullname = f"{appt_data.get('FirstName', '')} {appt_data.get('LastName', '')}".strip()
+
+            threading.Thread(
+                target=self.send_appointment_email,
+                args=(patient_email, fullname, "reschedule", {
+                    "Service": appt_data.get("Service", "your appointment"),
+                    "appointment_date": new_dt,
+                    "previous_appointment_date": old_dt
+                }),
+                daemon=True
+            ).start()
+
+            return jsonify({
+                "success": True,
+                "appointment_date": new_dt,
+                "email_on_file": bool(patient_email)
+            })
+        except Exception as e:
+            print("ADMIN RESCHEDULE APPOINTMENT ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def create_patient(
@@ -2942,6 +3217,22 @@ class DentalClinicApp(BaseFlaskApp):
     Best regards,
     Capizonda Dental Clinic Team
     """
+            elif action == "reschedule":
+                previous_date = appointment_data.get("previous_appointment_date", "")
+                subject = "Appointment Rescheduled - Capizonda Dental Clinic"
+                body = f"""
+    Hello {fullname},
+    
+    Your appointment for {service} has been moved to a new schedule because the dentist is unavailable at the original time.
+    {f'Previous schedule: {previous_date}' if previous_date else ''}
+    {f'New schedule: {appointment_date}' if appointment_date else ''}
+    
+    If the new schedule does not work for you, please contact us so we can find a time that does.
+    We apologize for any inconvenience this may have caused.
+    
+    Best regards,
+    Capizonda Dental Clinic Team
+    """
             else:
                 subject = "Appointment Declined - Capizonda Dental Clinic"
                 body = f"""
@@ -3112,16 +3403,20 @@ class DentalClinicApp(BaseFlaskApp):
         # DOCTOR AVAILABILITY CHECK
         # ---------------------------------------------------------
 
-        blocked, block_reason = self.is_slot_blocked(data["appointment_date"])
+        # Only accepting needs the slot to be free. Declining must always work,
+        # otherwise a request sitting in a slot the dentist just blocked could
+        # not even be declined.
+        if action == "accept":
+            blocked, block_reason = self.is_slot_blocked(data["appointment_date"])
 
-        if blocked:
-            return jsonify({
-                "success": False,
-                "message": (
-                    f"This date/time is blocked by the dentist ({block_reason}). "
-                    f"Please choose another slot."
-                )
-            }), 409
+            if blocked:
+                return jsonify({
+                    "success": False,
+                    "message": (
+                        f"This date/time is blocked by the dentist ({block_reason}). "
+                        f"Use Reschedule to move it to an open slot."
+                    )
+                }), 409
         # -------------------------------------------------------------
         # DOUBLE-BOOKING CHECK
         # -------------------------------------------------------------
@@ -6257,138 +6552,250 @@ class DentalClinicApp(BaseFlaskApp):
 
         return jsonify({"success": True, "message": "Patients merged successfully"})
 
+    def _financial_alltime_stats(self):
+        """
+        One pass over the cached Done_procedure scan (no extra Firestore
+        reads) for the numbers that do NOT depend on the selected period:
+
+        - outstanding / unpaid_count: everything with balance > 0, the same
+          rule the Unpaid Procedures table uses, so the cards match it.
+        - total_paid: every paid amount ever recorded (the "Overall" total).
+        - paid_by_year / earliest: dated procedures only, used for the
+          one-bar-per-year Overall view and to stop the picker from walking
+          back into years with no data. Dates before 2000 or after today
+          are treated as typos and ignored here (they still count in
+          total_paid).
+        """
+        today = datetime.now(PH_TZ).date()
+        total_paid = 0.0
+        outstanding = 0.0
+        unpaid_count = 0
+        earliest = None
+        paid_by_year = {}
+
+        for data in self._get_done_procedures_cached():
+            procs = data.get("procedures", [])
+            if not isinstance(procs, list):
+                continue
+            for p in procs:
+                if not isinstance(p, dict):
+                    continue
+                paid = self.safe_float(p.get("paid", 0))
+                balance = self.safe_float(p.get("balance", 0))
+                total_paid += paid
+                if balance > 0:
+                    outstanding += balance
+                    unpaid_count += 1
+
+                date_str = str(p.get("date", "")).strip()
+                if not date_str:
+                    continue
+                try:
+                    proc_date = datetime.fromisoformat(date_str).date()
+                except Exception:
+                    continue
+                if proc_date.year < 2000 or proc_date > today:
+                    continue
+                paid_by_year[proc_date.year] = paid_by_year.get(proc_date.year, 0.0) + paid
+                if earliest is None or proc_date < earliest:
+                    earliest = proc_date
+
+        return {
+            "total_paid": total_paid,
+            "outstanding": outstanding,
+            "unpaid_count": unpaid_count,
+            "earliest": earliest,
+            "paid_by_year": paid_by_year,
+        }
+
     def admin_financial_chart_data(self):
         """
         Returns income-over-time data for the Financial Reports trend chart.
+
+        period=today    -> today only
+        period=weekly   -> 7-day window ending today; &week=N steps back N weeks
+        period=monthly  -> one calendar month, day by day; &month=YYYY-MM
+        period=yearly   -> January to December of one year; &year=YYYY
+        period=overall  -> one point per year, earliest year to this year
+
+        Total income follows the selected period. Outstanding Balance and
+        Unpaid Procedures always cover everything unpaid (same as the table).
         """
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
-            
-        period = request.args.get("period", "weekly").strip().lower()
-        today = datetime.now(UTC).date()
-        
-        # --- NEW: Handle Yearly (Last 12 Months) ---
-        if period == "yearly":
-            income_by_month = {}
-            labels = []
-            # Generate last 12 months keys
-            current = today.replace(day=1)
-            months = []
-            for i in range(12):
-                months.append(current)
-                if current.month == 1:
-                    current = current.replace(year=current.year-1, month=12)
-                else:
-                    current = current.replace(month=current.month-1)
-            months.reverse() # Oldest to newest
-            
-            for m in months:
-                key = m.strftime("%Y-%m")
-                income_by_month[key] = 0.0
-                labels.append(m.strftime("%b %Y"))
 
-            total_income = 0.0
-            total_outstanding = 0.0
-            unpaid_procedures = 0
+        period = request.args.get("period", "weekly").strip().lower()
+        if period not in ("today", "weekly", "monthly", "yearly", "overall"):
+            period = "weekly"
+        today = datetime.now(PH_TZ).date()
+
+        def int_arg(name, default):
             try:
-                done_docs = self._get_done_procedures_cached()
-                for data in done_docs:
-                    for p in data.get("procedures", []):
-                        date_str = str(p.get("date", "")).strip()
-                        if date_str:
-                            try:
-                                proc_date = datetime.fromisoformat(date_str).date()
-                                key = proc_date.strftime("%Y-%m")
-                                if key in income_by_month:
-                                    paid = self.safe_float(p.get("paid", 0))
-                                    balance = self.safe_float(p.get("balance", 0))
-                                    income_by_month[key] += paid
-                                    total_income += paid
-                                    total_outstanding += balance
-                                    if balance > 0:
-                                        unpaid_procedures += 1
-                            except:
-                                pass
-            except Exception as e:
-                print("FINANCIAL CHART DATA ERROR:", e)
-                return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
-                
-            values = [round(income_by_month[k], 2) for k in income_by_month.keys()]
-            return jsonify({
+                return int(request.args.get(name, default))
+            except (TypeError, ValueError):
+                return default
+
+        try:
+            stats = self._financial_alltime_stats()
+            done_docs = self._get_done_procedures_cached()
+        except Exception as e:
+            print("FINANCIAL CHART DATA ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        earliest = stats["earliest"]
+        # Earliest year the pickers/dropdowns offer: at least the last 5 years
+        # (this year + 4 before), or further back if there is older data. This
+        # keeps the dropdowns usable even when all data is from this year.
+        first_year = min(earliest.year if earliest else today.year, today.year - 4)
+
+        def respond(labels, values, total_income, range_label, **extra):
+            payload = {
                 "success": True,
                 "period": period,
                 "labels": labels,
                 "data": values,
                 "total_income": round(total_income, 2),
-                "total_outstanding": round(total_outstanding, 2),
-                "unpaid_procedures": unpaid_procedures
-            })
+                # Always everything unpaid, whatever period is on screen.
+                "total_outstanding": round(stats["outstanding"], 2),
+                "unpaid_procedures": stats["unpaid_count"],
+                "range_label": range_label,
+                "as_of_label": f"{today:%B} {today.day}, {today.year}",
+                "chart_type": "line",
+                "can_prev": False,
+                "can_next": False,
+                "min_year": first_year,
+                "max_year": today.year,
+                "max_month": today.month,  # last selectable month in max_year
+            }
+            payload.update(extra)
+            return jsonify(payload)
 
-        # --- NEW: Handle Overall (All Time Total) ---
-        if period == "overall":
-            total = 0.0
-            total_outstanding = 0.0
-            unpaid_procedures = 0
+        # --- Yearly: January to December of the chosen year ---
+        if period == "yearly":
+            min_year = first_year
+            year = max(min_year, min(int_arg("year", today.year), today.year))
+
+            income_by_month = {m: 0.0 for m in range(1, 13)}
+            total_income = 0.0
             try:
-                done_docs = self._get_done_procedures_cached()
                 for data in done_docs:
                     for p in data.get("procedures", []):
-                        total += self.safe_float(p.get("paid", 0))
-                        balance = self.safe_float(p.get("balance", 0))
-                        total_outstanding += balance
-                        if balance > 0:
-                            unpaid_procedures += 1
+                        if not isinstance(p, dict):
+                            continue
+                        date_str = str(p.get("date", "")).strip()
+                        if not date_str:
+                            continue
+                        try:
+                            proc_date = datetime.fromisoformat(date_str).date()
+                        except Exception:
+                            continue
+                        if proc_date.year == year:
+                            paid = self.safe_float(p.get("paid", 0))
+                            income_by_month[proc_date.month] += paid
+                            total_income += paid
             except Exception as e:
                 print("FINANCIAL CHART DATA ERROR:", e)
                 return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
-            return jsonify({
-                "success": True,
-                "period": period,
-                "labels": ["All Time"],
-                "data": [round(total, 2)],
-                "total_income": round(total, 2),
-                "total_outstanding": round(total_outstanding, 2),
-                "unpaid_procedures": unpaid_procedures
-            })
 
-        # --- Existing Logic for Today/Weekly/Monthly ---
+            labels = [datetime(2000, m, 1).strftime("%b") for m in range(1, 13)]
+            # Months that haven't happened yet are left empty (null) so the
+            # line stops at the current month instead of dropping to zero.
+            values = [
+                None if (year == today.year and m > today.month) else round(income_by_month[m], 2)
+                for m in range(1, 13)
+            ]
+            return respond(
+                labels, values, total_income, str(year),
+                year=year,
+                can_prev=year > min_year,
+                can_next=year < today.year,
+            )
+
+        # --- Overall: one point per year ---
+        if period == "overall":
+            overall_first_year = earliest.year if earliest else today.year
+            years = list(range(overall_first_year, today.year + 1))
+            labels = [str(y) for y in years]
+            values = [round(stats["paid_by_year"].get(y, 0.0), 2) for y in years]
+            range_label = str(years[0]) if len(years) == 1 else f"{years[0]} to {years[-1]}"
+            return respond(
+                labels, values, stats["total_paid"], range_label,
+                chart_type="bar",
+            )
+
+        # --- Today / Weekly / Monthly: day-by-day ---
+        extra = {}
         if period == "today":
             start_date = today
             num_days = 1
+            range_label = f"{today:%B} {today.day}, {today.year}"
         elif period == "monthly":
-            start_date = today - timedelta(days=29)
-            num_days = 30
+            raw_month = request.args.get("month", "").strip()
+            try:
+                y, m = int(raw_month[:4]), int(raw_month[5:7])
+                datetime(y, m, 1)  # rejects month 0 / 13
+            except (TypeError, ValueError):
+                y, m = today.year, today.month
+            cur = (today.year, today.month)
+            lowest = (first_year, 1)
+            y, m = max(lowest, min((y, m), cur))
+
+            start_date = today.replace(year=y, month=m, day=1)
+            next_first = (
+                today.replace(year=y + 1, month=1, day=1) if m == 12
+                else today.replace(year=y, month=m + 1, day=1)
+            )
+            # The current month stops at today so the line doesn't fall to
+            # zero for days that haven't happened yet.
+            last_day = min(next_first - timedelta(days=1), today)
+            num_days = (last_day - start_date).days + 1
+            range_label = f"{start_date:%B} {y}"
+            extra = {
+                "month": f"{y}-{m:02d}",
+                "can_prev": (y, m) > lowest,
+                "can_next": (y, m) < cur,
+            }
         else:
             period = "weekly"
-            start_date = today - timedelta(days=6)
+            max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
+            week = min(max(0, int_arg("week", 0)), max_week)
+            end_date = today - timedelta(days=7 * week)
+            start_date = end_date - timedelta(days=6)
             num_days = 7
-            
+            if start_date.year == end_date.year:
+                range_label = f"{start_date:%b} {start_date.day} to {end_date:%b} {end_date.day}, {end_date.year}"
+            else:
+                range_label = (
+                    f"{start_date:%b} {start_date.day}, {start_date.year} to "
+                    f"{end_date:%b} {end_date.day}, {end_date.year}"
+                )
+            extra = {
+                "week": week,
+                "can_prev": week < max_week,
+                "can_next": week > 0,
+            }
+
         date_keys = [
             (start_date + timedelta(days=i)).isoformat()
             for i in range(num_days)
         ]
         income_by_date = {d: 0.0 for d in date_keys}
         total_income = 0.0
-        total_outstanding = 0.0
-        unpaid_procedures = 0
 
         try:
-            done_docs = self._get_done_procedures_cached()
             for data in done_docs:
                 for p in data.get("procedures", []):
+                    if not isinstance(p, dict):
+                        continue
                     date_str = str(p.get("date", "")).strip()
                     if date_str in income_by_date:
                         paid = self.safe_float(p.get("paid", 0))
-                        balance = self.safe_float(p.get("balance", 0))
                         income_by_date[date_str] += paid
                         total_income += paid
-                        total_outstanding += balance
-                        if balance > 0:
-                            unpaid_procedures += 1
         except Exception as e:
             print("FINANCIAL CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
-            
+
         if period == "today":
             labels = ["Today"]
         else:
@@ -6397,16 +6804,160 @@ class DentalClinicApp(BaseFlaskApp):
                 for d in date_keys
             ]
         values = [round(income_by_date[d], 2) for d in date_keys]
-        
-        return jsonify({
-            "success": True,
-            "period": period,
-            "labels": labels,
-            "data": values,
-            "total_income": round(total_income, 2),
-            "total_outstanding": round(total_outstanding, 2),
-            "unpaid_procedures": unpaid_procedures
-        })
+
+        return respond(labels, values, total_income, range_label, **extra)
+
+    def admin_unpaid_procedures(self):
+        """
+        Every procedure that still has an unpaid balance, with the patient's
+        name, for the "Unpaid Procedures" table on Financial Reports.
+
+        Costs no extra Firestore reads in the normal case: it reuses the
+        cached Done_procedure scan the financial cards already use and the
+        cached Patients list for names. The accounts cache is only touched
+        when a name can't be found in the Patients list.
+
+        "Unpaid" means balance > 0, the same rule the Unpaid Procedures card
+        and the Outstanding Balance card use, so the totals agree.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        try:
+            # --- name sources, best first -------------------------------------
+            # 1. Customer_Account firstname/lastname: the same editable name
+            #    My Patients and the Treatment Information window show. Walk-in
+            #    accounts are NOT in the User Management cache, so accounts
+            #    missing from it are read directly (a few reads, remembered).
+            # 2. Patients collection (by account link, then by patient id).
+            name_by_patient_id = {}
+            name_by_account = {}
+            for patient_id, pdata in self._get_patients_cached():
+                parts = [
+                    str(pdata.get("first_name", "")).strip(),
+                    str(pdata.get("middle_name", "")).strip(),
+                    str(pdata.get("last_name", "")).strip(),
+                ]
+                full = " ".join(part for part in parts if part)
+                if not full:
+                    continue
+                name_by_patient_id[patient_id] = full
+                linked_uid = pdata.get("account_uid") or ""
+                if linked_uid and linked_uid not in name_by_account:
+                    name_by_account[linked_uid] = full
+
+            managed = None  # uid -> account data, built on first use
+            direct_names = self.cache.get("unpaid_account_names")
+            if direct_names is None:
+                direct_names = {}
+            direct_changed = False
+
+            def account_name(account_uid):
+                nonlocal managed, direct_changed
+                if not account_uid:
+                    return ""
+                if managed is None:
+                    managed = {uid: acc for uid, acc in self._get_manageable_accounts_cached()}
+                acc = managed.get(account_uid)
+                if acc is None:
+                    if account_uid in direct_names:
+                        return direct_names[account_uid]
+                    try:
+                        snap = (
+                            self.db.collection(self.Customer_Account)
+                            .document(account_uid)
+                            .get()
+                        )
+                        acc = snap.to_dict() if snap.exists else {}
+                    except Exception as e:
+                        print("UNPAID NAME LOOKUP FAILED:", account_uid, e)
+                        return ""
+                    nm = (
+                        f"{acc.get('firstname') or ''} {acc.get('lastname') or ''}".strip()
+                        or str(acc.get("name") or "").strip()
+                    )
+                    direct_names[account_uid] = nm
+                    direct_changed = True
+                    return nm
+                return (
+                    f"{acc.get('firstname') or ''} {acc.get('lastname') or ''}".strip()
+                    or str(acc.get("name") or "").strip()
+                )
+
+            rows = []
+            total_balance = 0.0
+
+            for data in self._get_done_procedures_cached():
+                procs = data.get("procedures", [])
+                if not isinstance(procs, list):
+                    continue
+
+                # Two places can say which account this record belongs to: the
+                # uid saved inside the record, and the record's real location
+                # in the database. They can disagree (e.g. records copied by a
+                # patient merge keep the old uid), so try both.
+                field_uid = str(data.get("uid") or "").strip()
+                path_uid = str(data.get("_account_uid") or "").strip()
+                uid_candidates = []
+                for cand in (path_uid, field_uid):
+                    if cand and cand not in uid_candidates:
+                        uid_candidates.append(cand)
+                account_uid = path_uid or field_uid
+                patient_unq_id = str(data.get("Patient_unq_id") or "").strip()
+
+                resolved_name = None  # same patient for every row of this record
+
+                for p in procs:
+                    if not isinstance(p, dict):
+                        continue
+
+                    balance = self.safe_float(p.get("balance", 0))
+                    if balance <= 0:
+                        continue
+
+                    if resolved_name is None:
+                        resolved_name = ""
+                        for cand in uid_candidates:
+                            resolved_name = account_name(cand) or name_by_account.get(cand) or ""
+                            if resolved_name:
+                                break
+                        if not resolved_name:
+                            resolved_name = name_by_patient_id.get(patient_unq_id) or ""
+                        if not resolved_name:
+                            print(
+                                "UNPAID LIST: no name found. uid in record:", repr(field_uid),
+                                "| record stored under account:", repr(path_uid),
+                                "| Patient_unq_id:", repr(patient_unq_id),
+                            )
+
+                    rows.append({
+                        "patient_name": resolved_name or "Unknown patient",
+                        "uid": account_uid,
+                        "patient_id": patient_unq_id,
+                        "procedure": str(p.get("procedure", "") or ""),
+                        "tooth": str(p.get("tooth", "") or ""),
+                        "date": str(p.get("date", "") or "").strip(),
+                        "dentist": str(p.get("dentist", "") or ""),
+                        "value": round(self.safe_float(p.get("value", 0)), 2),
+                        "paid": round(self.safe_float(p.get("paid", 0)), 2),
+                        "balance": round(balance, 2),
+                    })
+                    total_balance += balance
+
+            if direct_changed:
+                self.cache.set("unpaid_account_names", direct_names, ttl_seconds=self.CACHE_TTL_SECONDS)
+
+            rows.sort(key=lambda r: r["balance"], reverse=True)
+
+            return jsonify({
+                "success": True,
+                "rows": rows,
+                "total_balance": round(total_balance, 2),
+            })
+
+        except Exception as e:
+            print("UNPAID PROCEDURES ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def get_approve(self, uid):
         
@@ -6628,6 +7179,8 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/get_blocked_slots")(self.get_blocked_slots)
         self.app.route("/admin/block_slot", methods=["POST"])(self.admin_block_slot)
         self.app.route("/admin/unblock_slot", methods=["POST"])(self.admin_unblock_slot)
+        self.app.route("/admin/day_schedule")(self.admin_day_schedule)
+        self.app.route("/admin/reschedule_appointment", methods=["POST"])(self.admin_reschedule_appointment)
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)
         self.app.route("/admin/update_patient", methods=["POST"])(self.update_patient)
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
@@ -6639,6 +7192,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/get_patient_profile_data")(self.get_patient_profile_data)
         self.app.route("/admin/merge_patients", methods=["POST"])(self.admin_merge_patients)
         self.app.route("/admin/financial_chart_data")(self.admin_financial_chart_data)
+        self.app.route("/admin/unpaid_procedures")(self.admin_unpaid_procedures)
         self.app.route("/privacy-policy")(self.privacy_policy)
         self.app.route("/terms-of-service")(self.terms_of_service)
         self.app.route("/admin/procedure_chart_data")(self.admin_procedure_chart_data)

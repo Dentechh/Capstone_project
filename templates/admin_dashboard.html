@@ -487,6 +487,719 @@
             color: #e2e8f0 !important;
         }
     </style>
+    <style id="doctorCalendarExtras">
+        /* Doctors Calendar: day schedule + upcoming blocked days */
+        .dc-extras {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .dc-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            min-width: 0;
+        }
+
+        .dc-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dc-card-head h4 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0d47a1;
+        }
+
+        .dc-count {
+            display: inline-block;
+            min-width: 22px;
+            padding: 1px 8px;
+            margin-left: 6px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #0d47a1;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .dc-count:empty {
+            display: none;
+        }
+
+        .dc-link-btn {
+            background: none;
+            border: none;
+            color: #1e63cd;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .dc-link-btn:hover {
+            background: #eff6ff;
+        }
+
+        .dc-summary {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .dc-list {
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dc-empty {
+            padding: 28px 12px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dc-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .dc-row.is-booked {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .dc-row.is-conflict {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .dc-time {
+            flex: 0 0 76px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #334155;
+        }
+
+        .dc-main {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .dc-main strong {
+            display: block;
+            font-weight: 700;
+        }
+
+        .dc-sub {
+            display: block;
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 2px;
+            overflow-wrap: anywhere;
+        }
+
+        .dc-muted {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .dc-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-left: 6px;
+        }
+
+        .dc-chip.accepted {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .dc-chip.pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .dc-chip.blocked {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dc-chip.partial {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .dc-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .dc-mini-btn {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0d47a1;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .dc-mini-btn:hover {
+            background: #eff6ff;
+        }
+
+        .dc-mini-btn.is-urgent {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+
+        body.dark-mode .dc-mini-btn.is-urgent {
+            background: rgba(251, 191, 36, 0.18);
+            border-color: #b45309;
+            color: #fbbf24;
+        }
+
+        .dc-mini-btn.danger {
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .dc-mini-btn.danger:hover {
+            background: #fef2f2;
+        }
+
+        .dc-date {
+            flex: 0 0 96px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        body.dark-mode .dc-card {
+            background: rgba(30, 41, 59, 0.75);
+            border-color: #334155;
+        }
+
+        body.dark-mode .dc-card-head h4,
+        body.dark-mode .dc-date {
+            color: #64b5f6;
+        }
+
+        body.dark-mode .dc-count {
+            background: #1e3a5f;
+            color: #93c5fd;
+        }
+
+        body.dark-mode .dc-link-btn:hover {
+            background: #1e293b;
+        }
+
+        body.dark-mode .dc-row {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        body.dark-mode .dc-row.is-booked {
+            background: #172554;
+            border-color: #1e40af;
+        }
+
+        body.dark-mode .dc-row.is-conflict {
+            background: #450a0a;
+            border-color: #991b1b;
+        }
+
+        body.dark-mode .dc-time,
+        body.dark-mode .dc-main {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .dc-sub,
+        body.dark-mode .dc-summary {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .dc-mini-btn {
+            background: #1e293b;
+            border-color: #475569;
+            color: #93c5fd;
+        }
+
+        body.dark-mode .dc-mini-btn:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .dc-mini-btn.danger {
+            color: #fca5a5;
+            border-color: #7f1d1d;
+        }
+
+        @media (max-width: 1000px) {
+            .dc-extras {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <style id="headerDateTimeChips">
+        /* Header date + live clock: two frosted chips */
+        #datetime-display.dt-chips {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 0;
+        }
+
+        #datetime-display .dt-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: 0.2px;
+            text-shadow: none;
+            white-space: nowrap;
+        }
+
+        #datetime-display .dt-chip svg {
+            flex-shrink: 0;
+            color: #93c5fd;
+        }
+
+        /* fixed-width digits so the seconds don't make the chip jitter */
+        #datetime-display #dt-time {
+            font-variant-numeric: tabular-nums;
+            min-width: 8.6ch;
+        }
+
+        body.dark-mode #datetime-display .dt-chip {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(148, 163, 184, 0.30);
+        }
+
+        @media (max-width: 600px) {
+            #datetime-display .dt-chip {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+    <style id="apptRescheduleStyles">
+        /* ---- Appointments table: blocked flag + reschedule button ---- */
+        .appt-actions .appt-reschedule-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #b45309;
+        }
+
+        .appt-actions .appt-reschedule-btn:hover {
+            background: #fef3c7;
+        }
+
+        .appt-blocked-chip {
+            display: block;
+            width: fit-content;
+            margin-top: 5px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        tr.appt-row--blocked td:first-child {
+            box-shadow: inset 3px 0 0 #ef4444;
+        }
+
+        tr.appt-row--blocked .appt-reschedule-btn {
+            background: #fef3c7;
+            box-shadow: 0 0 0 2px #f59e0b;
+        }
+
+        body.dark-mode .appt-actions .appt-reschedule-btn {
+            color: #fbbf24;
+        }
+
+        body.dark-mode .appt-actions .appt-reschedule-btn:hover {
+            background: rgba(251, 191, 36, 0.15);
+        }
+
+        body.dark-mode .appt-blocked-chip {
+            background: #450a0a;
+            color: #fca5a5;
+        }
+
+        body.dark-mode tr.appt-row--blocked .appt-reschedule-btn {
+            background: rgba(251, 191, 36, 0.18);
+        }
+
+        /* ---- Reschedule modal ---- */
+        #rescheduleModal .rs-card {
+            position: relative;
+            width: 94%;
+            max-width: 880px;
+            padding: 28px 30px 24px;
+            border-radius: 18px;
+            box-sizing: border-box;
+        }
+
+        #rescheduleModal .rs-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #64748b;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        #rescheduleModal .rs-close:hover {
+            background: #f1f5f9;
+        }
+
+        #rescheduleModal h2 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        #rescheduleModal .rs-patient {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        #rescheduleModal .rs-current {
+            margin: 6px 0 18px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        #rescheduleModal .rs-current .rs-flag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        #rescheduleModal .rs-body {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 26px;
+            align-items: start;
+        }
+
+        #rescheduleModal .rs-cal {
+            display: flex;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-calendar {
+            box-shadow: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-day.rs-partial::after {
+            content: "";
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        #rescheduleModal .rs-slots-title {
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        #rescheduleModal .rs-slot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        #rescheduleModal .rs-hint {
+            grid-column: 1 / -1;
+            padding: 26px 8px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #rescheduleModal .rs-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 11px 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #1e293b;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease;
+        }
+
+        #rescheduleModal .rs-slot-time {
+            font-size: 14.5px;
+            font-weight: 800;
+        }
+
+        #rescheduleModal .rs-slot-note {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        #rescheduleModal .rs-slot.is-open:hover {
+            background: #eff6ff;
+            border-color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-slot.is-selected {
+            background: #0d47a1;
+            border-color: #0d47a1;
+            color: #ffffff;
+        }
+
+        #rescheduleModal .rs-slot.is-selected .rs-slot-note {
+            color: #bfdbfe;
+        }
+
+        #rescheduleModal .rs-slot:disabled {
+            cursor: not-allowed;
+        }
+
+        #rescheduleModal .rs-slot.is-blocked {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        #rescheduleModal .rs-slot.is-blocked .rs-slot-note {
+            color: #b91c1c;
+        }
+
+        #rescheduleModal .rs-slot.is-taken,
+        #rescheduleModal .rs-slot.is-past {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        #rescheduleModal .rs-slot.is-taken .rs-slot-note,
+        #rescheduleModal .rs-slot.is-past .rs-slot-note {
+            color: #94a3b8;
+        }
+
+        #rescheduleModal .rs-slot.is-current {
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+            color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-slot.is-current .rs-slot-note {
+            color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-summary {
+            margin: 20px 0 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        #rescheduleModal .rs-summary.is-ready {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        #rescheduleModal .rs-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        #rescheduleModal .rs-btn {
+            min-width: 120px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        #rescheduleModal .rs-btn-ghost {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
+        #rescheduleModal .rs-btn-primary {
+            background: #0d47a1;
+            color: #ffffff;
+        }
+
+        #rescheduleModal .rs-btn-primary:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        body.dark-mode #rescheduleModal .rs-card {
+            background: #1e293b;
+        }
+
+        body.dark-mode #rescheduleModal h2,
+        body.dark-mode #rescheduleModal .rs-slots-title {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #rescheduleModal .rs-patient {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-current,
+        body.dark-mode #rescheduleModal .rs-close {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #rescheduleModal .rs-close:hover {
+            background: #334155;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot {
+            background: #0f172a;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-open:hover {
+            background: #172554;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-selected {
+            background: #1e63cd;
+            border-color: #1e63cd;
+            color: #ffffff;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-blocked {
+            background: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-taken,
+        body.dark-mode #rescheduleModal .rs-slot.is-past {
+            background: #1e293b;
+            color: #64748b;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-current {
+            background: #172554;
+            border-color: #1e40af;
+            color: #93c5fd;
+        }
+
+        body.dark-mode #rescheduleModal .rs-summary {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode #rescheduleModal .rs-summary.is-ready {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-ghost {
+            background: #1e293b;
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode #rescheduleModal .rs-cal .flatpickr-calendar {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        @media (max-width: 760px) {
+            #rescheduleModal .rs-body {
+                grid-template-columns: 1fr;
+            }
+
+            #rescheduleModal .rs-slot-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
     <script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jspdf.umd.min.js') }}"></script>
@@ -1148,6 +1861,126 @@
         color: #1e293b;
     }
 
+    /* ---------- Financial Reports: Unpaid Procedures table ---------- */
+    .unpaid-card { margin-top: 20px; }
+
+    .unpaid-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .unpaid-filter-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        background: #f5f7fa;
+        color: #37474f;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .unpaid-filter-btn:hover { background: #e3ecfa; }
+
+    .unpaid-filter-btn.active {
+        background: var(--navy, #0d47a1);
+        color: #fff;
+        border-color: var(--navy, #0d47a1);
+    }
+
+    .unpaid-search {
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        background: #fff;
+        color: #263238;
+        font-size: 13px;
+        min-width: 230px;
+        outline: none;
+    }
+
+    .unpaid-search:focus { border-color: #42A5F6; }
+
+    .unpaid-table-wrap {
+        max-height: 420px;
+        overflow: auto;
+        border: 1px solid #e3e8ee;
+        border-radius: 10px;
+    }
+
+    .unpaid-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        color: #263238;
+    }
+
+    .unpaid-table th,
+    .unpaid-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #eceff1;
+        white-space: nowrap;
+    }
+
+    .unpaid-table th {
+        position: sticky;
+        top: 0;
+        background: #f1f5f9;
+        color: #455a64;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        z-index: 1;
+    }
+
+    .unpaid-table .num { text-align: right; }
+    .unpaid-table .unpaid-balance-cell { font-weight: 700; color: #d84315; }
+    .unpaid-table td.unpaid-empty { text-align: center; color: #78909c; padding: 26px 12px; }
+
+    .unpaid-table tfoot td {
+        position: sticky;
+        bottom: 0;
+        background: #f1f5f9;
+        font-weight: 700;
+        border-top: 2px solid #cfd8dc;
+        border-bottom: none;
+    }
+
+    body.dark-mode .unpaid-filter-btn {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(45, 55, 75, 0.75);
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .unpaid-filter-btn:hover { background: rgba(60, 70, 95, 0.85); }
+
+    body.dark-mode .unpaid-filter-btn.active {
+        background: #42A5F6;
+        border-color: #42A5F6;
+        color: #1e293b;
+    }
+
+    body.dark-mode .unpaid-search {
+        background: rgba(45, 55, 75, 0.75);
+        border-color: rgba(255, 255, 255, 0.15);
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .unpaid-table-wrap { border-color: rgba(255, 255, 255, 0.12); }
+    body.dark-mode .unpaid-table { color: #e2e8f0; }
+    body.dark-mode .unpaid-table th,
+    body.dark-mode .unpaid-table td { border-bottom-color: rgba(255, 255, 255, 0.08); }
+    body.dark-mode .unpaid-table th,
+    body.dark-mode .unpaid-table tfoot td { background: rgba(45, 55, 75, 0.98); color: #cbd5e1; }
+    body.dark-mode .unpaid-table tfoot td { border-top-color: rgba(255, 255, 255, 0.18); }
+    body.dark-mode .unpaid-table .unpaid-balance-cell { color: #ff8a65; }
+
     .financial-period-toolbar {
         display: flex;
         justify-content: space-between;
@@ -1170,6 +2003,91 @@
     .financial-download-btn:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+
+    /* Financial Reports: previous / next picker under the period buttons
+       (Weekly, Monthly, Yearly). Styled like .period-btn so it blends in. */
+    .financial-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: -4px 0 16px;
+    }
+
+    .fin-nav-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        background: #f5f7fa;
+        color: #37474f;
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .fin-nav-btn:hover:not(:disabled) {
+        background: #e3ecfa;
+    }
+
+    .fin-nav-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .fin-nav-label {
+        min-width: 180px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        background: #f5f7fa;
+        color: #37474f;
+        font-size: 13px;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .fin-nav-select {
+        min-width: 120px;
+        height: 34px;
+        padding: 0 12px;
+        border-radius: 8px;
+        border: 1px solid #cfd8dc;
+        background: #f5f7fa;
+        color: #37474f;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+    }
+
+    .fin-nav-select:hover {
+        background: #e3ecfa;
+    }
+
+    body.dark-mode .fin-nav-select {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(45, 55, 75, 0.75);
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .fin-nav-select option {
+        background: #1e293b;
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .fin-nav-btn,
+    body.dark-mode .fin-nav-label {
+        border-color: rgba(255, 255, 255, 0.15);
+        background: rgba(45, 55, 75, 0.75);
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .fin-nav-btn:hover:not(:disabled) {
+        background: rgba(60, 70, 95, 0.85);
     }
 
     .status-badge {
@@ -1526,7 +2444,24 @@
         <header class="top-header">
             <div class="header-title-group">
                 <h2 id="page-title">Dashboard Overview</h2>
-                <p id="datetime-display" class="datetime-text">Loading date & time...</p>
+                <div id="datetime-display" class="dt-chips">
+                    <span class="dt-chip">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="4.5" width="18" height="16.5" rx="3"></rect>
+                            <path d="M3 10h18M8 2.5v4M16 2.5v4"></path>
+                        </svg>
+                        <span id="dt-date">Loading...</span>
+                    </span>
+                    <span class="dt-chip">
+                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 7v5l3 2"></path>
+                        </svg>
+                        <span id="dt-time">--:--:-- --</span>
+                    </span>
+                </div>
             </div>
 
             <div class="admin-profile" style="display: flex; align-items: center; gap: 12px;">
@@ -1722,6 +2657,18 @@
                     onclick="downloadFinancialReportPDF()">⬇ Download Report</button>
             </div>
 
+            <div class="financial-nav" id="financialNav" style="display:none;">
+                <button type="button" class="fin-nav-btn" id="finNavPrev" aria-label="Previous period"
+                    onclick="financialNavStep(-1)">&lsaquo;</button>
+                <span class="fin-nav-label" id="finNavLabel" aria-live="polite"></span>
+                <select class="fin-nav-select" id="finMonthSel" aria-label="Choose month" style="display:none;"
+                    onchange="financialNavPick()"></select>
+                <select class="fin-nav-select" id="finYearSel" aria-label="Choose year" style="display:none;"
+                    onchange="financialNavPick()"></select>
+                <button type="button" class="fin-nav-btn" id="finNavNext" aria-label="Next period"
+                    onclick="financialNavStep(1)">&rsaquo;</button>
+            </div>
+
             <div class="metric-cards">
                 <div class="metric-card">
                     <div class="metric-icon">
@@ -1785,6 +2732,51 @@
                     Per-procedure payment breakdowns are available in each patient's "CHECK INFO" view under My
                     Patients.
                 </p>
+            </div>
+
+            <div class="income-trend-card unpaid-card" id="unpaidCard">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Unpaid Procedures</h3>
+                        <p>Patients who still have a balance.</p>
+                    </div>
+                </div>
+
+                <div class="unpaid-toolbar">
+                    <div class="period-btn-group" id="unpaidRangeGroup">
+                        <button type="button" class="unpaid-filter-btn active" data-range="all" onclick="setUnpaidRange('all')">All</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="today" onclick="setUnpaidRange('today')">Today</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="7d" onclick="setUnpaidRange('7d')">Last 7 Days</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="30d" onclick="setUnpaidRange('30d')">Last 30 Days</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="12m" onclick="setUnpaidRange('12m')">Last 12 Months</button>
+                    </div>
+                    <input type="text" id="unpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search unpaid procedures by patient name" oninput="renderUnpaidTable()">
+                </div>
+
+                <div class="unpaid-table-wrap">
+                    <table class="unpaid-table" id="unpaidTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Procedure</th>
+                                <th>Date</th>
+                                <th>Dentist</th>
+                                <th class="num">Total</th>
+                                <th class="num">Paid</th>
+                                <th class="num">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unpaidTableBody">
+                            <tr><td colspan="7" class="unpaid-empty">Loading...</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" id="unpaidFootLabel">Total balance</td>
+                                <td class="num" id="unpaidFootTotal">₱0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -1964,11 +2956,11 @@
                     .catch(function (err) { console.error('Refresh my patients error:', err); });
             }
 
-            /* accepted_at is stored as a UTC ISO string, so it needs the browser to do the
-               timezone conversion. Deliberately NOT formatApptDateTime(): that one
-               exists to re-render Firestore's "YYYY-MM-DD HH:MM" without ever
-               rewriting it, and this value has a different shape and a real offset.
-               The raw string stays in data-accepted-at either way, because
+                /* accepted_at is stored as a UTC ISO string, so it needs the browser to do the
+                timezone conversion. Deliberately NOT formatApptDateTime(): that one
+                exists to re-render Firestore's "YYYY-MM-DD HH:MM" without ever
+                rewriting it, and this value has a different shape and a real offset.
+                The raw string stays in data-accepted-at either way, because
                sortWeeklyClientsByDate parses the attribute, not the text. */
             function formatAcceptedAt(raw) {
                 const value = String(raw == null ? '' : raw).trim();
@@ -1995,9 +2987,9 @@
                 return joined || String(src.FirstName || '').trim() || 'Unnamed patient';
             }
 
-            /* The assigned-dentist cell. Read-only once a dentist is on the
-               appointment; an inline editor only while there is nothing to show,
-               so a filled-in card and an edited card end up looking identical. */
+                /* The assigned-dentist cell. Read-only once a dentist is on the
+                appointment; an inline editor only while there is nothing to show,
+                so a filled-in card and an edited card end up looking identical. */
             function apptCardDentistValue(name) {
                 return '<span class="appt-card__val appt-card__val--dentist">' + apptText(name) + '</span>';
             }
@@ -2042,10 +3034,10 @@
                     + '</div>';
             }
 
-            /* Save handler for the "no dentist assigned" editor. Only swaps the
-               editor for the read-only name once the server has confirmed, so a
-               failed save never leaves the card claiming a dentist it does not
-               have. */
+                /* Save handler for the "no dentist assigned" editor. Only swaps the
+                editor for the read-only name once the server has confirmed, so a
+                failed save never leaves the card claiming a dentist it does not
+                have. */
             function assignDentistFromCard(btn) {
                 const wrap = btn.closest('.appt-dentist');
                 const input = wrap ? wrap.querySelector('.dentist-input') : null;
@@ -3744,6 +4736,26 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="dc-extras">
+                    <section class="dc-card">
+                        <div class="dc-card-head">
+                            <h4 id="dayScheduleTitle">Day schedule</h4>
+                            <button type="button" id="dayScheduleRefresh" class="dc-link-btn">Refresh</button>
+                        </div>
+                        <div id="daySchedule" class="dc-list">
+                            <div class="dc-empty">Select a date on the calendar to see its schedule.</div>
+                        </div>
+                    </section>
+                    <section class="dc-card">
+                        <div class="dc-card-head">
+                            <h4>Upcoming blocked days <span id="upcomingBlockedCount" class="dc-count"></span></h4>
+                        </div>
+                        <div id="upcomingBlocked" class="dc-list">
+                            <div class="dc-empty">Loading...</div>
+                        </div>
+                    </section>
+                </div>
             </section>
         </div>
 
@@ -3850,6 +4862,11 @@
                                         title="Accept this appointment" aria-label="Accept this appointment"
                                         onclick="updateStatus(this.closest('tr'), 'accept')">
                                         <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                    </button>
+                                    <button type="button" class="btn-action appt-reschedule-btn"
+                                        title="Reschedule this appointment" aria-label="Reschedule this appointment"
+                                        onclick="openRescheduleModal(this.closest('tr'))">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_repeat</span>
                                     </button>
                                     <button type="button" class="btn-action appt-decline-btn"
                                         title="Decline this appointment" aria-label="Decline this appointment"
@@ -4292,6 +5309,9 @@
                                     <button type="button" class="btn-action appt-accept-btn" title="Accept this appointment" aria-label="Accept this appointment" onclick="updateStatus(this.closest('tr'), 'accept')">
                                         <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
                                     </button>
+                                    <button type="button" class="btn-action appt-reschedule-btn" title="Reschedule this appointment" aria-label="Reschedule this appointment" onclick="openRescheduleModal(this.closest('tr'))">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_repeat</span>
+                                    </button>
                                     <button type="button" class="btn-action appt-decline-btn" title="Decline this appointment" aria-label="Decline this appointment" onclick="updateStatus(this.closest('tr'), 'decline')">
                                         <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
                                     </button>
@@ -4300,6 +5320,8 @@
                         `;
                                     apptTbody.appendChild(tr);
                                 });
+
+                                if (window.markBlockedAppointments) window.markBlockedAppointments();
 
                                 if (result.next_cursor) {
                                     apptCursor.setAttribute('data-cursor', result.next_cursor);
@@ -5111,6 +6133,13 @@
             // Lazy-load the four big lists the first time their tab is opened,
             // so opening the dashboard itself doesn't read them from Firestore.
             loadSectionOnce(sectionId);
+
+            // Unpaid Procedures table: refetch each time Financial Reports is
+            // opened so it reflects payments taken since. The server answers
+            // from its cache, so this is cheap.
+            if (sectionId === 'financialreports' && typeof loadUnpaidProcedures === 'function') {
+                loadUnpaidProcedures();
+            }
         }
 
         // section id -> [load-more button, cursor holder, container to clear]
@@ -6170,19 +7199,20 @@
     <script>
         function updateDateTime() {
             const now = new Date();
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            };
-            // Formats to: Monday, May 24, 2026 • 10:30:45 AM
-            document.getElementById('datetime-display').textContent =
-                now.toLocaleDateString('en-US', options).replace(',', ' •');
+            const dateEl = document.getElementById('dt-date');
+            const timeEl = document.getElementById('dt-time');
+            if (!dateEl || !timeEl) return;
+
+            // e.g. Sunday, October 4, 2026
+            const dateText = now.toLocaleDateString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+            if (dateEl.textContent !== dateText) dateEl.textContent = dateText;
+
+            // e.g. 12:41:57 AM
+            timeEl.textContent = now.toLocaleTimeString('en-US', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+            });
         }
 
         // Update immediately, then every second
@@ -10995,6 +12025,34 @@
         </div>
     </div>
 
+    <!-- Reschedule Appointment Modal -->
+    <div id="rescheduleModal" class="modal" style="display: none;">
+        <div class="modal-content rs-card" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+            <button type="button" class="rs-close" id="rsCloseBtn" aria-label="Close">&times;</button>
+            <h2 id="rsTitle">Reschedule appointment</h2>
+            <div class="rs-patient" id="rsPatient"></div>
+            <div class="rs-current" id="rsCurrent"></div>
+
+            <div class="rs-body">
+                <div class="rs-cal">
+                    <div id="rsCalendar"></div>
+                </div>
+                <div>
+                    <div class="rs-slots-title" id="rsSlotsTitle">Pick a new date</div>
+                    <div class="rs-slot-grid" id="rsSlotGrid">
+                        <div class="rs-hint">Choose a date on the calendar to see the open times.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rs-summary" id="rsSummary">Select a new date and time.</div>
+            <div class="rs-actions">
+                <button type="button" class="rs-btn rs-btn-ghost" id="rsCancelBtn">Cancel</button>
+                <button type="button" class="rs-btn rs-btn-primary" id="rsConfirmBtn" disabled>Reschedule</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Unblock Confirmation Modal -->
     <div id="unblockConfirmModal" class="modal" style="display: none;">
         <div class="modal-content auth-card" style="max-width: 420px;">
@@ -11030,6 +12088,188 @@
             let blockedMap = {};
             let selectedDate = null;
             let calendarInstance = null;
+
+            let lastDay = { date: null, appts: [], failed: false };
+            const SLOT_LABEL = {};
+            TIME_SLOTS.forEach(sl => { SLOT_LABEL[sl.value] = sl.label; });
+
+            function esc(t) {
+                const d = document.createElement('div');
+                d.textContent = t == null ? '' : String(t);
+                return d.innerHTML;
+            }
+
+            function timeLabel(v) {
+                if (SLOT_LABEL[v]) return SLOT_LABEL[v];
+                const m = /^(\d{1,2}):(\d{2})$/.exec(v || '');
+                if (!m) return v || '';
+                let h = Number(m[1]);
+                const ap = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                return h + ':' + m[2] + ' ' + ap;
+            }
+
+            // ---- Block-slot conflict summary (counts only, never a long list of names) ----
+            function countLabel(n) {
+                return n >= 20 ? '20+' : String(n);
+            }
+
+            function apptWord(n) {
+                return n === 1 ? 'scheduled appointment' : 'scheduled appointments';
+            }
+
+            function conflictMessage(r, fullDay, dateStr) {
+                const slots = r.slots || [];
+                if (fullDay) {
+                    return formatBlockDate(dateStr) + ' already has ' + countLabel(r.total) + ' ' + apptWord(r.total) + '.';
+                }
+                if (slots.length === 1) {
+                    const s0 = slots[0];
+                    let msg = timeLabel(s0.time) + ' already has ' + countLabel(s0.count) + ' ' + apptWord(s0.count);
+                    if (s0.count === 1 && s0.name) msg += ': ' + s0.name + (s0.accepted ? ' (Accepted)' : ' (Pending)');
+                    return msg + '.';
+                }
+                return 'The selected times already have ' + countLabel(r.total) + ' ' + apptWord(r.total) + '.';
+            }
+
+            function conflictDetails(r) {
+                const slots = r.slots || [];
+                if (slots.length <= 1) return [];
+                const MAX_ROWS = 5;
+                const rows = slots.slice(0, MAX_ROWS).map(s => [
+                    timeLabel(s.time),
+                    s.count === 1 && s.name ? s.name : countLabel(s.count) + ' appointments'
+                ]);
+                if (slots.length > MAX_ROWS) {
+                    rows.push(['', '+ ' + (slots.length - MAX_ROWS) + ' more time slots']);
+                }
+                return rows;
+            }
+
+            let scheduleToken = 0;
+            async function loadDaySchedule(dateStr) {
+                const box = document.getElementById('daySchedule');
+                if (!box) return;
+                document.getElementById('dayScheduleTitle').textContent = 'Schedule: ' + formatBlockDate(dateStr);
+                const token = ++scheduleToken;
+                box.innerHTML = '<div class="dc-empty">Loading...</div>';
+                let appts = [];
+                let failed = false;
+                try {
+                    const res = await fetch('/admin/day_schedule?date=' + encodeURIComponent(dateStr));
+                    const data = await res.json();
+                    if (token !== scheduleToken) return;
+                    if (data.success) appts = data.appointments || [];
+                    else failed = true;
+                } catch (err) {
+                    if (token !== scheduleToken) return;
+                    console.error('Day schedule error:', err);
+                    failed = true;
+                }
+                lastDay = { date: dateStr, appts: appts, failed: failed };
+                renderDaySchedule();
+            }
+
+            function renderDaySchedule() {
+                const box = document.getElementById('daySchedule');
+                if (!box || !lastDay.date) return;
+                if (lastDay.failed) {
+                    box.innerHTML = '<div class="dc-empty">Could not load appointments for this day.</div>';
+                    return;
+                }
+
+                const info = blockedMap[lastDay.date];
+                const isBlocked = t => !!(info && (info.full_day || (info.blocked_times || []).includes(t)));
+
+                const byTime = {};
+                lastDay.appts.forEach(a => { (byTime[a.time] = byTime[a.time] || []).push(a); });
+
+                const times = TIME_SLOTS.map(sl => sl.value);
+                Object.keys(byTime).forEach(t => { if (!times.includes(t)) times.push(t); });
+                times.sort();
+
+                const booked = lastDay.appts.length;
+                const blockedCount = times.filter(isBlocked).length;
+                let html = '<div class="dc-summary">' + booked + ' appointment' + (booked === 1 ? '' : 's') +
+                    ' &middot; ' + (info && info.full_day ? 'Full day blocked' : blockedCount + ' blocked slot' + (blockedCount === 1 ? '' : 's')) + '</div>';
+
+                times.forEach(t => {
+                    const list = byTime[t] || [];
+                    const blocked = isBlocked(t);
+                    if (list.length) {
+                        list.forEach(a => {
+                            const chip = '<span class="dc-chip ' + (a.status === 'Accepted' ? 'accepted' : 'pending') + '">' + esc(a.status) + '</span>';
+                            const warn = blocked ? '<span class="dc-chip blocked">Slot is blocked</span>' : '';
+                            const sub = [a.service, a.dentist].filter(Boolean).map(esc).join(' &middot; ');
+                            const canMove = a.id && a.uid;
+                            html += '<div class="dc-row is-booked' + (blocked ? ' is-conflict' : '') + '">' +
+                                '<div class="dc-time">' + esc(timeLabel(t)) + '</div>' +
+                                '<div class="dc-main"><strong>' + esc(a.patient_name) + chip + warn + '</strong>' +
+                                (sub ? '<span class="dc-sub">' + sub + '</span>' : '') + '</div>' +
+                                (canMove ? '<div class="dc-actions"><button type="button" class="dc-mini-btn' +
+                                    (blocked ? ' is-urgent' : '') + '" data-act="move" data-uid="' + esc(a.uid) +
+                                    '" data-id="' + esc(a.id) + '">Reschedule</button></div>' : '') +
+                                '</div>';
+                        });
+                    } else if (blocked) {
+                        html += '<div class="dc-row">' +
+                            '<div class="dc-time">' + esc(timeLabel(t)) + '</div>' +
+                            '<div class="dc-main"><span class="dc-chip blocked" style="margin-left:0">Blocked</span>' +
+                            (info.reason ? '<span class="dc-sub">' + esc(info.reason) + '</span>' : '') + '</div></div>';
+                    } else {
+                        html += '<div class="dc-row">' +
+                            '<div class="dc-time">' + esc(timeLabel(t)) + '</div>' +
+                            '<div class="dc-main dc-muted">Open</div></div>';
+                    }
+                });
+                box.innerHTML = html;
+            }
+
+            function renderUpcomingBlocked() {
+                const box = document.getElementById('upcomingBlocked');
+                if (!box) return;
+                const today = toDateStr(new Date());
+                const list = Object.values(blockedMap)
+                    .filter(i => i.date >= today)
+                    .sort((a, b) => (a.date < b.date ? -1 : 1));
+                document.getElementById('upcomingBlockedCount').textContent = list.length ? String(list.length) : '';
+                if (!list.length) {
+                    box.innerHTML = '<div class="dc-empty">No upcoming blocked days.</div>';
+                    return;
+                }
+                box.innerHTML = list.map(i => {
+                    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(i.date);
+                    const label = m ? new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-US',
+                        { weekday: 'short', month: 'short', day: 'numeric' }) : i.date;
+                    const chip = i.full_day
+                        ? '<span class="dc-chip blocked" style="margin-left:0">Full day</span>'
+                        : '<span class="dc-chip partial" style="margin-left:0">' +
+                        esc((i.blocked_times || []).map(timeLabel).join(', ')) + '</span>';
+                    return '<div class="dc-row">' +
+                        '<div class="dc-date">' + esc(label) + '</div>' +
+                        '<div class="dc-main">' + chip +
+                        (i.reason ? '<span class="dc-sub">' + esc(i.reason) + '</span>' : '') + '</div>' +
+                        '<div class="dc-actions">' +
+                        '<button type="button" class="dc-mini-btn" data-act="view" data-date="' + esc(i.date) + '">View</button>' +
+                        '<button type="button" class="dc-mini-btn danger" data-act="unblock" data-date="' + esc(i.date) + '">Unblock</button>' +
+                        '</div></div>';
+                }).join('');
+            }
+
+            async function unblockDate(date) {
+                if (!(await showConfirm('Unblock ' + formatBlockDate(date) + '?'))) return;
+                const formData = new FormData();
+                formData.append('date', date);
+                try {
+                    const res = await fetch('/admin/unblock_slot', { method: 'POST', body: formData });
+                    const result = await res.json();
+                    if (result.success) { await loadBlockedSlots(); showToast('Unblocked successfully.'); }
+                    else showToast(result.message || 'Failed to unblock.');
+                } catch (err) {
+                    console.error('Unblock slot error:', err);
+                    showToast('Failed to unblock. Please try again.');
+                }
+            }
 
             /* Custom month dropdown.
                The native <select> flatpickr renders is hidden by CSS because its
@@ -11137,6 +12377,8 @@
                     blockedMap = {};
                     data.forEach(item => { blockedMap[item.date] = item; });
                     window.__blockedSlotsMap = blockedMap; // shared with the New Appointment modal
+                    renderUpcomingBlocked();
+                    if (window.markBlockedAppointments) window.markBlockedAppointments();
                     if (calendarInstance) {
                         calendarInstance.redraw();
                         // redraw() can rebuild the native month select, so re-sync label
@@ -11161,6 +12403,7 @@
             function selectDate(dateStr) {
                 selectedDate = dateStr;
                 document.getElementById('blockPanelDate').textContent = formatBlockDate(dateStr);
+                if (lastDay.date === dateStr) renderDaySchedule(); else loadDaySchedule(dateStr);
 
                 const existing = blockedMap[dateStr];
                 const fullDayToggle = document.getElementById('blockFullDayToggle');
@@ -11177,6 +12420,38 @@
 
             document.addEventListener('DOMContentLoaded', function () {
                 buildTimesGrid();
+
+                document.getElementById('daySchedule').addEventListener('click', function (e) {
+                    const btn = e.target.closest('button[data-act="move"]');
+                    if (!btn || !lastDay.date) return;
+                    const a = lastDay.appts.find(x => x.id === btn.getAttribute('data-id') &&
+                        x.uid === btn.getAttribute('data-uid'));
+                    if (!a || typeof window.openRescheduleModal !== 'function') return;
+                    window.openRescheduleModal({
+                        uid: a.uid, id: a.id, name: a.patient_name, service: a.service,
+                        appointment_date: a.appointment_date, dentist: a.dentist, source: a.source,
+                        onDone: function () {
+                            // The appointment left this day: reload the schedule and blocked list.
+                            lastDay = { date: null, appts: [], failed: false };
+                            loadDaySchedule(selectedDate);
+                        }
+                    });
+                });
+
+                document.getElementById('dayScheduleRefresh').addEventListener('click', function () {
+                    if (selectedDate) loadDaySchedule(selectedDate);
+                });
+
+                document.getElementById('upcomingBlocked').addEventListener('click', function (e) {
+                    const btn = e.target.closest('button[data-act]');
+                    if (!btn) return;
+                    const date = btn.getAttribute('data-date');
+                    if (btn.getAttribute('data-act') === 'view') {
+                        if (calendarInstance) calendarInstance.setDate(date, true);
+                    } else {
+                        unblockDate(date);
+                    }
+                });
 
                 document.getElementById('blockFullDayToggle').addEventListener('change', function () {
                     document.querySelectorAll('.block-time-cb').forEach(cb => cb.disabled = this.checked);
@@ -11220,15 +12495,33 @@
                         return;
                     }
 
-                    const formData = new FormData();
-                    formData.append('date', selectedDate);
-                    formData.append('full_day', fullDay ? 'true' : 'false');
-                    checkedTimes.forEach(t => formData.append('blocked_times[]', t));
-                    formData.append('reason', reason);
+                    const dateToBlock = selectedDate;
+                    function postBlock(force) {
+                        const formData = new FormData();
+                        formData.append('date', dateToBlock);
+                        formData.append('full_day', fullDay ? 'true' : 'false');
+                        checkedTimes.forEach(t => formData.append('blocked_times[]', t));
+                        formData.append('reason', reason);
+                        if (force) formData.append('force', 'true');
+                        return fetch('/admin/block_slot', { method: 'POST', body: formData })
+                            .then(res => res.json());
+                    }
 
                     try {
-                        const res = await fetch('/admin/block_slot', { method: 'POST', body: formData });
-                        const result = await res.json();
+                        let result = await postBlock(false);
+
+                        // The day/time already has appointments: summarise, then let the doctor decide.
+                        if (result && result.conflict) {
+                            const ok = await showConfirm(conflictMessage(result, fullDay, dateToBlock), {
+                                title: 'Appointments already booked',
+                                confirmLabel: 'Block anyway',
+                                note: 'Blocking will not cancel or move these appointments. After saving, use Reschedule in the day schedule below to move them.',
+                                details: conflictDetails(result)
+                            });
+                            if (!ok) return;
+                            result = await postBlock(true);
+                        }
+
                         if (result.success) { await loadBlockedSlots(); showToast('Blocked slot saved.'); }
                         else showToast(result.message || 'Failed to save block.');
                     } catch (err) {
@@ -11256,6 +12549,321 @@
                 });
 
                 loadBlockedSlots();
+            });
+        })();
+    </script>
+
+    <script>
+        /* ---- Reschedule a pending appointment around the Doctors Calendar blocks ---- */
+        (function () {
+            const SLOTS = [
+                { v: '09:00', l: '9:00 AM' }, { v: '10:00', l: '10:00 AM' }, { v: '11:00', l: '11:00 AM' },
+                { v: '12:00', l: '12:00 PM' }, { v: '13:00', l: '1:00 PM' }, { v: '14:00', l: '2:00 PM' },
+                { v: '15:00', l: '3:00 PM' }, { v: '16:00', l: '4:00 PM' }, { v: '17:00', l: '5:00 PM' }
+            ];
+            const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                'August', 'September', 'October', 'November', 'December'];
+            const NOTE = { open: 'Open', blocked: 'Blocked', taken: 'Booked', current: 'Current', past: 'Passed' };
+
+            let fp = null, curRow = null, curAppt = null, curDentist = '', curSource = 'pending', curOnDone = null;
+            let chosenDate = '', chosenTime = '';
+            let blockedMap = {}, dayAppts = [], dayToken = 0, busy = false;
+
+            const $ = id => document.getElementById(id);
+            const pad = n => (n < 10 ? '0' + n : '' + n);
+            const toStr = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+            const todayStr = () => toStr(new Date());
+
+            function esc(t) {
+                const d = document.createElement('div');
+                d.textContent = t == null ? '' : String(t);
+                return d.innerHTML;
+            }
+
+            function labelFor(time) {
+                const s = SLOTS.find(x => x.v === time);
+                return s ? s.l : time;
+            }
+
+            function prettyDate(iso) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+                return m ? MONTHS[Number(m[2]) - 1] + ' ' + Number(m[3]) + ', ' + m[1] : iso;
+            }
+
+            function parseRaw(raw) {
+                const m = /^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}):(\d{2})/.exec(String(raw || '').trim());
+                return m ? { date: m[1], time: pad(Number(m[2])) + ':' + m[3] } : null;
+            }
+
+            // Same normalisation the server uses for dentist names.
+            const normName = n => String(n || '').trim().toLowerCase().split(/\s+/).join(' ');
+
+            function isBlocked(date, time) {
+                const info = blockedMap[date];
+                return !!(info && (info.full_day || (info.blocked_times || []).includes(time)));
+            }
+
+            /* Flag pending requests that sit in a slot the dentist has since blocked. */
+            window.markBlockedAppointments = function () {
+                const map = window.__blockedSlotsMap || {};
+                document.querySelectorAll('#appointmentsTable tbody tr').forEach(function (tr) {
+                    const cell = tr.querySelector('.appt-date-cell');
+                    if (!cell) return;
+                    const old = cell.querySelector('.appt-blocked-chip');
+                    if (old) old.remove();
+                    tr.classList.remove('appt-row--blocked');
+
+                    const when = parseRaw(cell.getAttribute('data-raw'));
+                    const info = when && map[when.date];
+                    if (!info) return;
+                    if (info.full_day || (info.blocked_times || []).includes(when.time)) {
+                        const chip = document.createElement('span');
+                        chip.className = 'appt-blocked-chip';
+                        chip.textContent = 'Blocked - reschedule';
+                        chip.title = info.reason ? 'Dentist unavailable: ' + info.reason : 'Dentist unavailable at this time';
+                        cell.appendChild(chip);
+                        tr.classList.add('appt-row--blocked');
+                    }
+                });
+            };
+
+            async function loadBlocked() {
+                try {
+                    const res = await fetch('/get_blocked_slots');
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        blockedMap = {};
+                        data.forEach(i => { blockedMap[i.date] = i; });
+                        return;
+                    }
+                } catch (err) {
+                    console.error('Reschedule: blocked slots failed', err);
+                }
+                blockedMap = Object.assign({}, window.__blockedSlotsMap || {});
+            }
+
+            function slotState(time) {
+                const info = blockedMap[chosenDate];
+                if (info && (info.full_day || (info.blocked_times || []).includes(time))) {
+                    return { state: 'blocked', title: info.reason || 'Dentist unavailable' };
+                }
+                const cur = curAppt && parseRaw(curAppt.appointment_date);
+                if (cur && cur.date === chosenDate && cur.time === time) return { state: 'current' };
+
+                if (chosenDate === todayStr()) {
+                    const now = new Date();
+                    const parts = time.split(':').map(Number);
+                    if (parts[0] * 60 + parts[1] <= now.getHours() * 60 + now.getMinutes()) return { state: 'past' };
+                }
+                if (curDentist && dayAppts.some(a => a.status === 'Accepted' && a.time === time &&
+                    normName(a.dentist) === normName(curDentist))) {
+                    return { state: 'taken', title: 'Already booked for this dentist' };
+                }
+                return { state: 'open' };
+            }
+
+            function renderSlots() {
+                const grid = $('rsSlotGrid');
+                if (!chosenDate) {
+                    grid.innerHTML = '<div class="rs-hint">Choose a date on the calendar to see the open times.</div>';
+                    return;
+                }
+                if (chosenTime && slotState(chosenTime).state !== 'open') chosenTime = '';
+
+                grid.innerHTML = SLOTS.map(function (s) {
+                    const st = slotState(s.v);
+                    const selected = chosenTime === s.v;
+                    return '<button type="button" class="rs-slot is-' + st.state + (selected ? ' is-selected' : '') + '"' +
+                        ' data-time="' + s.v + '"' + (st.state === 'open' ? '' : ' disabled') +
+                        (st.title ? ' title="' + esc(st.title) + '"' : '') + '>' +
+                        '<span class="rs-slot-time">' + esc(s.l) + '</span>' +
+                        '<span class="rs-slot-note">' + (selected ? 'Selected' : NOTE[st.state]) + '</span></button>';
+                }).join('');
+            }
+
+            function updateSummary() {
+                const box = $('rsSummary');
+                const btn = $('rsConfirmBtn');
+                if (chosenDate && chosenTime) {
+                    box.textContent = 'New schedule: ' + prettyDate(chosenDate) + ' \u00b7 ' + labelFor(chosenTime);
+                    box.classList.add('is-ready');
+                    btn.disabled = busy;
+                } else {
+                    box.textContent = chosenDate ? 'Pick one of the open times.' : 'Select a new date and time.';
+                    box.classList.remove('is-ready');
+                    btn.disabled = true;
+                }
+            }
+
+            async function loadDay(date) {
+                const token = ++dayToken;
+                $('rsSlotGrid').innerHTML = '<div class="rs-hint">Loading...</div>';
+                let appts = [];
+                try {
+                    const res = await fetch('/admin/day_schedule?date=' + encodeURIComponent(date));
+                    const data = await res.json();
+                    if (data.success) appts = data.appointments || [];
+                } catch (err) {
+                    console.error('Reschedule: day schedule failed', err);
+                }
+                if (token !== dayToken) return;
+                dayAppts = appts;
+                renderSlots();
+            }
+
+            function buildCalendar() {
+                if (fp) { fp.destroy(); fp = null; }
+                fp = flatpickr('#rsCalendar', {
+                    inline: true,
+                    minDate: 'today',
+                    maxDate: new Date().fp_incr(365),
+                    disable: [function (d) {
+                        const info = blockedMap[toStr(d)];
+                        return !!(info && info.full_day);
+                    }],
+                    onDayCreate: function (dObj, dStr, inst, dayElem) {
+                        const info = blockedMap[toStr(dayElem.dateObj)];
+                        if (info && !info.full_day) dayElem.classList.add('rs-partial');
+                    },
+                    onChange: function (dates, dateStr) {
+                        chosenDate = dateStr;
+                        chosenTime = '';
+                        $('rsSlotsTitle').textContent = prettyDate(dateStr);
+                        updateSummary();
+                        loadDay(dateStr);
+                    }
+                });
+            }
+
+            function closeModal() {
+                $('rescheduleModal').style.display = 'none';
+                document.removeEventListener('keydown', onKey);
+                if (fp) { fp.destroy(); fp = null; }
+                curRow = curAppt = curOnDone = null;
+            }
+
+            function onKey(e) { if (e.key === 'Escape' && !busy) closeModal(); }
+
+            /* Accepts either a row of the Appointments table (pending request) or a plain
+               object from the Doctors Calendar day schedule:
+               { uid, id, name, service, appointment_date, dentist, source, onDone } */
+            window.openRescheduleModal = async function (target) {
+                let appt = null;
+                curRow = null;
+                curOnDone = null;
+                curSource = 'pending';
+
+                if (target && typeof target.getAttribute === 'function') {
+                    try { appt = JSON.parse(target.getAttribute('data-appointment')); } catch (err) { /* handled below */ }
+                    curRow = target;
+                    const dentistInput = target.querySelector('.dentist-input');
+                    curDentist = dentistInput ? dentistInput.value.trim() : '';
+                } else if (target && target.uid && target.id) {
+                    appt = {
+                        uid: target.uid, id: target.id, Service: target.service || '',
+                        appointment_date: target.appointment_date || '', __name: target.name || ''
+                    };
+                    curDentist = target.dentist || '';
+                    curSource = target.source === 'accepted' ? 'accepted' : 'pending';
+                    curOnDone = typeof target.onDone === 'function' ? target.onDone : null;
+                }
+                if (!appt) { showToast('Could not read this appointment.'); return; }
+
+                curAppt = appt;
+                chosenDate = '';
+                chosenTime = '';
+                dayAppts = [];
+
+                $('rsPatient').textContent = (appt.__name || [appt.FirstName, appt.LastName].filter(Boolean).join(' ')) +
+                    (appt.Service ? ' \u00b7 ' + appt.Service : '');
+                $('rsCurrent').textContent = 'Loading...';
+                $('rsSlotsTitle').textContent = 'Pick a new date';
+                renderSlots();
+                updateSummary();
+                $('rescheduleModal').style.display = 'flex';
+                document.addEventListener('keydown', onKey);
+
+                await loadBlocked();
+                if (curAppt !== appt) return; // closed while loading
+
+                const cur = parseRaw(appt.appointment_date);
+                let html = 'Currently scheduled: ' + (cur ? esc(prettyDate(cur.date) + ' \u00b7 ' + labelFor(cur.time)) : 'not set');
+                if (cur && isBlocked(cur.date, cur.time)) {
+                    const info = blockedMap[cur.date] || {};
+                    html += '<span class="rs-flag">Blocked' + (info.reason ? ': ' + esc(info.reason) : '') + '</span>';
+                }
+                $('rsCurrent').innerHTML = html;
+                buildCalendar();
+            };
+
+            function applyToRow(newDt) {
+                if (!curRow) return; // opened from the Doctors Calendar: its onDone refreshes the view
+                curAppt.appointment_date = newDt;
+                curRow.setAttribute('data-appointment', JSON.stringify(curAppt));
+                const cell = curRow.querySelector('.appt-date-cell');
+                if (cell) {
+                    cell.setAttribute('data-raw', newDt);
+                    cell.textContent = formatApptDateTime(newDt);
+                }
+                // The blocked map is refreshed from the server, then rows re-flagged.
+                window.__blockedSlotsMap = Object.assign({}, blockedMap);
+                window.markBlockedAppointments();
+            }
+
+            async function submit() {
+                if (busy || !chosenDate || !chosenTime || !curAppt) return;
+                busy = true;
+                const btn = $('rsConfirmBtn');
+                btn.disabled = true;
+                btn.textContent = 'Saving...';
+
+                const fd = new FormData();
+                fd.append('user_id', curAppt.uid);
+                fd.append('appointment_id', curAppt.id);
+                fd.append('new_date', chosenDate);
+                fd.append('new_time', chosenTime);
+                fd.append('dentist_name', curDentist);
+                fd.append('source', curSource);
+
+                let done = false;
+                try {
+                    const res = await fetch('/admin/reschedule_appointment', { method: 'POST', body: fd });
+                    const result = await res.json().catch(() => ({}));
+                    if (res.ok && result.success) {
+                        applyToRow(result.appointment_date);
+                        if (curOnDone) curOnDone(result.appointment_date);
+                        showToast(result.email_on_file
+                            ? 'Appointment rescheduled. The patient was notified by email.'
+                            : 'Appointment rescheduled. No email is on file for this patient.');
+                        done = true;
+                    } else {
+                        showToast(result.message || 'Failed to reschedule.');
+                        if (res.status === 409) {
+                            await loadBlocked();
+                            loadDay(chosenDate);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Reschedule error:', err);
+                    showToast('Failed to reschedule. Please try again.');
+                } finally {
+                    busy = false;
+                    btn.textContent = 'Reschedule';
+                    if (done) closeModal(); else updateSummary();
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                $('rsCloseBtn').addEventListener('click', closeModal);
+                $('rsCancelBtn').addEventListener('click', closeModal);
+                $('rsConfirmBtn').addEventListener('click', submit);
+                $('rsSlotGrid').addEventListener('click', function (e) {
+                    const b = e.target.closest('.rs-slot.is-open');
+                    if (!b) return;
+                    chosenTime = b.getAttribute('data-time');
+                    renderSlots();
+                    updateSummary();
+                });
             });
         })();
     </script>
@@ -11401,27 +13009,161 @@
             }
         })();
 
+        // Which week / month / year is on screen for the Weekly, Monthly and
+        // Yearly views. null month / year means "the current one".
+        let financialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+        let financialChartRequestId = 0; // so a slow, older response can't overwrite a newer one
+
         function loadFinancialChart(period) {
+            // Switching to a different period button starts at the current
+            // week / month / year. Reloading the SAME period (e.g. the
+            // light/dark theme toggle) keeps whatever was selected.
+            if (period !== financialNav.period) {
+                financialNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
+                    minYear: financialNav.minYear, maxYear: financialNav.maxYear, maxMonth: financialNav.maxMonth };
+            }
+
             // Update active button state
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.period === period) btn.classList.add('active');
             });
 
-            fetch(`/admin/financial_chart_data?period=${period}`)
+            const query = new URLSearchParams({ period: period });
+            if (period === 'weekly') query.set('week', financialNav.week);
+            if (period === 'monthly' && financialNav.month) query.set('month', financialNav.month);
+            if (period === 'yearly' && financialNav.year) query.set('year', financialNav.year);
+
+            const requestId = ++financialChartRequestId;
+
+            fetch(`/admin/financial_chart_data?${query.toString()}`)
                 .then(response => response.json())
                 .then(data => {
+                    if (requestId !== financialChartRequestId) return; // a newer request is in flight
                     if (data.success) {
-                        updateIncomeChart(data.labels, data.data);
+                        updateIncomeChart(data.labels, data.data, data.chart_type);
                         updateFinancialCards(data.total_income, data.total_outstanding, data.unpaid_procedures);
+
+                        // Remember what the server actually resolved (it clamps
+                        // out-of-range picks), then redraw the picker.
+                        financialNav.week = data.week || 0;
+                        financialNav.month = data.month || null;
+                        financialNav.year = data.year || null;
+                        financialNav.canPrev = !!data.can_prev;
+                        financialNav.canNext = !!data.can_next;
+                        financialNav.minYear = data.min_year;
+                        financialNav.maxYear = data.max_year;
+                        financialNav.maxMonth = data.max_month;
+                        renderFinancialNav(period, data.range_label);
+
                         financialReportState = {
                             period: period,
                             totalIncome: data.total_income,
                             totalOutstanding: data.total_outstanding,
-                            unpaidProcedures: data.unpaid_procedures
+                            unpaidProcedures: data.unpaid_procedures,
+                            rangeLabel: data.range_label || '',
+                            asOfLabel: data.as_of_label || '',
+                            selection: period === 'monthly' ? (data.month || '')
+                                : period === 'yearly' ? String(data.year || '')
+                                : period === 'weekly' ? (data.week ? 'week-' + data.week + '-back' : '')
+                                : ''
                         };
                     }
+                })
+                .catch(err => console.error('Failed to load financial chart:', err));
+        }
+
+        // Shows the  < label >  picker for Weekly / Monthly / Yearly only.
+        function renderFinancialNav(period, rangeLabel) {
+            const nav = document.getElementById('financialNav');
+            if (!nav) return;
+            const hasPicker = period === 'weekly' || period === 'monthly' || period === 'yearly';
+            nav.style.display = hasPicker ? 'flex' : 'none';
+            if (!hasPicker) return;
+            document.getElementById('finNavLabel').textContent = rangeLabel || '';
+            document.getElementById('finNavPrev').disabled = !financialNav.canPrev;
+            document.getElementById('finNavNext').disabled = !financialNav.canNext;
+
+            // Weekly shows the text label; Monthly shows Month + Year
+            // dropdowns; Yearly shows a Year dropdown.
+            const label = document.getElementById('finNavLabel');
+            const monthSel = document.getElementById('finMonthSel');
+            const yearSel = document.getElementById('finYearSel');
+            const showYear = period === 'monthly' || period === 'yearly';
+            const showMonth = period === 'monthly';
+            label.style.display = (showYear || showMonth) ? 'none' : '';
+            monthSel.style.display = showMonth ? '' : 'none';
+            yearSel.style.display = showYear ? '' : 'none';
+
+            if (showYear && financialNav.minYear != null) {
+                const selYear = period === 'monthly'
+                    ? Number((financialNav.month || '').split('-')[0])
+                    : financialNav.year;
+                yearSel.innerHTML = '';
+                for (let y = financialNav.maxYear; y >= financialNav.minYear; y--) { // newest first
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === selYear) opt.selected = true;
+                    yearSel.appendChild(opt);
+                }
+            }
+            if (showMonth) {
+                const parts = (financialNav.month || '').split('-');
+                const selYear = Number(parts[0]);
+                const selMonth = Number(parts[1]);
+                monthSel.innerHTML = '';
+                FIN_MONTH_NAMES.forEach(function (name, idx) {
+                    const opt = document.createElement('option');
+                    opt.value = idx + 1;
+                    opt.textContent = name;
+                    // months that haven't happened yet can't be picked
+                    if (selYear === financialNav.maxYear && idx + 1 > financialNav.maxMonth) opt.disabled = true;
+                    if (idx + 1 === selMonth) opt.selected = true;
+                    monthSel.appendChild(opt);
                 });
+            }
+        }
+
+        const FIN_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+
+        // Called when the Month or Year dropdown changes.
+        function financialNavPick() {
+            const n = financialNav;
+            const yearSel = document.getElementById('finYearSel');
+            const monthSel = document.getElementById('finMonthSel');
+            if (n.period === 'yearly') {
+                n.year = Number(yearSel.value);
+            } else if (n.period === 'monthly') {
+                const y = Number(yearSel.value);
+                let m = Number(monthSel.value);
+                // picking the current year while on a later month snaps to the latest valid month
+                if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
+                n.month = y + '-' + String(m).padStart(2, '0');
+            } else {
+                return;
+            }
+            loadFinancialChart(n.period);
+        }
+
+        // dir = -1 goes to the previous week / month / year, +1 to the next.
+        function financialNavStep(dir) {
+            const n = financialNav;
+            if ((dir < 0 && !n.canPrev) || (dir > 0 && !n.canNext)) return;
+
+            if (n.period === 'weekly') {
+                n.week = Math.max(0, n.week - dir); // "previous" = further back in time
+            } else if (n.period === 'monthly' && n.month) {
+                const parts = n.month.split('-');
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + dir, 1);
+                n.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            } else if (n.period === 'yearly' && n.year) {
+                n.year = n.year + dir;
+            } else {
+                return;
+            }
+            loadFinancialChart(n.period);
         }
 
         function updateFinancialCards(totalIncome, totalOutstanding, unpaidProcedures) {
@@ -11440,7 +13182,7 @@
             }
         }
 
-        function updateIncomeChart(labels, dataValues) {
+        function updateIncomeChart(labels, dataValues, chartType) {
             const ctx = document.getElementById('incomeChart').getContext('2d'); // Ensure ID matches your canvas
 
             if (incomeChartInstance) {
@@ -11453,18 +13195,24 @@
             const textColor = '#42A5F6';
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
 
+            // Overall (one point per year) reads better as bars; everything
+            // else is the same line chart as before.
+            const isBar = chartType === 'bar';
+
             incomeChartInstance = new Chart(ctx, {
-                type: 'line',
+                type: isBar ? 'bar' : 'line',
                 data: {
                     labels: labels,
                     datasets: [{
                         label: 'Revenue (₱)',
                         data: dataValues,
                         borderColor: lineColor, // Matches unpaid procedures number color
-                        backgroundColor: fillColor,
+                        backgroundColor: isBar ? 'rgba(66, 165, 246, 0.55)' : fillColor,
                         fill: true,
                         tension: 0.4,
-                        cubicInterpolationMode: 'monotone'
+                        cubicInterpolationMode: 'monotone',
+                        borderRadius: isBar ? 8 : 0,
+                        maxBarThickness: 60
                     }]
                 },
                 options: {
@@ -11579,10 +13327,10 @@
         // --- Downloadable Financial Report (PDF) ---
         const FINANCIAL_PERIOD_LABELS = {
             today: 'Today',
-            weekly: 'This Week',
-            monthly: 'This Month',
-            yearly: 'Last 12 Months',
-            overall: 'All Time'
+            weekly: 'Weekly',
+            monthly: 'Monthly',
+            yearly: 'Yearly',
+            overall: 'All Time (by year)'
         };
 
         function formatPesoForPdf(value) {
@@ -11627,7 +13375,11 @@
                 const margin = 15;
                 let y = margin;
 
-                const periodLabel = FINANCIAL_PERIOD_LABELS[financialReportState.period] || financialReportState.period;
+                const basePeriodLabel = FINANCIAL_PERIOD_LABELS[financialReportState.period] || financialReportState.period;
+                // e.g. "Monthly - September 2026", "Yearly - 2025"
+                const periodLabel = financialReportState.rangeLabel
+                    ? `${basePeriodLabel} - ${financialReportState.rangeLabel}`
+                    : basePeriodLabel;
 
                 pdf.setFontSize(18);
                 pdf.setTextColor(13, 71, 161);
@@ -11664,6 +13416,11 @@
                     pdf.setTextColor(13, 71, 161);
                     pdf.text(value, x, y + 7);
                 });
+                if (financialReportState.asOfLabel) {
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(120, 120, 120);
+                    pdf.text(`Outstanding Balance and Unpaid Procedures cover all unpaid items as of ${financialReportState.asOfLabel}, not only the selected period.`, margin, y + 14);
+                }
                 y += 22;
 
                 pdf.setDrawColor(220, 220, 220);
@@ -11679,15 +13436,248 @@
                 const imgRatio = chartCanvas.width / chartCanvas.height;
                 const imgH = usableW / imgRatio;
                 pdf.addImage(chartImg, 'PNG', margin, y, usableW, imgH);
+                y += imgH + 14;
+
+                drawUnpaidSectionInPdf(pdf, y, margin);
 
                 const dateStamp = new Date().toISOString().slice(0, 10);
-                pdf.save(`financial-report-${financialReportState.period}-${dateStamp}.pdf`);
+                const selectionPart = financialReportState.selection ? `-${financialReportState.selection}` : '';
+                pdf.save(`financial-report-${financialReportState.period}${selectionPart}-${dateStamp}.pdf`);
             } catch (err) {
                 console.error('Financial report PDF generation failed:', err);
                 showToast('Could not generate the report. Please try again.');
             } finally {
                 if (btn) btn.disabled = false;
             }
+        }
+
+        // --- Unpaid Procedures table (Financial Reports) ---
+        // Own filters; deliberately independent of the Today/Weekly/... buttons,
+        // which only drive the three cards and the Income Trend chart. The server
+        // sends every unpaid procedure once and filtering happens here, so
+        // changing a filter costs no request and no Firestore read.
+        let unpaidRows = [];
+        let unpaidRange = 'all';
+
+        const UNPAID_RANGE_LABELS = {
+            all: 'All',
+            today: 'Today',
+            '7d': 'Last 7 days',
+            '30d': 'Last 30 days',
+            '12m': 'Last 12 months'
+        };
+
+        function unpaidEsc(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function unpaidPeso(n) {
+            return '\u20B1' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function unpaidParseDate(str) {
+            // Procedure dates are stored as YYYY-MM-DD. Parsed as a LOCAL date so
+            // "today" and the day counts follow the clinic's own clock.
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str || ''));
+            if (!m) return null;
+            return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        }
+
+        function unpaidFormatDate(str) {
+            const d = unpaidParseDate(str);
+            if (!d) return '\u2014';
+            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function unpaidInRange(row, range) {
+            if (range === 'all') return true;
+            const d = unpaidParseDate(row.date);
+            if (!d) return false; // no usable date: only shown under "All"
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let start;
+            if (range === 'today') {
+                start = today;
+            } else if (range === '7d') {
+                start = new Date(today); start.setDate(start.getDate() - 6);
+            } else if (range === '30d') {
+                start = new Date(today); start.setDate(start.getDate() - 29);
+            } else if (range === '12m') {
+                start = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+            } else {
+                return true;
+            }
+            return d >= start && d <= today;
+        }
+
+        function getUnpaidFiltered() {
+            const searchEl = document.getElementById('unpaidSearch');
+            const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            return unpaidRows.filter(r =>
+                unpaidInRange(r, unpaidRange) &&
+                (!q || String(r.patient_name || '').toLowerCase().includes(q))
+            );
+        }
+
+        function renderUnpaidTable() {
+            const body = document.getElementById('unpaidTableBody');
+            const footLabel = document.getElementById('unpaidFootLabel');
+            const footTotal = document.getElementById('unpaidFootTotal');
+            if (!body) return;
+
+            const rows = getUnpaidFiltered();
+            const total = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+
+            if (!rows.length) {
+                body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">No unpaid procedures found.</td></tr>';
+            } else {
+                body.innerHTML = rows.map(r => {
+                    const proc = unpaidEsc(r.procedure || '\u2014') +
+                        (r.tooth ? ' <span style="color:#78909c;">(Tooth ' + unpaidEsc(r.tooth) + ')</span>' : '');
+                    return '<tr>' +
+                        '<td>' + unpaidEsc(r.patient_name) + '</td>' +
+                        '<td>' + proc + '</td>' +
+                        '<td>' + unpaidEsc(unpaidFormatDate(r.date)) + '</td>' +
+                        '<td>' + unpaidEsc(r.dentist || '\u2014') + '</td>' +
+                        '<td class="num">' + unpaidPeso(r.value) + '</td>' +
+                        '<td class="num">' + unpaidPeso(r.paid) + '</td>' +
+                        '<td class="num unpaid-balance-cell">' + unpaidPeso(r.balance) + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            if (footLabel) footLabel.textContent = 'Total balance (' + rows.length + ' unpaid procedure' + (rows.length === 1 ? '' : 's') + ')';
+            if (footTotal) footTotal.textContent = unpaidPeso(total);
+        }
+
+        function setUnpaidRange(range) {
+            unpaidRange = range;
+            document.querySelectorAll('#unpaidRangeGroup .unpaid-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === range);
+            });
+            renderUnpaidTable();
+        }
+
+        function loadUnpaidProcedures() {
+            const body = document.getElementById('unpaidTableBody');
+            if (!body) return;
+            fetch('/admin/unpaid_procedures')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        unpaidRows = data.rows || [];
+                        renderUnpaidTable();
+                    } else {
+                        body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
+                    }
+                })
+                .catch(() => {
+                    body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
+                });
+        }
+
+        function drawUnpaidSectionInPdf(pdf, startY, margin) {
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const rows = getUnpaidFiltered();
+            const total = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+
+            // [header, width in mm, right-aligned?]
+            const cols = [
+                ['Patient', 46, false],
+                ['Procedure', 46, false],
+                ['Date', 24, false],
+                ['Total', 21, true],
+                ['Paid', 21, true],
+                ['Balance', 22, true]
+            ];
+            const lineH = 4.2;
+            let y = startY;
+
+            const searchEl = document.getElementById('unpaidSearch');
+            const q = searchEl ? searchEl.value.trim() : '';
+            const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) + (q ? ' / Search: "' + q + '"' : '');
+
+            function drawHeader() {
+                pdf.setFontSize(9);
+                pdf.setTextColor(90, 90, 90);
+                pdf.setFont(undefined, 'bold');
+                let x = margin;
+                cols.forEach(([label, w, right]) => {
+                    pdf.text(label, right ? x + w - 1 : x + 1, y, right ? { align: 'right' } : undefined);
+                    x += w;
+                });
+                pdf.setFont(undefined, 'normal');
+                y += 2;
+                pdf.setDrawColor(200, 200, 200);
+                pdf.line(margin, y, pageW - margin, y);
+                y += 5;
+            }
+
+            if (y + 40 > pageH - margin) { pdf.addPage(); y = margin; }
+
+            pdf.setFontSize(11);
+            pdf.setTextColor(40, 40, 40);
+            pdf.text('Unpaid Procedures', margin, y);
+            pdf.setFontSize(9);
+            pdf.setTextColor(90, 90, 90);
+            pdf.text(filterText, pageW - margin, y, { align: 'right' });
+            y += 7;
+
+            if (!rows.length) {
+                pdf.setFontSize(10);
+                pdf.text('No unpaid procedures found.', margin, y);
+                return;
+            }
+
+            drawHeader();
+
+            rows.forEach(r => {
+                const procText = (r.procedure || '-') + (r.tooth ? ' (Tooth ' + r.tooth + ')' : '');
+                const nameLines = pdf.splitTextToSize(String(r.patient_name || ''), cols[0][1] - 2);
+                const procLines = pdf.splitTextToSize(procText, cols[1][1] - 2);
+                const nLines = Math.max(nameLines.length, procLines.length);
+                const rowH = nLines * lineH + 2;
+
+                if (y + rowH > pageH - margin - 10) {
+                    pdf.addPage();
+                    y = margin;
+                    drawHeader();
+                }
+
+                pdf.setFontSize(9);
+                pdf.setTextColor(40, 40, 40);
+                let x = margin;
+                pdf.text(nameLines, x + 1, y); x += cols[0][1];
+                pdf.text(procLines, x + 1, y); x += cols[1][1];
+                pdf.text(unpaidFormatDate(r.date), x + 1, y); x += cols[2][1];
+                pdf.text(formatPesoForPdf(r.value), x + cols[3][1] - 1, y, { align: 'right' }); x += cols[3][1];
+                pdf.text(formatPesoForPdf(r.paid), x + cols[4][1] - 1, y, { align: 'right' }); x += cols[4][1];
+                pdf.setFont(undefined, 'bold');
+                pdf.text(formatPesoForPdf(r.balance), x + cols[5][1] - 1, y, { align: 'right' });
+                pdf.setFont(undefined, 'normal');
+
+                y += rowH;
+                pdf.setDrawColor(235, 235, 235);
+                pdf.line(margin, y - 3, pageW - margin, y - 3);
+            });
+
+            if (y + 12 > pageH - margin) { pdf.addPage(); y = margin; }
+            y += 2;
+            pdf.setDrawColor(150, 150, 150);
+            pdf.line(margin, y, pageW - margin, y);
+            y += 6;
+            pdf.setFontSize(10);
+            pdf.setFont(undefined, 'bold');
+            pdf.setTextColor(13, 71, 161);
+            pdf.text('Total balance (' + rows.length + ')', margin + 1, y);
+            pdf.text(formatPesoForPdf(total), pageW - margin - 1, y, { align: 'right' });
+            pdf.setFont(undefined, 'normal');
         }
 
         (function () {
