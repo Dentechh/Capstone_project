@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=25">
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
@@ -488,11 +487,10 @@
             color: #e2e8f0 !important;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jspdf.umd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 
 
 </head>
@@ -3596,12 +3594,12 @@
                 else ('normal' if urg_lc == 'normal' else 'unset')) %}
                 {% set urg_label = urg_raw if urg_raw else 'Unspecified' %}
                 {# Rendered by JS on the live list; this only matters if server-side
-                   rendering is ever switched back on. Kept in step with
-                   formatAcceptedAt so the two paths do not disagree. #}
+                rendering is ever switched back on. Kept in step with
+                formatAcceptedAt so the two paths do not disagree. #}
                 {% set accepted_raw = (appointment.accepted_at or '')|string %}
                 {# Slice to the minute before swapping the separator: truncate()'s
-                   leeway would hand the whole string back here, since the ISO
-                   value is only twice as long as its length. #}
+                leeway would hand the whole string back here, since the ISO
+                value is only twice as long as its length. #}
                 {% set accepted_shown = accepted_raw[:16]|replace('T', ' ') if accepted_raw
                 else 'Not recorded' %}
                 <div class="patient-card appt-card appt-card--{{ urg_key }}" data-name="{{ full_name }}"
@@ -3658,8 +3656,8 @@
 
                     <div class="appt-card__actions">
                         <button type="button" class="btn-action accept check-profile-btn"
-                            data-name="{{ appointment.FirstName }}" data-Patient_unq_id="{{ appointment.Patient_unq_id }}"
-                            data-uid="{{ appointment.uid }}"
+                            data-name="{{ appointment.FirstName }}"
+                            data-Patient_unq_id="{{ appointment.Patient_unq_id }}" data-uid="{{ appointment.uid }}"
                             data-sex="{{ appointment.Sex|default('Female') }}"
                             data-age="{{ appointment.Age|default('N/A') }}"
                             data-lastname="{{ appointment.get('LastName', '') }}"
@@ -3834,8 +3832,8 @@
                                     <input type="text" name="dentist_name" class="dentist-input"
                                         placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
                                         spellcheck="false" role="combobox" aria-autocomplete="list"
-                                        aria-expanded="false" aria-controls="dentistMenu"
-                                        aria-required="true" aria-label="Consulting dentist">
+                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
+                                        aria-label="Consulting dentist">
                                     <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
                                         title="Show dentists">
                                         <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
@@ -10592,13 +10590,14 @@
                             <input type="hidden" name="appointment_date" id="admApptDateHidden">
 
                             <div class="form-group">
-                                <label for="admDentistName">Dentist Name <span class="adm-req" aria-hidden="true">*</span></label>
+                                <label for="admDentistName">Dentist Name <span class="adm-req"
+                                        aria-hidden="true">*</span></label>
                                 <div class="dentist-field">
                                     <input type="text" id="admDentistName" name="dentist_name" class="dentist-input"
                                         placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
                                         spellcheck="false" role="combobox" aria-autocomplete="list"
-                                        aria-expanded="false" aria-controls="dentistMenu"
-                                        aria-required="true" aria-label="Dentist name">
+                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
+                                        aria-label="Dentist name">
                                     <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
                                         title="Show dentists">
                                         <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
@@ -11255,16 +11254,6 @@
                         showToast('Failed to unblock. Please try again.');
                     }
                 });
-
-                const unblockConfirmClose = document.getElementById('unblockConfirmModalClose');
-                if (unblockConfirmClose) {
-                    unblockConfirmClose.addEventListener('click', closeUnblockConfirmModal);
-                }
-
-                const unblockConfirmCancel = document.getElementById('unblockConfirmCancelBtn');
-                if (unblockConfirmCancel) {
-                    unblockConfirmCancel.addEventListener('click', closeUnblockConfirmModal);
-                }
 
                 loadBlockedSlots();
             });

@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
 </head>
 <body>
@@ -720,12 +720,12 @@ sendPasswordResetEmail
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
-  authDomain: "capizonda-dentech-dev.firebaseapp.com",
-  projectId: "capizonda-dentech-dev",
-  storageBucket: "capizonda-dentech-dev.firebasestorage.app",
-  messagingSenderId: "938908117708",
-  appId: "1:938908117708:web:77d10befb2f8917ccf3069"
+    apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
+    authDomain: "capizonda-dentech-dev.firebaseapp.com",
+    projectId: "capizonda-dentech-dev",
+    storageBucket: "capizonda-dentech-dev.firebasestorage.app",
+    messagingSenderId: "938908117708",
+    appId: "1:938908117708:web:77d10befb2f8917ccf3069"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -910,7 +910,7 @@ resetPasswordBtn.addEventListener("click", async () => {
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
 
 <script>
 

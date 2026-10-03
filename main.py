@@ -35,6 +35,21 @@ load_dotenv()
 ADMIN_ONLY_FLASH = re.compile(r"\bDr\.\s")
 
 
+
+_HTML_COMMENT = re.compile(r'<!--(?!\[if).*?-->', re.S)
+_BLOCK_COMMENT = re.compile(r'/\*.*?\*/', re.S)
+_LINE_COMMENT = re.compile(r'^[ \t]*//.*(?:\r?\n|$)', re.M)
+_SCRIPT_TAG = re.compile(r'(<script\b[^>]*>)(.*?)(</script>)', re.S | re.I)
+_STYLE_TAG = re.compile(r'(<style\b[^>]*>)(.*?)(</style>)', re.S | re.I)
+
+def strip_comments(html):
+    html = _HTML_COMMENT.sub('', html)
+    html = _SCRIPT_TAG.sub(
+        lambda m: m.group(1) + _LINE_COMMENT.sub('', _BLOCK_COMMENT.sub('', m.group(2))) + m.group(3), html)
+    html = _STYLE_TAG.sub(
+        lambda m: m.group(1) + _BLOCK_COMMENT.sub('', m.group(2)) + m.group(3), html)
+    return html
+
 class BaseFlaskApp:
     """Base class demonstrating Inheritance"""
     def __init__(self):
@@ -126,7 +141,7 @@ class DentalClinicApp(BaseFlaskApp):
                 if not os.path.exists(key_path):
                     raise FileNotFoundError(f"Firebase key not found at: {key_path}")
                 cred = credentials.Certificate(key_path)
-                firebase_admin.initialize_app(cred, {"projectId": "dentech-c2ee0"})
+                firebase_admin.initialize_app(cred, {"projectId": "capizonda-dentech-dev"})
                 self._db = fb_firestore.client()
                 print("✅ Firebase initialized successfully")
             except Exception as e:
@@ -145,7 +160,7 @@ class DentalClinicApp(BaseFlaskApp):
             from google.auth.credentials import AnonymousCredentials
             from google.cloud import firestore as gc_firestore
             self._db = gc_firestore.Client(
-                project="dentech-c2ee0", credentials=AnonymousCredentials()
+                project="capizonda-dentech-dev", credentials=AnonymousCredentials()
             )
             print(f"🧪 Firestore EMULATOR at {os.environ['FIRESTORE_EMULATOR_HOST']} (no real reads)")
 
@@ -155,7 +170,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.Doc_Patients = "Patients"
         self.Blocked_Slots = "BlockedSlots"
         self.CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-        self.firebase_api_key = "7HrEnIE4fKNxmv3ctFHoNdcmqRV2"
+        self.firebase_api_key = "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI"
         
         if not self.CLIENT_ID:
             
@@ -1066,11 +1081,11 @@ class DentalClinicApp(BaseFlaskApp):
     def _setup_security_headers(self):
         csp = "; ".join([
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://accounts.google.com",
+            "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src 'self' data: blob: https:",
-            "connect-src 'self' https://accounts.google.com",
+            "connect-src 'self' https://accounts.google.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
             "frame-src https://accounts.google.com https://www.google.com",
             "frame-ancestors 'none'",
             "object-src 'none'",
@@ -1086,6 +1101,8 @@ class DentalClinicApp(BaseFlaskApp):
             if request.endpoint != "static":
                 response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
                 response.headers["Pragma"] = "no-cache"
+            if response.mimetype == "text/html" and not response.direct_passthrough:
+                response.set_data(strip_comments(response.get_data(as_text=True)))
             return response
 
 
