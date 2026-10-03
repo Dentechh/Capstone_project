@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +10,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=25">
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
@@ -487,11 +486,10 @@
         color: #e2e8f0 !important;
     }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jspdf.umd.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 
 
 </head>
@@ -2685,9 +2683,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-    !-- Deliberately separate from the shared #confirmModal used by the patient
-    REMOVE flow, so this one can be styled for treatment records without
-    touching that dialog. -->
 <div id="deleteTreatmentModal" class="modal ci-danger-modal" style="display:none;">
     <div class="modal-content ci-danger-card">
         <span class="ci-danger-icon" aria-hidden="true">
@@ -5818,9 +5813,6 @@ async function saveDentalRecord(uid) {
             return;
         }
 
-        console.log("====================================");
-        console.log("FINAL UID BEING SENT:", uid);
-        console.log("====================================");
 
 
         // =====================================================
@@ -5955,11 +5947,6 @@ async function saveDentalRecord(uid) {
                 ? patientElement.textContent.trim()
                 : "";
 
-
-        console.log(
-            "PATIENT UNIQUE ID:",
-            patientUnqId
-        );
 
 
         if (!patientUnqId || patientUnqId === "-") {
@@ -6120,15 +6107,6 @@ async function saveDentalRecord(uid) {
             });
 
 
-        // =====================================================
-        // DEBUG
-        // =====================================================
-
-        console.log("====================================");
-        console.log("SENDING DENTAL RECORD");
-        console.log("UID:", uid);
-        console.log("Patient_unq_id:", patientUnqId);
-        console.log("====================================");
 
 
         // =====================================================
@@ -6179,16 +6157,6 @@ async function saveDentalRecord(uid) {
 
         }
 
-
-        console.log(
-            "SERVER STATUS:",
-            response.status
-        );
-
-        console.log(
-            "SERVER RESPONSE:",
-            result
-        );
 
 
         // =====================================================
@@ -10333,7 +10301,7 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
 
             const formData = new FormData();
             formData.append('date', selectedDate);
-
+            
             try {
                 const res = await fetch('/admin/unblock_slot', { method: 'POST', body: formData });
                 const result = await res.json();
@@ -10344,16 +10312,6 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
                 showToast('Failed to unblock. Please try again.');
             }
         });
-
-        const unblockConfirmClose = document.getElementById('unblockConfirmModalClose');
-        if (unblockConfirmClose) {
-            unblockConfirmClose.addEventListener('click', closeUnblockConfirmModal);
-        }
-
-        const unblockConfirmCancel = document.getElementById('unblockConfirmCancelBtn');
-        if (unblockConfirmCancel) {
-            unblockConfirmCancel.addEventListener('click', closeUnblockConfirmModal);
-        }
 
         loadBlockedSlots();
     });
