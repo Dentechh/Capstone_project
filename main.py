@@ -4210,7 +4210,7 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-        uid = (request.args.get("uid") or "").strip()
+        uid = ((request.get_json(silent=True) or {}).get("uid") or "").strip()
         if not uid:
             return jsonify({"success": True, "profile_pic": ""})
 
@@ -4319,7 +4319,7 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return jsonify([]), 403
 
-        query = request.args.get("q", "").strip().lower()
+        query = str((request.get_json(silent=True) or {}).get("q", "")).strip().lower()
 
         if len(query) < 2:
             return jsonify([])
@@ -4372,10 +4372,11 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-        first_name = request.args.get("first_name", "").strip()
-        last_name = request.args.get("last_name", "").strip()
-        middle_name = request.args.get("middle_name", "").strip()
-        birthday = request.args.get("birthday", "").strip()
+        data = request.get_json(silent=True) or {}
+        first_name = str(data.get("first_name", "")).strip()
+        last_name = str(data.get("last_name", "")).strip()
+        middle_name = str(data.get("middle_name", "")).strip()
+        birthday = str(data.get("birthday", "")).strip()
 
         if not first_name or not last_name:
             return jsonify({"match": False})
@@ -6444,7 +6445,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
         self.app.route("/admin/approved_page")(self.admin_approved_page)
-        self.app.route("/admin/patient_avatar")(self.admin_patient_avatar)
+        self.app.route("/admin/patient_avatar", methods=["POST"])(self.admin_patient_avatar)
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
         self.app.route("/get_patient/<uid>")(self.get_patient)
         self.app.route("/admin_login", methods=["GET", "POST"])(self.adminLogin)
@@ -6459,13 +6460,13 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/get_blocked_slots")(self.get_blocked_slots)
         self.app.route("/admin/block_slot", methods=["POST"])(self.admin_block_slot)
         self.app.route("/admin/unblock_slot", methods=["POST"])(self.admin_unblock_slot)
-        self.app.route("/search_patients")(self.search_patients)
+        self.app.route("/search_patients", methods=["POST"])(self.search_patients)
         self.app.route("/admin/update_patient", methods=["POST"])(self.update_patient)
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
         self.app.route("/admin/toggle_user_block", methods=["POST"])(self.toggle_user_block)
         self.app.route("/admin/update_treatment_record", methods=["POST"])(self.update_treatment_record)
         self.app.route("/admin/delete_treatment_record", methods=["POST"])(self.delete_treatment_record)
-        self.app.route("/admin/check_duplicate_patient")(self.check_duplicate_patient)
+        self.app.route("/admin/check_duplicate_patient", methods=["POST"])(self.check_duplicate_patient)
         self.app.route("/link_patient_account", methods=["POST"])(self.link_patient_account)
         self.app.route("/get_patient_profile_data")(self.get_patient_profile_data)
         self.app.route("/admin/merge_patients", methods=["POST"])(self.admin_merge_patients)

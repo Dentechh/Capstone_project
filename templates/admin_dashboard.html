@@ -1802,15 +1802,15 @@ function buildMyPatientRow(p) {
     tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
     const ageDisplay = (p.age === null || p.age === undefined) ? '-' : p.age;
     const birthYearDisplay = p.birthday || '-';
-      const sexDisplay = p.sex || '-';
-      const civilStatusDisplay = p.civil_status || '-';
-      tr.innerHTML = `
-          <td data-cell="name">${p.full_name || ''}</td>
-          <td>${ageDisplay}</td>
-          <td>${birthYearDisplay}</td>
-          <td data-cell="sex">${sexDisplay}</td>
-          <td data-cell="civil">${civilStatusDisplay}</td>
-          <td data-cell="mobile">${p.contact_number || '-'}</td>
+        const sexDisplay = p.sex || '-';
+        const civilStatusDisplay = p.civil_status || '-';
+        tr.innerHTML = `
+            <td data-cell="name">${p.full_name || ''}</td>
+            <td>${ageDisplay}</td>
+            <td>${birthYearDisplay}</td>
+            <td data-cell="sex">${sexDisplay}</td>
+            <td data-cell="civil">${civilStatusDisplay}</td>
+            <td data-cell="mobile">${p.contact_number || '-'}</td>
 
         <td>
             <div class="mp-actions">
@@ -2122,6 +2122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
 
         <form id="editPatientForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" id="editPatientUid" name="uid">
             <input type="hidden" id="editPatientPatientId" name="patient_id">
 
@@ -2579,15 +2580,19 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const params = new URLSearchParams({
+        const payload = {
             first_name: first,
             last_name: last,
             middle_name: middleNameInput ? middleNameInput.value.trim() : '',
             birthday: birthdayInput ? birthdayInput.value.trim() : ''
-        });
+        };
 
         try {
-            const res = await fetch('/admin/check_duplicate_patient?' + params.toString());
+            const res = await fetch('/admin/check_duplicate_patient', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
             const result = await res.json();
 
             if (result.match) {
@@ -2680,9 +2685,9 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Deliberately separate from the shared #confirmModal used by the patient
-     REMOVE flow, so this one can be styled for treatment records without
-     touching that dialog. -->
+    !-- Deliberately separate from the shared #confirmModal used by the patient
+    REMOVE flow, so this one can be styled for treatment records without
+    touching that dialog. -->
 <div id="deleteTreatmentModal" class="modal ci-danger-modal" style="display:none;">
     <div class="modal-content ci-danger-card">
         <span class="ci-danger-icon" aria-hidden="true">
@@ -3535,9 +3540,9 @@ window.onclick = function(e) {
 <script>
 /* ---- Appointment request tab: shared helpers ---- */
 
-/* Display-only. Firestore stores "YYYY-MM-DD HH:MM" because that string is
-   what order_by, the cursor pagination and the blocked-slot lookups compare
-   against, so it must never be rewritten -- only rendered differently. */
+    /* Display-only. Firestore stores "YYYY-MM-DD HH:MM" because that string is
+    what order_by, the cursor pagination and the blocked-slot lookups compare
+    against, so it must never be rewritten -- only rendered differently. */
 function formatApptDateTime(raw) {
     const value = String(raw == null ? '' : raw).trim();
     if (!value) return '';
@@ -3563,9 +3568,9 @@ function formatApptDateTime(raw) {
    the table (server-rendered and loaded on demand) picks them up. */
 const APPOINTMENT_DENTIST_OPTIONS = ['Dr. Capizonda'];
 
-/* Matching is against the name plus these generic words, so someone who types
-   "dentist" or "dr" still finds the list instead of an empty popup. Typing
-   anything else is unaffected: the input is never overwritten by a match. */
+    /* Matching is against the name plus these generic words, so someone who types
+    "dentist" or "dr" still finds the list instead of an empty popup. Typing
+    anything else is unaffected: the input is never overwritten by a match. */
 const APPOINTMENT_DENTIST_KEYWORDS = ' dr doctor dentist';
 
 function dentistMatches(query) {
@@ -3596,9 +3601,9 @@ function apptAttr(value) {
     return apptText(value).replace(/"/g, '&quot;');
 }
 
-/* The header carries 17 hidden columns before "Urgency Level". A row built in
-   JS has to emit the same 24 cells or every value after the patient name
-   shifts one column left of its heading. */
+    /* The header carries 17 hidden columns before "Urgency Level". A row built in
+    JS has to emit the same 24 cells or every value after the patient name
+    shifts one column left of its heading. */
 const APPOINTMENT_HIDDEN_FIELDS = ['uid', 'id', 'MiddleName', 'LastName',
     'HouseNo', 'Street', 'Brgy', 'Municipality', 'Province', 'ContactNumber',
     'Nationality', 'Religion', 'Age', 'Sex', 'Birthday', 'Occupation',
@@ -3610,9 +3615,9 @@ function apptHiddenCells(appt) {
     }).join('');
 }
 
-/* ---- Urgency severity ----
-   Mirrors the Jinja whitelist above so a server-rendered row and a
-   "Load More" row are styled identically. Only the whitelisted key ever
+    /* ---- Urgency severity ----
+    Mirrors the Jinja whitelist above so a server-rendered row and a
+    "Load More" row are styled identically. Only the whitelisted key ever
    reaches a class name or attribute; the raw value is display text. */
 const APPOINTMENT_URGENCY_KEYS = {
     emergency: 'emergency',
@@ -3639,11 +3644,11 @@ function apptUrgencyCell(raw) {
 }
 
 /* ---- Consulting Dentist combobox ----
-   A native <datalist> cannot be styled, so this is a real listbox popup.
-   The table sets overflow:hidden and the panel sets overflow-x:auto, either
-   of which would clip an in-cell menu, so the popup is a single shared
-   <ul> portalled to <body> and positioned with fixed coordinates.
-   All interaction is delegated from document, so rows added later by
+    A native <datalist> cannot be styled, so this is a real listbox popup.
+    The table sets overflow:hidden and the panel sets overflow-x:auto, either
+    of which would clip an in-cell menu, so the popup is a single shared
+    <ul> portalled to <body> and positioned with fixed coordinates.
+    All interaction is delegated from document, so rows added later by
    "Load More" work with no extra wiring. */
 const DENTIST_MENU_ID = 'dentistMenu';
 const DENTIST_MENU_GAP = 6;
@@ -4050,9 +4055,9 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <!-- Layout lives in .dashboard-grid in admin.css. An inline
-                 grid-template-columns here would beat the stylesheet (and its
-                 media queries), which is what previously kept this grid at
-                 `1fr` = minmax(auto, 1fr) on phones. -->
+                grid-template-columns here would beat the stylesheet (and its
+                media queries), which is what previously kept this grid at
+                `1fr` = minmax(auto, 1fr) on phones. -->
             <div class="dashboard-grid">
                 <div class="content-panel pd-info-panel">
                     <div class="pd-panel-head">
@@ -4970,7 +4975,11 @@ function renderPatientAvatar(fullName, uid) {
 
     if (!uid) return;
 
-    fetch('/admin/patient_avatar?uid=' + encodeURIComponent(uid))
+    fetch('/admin/patient_avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: uid })
+    })
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data && data.profile_pic) {
@@ -7227,7 +7236,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
             debounceTimer = setTimeout(async () => {
                 try {
-                    const res = await fetch('/search_patients?q=' + encodeURIComponent(q));
+                    const res = await fetch('/search_patients', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ q: q })
+                    });
                     const results = await res.json();
 
                     select.innerHTML = '';
@@ -9454,6 +9467,7 @@ body.dark-mode .unblock-modal-btn-cancel:hover {
         <!-- One form spans both steps so the consent checkbox and the signature
             are submitted together with the appointment fields. -->
         <form id="newApptForm" class="adm-wizard">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <!-- ============ STEP 1 : APPOINTMENT DETAILS ============ -->
         <section class="adm-page is-active" data-adm-step="1" aria-label="Appointment details">

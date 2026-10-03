@@ -537,6 +537,7 @@
         <h2>Welcome Back</h2>
 
         <form action="/login" method="POST" id="loginForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="login-error" id="loginError"></div>
             <input type="email" id="loginEmail" name="email" placeholder="Email" required>
             <div class="password-wrapper">
@@ -653,6 +654,7 @@
             </button>
         <h2>Create Account</h2>
         <form id="signupForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div style="display:flex; gap:10px;">
         <input type="text" name="FirstName" placeholder="First Name" required>
