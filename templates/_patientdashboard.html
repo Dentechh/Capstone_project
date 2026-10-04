@@ -1,0 +1,499 @@
+
+        <div id="section-patientdashboard" class="content-section">
+
+            <button type="button" class="pd-back"
+                onclick="showSection('WeeklyClients'); document.getElementById('nav-patientdashboard').style.display='none';">
+                <span class="material-symbols-rounded pd-back__icon" aria-hidden="true">arrow_back</span>
+                <span class="pd-back__label">Back to Patients</span>
+            </button>
+
+            <!-- Hidden Approve data for JS access -->
+            <div id="all-approve-data" data-approve="{{ Approve|tojson }}" style="display:none;"></div>
+
+            <!-- Identity header: avatar (uploaded picture, or the default
+                 one when the patient has none), name, account no, gender
+                 and age. Styled by the .pd-* block in admin.css. -->
+            <header class="pd-header" id="pd-header">
+                <div class="pd-header__identity">
+                    <span class="pd-avatar" id="pd-avatar" aria-hidden="true">
+                        <span class="pd-avatar__initials" id="pd-avatar-initials">?</span>
+                        <img class="pd-avatar__img" id="pd-avatar-img" alt="" style="display: none;">
+                    </span>
+                    <div class="pd-header__text">
+                        <h2 class="pd-header__name" id="pd-name">Patient Name</h2>
+                        <p class="pd-header__account">
+                            <span class="material-symbols-rounded pd-header__account-icon"
+                                aria-hidden="true">badge</span>
+                            <span class="pd-header__account-label">Account No</span>
+                            <span class="pd-header__account-no" id="pd-id"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pd-header__stats">
+                    <div class="pd-stat">
+                        <span class="pd-stat__label">Sex</span>
+                        <span class="pd-stat__value" id="pd-gender">-</span>
+                    </div>
+                    <div class="pd-stat">
+                        <span class="pd-stat__label">Age</span>
+                        <span class="pd-stat__value" id="pd-age">-</span>
+                    </div>
+                    <!-- Blood type is not real patient data yet (see the
+                         hardcoded value in openPatientDashboard), so it stays
+                         hidden instead of showing a fabricated "O+". -->
+                    <div class="pd-stat" style="display: none;">
+                        <span class="pd-stat__label">Blood Type</span>
+                        <span class="pd-stat__value" id="pd-blood">-</span>
+                    </div>
+                </div>
+            </header>
+
+            <div id="pd-details" style="display:none;">
+                <span id="pd-fullname"></span>
+                <span id="pd-middlename"></span>
+                <span id="pd-birthday"></span>
+                <span id="pd-nationality"></span>
+                <span id="pd-religion"></span>
+                <span id="pd-occupation"></span>
+                <span id="pd-civilstatus"></span>
+                <span id="pd-contact"></span>
+                <span id="pd-service"></span>
+                <span id="pd-q1"></span>
+                <span id="pd-q2"></span>
+                <span id="pd-q3"></span>
+                <span id="pd-q4"></span>
+                <span id="pd-q5"></span>
+                <span id="pd-q6"></span>
+                <span id="pd-q7"></span>
+                <span id="pd-q9"></span>
+                <span id="pd-w-preg"></span>
+                <span id="pd-w-nurse"></span>
+                <span id="pd-w-pill"></span>
+            </div>
+
+            <!-- Layout lives in .dashboard-grid in admin.css. An inline
+                grid-template-columns here would beat the stylesheet (and its
+                media queries), which is what previously kept this grid at
+                `1fr` = minmax(auto, 1fr) on phones. -->
+            <div class="dashboard-grid">
+                <div class="content-panel pd-info-panel">
+                    <div class="pd-panel-head">
+                        <span class="material-symbols-rounded pd-panel-head__icon"
+                            aria-hidden="true">assignment_ind</span>
+                        <h3 class="pd-panel-head__title">Patient Information</h3>
+                    </div>
+                    <div class="panel-content pd-info">
+                        <div class="pd-fields">
+                            <div class="pd-field">
+                                <span class="pd-field__label">Full Name</span>
+                                <span class="pd-field__value" id="pd-disp-fullname"></span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Middle Name</span>
+                                <span class="pd-field__value" id="pd-disp-middlename">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Birthday</span>
+                                <span class="pd-field__value" id="pd-disp-birthday">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Nationality</span>
+                                <span class="pd-field__value" id="pd-disp-nationality">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Religion</span>
+                                <span class="pd-field__value" id="pd-disp-religion">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Occupation</span>
+                                <span class="pd-field__value" id="pd-disp-occupation">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Civil Status</span>
+                                <span class="pd-field__value" id="pd-disp-civilstatus">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Contact Number</span>
+                                <span class="pd-field__value" id="pd-disp-contact">-</span>
+                            </div>
+                            <div class="pd-field">
+                                <span class="pd-field__label">Service</span>
+                                <span class="pd-field__value" id="pd-disp-service">-</span>
+                            </div>
+                            <div class="pd-field" style="display: none;">
+                                <span class="pd-field__label">Patient ID</span>
+                                <span class="pd-field__value" id="pd-disp-Patient_unq_id">-</span>
+                            </div>
+                        </div>
+
+                        <section class="pd-subsection">
+                            <h4 class="pd-subsection__title">
+                                <span class="material-symbols-rounded pd-subsection__icon"
+                                    aria-hidden="true">medical_services</span>
+                                Medical History
+                            </h4>
+                            <ul class="pd-checks" id="pd-meds">
+                                <li class="pd-check" id="q1-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q1</span>
+                                        <span class="pd-check__label">In Good Health</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q2-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q2</span>
+                                        <span class="pd-check__label">Under Medical Treatment</span>
+                                        <span class="pd-check__spec" id="q2-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q3-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q3</span>
+                                        <span class="pd-check__label">Serious Illness / Surgical Operation</span>
+                                        <span class="pd-check__spec" id="q3-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q4-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q4</span>
+                                        <span class="pd-check__label">Have been hospitalized before</span>
+                                        <span class="pd-check__spec" id="q4-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q5-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q5</span>
+                                        <span class="pd-check__label">Taking any medication</span>
+                                        <span class="pd-check__spec" id="q5-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q6-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q6</span>
+                                        <span class="pd-check__label">Using Tobacco Products</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q7-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q7</span>
+                                        <span class="pd-check__label">Have any Allergy</span>
+                                        <span class="pd-check__spec" id="q7-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="q9-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__q">Q9</span>
+                                        <span class="pd-check__label">Medical Condition</span>
+                                        <span class="pd-check__spec" id="q9-spec"></span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <!-- Hidden for a male patient; see syncWomensHealthVisibility(). -->
+                        <section class="pd-subsection" id="pd-womens-block">
+                            <h4 class="pd-subsection__title">
+                                <span class="material-symbols-rounded pd-subsection__icon"
+                                    aria-hidden="true">favorite</span>
+                                Women's Health
+                            </h4>
+                            <ul class="pd-checks" id="pd-womens">
+                                <li class="pd-check" id="w-preg-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Currently Pregnant</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="w-nurse-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Nursing Mother</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                                <li class="pd-check" id="w-pill-check">
+                                    <span class="pd-check__text">
+                                        <span class="pd-check__label">Taking Birth Control Pills</span>
+                                    </span>
+                                    <span class="pd-check__value">-</span>
+                                </li>
+                            </ul>
+                        </section>
+                    </div>
+                </div>
+
+                <div class="content-panel pd-visits-panel">
+                    <div class="pd-panel-head">
+                        <span class="material-symbols-rounded pd-panel-head__icon" aria-hidden="true">history</span>
+                        <h3 class="pd-panel-head__title">Visit History</h3>
+                        <span class="pd-panel-head__count" id="pd-visits-count" hidden></span>
+                        <p hidden id="td-history-uid" style="margin: 0;"></p>
+                    </div>
+                    <div class="pd-visits">
+                        <div class="pd-visits__scroll">
+                            <table class="appointment-table pd-visits__table">
+                                <thead>
+                                    <tr>
+                                        <th>Assigned Dentist</th>
+                                        <th class="pd-visits__chart-col">Chart</th>
+                                        <th>Visit Date</th>
+                                        <th>Procedure</th>
+                                        <th>Fee Paid</th>
+                                        <th>Next Appointment</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pd-visit-history">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="pd-empty">
+                                                <span class="material-symbols-rounded pd-empty__icon"
+                                                    aria-hidden="true">person_search</span>
+                                                <span class="pd-empty__text">Select a patient to view visit
+                                                    history.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pd-chart-launch">
+                <button type="button" id="open-chart-btn" class="pd-open-chart" onclick="openLiveChartModal()">
+                    <span class="material-symbols-rounded pd-open-chart__icon" aria-hidden="true">dentistry</span>
+                    <span class="pd-open-chart__text">
+                        <span class="pd-open-chart__title">Open Dental Chart</span>
+                        <span class="pd-open-chart__hint">Full odontogram, treatments and chart tools</span>
+                    </span>
+                </button>
+            </div>
+
+
+            <div id="section-chart" class="chart-section">
+                <div class="chart-container">
+                    <aside class="action-palette">
+                        <div class="palette-head">
+                            <span class="material-symbols-rounded palette-head__icon"
+                                aria-hidden="true">edit_note</span>
+                            <span class="palette-title">Action Palette</span>
+                        </div>
+                        <div class="palette-tools" role="group" aria-label="Chart action tools">
+                            <button type="button" class="tool active" data-tool="healthy" aria-pressed="true"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">verified</span>
+                                <span class="tool__label">Healthy</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="caries" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">brush</span>
+                                <span class="tool__label">Caries</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="filling" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">format_color_fill</span>
+                                <span class="tool__label">Filling</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="crown" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
+                                <span class="tool__label">Crown</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="rootcanal" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                <span class="tool__label">Root Canal</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="missing" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">cancel</span>
+                                <span class="tool__label">Missing Tooth</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="extraction" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">content_cut</span>
+                                <span class="tool__label">Extraction</span>
+                            </button>
+                            <button type="button" class="tool" data-tool="check" aria-pressed="false"
+                                onclick="setTool(this)">
+                                <span class="material-symbols-rounded" aria-hidden="true">task_alt</span>
+                                <span class="tool__label">Check</span>
+                            </button>
+                        </div>
+                    </aside>
+
+
+
+                    <section class="dental-chart">
+                        <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                        <div class="odontogram-container">
+                            <div class="axis-v"></div>
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-upper"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                            <div class="teeth-row" id="teeth-temp-top"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="axis-h"></div>
+                            <div class="permanent-wrap">
+                                <div class="label-side rotated">PERMANENT TEETH</div>
+                                <div class="permanent-block">
+                                    <div class="unified-grid wide" id="grid-perm-upper"></div>
+                                    <div class="teeth-row wide" id="teeth-perm-top"></div>
+                                    <div class="axis-h-mid"></div>
+                                    <div class="teeth-row wide reverse-layout" id="teeth-perm-bottom"></div>
+                                    <div class="unified-grid wide" id="grid-perm-lower"></div>
+                                </div>
+                            </div>
+                            <div class="axis-h"></div>
+                            <div class="section-label">TEMPORARY TEETH</div>
+                            <div class="teeth-row reverse-layout" id="teeth-temp-bottom"></div>
+                            <div class="status-row-wrapper">
+                                <div class="label-inline">STATUS RIGHT</div>
+                                <div class="unified-grid" id="grid-lower"></div>
+                                <div class="label-inline">LEFT</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Treatment Records -->
+            <div id="td-treatment-section" class="treatment-section td-records" style="display:none;">
+                <p hidden>
+                    Patient Record ID:
+                    <span id="td-Patient_unq_id">-</span>
+                </p>
+                <div class="pd-panel-head td-records__head">
+                    <span class="material-symbols-rounded pd-panel-head__icon" aria-hidden="true">assignment</span>
+                    <div class="td-records__head-text">
+                        <h3 class="pd-panel-head__title">Treatment Records</h3>
+                        <p class="td-records__sub">One row per treatment for this patient. Fill these in alongside the
+                            Dental Record Chart above.</p>
+                    </div>
+                    <div class="td-records__actions">
+                        <button type="button" id="td-add-row-btn" class="btn-add-row td-records__add">
+                            <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                            <span>Add Row</span>
+                        </button>
+                        <!-- Lives inside the panel now: this form owns the
+                                 records, so its save action belongs with it
+                                 rather than floating below. -->
+                        <button id="td-save-btn" type="button" class="btn-action accept btn-save-td td-records__submit">
+                            <span class="material-symbols-rounded" aria-hidden="true">save</span>
+                            <span>Submit Information</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="td-records__scroll">
+                    <table class="treatment-table td-records__table" id="td-treatment-table"
+                        style="min-width:1270px; table-layout:fixed;">
+                        <colgroup>
+                            <col style="width:134px;"> <!-- Date -->
+                            <col style="width:80px;"> <!-- Tooth# -->
+                            <col style="width:170px;"> <!-- Procedure -->
+                            <col style="width:150px;"> <!-- Dentist/s -->
+                            <col style="width:110px;"> <!-- Value of Work -->
+                            <col style="width:110px;"> <!-- Amount Paid -->
+                            <col style="width:100px;"> <!-- Balance -->
+                            <col style="width:156px;"> <!-- Next Appointment -->
+                            <col style="width:150px;"> <!-- Medicine -->
+                            <col style="width:110px;"> <!-- Status -->
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tooth#</th>
+                                <th>Procedure</th>
+                                <th>Dentist/s</th>
+                                <th>Value of Work</th>
+                                <th>Amount Paid</th>
+                                <th>Balance</th>
+                                <th>Next Appointment</th>
+                                <th>Medicine</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <!-- One empty row. loadTreatmentNotes() rebuilds this tbody when a patient
+         is opened, so this is only the pre-selection placeholder. It carries
+         the same ten cells as appendRow() builds at runtime, so the Medicine
+         and Status columns are never left orphaned. -->
+                            <tr>
+                                <td><input type="date" class="td-date adm-date-native" required /></td>
+                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+                                <td>
+                                    <select class="td-procedure" required>
+                                        <option value="Select Procedure">Select Procedure</option>
+                                        <option value="Dental Consultation">Dental Consultation</option>
+                                        <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                                        <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                                        <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
+                                        <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                                        <option value="Crowns and Bridges">Crowns and Bridges</option>
+                                        <option value="Teeth Whitening">Teeth Whitening</option>
+                                        <option value="Fluoride Treatment">Fluoride Treatment</option>
+                                        <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                                        <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                                        <option value="Root Canal Treatment">Root Canal Treatment</option>
+                                        <option value="Periapical Xray">Periapical Xray</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="dentist-field">
+                                        <input type="text" class="dentist-input td-dentist"
+                                            placeholder="Select or type a dentist" autocomplete="off"
+                                            autocapitalize="off" spellcheck="false" role="combobox"
+                                            aria-autocomplete="list" aria-expanded="false" aria-controls="dentistMenu"
+                                            aria-label="Treating dentist" />
+                                        <button type="button" class="dentist-field__toggle" tabindex="-1"
+                                            aria-hidden="true" title="Show dentists">
+                                            <span class="material-symbols-rounded"
+                                                aria-hidden="true">arrow_drop_down</span>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required />
+                                </td>
+                                <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
+                                <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
+                                <td><input type="date" class="td-next-appt adm-date-native" required /></td>
+                                <td>
+                                    <select class="td-medicine">
+                                        <option value="Select Medicine">Select Medicine</option>
+                                        <option value="Mefenamic Acid">Mefenamic Acid</option>
+                                        <option value="Tranexamic Acid">Tranexamic Acid</option>
+                                        <option value="Amoxicillin">Amoxicillin</option>
+                                        <option value="Co- amoxiclav">Co- amoxiclav</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="td-status">
+                                        <option value="Not Paid" selected>Not Paid</option>
+                                        <option value="Paid">Paid</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+
+
+                    </table>
+                </div>
+                <div id="td-save-msg" class="td-records__msg" style="display:none;"></div>
+            </div>
+
+        </div>
+
+        <script src="{{ url_for('static', filename='js/treatment-totals.js') }}?v=1"></script>

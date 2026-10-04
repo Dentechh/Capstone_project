@@ -1,0 +1,282 @@
+        /* Doctors Calendar: day schedule + upcoming blocked days */
+        .dc-extras {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .dc-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+            min-width: 0;
+        }
+
+        .dc-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dc-card-head h4 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: #0d47a1;
+        }
+
+        .dc-count {
+            display: inline-block;
+            min-width: 22px;
+            padding: 1px 8px;
+            margin-left: 6px;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #0d47a1;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .dc-count:empty {
+            display: none;
+        }
+
+        .dc-link-btn {
+            background: none;
+            border: none;
+            color: #1e63cd;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 6px;
+        }
+
+        .dc-link-btn:hover {
+            background: #eff6ff;
+        }
+
+        .dc-summary {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .dc-list {
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dc-empty {
+            padding: 28px 12px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .dc-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .dc-row.is-booked {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .dc-row.is-conflict {
+            background: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .dc-time {
+            flex: 0 0 76px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #334155;
+        }
+
+        .dc-main {
+            flex: 1;
+            min-width: 0;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .dc-main strong {
+            display: block;
+            font-weight: 700;
+        }
+
+        .dc-sub {
+            display: block;
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 2px;
+            overflow-wrap: anywhere;
+        }
+
+        .dc-muted {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .dc-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-left: 6px;
+        }
+
+        .dc-chip.accepted {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .dc-chip.pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .dc-chip.blocked {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .dc-chip.partial {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .dc-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .dc-mini-btn {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0d47a1;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .dc-mini-btn:hover {
+            background: #eff6ff;
+        }
+
+        .dc-mini-btn.is-urgent {
+            background: #fef3c7;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+
+        body.dark-mode .dc-mini-btn.is-urgent {
+            background: rgba(251, 191, 36, 0.18);
+            border-color: #b45309;
+            color: #fbbf24;
+        }
+
+        .dc-mini-btn.danger {
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .dc-mini-btn.danger:hover {
+            background: #fef2f2;
+        }
+
+        .dc-date {
+            flex: 0 0 96px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        body.dark-mode .dc-card {
+            background: rgba(30, 41, 59, 0.75);
+            border-color: #334155;
+        }
+
+        body.dark-mode .dc-card-head h4,
+        body.dark-mode .dc-date {
+            color: #64b5f6;
+        }
+
+        body.dark-mode .dc-count {
+            background: #1e3a5f;
+            color: #93c5fd;
+        }
+
+        body.dark-mode .dc-link-btn:hover {
+            background: #1e293b;
+        }
+
+        body.dark-mode .dc-row {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        body.dark-mode .dc-row.is-booked {
+            background: #172554;
+            border-color: #1e40af;
+        }
+
+        body.dark-mode .dc-row.is-conflict {
+            background: #450a0a;
+            border-color: #991b1b;
+        }
+
+        body.dark-mode .dc-time,
+        body.dark-mode .dc-main {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .dc-sub,
+        body.dark-mode .dc-summary {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .dc-mini-btn {
+            background: #1e293b;
+            border-color: #475569;
+            color: #93c5fd;
+        }
+
+        body.dark-mode .dc-mini-btn:hover {
+            background: #334155;
+        }
+
+        body.dark-mode .dc-mini-btn.danger {
+            color: #fca5a5;
+            border-color: #7f1d1d;
+        }
+
+        @media (max-width: 1000px) {
+            .dc-extras {
+                grid-template-columns: 1fr;
+            }
+        }

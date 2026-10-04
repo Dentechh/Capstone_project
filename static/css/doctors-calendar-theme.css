@@ -1,0 +1,470 @@
+        /* ==========================================================
+        DOCTORS CALENDAR - flatpickr theme
+        VERIFIED (headless browser): in inline mode flatpickr inserts
+        .flatpickr-calendar as a SIBLING of the target element, and the
+        className option does NOT land on the calendar. Both picker and
+        calendar are children of .doctor-cal-panel, so that panel is the
+        only reliable scope root. No JS class-tagging required.
+       */
+
+        /* ---- Card shell ---- */
+        .doctor-cal-panel .flatpickr-calendar {
+            width: 100% !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+                0 10px 24px -8px rgba(15, 23, 42, 0.10) !important;
+            font-family: 'Kumbh Sans', sans-serif !important;
+            overflow: hidden !important;
+        }
+
+        /* ---- Month / year header ---- */
+        .doctor-cal-panel .flatpickr-months,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+            background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+            padding: 14px 10px 10px !important;
+        }
+
+        .doctor-cal-panel .flatpickr-current-month .cur-month,
+        .doctor-cal-panel .flatpickr-current-month input.cur-year,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month .cur-month,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 15px !important;
+        }
+
+        .doctor-cal-panel .flatpickr-current-month input.cur-year,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+            background: transparent !important;
+            border: none !important;
+        }
+
+        /* Month dropdown.
+        This calendar does NOT set monthSelectorType, so flatpickr renders a
+        native <select>. Its opened <option> list is drawn with OS chrome and
+        CSS cannot restyle it (Chrome ignores option backgrounds), so the native
+        select is hidden and a real listbox (.adm-month-dd) takes its place.
+        flatpickr keeps maintaining the hidden select, which stays the source of
+       truth for the available months. */
+        /* Only hide the native select once the custom listbox has actually been
+        built - buildMonthDropdown() adds .has-custom-month when it succeeds.
+        If that JS ever fails, the native control stays visible and usable
+        rather than leaving a blank header with no way to change month. */
+        .doctor-cal-panel .flatpickr-calendar.has-custom-month .flatpickr-monthDropdown-months {
+            display: none !important;
+        }
+
+        .adm-month-dd {
+            position: relative;
+            display: inline-block;
+            background-color: transparent;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 13px;
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            line-height: 1.2;
+            padding: 6px 28px 6px 10px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .adm-month-dd:hover,
+        .adm-month-dd:focus-visible {
+            background-color: rgba(255, 255, 255, 0.18);
+            outline: none;
+        }
+
+        .adm-month-dd-list {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 168px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 6px;
+            text-align: left;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 14px 32px -8px rgba(15, 23, 42, 0.3);
+            z-index: 40;
+        }
+
+        .adm-month-dd-list.is-open {
+            display: block;
+        }
+
+        /* flatpickr sets overflow:hidden on .flatpickr-month (the prev/next arrow
+        box) and nests .flatpickr-current-month inside it, which clips the
+        dropdown list completely. Let it overflow, and lift the whole header
+       subtree above the day grid so the open list is not painted behind it. */
+        .doctor-cal-panel .flatpickr-month,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-month {
+            overflow: visible !important;
+        }
+
+        .doctor-cal-panel .flatpickr-months,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+            position: relative !important;
+            z-index: 20 !important;
+        }
+
+        .adm-month-dd-item {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0d47a1;
+            transition: background-color 0.12s ease, color 0.12s ease;
+        }
+
+        .adm-month-dd-item:hover,
+        .adm-month-dd-item:focus-visible {
+            background: #dbeafe;
+            color: #0d47a1;
+            outline: none;
+        }
+
+        .adm-month-dd-item.is-active {
+            background: #0d47a1;
+            color: #ffffff;
+        }
+
+        .doctor-cal-panel .flatpickr-current-month .numInputWrapper:hover,
+        .doctor-cal-panel .numInputWrapper:hover,
+        .doctor-cal-panel .flatpickr-calendar .numInputWrapper:hover {
+            background: rgba(255, 255, 255, 0.18) !important;
+            border-radius: 6px !important;
+        }
+
+        .doctor-cal-panel .numInputWrapper span,
+        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span {
+            border-color: rgba(255, 255, 255, 0.45) !important;
+        }
+
+        .doctor-cal-panel .numInputWrapper span.arrowUp::after,
+        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowUp::after {
+            border-bottom-color: #ffffff !important;
+        }
+
+        .doctor-cal-panel .numInputWrapper span.arrowDown::after,
+        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowDown::after {
+            border-top-color: #ffffff !important;
+        }
+
+        .doctor-cal-panel .flatpickr-prev-month svg,
+        .doctor-cal-panel .flatpickr-next-month svg,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-prev-month svg,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-next-month svg {
+            fill: #ffffff !important;
+        }
+
+        /* ---- Weekday header: light slate band instead of a second navy bar ---- */
+        .doctor-cal-panel .flatpickr-weekdays,
+        .doctor-cal-panel span.flatpickr-weekday,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
+        .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+            background: #f1f5f9 !important;
+        }
+
+        .doctor-cal-panel .flatpickr-weekday,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+            color: #64748b !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.6px !important;
+            text-transform: uppercase !important;
+        }
+
+        /* ---- Day grid (grid layout: even 7 columns) ---- */
+        /* flatpickr renders .flatpickr-rContainer as a flex item inside
+       .flatpickr-innerContainer, which makes it shrink instead of filling
+       the card. Force block layout down the whole chain. */
+        .doctor-cal-panel .flatpickr-innerContainer,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-innerContainer {
+            display: block !important;
+            overflow: hidden !important;
+            width: auto !important;
+        }
+
+        .doctor-cal-panel .flatpickr-rContainer,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-rContainer {
+            display: block !important;
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        .doctor-cal-panel .flatpickr-days,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-days {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding: 10px 10px 6px !important;
+            border: none !important;
+        }
+
+        .doctor-cal-panel .dayContainer,
+        .doctor-cal-panel .flatpickr-calendar .dayContainer {
+            display: grid !important;
+            grid-template-columns: repeat(7, 38px) !important;
+            justify-content: center !important;
+            gap: 3px !important;
+            align-content: start !important;
+            width: auto !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            height: auto !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .doctor-cal-panel .flatpickr-day,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+            background: none !important;
+            border: 1px solid transparent !important;
+            border-radius: 50% !important;
+            color: #334155 !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            width: 38px !important;
+            height: 38px !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            line-height: 1 !important;
+            margin: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: background 0.15s ease, color 0.15s ease,
+                transform 0.15s ease, box-shadow 0.15s ease !important;
+        }
+
+        .doctor-cal-panel .flatpickr-day:hover,
+        .doctor-cal-panel .flatpickr-day:focus,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+            background: #dbeafe !important;
+            border-color: transparent !important;
+            color: #0d47a1 !important;
+            transform: scale(1.08) !important;
+            box-shadow: 0 2px 8px rgba(13, 71, 161, 0.18) !important;
+        }
+
+        /* Today */
+        .doctor-cal-panel .flatpickr-day.today,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+            border: 2px solid #1e63cd !important;
+            background: #eff6ff !important;
+            color: #0d47a1 !important;
+            font-weight: 800 !important;
+        }
+
+        .doctor-cal-panel .flatpickr-day.today:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today:hover {
+            background: #dbeafe !important;
+            border-color: #0d47a1 !important;
+        }
+
+        /* Selected */
+        .doctor-cal-panel .flatpickr-day.selected,
+        .doctor-cal-panel .flatpickr-day.startRange,
+        .doctor-cal-panel .flatpickr-day.endRange,
+        .doctor-cal-panel .flatpickr-day.selected:hover,
+        .doctor-cal-panel .flatpickr-day.startRange:hover,
+        .doctor-cal-panel .flatpickr-day.endRange:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+            background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.4) !important;
+            transform: none !important;
+        }
+
+        /* Adjacent-month + disabled days */
+        .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+        .doctor-cal-panel .flatpickr-day.prevMonthDay,
+        .doctor-cal-panel .flatpickr-day.nextMonthDay,
+        .doctor-cal-panel .flatpickr-day.notAllowed,
+        .doctor-cal-panel .flatpickr-day.flatpickr-disabled:hover,
+        .doctor-cal-panel .flatpickr-day.prevMonthDay:hover,
+        .doctor-cal-panel .flatpickr-day.nextMonthDay:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.notAllowed,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay:hover,
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay:hover {
+            background: transparent !important;
+            border-color: transparent !important;
+            color: #cbd5e1 !important;
+            font-weight: 400 !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+
+        /* Blocked-day dot (built inline by onDayCreate) */
+        .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"],
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
+            width: 5px !important;
+            height: 5px !important;
+            box-shadow: 0 0 0 1.5px #ffffff !important;
+            z-index: 2 !important;
+        }
+
+        .doctor-cal-panel .flatpickr-day.selected>span[style*="border-radius:50%"],
+        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
+            box-shadow: 0 0 0 1.5px #1e63cd !important;
+        }
+
+        /* ============================ DARK MODE ============================ */
+        /* NOTE: target the CALENDAR only. Writing bare .doctor-cal-panel here
+       would repaint the outer panel and undo its transparent background. */
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
+                0 14px 32px -12px rgba(0, 0, 0, 0.55) !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-months,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+            background: linear-gradient(135deg, #0b1a3a 0%, #14346b 100%) !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-weekdays,
+        body.dark-mode .doctor-cal-panel span.flatpickr-weekday,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+            background: #0f172a !important;
+        }
+
+        /* Month dropdown - dark */
+        body.dark-mode .adm-month-dd-list {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 16px 34px -8px rgba(0, 0, 0, 0.65);
+        }
+
+        body.dark-mode .adm-month-dd-item {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .adm-month-dd-item:hover,
+        body.dark-mode .adm-month-dd-item:focus-visible {
+            background: #1e3a8a;
+            color: #ffffff;
+        }
+
+        body.dark-mode .adm-month-dd-item.is-active {
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-weekday,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+            color: #7dd3fc !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day:hover,
+        body.dark-mode .doctor-cal-panel .flatpickr-day:focus,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+            background: #1e3a8a !important;
+            color: #dbeafe !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day.today,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+            border-color: #60a5fa !important;
+            background: #172554 !important;
+            color: #bfdbfe !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day.selected,
+        body.dark-mode .doctor-cal-panel .flatpickr-day.startRange,
+        body.dark-mode .doctor-cal-panel .flatpickr-day.endRange,
+        body.dark-mode .doctor-cal-panel .flatpickr-day.selected:hover,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+        body.dark-mode .doctor-cal-panel .flatpickr-day.prevMonthDay,
+        body.dark-mode .doctor-cal-panel .flatpickr-day.nextMonthDay,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay {
+            color: #475569 !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"],
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
+            box-shadow: 0 0 0 1.5px #1e293b !important;
+        }
+
+        body.dark-mode .doctor-cal-panel .flatpickr-day.selected>span[style*="border-radius:50%"],
+        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
+            box-shadow: 0 0 0 1.5px #2563eb !important;
+        }
+
+        /* ---- Legend under the calendar ---- */
+        .calendar-legend {
+            margin-top: 14px !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #475569 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 7px !important;
+            line-height: 1.4 !important;
+        }
+
+        .calendar-legend>span {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .calendar-legend>span>span {
+            flex-shrink: 0 !important;
+        }
+
+        body.dark-mode .calendar-legend {
+            color: #e2e8f0 !important;
+        }

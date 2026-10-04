@@ -1,0 +1,51 @@
+        /* Header date + live clock: two frosted chips */
+        #datetime-display.dt-chips {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0 0;
+        }
+
+        #datetime-display .dt-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 14px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.42);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: 0.2px;
+            text-shadow: none;
+            white-space: nowrap;
+        }
+
+        #datetime-display .dt-chip svg {
+            flex-shrink: 0;
+            color: #93c5fd;
+        }
+
+        /* fixed-width digits so the seconds don't make the chip jitter */
+        #datetime-display #dt-time {
+            font-variant-numeric: tabular-nums;
+            min-width: 8.6ch;
+        }
+
+        body.dark-mode #datetime-display .dt-chip {
+            background: rgba(15, 23, 42, 0.62);
+            border-color: rgba(148, 163, 184, 0.30);
+        }
+
+        @media (max-width: 600px) {
+            #datetime-display .dt-chip {
+                font-size: 13px;
+                padding: 6px 12px;
+            }
+        }

@@ -1,0 +1,141 @@
+        <div id="section-WeeklyClients" class="content-section">
+            <div class="filter-bar">
+                <div class="filter-search-wrap">
+                    <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
+                    <input type="text" id="weeklyClientSearch" placeholder="Search accepted patients by name..."
+                        class="search-input filter-search" aria-label="Search accepted patients by name"
+                        onkeyup="filterWeeklyClients()">
+                </div>
+                <div class="filter-group">
+                    <button type="button" id="sortWeeklyClientsBtn" class="btn-action filter-btn filter-btn--sort"
+                        onclick="sortWeeklyClients()">
+                        <span class="material-symbols-rounded" aria-hidden="true">sort_by_alpha</span>
+                        <span class="filter-btn__label">A-Z</span>
+                        <span class="material-symbols-rounded filter-btn__dir" aria-hidden="true">arrow_upward</span>
+                    </button>
+                    <button type="button" id="sortWeeklyClientsDateBtn" class="btn-action filter-btn filter-btn--sort"
+                        onclick="sortWeeklyClientsByDate()">
+                        <span class="material-symbols-rounded" aria-hidden="true">calendar_today</span>
+                        <span class="filter-btn__label">Newest</span>
+                        <span class="material-symbols-rounded filter-btn__dir" aria-hidden="true">arrow_downward</span>
+                    </button>
+                </div>
+            </div>
+            <div id="weeklyClientsCursor" data-cursor="{{ approve_list_next_cursor or '' }}" style="display:none;">
+            </div>
+            <div class="patient-card-grid" id="weeklyClientsGrid">
+
+                {% for appointment in Approve %}
+                {% set full_name = ([appointment.FirstName or '', appointment.MiddleName or '',
+                appointment.LastName or ''] | map('trim') | select | join(' ')) or (appointment.FirstName or '')
+                or 'Unnamed patient' %}
+                {% set urg_raw = (appointment.UrgencyLevel or '')|trim %}
+                {% set urg_lc = urg_raw|lower %}
+                {% set urg_key = 'emergency' if urg_lc == 'emergency' else ('urgent' if urg_lc == 'urgent'
+                else ('normal' if urg_lc == 'normal' else 'unset')) %}
+                {% set urg_label = urg_raw if urg_raw else 'Unspecified' %}
+                {# Rendered by JS on the live list; this only matters if server-side
+                rendering is ever switched back on. Kept in step with
+                formatAcceptedAt so the two paths do not disagree. #}
+                {% set accepted_raw = (appointment.accepted_at or '')|string %}
+                {# Slice to the minute before swapping the separator: truncate()'s
+                leeway would hand the whole string back here, since the ISO
+                value is only twice as long as its length. #}
+                {% set accepted_shown = accepted_raw[:16]|replace('T', ' ') if accepted_raw
+                else 'Not recorded' %}
+                <div class="patient-card appt-card appt-card--{{ urg_key }}" data-name="{{ full_name }}"
+                    data-accepted-at="{{ accepted_raw }}">
+
+                    <div class="appt-card__head">
+                        <div class="p-info">
+                            <strong class="appt-card__name">{{ full_name }}</strong>
+                            <span class="appt-card__service">{{ appointment.Service or 'General consultation' }}</span>
+                        </div>
+                        <span class="urg-badge urg-badge--{{ urg_key }}" title="Urgency level: {{ urg_label }}">
+                            <span class="urg-badge__dot" aria-hidden="true"></span>
+                            <span class="urg-badge__label">{{ urg_label }}</span>
+                        </span>
+                    </div>
+
+                    <div class="appt-card__rows">
+                        <div class="appt-card__row">
+                            <span class="appt-card__key">
+                                <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                Accepted
+                            </span>
+                            <span class="appt-card__val appt-card__val--date">{{ accepted_shown }}</span>
+                        </div>
+                        <div class="appt-card__row">
+                            <span class="appt-card__key">
+                                <span class="material-symbols-rounded" aria-hidden="true">dentistry</span>
+                                Assigned dentist
+                            </span>
+                            {% if (appointment.DentistName or '')|trim %}
+                            <span class="appt-card__val appt-card__val--dentist">{{ appointment.DentistName }}</span>
+                            {% else %}
+                            <span class="appt-dentist">
+                                <span class="dentist-field">
+                                    <input type="text" class="dentist-input" placeholder="Select or type a dentist"
+                                        autocomplete="off" autocapitalize="off" spellcheck="false" role="combobox"
+                                        aria-autocomplete="list" aria-expanded="false" aria-controls="dentistMenu"
+                                        aria-label="Assign a consulting dentist">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
+                                        title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </span>
+                                <button type="button" class="btn-action appt-dentist-save" title="Save dentist"
+                                    aria-label="Save dentist" data-uid="{{ appointment.uid }}"
+                                    data-appointment-id="{{ appointment.Patient_unq_id or appointment.id }}"
+                                    onclick="assignDentistFromCard(this)">
+                                    <span class="material-symbols-rounded" aria-hidden="true">save</span>
+                                </button>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="appt-card__actions">
+                        <button type="button" class="btn-action accept check-profile-btn"
+                            data-name="{{ appointment.FirstName }}"
+                            data-Patient_unq_id="{{ appointment.Patient_unq_id }}" data-uid="{{ appointment.uid }}"
+                            data-sex="{{ appointment.Sex|default('Female') }}"
+                            data-age="{{ appointment.Age|default('N/A') }}"
+                            data-lastname="{{ appointment.get('LastName', '') }}"
+                            data-middlename="{{ appointment.get('MiddleName', '') }}"
+                            data-birthday="{{ appointment.get('Birthday', '') }}"
+                            data-nationality="{{ appointment.get('Nationality', '') }}"
+                            data-religion="{{ appointment.get('Religion', '') }}"
+                            data-occupation="{{ appointment.get('Occupation', '') }}"
+                            data-civilstatus="{{ appointment.get('CivilStatus', '') }}"
+                            data-contact="{{ appointment.get('ContactNumber', '') }}"
+                            data-service="{{ appointment.get('Service', '') }}"
+                            data-dentist="{{ appointment.get('DentistName', '') }}"
+                            data-q1="{{ appointment.get('q1', 'N') }}" data-q2="{{ appointment.get('q2', 'N') }}"
+                            data-q3="{{ appointment.get('q3', 'N') }}" data-q4="{{ appointment.get('q4', 'N') }}"
+                            data-q5="{{ appointment.get('q5', 'N') }}" data-q6="{{ appointment.get('q6', 'N') }}"
+                            data-q7="{{ appointment.get('q7', 'N') }}" data-q9="{{ appointment.get('q9', 'N') }}"
+                            data-q2_spec="{{ appointment.get('q2_spec', '')|e }}"
+                            data-q3_spec="{{ appointment.get('q3_spec', '')|e }}"
+                            data-q4_spec="{{ appointment.get('q4_spec', '')|e }}"
+                            data-q5_spec="{{ appointment.get('q5_spec', '')|e }}"
+                            data-q7_spec="{{ appointment.get('q7_spec', '')|e }}"
+                            data-q9_spec="{{ appointment.get('q9_spec', '')|e }}"
+                            data-w-preg="{{ appointment.get('w_preg', 'N') }}"
+                            data-w-nurse="{{ appointment.get('w_nurse', 'N') }}"
+                            data-w-pill="{{ appointment.get('w_pill', 'N') }}">
+                            <span class="material-symbols-rounded" aria-hidden="true">fact_check</span>
+                            <span>Check Info</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="text-align:center; margin-top:16px;">
+                <button type="button" id="weeklyClientsLoadMoreBtn" class="btn-action filter-btn" {% if not
+                    approve_list_next_cursor %}style="display:none;" {% endif %}>
+                    Load More
+                </button>
+            </div>
+        </div>
+

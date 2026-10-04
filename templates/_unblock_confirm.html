@@ -1,0 +1,22 @@
+    <!-- Unblock Confirmation Modal -->
+    <div id="unblockConfirmModal" class="modal" style="display: none;">
+        <div class="modal-content auth-card" style="max-width: 420px;">
+            <span class="modal-x" role="button" tabindex="0" aria-label="Close" id="unblockConfirmModalClose"><svg
+                    viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg></span>
+            <h2 style="color:#ef4444;">Unblock This Day?</h2>
+            <p id="unblockConfirmMessage"
+                style="margin: 16px 0; text-align: center; color:#475569; font-size:14px; line-height:1.5;">
+                Are you sure you want to remove the block for this date?
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                <button id="unblockConfirmYesBtn" class="unblock-modal-btn unblock-modal-btn-danger">Yes,
+                    Unblock</button>
+                <button id="unblockConfirmCancelBtn" class="unblock-modal-btn unblock-modal-btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+

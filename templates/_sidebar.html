@@ -1,0 +1,51 @@
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle Sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <h2>CAPIZONDA</h2>
+                <span>ADMIN PANEL</span>
+            </div>
+            <button class="sidebar-logout-btn mobile-only" id="sidebarLogoutBtn" title="Logout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active"
+                onclick="showSection('dashboard')">Dashboard</a>
+            <a href="javascript:void(0)" id="nav-financialreports" class="nav-item"
+                onclick="showSection('financialreports')">Financial Reports</a>
+            <a href="javascript:void(0)" id="nav-doctorscalendar" class="nav-item"
+                onclick="showSection('doctorscalendar')">Doctors Calendar</a>
+            <a href="javascript:void(0)" id="nav-appointments" class="nav-item"
+                onclick="showSection('appointments')">Appointments</a>
+            <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
+            <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
+            <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item"
+                onclick="showSection('WeeklyClients')">Accepted Patients</a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My
+                Patients</a>
+            <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item"
+                onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
+            <a href="javascript:void(0)" id="nav-usermanagement" class="nav-item"
+                onclick="showSection('usermanagement')">User Management</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logoutadmin" class="nav-item logout">Logout</a>
+        </div>
+    </aside>
+

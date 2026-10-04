@@ -1,0 +1,141 @@
+        <div id="section-financialreports" class="content-section">
+            <div class="financial-period-toolbar">
+                <div class="period-btn-group">
+                    <button class="period-btn" data-period="today" onclick="loadFinancialChart('today')">Today</button>
+                    <button class="period-btn active" data-period="weekly"
+                        onclick="loadFinancialChart('weekly')">Weekly</button>
+                    <button class="period-btn" data-period="monthly"
+                        onclick="loadFinancialChart('monthly')">Monthly</button>
+                    <button class="period-btn" data-period="yearly"
+                        onclick="loadFinancialChart('yearly')">Yearly</button>
+                    <button class="period-btn" data-period="overall"
+                        onclick="loadFinancialChart('overall')">Overall</button>
+                </div>
+                <button type="button" id="download-financial-report-btn" class="period-btn financial-download-btn"
+                    onclick="downloadFinancialReportPDF()">⬇ Download Report</button>
+            </div>
+
+            <div class="financial-nav" id="financialNav" style="display:none;">
+                <button type="button" class="fin-nav-btn" id="finNavPrev" aria-label="Previous period"
+                    onclick="financialNavStep(-1)">&lsaquo;</button>
+                <span class="fin-nav-label" id="finNavLabel" aria-live="polite"></span>
+                <select class="fin-nav-select" id="finMonthSel" aria-label="Choose month" style="display:none;"
+                    onchange="financialNavPick()"></select>
+                <select class="fin-nav-select" id="finYearSel" aria-label="Choose year" style="display:none;"
+                    onchange="financialNavPick()"></select>
+                <button type="button" class="fin-nav-btn" id="finNavNext" aria-label="Next period"
+                    onclick="financialNavStep(1)">&rsaquo;</button>
+            </div>
+
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 21V3h6.5a4.5 4.5 0 0 1 0 9H7" />
+                            <line x1="4" y1="6" x2="16" y2="6" />
+                            <line x1="4" y1="9" x2="16" y2="9" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 id="finTotalIncome">₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
+                        <p>Total Income Collected</p>
+                    </div>
+                    <div class="metric-bg-icon">₱</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 id="finTotalOutstanding">₱{{ "{:,.2f}".format(total_outstanding|default(0)) }}</h3>
+                        <p>Outstanding Balance</p>
+                    </div>
+                    <div class="metric-bg-icon">📄</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 8v13H3V8" />
+                            <path d="M1 3h22v5H1z" />
+                            <path d="M10 12h4" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 id="finUnpaidProcedures">{{ unpaid_procedures|default(0) }}</h3>
+                        <p>Unpaid Procedures</p>
+                    </div>
+                    <div class="metric-bg-icon">🧾</div>
+                </div>
+            </div>
+
+            <div class="income-trend-card">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Income Trend</h3>
+                        <p>Revenue collected over time</p>
+                    </div>
+                </div>
+
+                <div class="income-chart-wrapper">
+                    <canvas id="incomeChart"></canvas>
+                </div>
+
+                <p style="text-align:center; color:#546e7a; margin-top:20px; font-size:13px;">
+                    Per-procedure payment breakdowns are available in each patient's "CHECK INFO" view under My
+                    Patients.
+                </p>
+            </div>
+
+            <div class="income-trend-card unpaid-card" id="unpaidCard">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Unpaid Procedures</h3>
+                        <p>Patients who still have a balance.</p>
+                    </div>
+                </div>
+
+                <div class="unpaid-toolbar">
+                    <div class="period-btn-group" id="unpaidRangeGroup">
+                        <button type="button" class="unpaid-filter-btn active" data-range="all" onclick="setUnpaidRange('all')">All</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="today" onclick="setUnpaidRange('today')">Today</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="7d" onclick="setUnpaidRange('7d')">Last 7 Days</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="30d" onclick="setUnpaidRange('30d')">Last 30 Days</button>
+                        <button type="button" class="unpaid-filter-btn" data-range="12m" onclick="setUnpaidRange('12m')">Last 12 Months</button>
+                    </div>
+                    <input type="text" id="unpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search unpaid procedures by patient name" oninput="renderUnpaidTable()">
+                </div>
+
+                <div class="unpaid-table-wrap">
+                    <table class="unpaid-table" id="unpaidTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Procedure</th>
+                                <th>Date</th>
+                                <th>Dentist</th>
+                                <th class="num">Total</th>
+                                <th class="num">Paid</th>
+                                <th class="num">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unpaidTableBody">
+                            <tr><td colspan="7" class="unpaid-empty">Loading...</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" id="unpaidFootLabel">Total balance</td>
+                                <td class="num" id="unpaidFootTotal">₱0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+

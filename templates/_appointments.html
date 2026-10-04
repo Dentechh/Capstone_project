@@ -1,0 +1,127 @@
+        <div id="section-appointments" class="content-section">
+            <section class="content-panel">
+                <div class="filter-bar">
+                    <button type="button" id="newAppointmentBtn" class="btn-action accept">
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>
+                        <span>New Appointment</span>
+                    </button>
+                </div>
+                <div id="appointmentsCursor" data-cursor="{{ appointment_list_next_cursor or '' }}"
+                    style="display:none;"></div>
+                <table class="appointment-table" id="appointmentsTable">
+                    <thead>
+                        <tr>
+                            <th>Patient Name</th>
+                            <th style="display:none;">UID</th>
+                            <th style="display:none;">Appointment ID</th>
+                            <th style="display:none;">Middle Name</th>
+                            <th style="display:none;">Last Name</th>
+                            <th style="display:none;">House No.</th>
+                            <th style="display:none;">Street</th>
+                            <th style="display:none;">Barangay</th>
+                            <th style="display:none;">Municipality</th>
+                            <th style="display:none;">Province</th>
+                            <th style="display:none;">Contact Number</th>
+                            <th style="display:none;">Nationality</th>
+                            <th style="display:none;">Religion</th>
+                            <th style="display:none;">Age</th>
+                            <th style="display:none;">Sex</th>
+                            <th style="display:none;">Birthday</th>
+                            <th style="display:none;">Occupation</th>
+                            <th style="display:none;">Civil Status</th>
+                            <th>Urgency Level</th>
+                            <th>Date and Time</th>
+                            <th>Procedure</th>
+                            <th>Consulting Dentist <span class="appt-req" aria-hidden="true">*</span></th>
+
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in Appointment_clients %}
+                        {% set urgency_raw = (appointment.UrgencyLevel or '')|trim %}
+                        {% set urgency_lc = urgency_raw|lower %}
+                        {% set urgency_key = 'emergency' if urgency_lc == 'emergency' else ('urgent' if urgency_lc ==
+                        'urgent' else ('normal' if urgency_lc == 'normal' else 'unset')) %}
+                        {% set urgency_label = urgency_raw if urgency_raw else 'Unspecified' %}
+                        <tr data-appointment='{{ appointment|tojson|safe }}' data-urgency="{{ urgency_key }}">
+                            <td>{{ appointment.FirstName }}</td>
+                            <td style="display:none;">{{ appointment.uid }}</td>
+                            <td style="display:none;">{{ appointment.id }}</td>
+                            <td style="display:none;">{{ appointment.MiddleName }}</td>
+                            <td style="display:none;">{{ appointment.LastName }}</td>
+                            <td style="display:none;">{{ appointment.HouseNo }}</td>
+                            <td style="display:none;">{{ appointment.Street }}</td>
+                            <td style="display:none;">{{ appointment.Brgy }}</td>
+                            <td style="display:none;">{{ appointment.Municipality }}</td>
+                            <td style="display:none;">{{ appointment.Province }}</td>
+                            <td style="display:none;">{{ appointment.ContactNumber }}</td>
+                            <td style="display:none;">{{ appointment.Nationality }}</td>
+                            <td style="display:none;">{{ appointment.Religion }}</td>
+                            <td style="display:none;">{{ appointment.Age }}</td>
+                            <td style="display:none;">{{ appointment.Sex }}</td>
+                            <td style="display:none;">{{ appointment.Birthday }}</td>
+                            <td style="display:none;">{{ appointment.Occupation }}</td>
+                            <td style="display:none;">{{ appointment.CivilStatus }}</td>
+                            <td data-cell="urgency">
+                                <span class="urg-badge urg-badge--{{ urgency_key }}"
+                                    title="Urgency level: {{ urgency_label }}">
+                                    <span class="urg-badge__dot" aria-hidden="true"></span>
+                                    <span class="urg-badge__label">{{ urgency_label }}</span>
+                                </span>
+                            </td>
+                            <td class="appt-date-cell" data-raw="{{ appointment.appointment_date }}">{{
+                                appointment.appointment_date }}</td>
+                            <td>{{ appointment.Service }}</td>
+                            <td>
+                                <div class="dentist-field">
+                                    <input type="text" name="dentist_name" class="dentist-input"
+                                        placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
+                                        spellcheck="false" role="combobox" aria-autocomplete="list"
+                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
+                                        aria-label="Consulting dentist">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
+                                        title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge pending">pending</span>
+                            </td>
+                            <td>
+                                <div class="appt-actions">
+                                    <button type="button" class="btn-action appt-accept-btn"
+                                        title="Accept this appointment" aria-label="Accept this appointment"
+                                        onclick="updateStatus(this.closest('tr'), 'accept')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                    </button>
+                                    <button type="button" class="btn-action appt-reschedule-btn"
+                                        title="Reschedule this appointment" aria-label="Reschedule this appointment"
+                                        onclick="openRescheduleModal(this.closest('tr'))">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_repeat</span>
+                                    </button>
+                                    <button type="button" class="btn-action appt-decline-btn"
+                                        title="Decline this appointment" aria-label="Decline this appointment"
+                                        onclick="updateStatus(this.closest('tr'), 'decline')">
+                                        <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="text-align:center; margin-top:16px;">
+                    <button type="button" id="appointmentsLoadMoreBtn" class="btn-action filter-btn" {% if not
+                        appointment_list_next_cursor %}style="display:none;" {% endif %}>
+                        Load More
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/appointments-helpers.js') }}?v=1"></script>
+        <script src="{{ url_for('static', filename='js/load-more.js') }}?v=1"></script>

@@ -1,0 +1,73 @@
+        <div id="section-doctorscalendar" class="content-section">
+            <section class="content-panel">
+                <div style="display:flex; gap:24px; flex-wrap:wrap;">
+                    <div class="doctor-cal-panel">
+                        <div id="doctorCalendarPicker"></div>
+                        <div class="calendar-legend">
+                            <span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px;">
+                                <span
+                                    style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;box-shadow:0 0 0 3px rgba(239,68,68,0.15);"></span>
+                                Full day blocked
+                            </span>
+                            <span style="display:inline-flex;align-items:center;gap:6px;">
+                                <span
+                                    style="display:inline-block;width:12px;height:12px;background:#f59e0b;border-radius:50%;box-shadow:0 0 0 3px rgba(245,158,11,0.15);"></span>
+                                Partially blocked
+                            </span>
+                        </div>
+                    </div>
+                    <div style="flex:1; min-width:280px;">
+                        <h3 id="blockPanelDate"
+                            style="margin-top:0; font-size:22px; color:#0d47a1; font-weight:700; margin-bottom:20px;">
+                            Select a date</h3>
+
+                        <label id="blockFullDayToggleLabel"
+                            style="display:flex; align-items:center; gap:10px; margin-bottom:16px; font-weight:600; cursor:pointer; color:#1e293b; font-size:15px;">
+                            <input type="checkbox" id="blockFullDayToggle" class="calendar-checkbox">
+                            Block entire day
+                        </label>
+
+                        <div id="blockTimesGrid"
+                            style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px;">
+                        </div>
+
+                        <label
+                            style="display:block; font-weight:600; margin-bottom:8px; color:#1e293b; font-size:14px;">Reason
+                            (Optional, Internal Note)</label>
+                        <input type="text" id="blockReasonInput" placeholder="e.g. Out of town - Cebu conference">
+
+                        <div id="calendarBtnGroup" style="display:flex; gap:12px; margin-top:20px;">
+                            <button type="button" id="saveBlockBtn"><span class="material-symbols-rounded"
+                                    style="font-size:18px;">save</span> Save Block</button>
+                            <button type="button" id="unblockBtn"><span class="material-symbols-rounded"
+                                    style="font-size:18px;">block</span> Unblock This Day</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dc-extras">
+                    <section class="dc-card">
+                        <div class="dc-card-head">
+                            <h4 id="dayScheduleTitle">Day schedule</h4>
+                            <button type="button" id="dayScheduleRefresh" class="dc-link-btn">Refresh</button>
+                        </div>
+                        <div id="daySchedule" class="dc-list">
+                            <div class="dc-empty">Select a date on the calendar to see its schedule.</div>
+                        </div>
+                    </section>
+                    <section class="dc-card">
+                        <div class="dc-card-head">
+                            <h4>Upcoming blocked days <span id="upcomingBlockedCount" class="dc-count"></span></h4>
+                        </div>
+                        <div id="upcomingBlocked" class="dc-list">
+                            <div class="dc-empty">Loading...</div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </div>
+
+
+
+
+

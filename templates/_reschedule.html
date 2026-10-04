@@ -1,0 +1,28 @@
+    <!-- Reschedule Appointment Modal -->
+    <div id="rescheduleModal" class="modal" style="display: none;">
+        <div class="modal-content rs-card" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+            <button type="button" class="rs-close" id="rsCloseBtn" aria-label="Close">&times;</button>
+            <h2 id="rsTitle">Reschedule appointment</h2>
+            <div class="rs-patient" id="rsPatient"></div>
+            <div class="rs-current" id="rsCurrent"></div>
+
+            <div class="rs-body">
+                <div class="rs-cal">
+                    <div id="rsCalendar"></div>
+                </div>
+                <div>
+                    <div class="rs-slots-title" id="rsSlotsTitle">Pick a new date</div>
+                    <div class="rs-slot-grid" id="rsSlotGrid">
+                        <div class="rs-hint">Choose a date on the calendar to see the open times.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rs-summary" id="rsSummary">Select a new date and time.</div>
+            <div class="rs-actions">
+                <button type="button" class="rs-btn rs-btn-ghost" id="rsCancelBtn">Cancel</button>
+                <button type="button" class="rs-btn rs-btn-primary" id="rsConfirmBtn" disabled>Reschedule</button>
+            </div>
+        </div>
+    </div>
+

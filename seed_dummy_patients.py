@@ -33,14 +33,14 @@ WHAT'S NEW IN v2:
     project ID to continue (--yes does not skip that).
 """
 
-import os
-import sys
-import json
-import time
-import random
-import uuid
 import argparse
-from datetime import datetime, timedelta, UTC
+import json
+import os
+import random
+import sys
+import time
+import uuid
+from datetime import UTC, datetime, timedelta
 
 try:
     import firebase_admin

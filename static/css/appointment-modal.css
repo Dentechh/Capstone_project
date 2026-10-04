@@ -1,0 +1,1943 @@
+        #newApptModal .adm-modal-box {
+            width: 95vw;
+            max-width: 1600px;
+            height: 92vh;
+            background: #fff;
+            border-radius: 15px;
+            border-top: 8px solid #0d47a1;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            color: #000;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #newApptModal .adm-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid #dee2e6;
+            background: #ffffff;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        #newApptModal .adm-modal-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: #0d47a1;
+            font-weight: 700;
+        }
+
+        #newApptModal .adm-modal-body {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #newApptModal .adm-consent-side {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+            font-size: 13.5px;
+            line-height: 1.65;
+            background: #ffffff;
+            color: #333333;
+        }
+
+        #newApptModal .adm-consent-side h3 {
+            font-size: 20px;
+            color: #0d47a1;
+            margin: 0 0 16px;
+            font-weight: 700;
+        }
+
+        #newApptModal .adm-consent-side p {
+            margin: 0 0 12px;
+        }
+
+        #newApptModal .adm-form-side {
+            flex: 1.5;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fff;
+        }
+
+        #newApptModal .adm-form-side h2 {
+            font-size: 1.4rem;
+            color: #64b5f6;
+            font-weight: 700;
+            margin: 0 0 20px;
+        }
+
+        #newApptModal .adm-form-side label {
+            display: block;
+            font-size: 15px;
+            font-weight: 600;
+            margin: 14px 0 6px;
+            color: #0d47a1;
+        }
+
+        /* Form controls - matches #appointmentForm in index-s.css */
+        #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
+        #newApptModal .adm-form-side select {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Kumbh Sans', sans-serif;
+            background-color: #f1f8ff;
+            color: #333;
+            box-shadow: none;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]):focus,
+        #newApptModal .adm-form-side select:focus {
+            border-color: #0d47a1;
+            outline: none;
+            background-color: #f1f8ff;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.14);
+        }
+
+        #newApptModal .adm-form-side input::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        #newApptModal .adm-form-side input:disabled {
+            background: #eef2f7;
+            color: #94a3b8;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        /* Dropdowns - custom chip + chevron, no native arrow */
+        #newApptModal .adm-form-side select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 12px 46px 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background-color: #f1f8ff;
+            color: #0d47a1;
+            font-size: 14.5px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#f1f8ff, #f1f8ff);
+            background-repeat: no-repeat, no-repeat;
+            background-position: right 10px center, 0 0;
+            background-size: 24px 24px, 100% 100%;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+        }
+
+        #newApptModal .adm-form-side select:hover {
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#e8f2ff, #e8f2ff);
+        }
+
+        #newApptModal .adm-form-side select:focus {
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#e8f2ff, #e8f2ff);
+        }
+
+        #newApptModal .adm-form-side select option {
+            background: #ffffff;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        #newApptModal .adm-form-side select option:checked {
+            background: #dbeafe;
+            color: #0d47a1;
+            font-weight: 700;
+        }
+
+        #newApptModal .adm-form-side select:disabled {
+            background-color: #eef2f7;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* ===== Custom option panel (native popup is not stylable) ===== */
+        .adm-select {
+            position: relative;
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .adm-select>select:not([type="radio"]):not([type="checkbox"]) {
+            margin: 0;
+        }
+
+        .adm-select.is-open>select {
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        }
+
+        /* The panel is moved to <body> while open (same reason flatpickr's
+       calendar escapes the dialog) and anchored to the trigger's viewport
+       rect by positionMenu(). It therefore must not be positioned by its
+       wrapper, and it has to sit above every modal. */
+        .adm-select-menu {
+            position: fixed;
+            z-index: 100050;
+            display: none;
+            margin: 0;
+            padding: 6px;
+            list-style: none;
+            max-height: 230px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: #ffffff;
+            border: 1px solid #d5dde8;
+            border-radius: 12px;
+            box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Driven by the panel's own class, because the panel is not a child of
+       the wrapper while it is open. */
+        .adm-select-menu.is-open,
+        .adm-select.is-open .adm-select-menu {
+            display: block;
+        }
+
+        /* Flipped panels get their top/bottom from positionMenu(), which writes
+   inline styles against the viewport rect, so nothing is needed here. */
+
+        .adm-select-menu::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .adm-select-menu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+
+        .adm-select-menu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .adm-select-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            cursor: pointer;
+            transition: background-color 0.12s ease, color 0.12s ease;
+            /* Procedure names are long words. positionMenu() sizes the panel, so
+       wrap here rather than clip or spill out of it. */
+            white-space: normal;
+            overflow-wrap: anywhere;
+            min-height: 36px;
+        }
+
+        .adm-select-option:hover,
+        .adm-select-option.is-active {
+            background: #eff6ff;
+            color: #0d47a1;
+        }
+
+        .adm-select-option.is-selected {
+            background: #dbeafe;
+            color: #0d47a1;
+            font-weight: 700;
+        }
+
+        .adm-select-option.is-disabled {
+            color: #9aa6b6;
+            cursor: not-allowed;
+            background: transparent;
+        }
+
+        .adm-select-option .adm-select-check {
+            flex: 0 0 auto;
+            width: 15px;
+            height: 15px;
+            opacity: 0;
+        }
+
+        .adm-select-option.is-selected .adm-select-check {
+            opacity: 1;
+        }
+
+        .adm-select-empty {
+            padding: 12px;
+            font-size: 13px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        body.dark-mode .adm-select-menu {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        body.dark-mode .adm-select-menu::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        body.dark-mode .adm-select-option {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .adm-select-option:hover,
+        body.dark-mode .adm-select-option.is-active {
+            background: #1e3a8a;
+            color: #dbeafe;
+        }
+
+        body.dark-mode .adm-select-option.is-selected {
+            background: #1d4ed8;
+            color: #ffffff;
+        }
+
+        body.dark-mode .adm-select-empty {
+            color: #94a3b8;
+        }
+
+        /* Date pickers - Birthday and Date of Appointment */
+        #newApptModal .adm-form-side input[type="date"] {
+            padding: 12px 14px 12px 14px;
+            border-radius: 10px;
+            min-height: 44px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        #newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.55;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 2px;
+            filter: invert(11%) sepia(58%) saturate(2723%) hue-rotate(196deg) brightness(96%) contrast(96%);
+            transition: opacity 0.2s ease, background-color 0.2s ease;
+        }
+
+        #newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            background: #dbeafe;
+        }
+
+        #newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit {
+            font-family: 'Kumbh Sans', sans-serif;
+            font-size: 14px;
+        }
+
+        #newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-month-field,
+        #newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-day-field,
+        #newApptModal .adm-form-side input[type="date"]::-webkit-datetime-edit-year-field {
+            padding: 0 2px;
+        }
+
+        /* Date fields use the same label style as every other field */
+        #newApptModal .adm-form-side .form-group:has(input[type="date"])>label,
+        #newApptModal .adm-form-side .form-group:has(.flatpickr-input)>label {
+            font-size: 15px;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: normal;
+            margin: 14px 0 6px;
+            color: #0d47a1;
+        }
+
+        #newApptModal .adm-form-side .adm-date-alt,
+        #newApptModal .adm-form-side .flatpickr-input {
+            width: 100%;
+            margin: 5px 0;
+            padding: 12px 42px 12px 14px;
+            min-height: 44px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f1f8ff;
+            color: #333;
+            font-size: 14px;
+            font-family: 'Kumbh Sans', sans-serif;
+            cursor: pointer;
+            box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        #newApptModal .adm-form-side .adm-date-alt::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        #newApptModal .adm-form-side .flatpickr-input:focus {
+            border-color: #0d47a1;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        }
+
+        .adm-select .flatpickr-input {
+            margin: 0;
+        }
+
+        #newApptModal .adm-form-side .flatpickr {
+            display: block;
+            width: 100%;
+        }
+
+        #newApptModal .adm-form-side .flatpickr__toggle {
+            border-color: #0d47a1;
+            background: transparent;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        #newApptModal .adm-form-side .flatpickr__toggle:hover {
+            background: #dbeafe;
+        }
+
+        #newApptModal .adm-form-side .flatpickr__toggle svg {
+            fill: #0d47a1;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle {
+            border-color: #475569;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle:hover {
+            background: #334155;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .flatpickr__toggle svg {
+            fill: #64b5f6;
+        }
+
+
+        /* Doctors Calendar panel: layout only, no background/border/shadow */
+        .doctor-cal-panel {
+            flex: 0 0 340px;
+            padding: 16px;
+        }
+
+        /* Dark mode: Doctor Calendar panel */
+        body.dark-mode .doctor-cal-panel {
+            background: none;
+            border: none;
+            box-shadow: none;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        body.dark-mode #blockPanelDate {
+            color: #64b5f6 !important;
+        }
+
+        body.dark-mode #blockFullDayToggleLabel {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-mode label[style*="color:#1e293b"] {
+            color: #cbd5e1 !important;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .adm-date-alt,
+        body.dark-mode #newApptModal .adm-form-side .flatpickr-input {
+            background-color: #1e1e1e;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .flatpickr-input:focus {
+            border-color: #64b5f6;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        }
+
+        #newApptModal .adm-row2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        #newApptModal .adm-row3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        #newApptModal .adm-women-box {
+            background: #fdf6f6;
+            border: 1px solid #feeaea;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        #newApptModal .adm-women-box p {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+        #newApptModal .adm-sig-canvas {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #fff;
+            touch-action: none;
+            cursor: crosshair;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        #newApptModal .adm-sig-clear {
+            margin-top: 8px;
+            padding: 8px 18px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: #e0e0e0;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            color: #1f2937;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        #newApptModal .adm-sig-clear:hover {
+            background: #d0d0d0;
+            border-color: #999;
+        }
+
+        /* =========================================
+   TWO-STEP APPOINTMENT WIZARD
+   The consent text and signature used to sit in
+   a second column beside the form. They now live
+   on step 2 so the modal is one focused task at a
+   time. The inner panes keep their original class
+   names, so every existing input style above still
+   applies without modification.
+   ========================================= */
+
+        /* --- Step indicator --- */
+        #newApptModal .adm-steps {
+            display: flex;
+            align-items: stretch;
+            margin: 0;
+            padding: 0 30px;
+            list-style: none;
+            background: #f8fafc;
+            border-bottom: 1px solid #dee2e6;
+            flex-shrink: 0;
+        }
+
+        #newApptModal .adm-step {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            margin-right: 28px;
+            color: #64748b;
+            transition: color 0.2s ease;
+        }
+
+        #newApptModal .adm-step:last-child {
+            margin-right: 0;
+        }
+
+        #newApptModal .adm-step+.adm-step {
+            padding-left: 28px;
+        }
+
+        /* Connector between the two steps. */
+        #newApptModal .adm-step+.adm-step::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 28px;
+            height: 2px;
+            transform: translateY(-50%);
+            background: #cbd5e1;
+            transition: background-color 0.2s ease;
+        }
+
+        #newApptModal .adm-step__num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #cbd5e1;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+        }
+
+        #newApptModal .adm-step__text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+        }
+
+        #newApptModal .adm-step__title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        #newApptModal .adm-step__hint {
+            font-size: 11.5px;
+            opacity: 0.85;
+        }
+
+        #newApptModal .adm-step.is-active {
+            color: #0d47a1;
+        }
+
+        #newApptModal .adm-step.is-active .adm-step__num {
+            background: #0d47a1;
+            border-color: #0d47a1;
+            color: #ffffff;
+        }
+
+        /* Completed step: filled, but calmer than the current one. */
+        #newApptModal .adm-step.is-done {
+            color: #15803d;
+        }
+
+        #newApptModal .adm-step.is-done .adm-step__num {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: #ffffff;
+        }
+
+        #newApptModal .adm-step.is-done+.adm-step::before {
+            background: #22c55e;
+        }
+
+        /* --- Page switching --- */
+        #newApptModal .adm-modal-body {
+            flex-direction: column;
+        }
+
+        #newApptModal .adm-wizard {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
+        #newApptModal .adm-page {
+            display: none;
+            flex-direction: column;
+        }
+
+        #newApptModal .adm-page.is-active {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        #newApptModal .adm-page[hidden] {
+            display: none;
+        }
+
+        /* Each pane is now the full width of the modal rather than one column. */
+        #newApptModal .adm-page[data-adm-step="1"] .adm-form-side,
+        #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+            flex: 1 1 auto;
+            min-height: 0;
+            border-right: none;
+            overflow-y: auto;
+        }
+
+        /* Consent text is a reading column: cap the measure so the lines stay
+   legible on a 1600px-wide modal. */
+        #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+            background: #f8fafc;
+        }
+
+        #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side>* {
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- Wizard navigation --- */
+        #newApptModal .adm-wizard-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 30px;
+            background: #ffffff;
+            border-top: 1px solid #dee2e6;
+            flex-shrink: 0;
+        }
+
+        #newApptModal .adm-wizard-nav__spacer {
+            flex: 1;
+        }
+
+        #newApptModal .adm-wizard-nav__status {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #64748b;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #newApptModal .adm-nav-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 11px 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #334155;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.18s ease, border-color 0.18s ease,
+                color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+        }
+
+        #newApptModal .adm-nav-btn>.material-symbols-rounded {
+            font-size: 19px;
+            line-height: 1;
+            font-weight: normal;
+            font-style: normal;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+
+        #newApptModal .adm-nav-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        #newApptModal .adm-nav-btn:active {
+            transform: translateY(1px);
+        }
+
+        #newApptModal .adm-nav-btn:focus-visible {
+            outline: 2px solid #0d47a1;
+            outline-offset: 2px;
+        }
+
+        #newApptModal .adm-nav-btn--primary,
+        #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+            background: #0d47a1;
+            border: 1px solid #0d47a1;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(13, 71, 161, 0.28);
+        }
+
+        #newApptModal .adm-nav-btn--primary:hover,
+        #newApptModal .adm-wizard-nav button[type="submit"].btn-primary:hover {
+            background: #0b3c8c;
+            border-color: #0b3c8c;
+            filter: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.34);
+        }
+
+        #newApptModal .adm-nav-btn--primary:active,
+        #newApptModal .adm-wizard-nav button[type="submit"].btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+        }
+
+        /* The legacy submit rule above is width:100% for a button at the foot of the
+   form column; inside the nav it becomes one of two equal-weight actions. */
+        #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+            display: inline-flex;
+            width: auto;
+            margin-top: 0;
+            padding: 11px 22px;
+            font-size: 14px;
+            border-radius: 9px;
+        }
+
+        /* --- Signature block (last thing on step 2) --- */
+        #newApptModal .adm-consent-ack {
+            margin-top: 22px;
+        }
+
+        #newApptModal .adm-sign-block {
+            margin-top: 22px;
+            padding: 18px 20px 16px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+        }
+
+        #newApptModal .adm-sign-block__head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 4px 14px;
+            margin-bottom: 12px;
+        }
+
+        #newApptModal .adm-sign-block__label {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #0d47a1;
+        }
+
+        #newApptModal .adm-sign-block__meta {
+            margin: 0;
+            font-size: 12.5px;
+            color: #64748b;
+        }
+
+        #newApptModal .adm-sign-block__sep {
+            margin: 0 6px;
+        }
+
+        #newApptModal .adm-sign-block__actions {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        #newApptModal .adm-sign-block__actions .adm-sig-clear {
+            margin-top: 0;
+        }
+
+        #newApptModal .adm-sign-block__hint {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        #newApptModal .adm-sign-block__line {
+            margin-top: 18px;
+        }
+
+        #newApptModal .adm-sign-block__rule {
+            display: block;
+            height: 1px;
+            background: #cbd5e1;
+        }
+
+        #newApptModal .adm-sign-block__caption {
+            display: block;
+            margin-top: 6px;
+            font-size: 11.5px;
+            letter-spacing: 0.3px;
+            color: #94a3b8;
+        }
+
+        /* Dashed edge reads as a fill-in area rather than a disabled control. */
+        #newApptModal .adm-sign-block .adm-sig-canvas {
+            display: block;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            background: #fdfdfd;
+        }
+
+        /* --- Dark mode --- */
+        body.dark-mode #newApptModal .adm-steps {
+            background: #16202e;
+            border-bottom-color: #2b3646;
+        }
+
+        body.dark-mode #newApptModal .adm-step {
+            color: #8b98a9;
+        }
+
+        body.dark-mode #newApptModal .adm-step__num {
+            background: #1f2937;
+            border-color: #475569;
+            color: #8b98a9;
+        }
+
+        body.dark-mode #newApptModal .adm-step+.adm-step::before {
+            background: #475569;
+        }
+
+        body.dark-mode #newApptModal .adm-step.is-active {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-step.is-active .adm-step__num {
+            background: #0d47a1;
+            border-color: #64b5f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode #newApptModal .adm-step.is-done {
+            color: #4ade80;
+        }
+
+        body.dark-mode #newApptModal .adm-step.is-done .adm-step__num {
+            background: #15803d;
+            border-color: #4ade80;
+            color: #ffffff;
+        }
+
+        body.dark-mode #newApptModal .adm-step.is-done+.adm-step::before {
+            background: #15803d;
+        }
+
+        body.dark-mode #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+            background: #16202e;
+        }
+
+        body.dark-mode #newApptModal .adm-wizard-nav {
+            background: #1a2433;
+            border-top-color: #2b3646;
+        }
+
+        body.dark-mode #newApptModal .adm-wizard-nav__status {
+            color: #8b98a9;
+        }
+
+        body.dark-mode #newApptModal .adm-nav-btn {
+            background: #1f2937;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #newApptModal .adm-nav-btn:hover {
+            background: #334155;
+            border-color: #64748b;
+        }
+
+        body.dark-mode #newApptModal .adm-nav-btn:focus-visible {
+            outline-color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-nav-btn--primary,
+        body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+            background: #0d47a1;
+            border-color: #d4af37;
+            color: #0b1220;
+        }
+
+        body.dark-mode #newApptModal .adm-nav-btn--primary:hover,
+        body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary:hover {
+            background: #164e9e;
+            border-color: #d4af37;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block {
+            background: #1f2937;
+            border-color: #475569;
+            box-shadow: none;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block__label {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block__meta,
+        body.dark-mode #newApptModal .adm-sign-block__hint {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block__rule {
+            background: #475569;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block__caption {
+            color: #64748b;
+        }
+
+        body.dark-mode #newApptModal .adm-sign-block .adm-sig-canvas {
+            border-color: #475569;
+            background: #111827;
+        }
+
+        #newApptModal .adm-patient-toggle {
+            display: grid !important;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: normal;
+        }
+
+        #newApptModal .adm-patient-toggle label {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            margin: 0 !important;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            white-space: normal;
+            padding: 11px 14px;
+            border: 1.5px solid #d5dde8;
+            border-radius: 10px;
+            background: #fff;
+            color: #475569;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        }
+
+        #newApptModal .adm-patient-toggle label:hover {
+            border-color: #93c5fd;
+            background: #f8fbff;
+            transform: translateY(-1px);
+        }
+
+        #newApptModal .adm-patient-toggle label:has(input:checked) {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        #newApptModal .adm-patient-toggle label:has(input:focus-visible) {
+            outline: 2px solid #1d4ed8;
+            outline-offset: 2px;
+        }
+
+        #newApptModal .adm-patient-toggle input[type="radio"] {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            padding: 0;
+            accent-color: #0d47a1;
+            flex: 0 0 auto;
+            cursor: pointer;
+        }
+
+        #newApptModal .adm-opt {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        #newApptModal .adm-opt-title {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        #newApptModal .adm-opt-hint {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            line-height: 1.2;
+        }
+
+        #newApptModal .adm-patient-toggle label:has(input:checked) .adm-opt-hint {
+            color: #3b82f6;
+        }
+
+        body.dark-mode #newApptModal .adm-patient-toggle label {
+            background: #1e293b;
+            border-color: #334155;
+            color: #cbd5e1;
+            box-shadow: none;
+        }
+
+        body.dark-mode #newApptModal .adm-patient-toggle label:hover {
+            background: #24334a;
+            border-color: #60a5fa;
+        }
+
+        body.dark-mode #newApptModal .adm-patient-toggle label:has(input:checked) {
+            background: #1e3a8a;
+            border-color: #60a5fa;
+            color: #dbeafe;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+        }
+
+        body.dark-mode #newApptModal .adm-patient-toggle label:has(input:checked) .adm-opt-hint {
+            color: #93c5fd;
+        }
+
+        #newApptModal .adm-consent-label {
+            display: flex !important;
+            align-items: center;
+            gap: 12px;
+            margin: 0 !important;
+            font-weight: 500 !important;
+            font-size: 15px;
+            line-height: 1.4;
+            color: #334155;
+            cursor: pointer;
+            padding: 14px 16px;
+            border: 1.5px solid #dbe2ec;
+            border-radius: 12px;
+            background: #f8fafc;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+            transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+        }
+
+        #newApptModal .adm-consent-label:hover {
+            border-color: #93c5fd;
+            background: #f0f7ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.12);
+        }
+
+        #newApptModal .adm-consent-label input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            flex: 0 0 auto;
+            width: 22px;
+            height: 22px;
+            margin: 0;
+            padding: 0;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            background: #fff no-repeat center / 14px 14px;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        #newApptModal .adm-consent-label input[type="checkbox"]:hover {
+            border-color: #60a5fa;
+        }
+
+        #newApptModal .adm-consent-label input[type="checkbox"]:checked {
+            border-color: #2563eb;
+            /* Single shorthand so no other background rule can drop the tick. */
+            background: #2563eb url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") no-repeat center / 15px 15px;
+        }
+
+        #newApptModal .adm-consent-label:has(input:checked) {
+            border-color: #16a34a;
+            background: #f0fdf4;
+            color: #14532d;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+        }
+
+        #newApptModal .adm-consent-label:has(input:focus-visible) {
+            outline: 2px solid #1d4ed8;
+            outline-offset: 2px;
+        }
+
+        #newApptModal .adm-consent-label:has(input:user-invalid) {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        #newApptModal .adm-consent-check-text {
+            flex: 1;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label {
+            background: #1e293b;
+            border-color: #334155;
+            color: #cbd5e1;
+            box-shadow: none;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label:hover {
+            background: #24334a;
+            border-color: #60a5fa;
+            box-shadow: none;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label input[type="checkbox"] {
+            background: #0f172a;
+            border-color: #475569;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label input[type="checkbox"]:checked {
+            border-color: #2563eb;
+            background: #2563eb url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") no-repeat center / 15px 15px;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label:has(input:checked) {
+            background: #14532d;
+            border-color: #22c55e;
+            color: #bbf7d0;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        body.dark-mode #newApptModal .adm-consent-label:has(input:user-invalid) {
+            background: #4c0519;
+            border-color: #f43f5e;
+        }
+
+        #newApptModal button[type="submit"].btn-primary {
+            width: 100%;
+            margin-top: 15px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: #fff;
+            background: linear-gradient(135deg, #0d47a1 0%, #8CD3FF 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(21, 102, 153, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        }
+
+        #newApptModal button[type="submit"].btn-primary:hover {
+            filter: brightness(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(21, 102, 153, 0.4);
+        }
+
+        #newApptModal button[type="submit"].btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(13, 71, 161, 0.35);
+        }
+
+        #newApptModal .adm-q-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 16px;
+            margin-top: 8px;
+            padding: 4px 0;
+        }
+
+        #newApptModal .adm-q-row span {
+            font-size: 15px;
+            color: #444;
+            font-weight: 500;
+        }
+
+        #newApptModal .adm-yn {
+            display: flex;
+            gap: 6px;
+            white-space: nowrap;
+            background: #eef2f7;
+            border: 1px solid #dbe2ec;
+            border-radius: 999px;
+            padding: 3px;
+        }
+
+        #newApptModal .adm-yn label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            font-size: 14.5px;
+            margin: 0;
+            cursor: pointer;
+            color: #64748b;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 999px;
+            padding: 5px 12px;
+            user-select: none;
+            transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+        }
+
+        #newApptModal .adm-yn label:hover {
+            background: #fff;
+            color: #1e293b;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+        }
+
+        #newApptModal .adm-yn label:active {
+            transform: scale(0.96);
+        }
+
+        #newApptModal .adm-yn input[type="radio"] {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            padding: 0;
+            flex: 0 0 auto;
+            cursor: pointer;
+        }
+
+        #newApptModal .adm-yn label:has(input[value="Yes"]) input[type="radio"] {
+            accent-color: #16a34a;
+        }
+
+        #newApptModal .adm-yn label:has(input[value="No"]) input[type="radio"] {
+            accent-color: #e11d48;
+        }
+
+        #newApptModal .adm-yn label:has(input[value="Yes"]:checked) {
+            background: #dcfce7;
+            color: #15803d;
+            border-color: #86efac;
+            box-shadow: 0 1px 4px rgba(21, 128, 61, 0.25);
+        }
+
+        #newApptModal .adm-yn label:has(input[value="No"]:checked) {
+            background: #ffe4e6;
+            color: #be123c;
+            border-color: #fda4af;
+            box-shadow: 0 1px 4px rgba(190, 18, 60, 0.25);
+        }
+
+        #newApptModal .adm-yn label:has(input:focus-visible) {
+            outline: 2px solid #1d4ed8;
+            outline-offset: 2px;
+        }
+
+        #newApptModal .adm-q-row+input[type="text"] {
+            margin-top: -2px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        body.dark-mode #newApptModal .adm-yn {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        body.dark-mode #newApptModal .adm-yn label {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #newApptModal .adm-yn label:hover {
+            background: #1e293b;
+            color: #e2e8f0;
+            box-shadow: none;
+        }
+
+        body.dark-mode #newApptModal .adm-yn label:has(input[value="Yes"]:checked) {
+            background: #14532d;
+            color: #bbf7d0;
+            border-color: #22c55e;
+        }
+
+        body.dark-mode #newApptModal .adm-yn label:has(input[value="No"]:checked) {
+            background: #881337;
+            color: #fecdd3;
+            border-color: #f43f5e;
+        }
+
+        /* =========================
+   NEW APPOINTMENT MODAL - RESPONSIVE
+========================== */
+        @media (max-width: 900px) {
+            #newApptModal {
+                align-items: stretch;
+                justify-content: stretch;
+            }
+
+            #newApptModal .adm-modal-box {
+                width: 100%;
+                max-width: 100%;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+            }
+
+            #newApptModal .adm-modal-header {
+                padding: 12px 16px;
+                padding-top: max(12px, env(safe-area-inset-top));
+                gap: 12px;
+            }
+
+            #newApptModal .adm-modal-header h2 {
+                font-size: 17px;
+            }
+
+            #newApptModal .adm-modal-body {
+                flex-direction: column;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #newApptModal .adm-consent-side,
+            #newApptModal .adm-form-side {
+                width: 100%;
+                flex: none !important;
+                overflow-y: visible;
+                padding: 16px;
+            }
+
+            #newApptModal .adm-consent-side {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            #newApptModal .adm-row2,
+            #newApptModal .adm-row3 {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            #newApptModal .adm-q-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 8px 0;
+                border-bottom: 1px dashed #e2e8f0;
+            }
+
+            #newApptModal .adm-yn {
+                align-self: flex-start;
+            }
+
+            #newApptModal .adm-patient-toggle {
+                grid-template-columns: 1fr;
+            }
+
+            #newApptModal .adm-sig-canvas {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #newApptModal button[type="submit"].btn-primary {
+                margin-bottom: max(18px, env(safe-area-inset-bottom));
+            }
+
+            /* Wizard on small screens: the wizard itself scrolls and the nav bar
+       sticks to its bottom, instead of each pane scrolling separately. */
+            #newApptModal .adm-modal-body {
+                overflow: hidden;
+            }
+
+            #newApptModal .adm-wizard {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #newApptModal .adm-page.is-active {
+                display: block;
+                flex: none;
+            }
+
+            #newApptModal .adm-page[data-adm-step="1"] .adm-form-side,
+            #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side {
+                width: 100%;
+                min-height: 0;
+                overflow: visible;
+                border-right: none;
+            }
+
+            #newApptModal .adm-page[data-adm-step="2"] .adm-consent-side>* {
+                max-width: none;
+            }
+
+            #newApptModal .adm-wizard-nav {
+                position: sticky;
+                bottom: 0;
+                z-index: 5;
+                padding: 12px 16px;
+                padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            }
+
+            #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+                margin-bottom: 0;
+            }
+
+            #newApptModal .adm-steps {
+                padding: 0 16px;
+            }
+
+            #newApptModal .adm-step {
+                margin-right: 18px;
+            }
+
+            #newApptModal .adm-step+.adm-step {
+                padding-left: 18px;
+            }
+
+            #newApptModal .adm-step+.adm-step::before {
+                width: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            #newApptModal .adm-consent-side,
+            #newApptModal .adm-form-side {
+                padding: 12px;
+            }
+
+            /* Not enough width for title + hint side by side. */
+            #newApptModal .adm-step__hint {
+                display: none;
+            }
+
+            #newApptModal .adm-wizard-nav {
+                gap: 8px;
+                padding: 10px 12px;
+            }
+
+            #newApptModal .adm-wizard-nav__status {
+                display: none;
+            }
+
+            #newApptModal .adm-nav-btn {
+                padding: 10px 14px;
+                font-size: 13.5px;
+            }
+
+            #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+                padding: 10px 16px;
+            }
+
+            #newApptModal .adm-sign-block {
+                padding: 14px 14px 12px;
+            }
+
+            #newApptModal .adm-modal-header {
+                padding: 14px 16px;
+            }
+
+            #newApptModal .adm-modal-header h2 {
+                font-size: 18px;
+            }
+
+            #newApptModal .adm-form-side h2 {
+                font-size: 18px;
+                margin-bottom: 15px;
+            }
+
+            #newApptModal .adm-consent-side h3 {
+                font-size: 16px;
+            }
+
+            #newApptModal .adm-consent-side {
+                font-size: 12.5px;
+                line-height: 1.5;
+            }
+
+            #newApptModal .adm-form-side label {
+                font-size: 14px;
+            }
+
+            #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
+            #newApptModal .adm-form-side select {
+                padding: 11px 10px;
+                font-size: 16px;
+            }
+
+            #newApptModal .adm-form-side select {
+                padding-right: 46px;
+                font-size: 16px;
+            }
+
+            #newApptModal .adm-form-side input[type="date"] {
+                font-size: 16px;
+                min-height: 46px;
+            }
+
+            #newApptModal .adm-form-side .adm-date-alt,
+            #newApptModal .adm-form-side .flatpickr-input {
+                font-size: 16px;
+                min-height: 46px;
+            }
+
+            #newApptModal .adm-patient-toggle label {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            #newApptModal .adm-yn label {
+                flex: 1;
+                justify-content: center;
+            }
+
+            #newApptModal .adm-consent-label {
+                padding: 12px;
+                gap: 10px;
+                font-size: 13.5px;
+            }
+        }
+
+        @media (max-width: 900px) and (orientation: landscape) {
+            #newApptModal .adm-modal-box {
+                height: 100vh;
+                height: 100dvh;
+            }
+        }
+
+        /* Dark mode mirrors the patient-side appointment modal
+   (see body.dark-mode .appointment-modal-content in index-s.css):
+   neutral #121212 surfaces, #e0e0e0 text, #64b5f6 accent. */
+        body.dark-mode #newApptModal .adm-modal-box {
+            background: #121212;
+            color: #e0e0e0;
+            border-top-color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-modal-header {
+            background: #121212;
+            color: #e0e0e0;
+            border-bottom-color: #333333;
+        }
+
+        body.dark-mode #newApptModal .adm-modal-header h2 {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side {
+            background: #121212;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side label {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side h2 {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-q-row span {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-q-row {
+            border-bottom-color: #333333;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-side {
+            background: #121212;
+            color: #e0e0e0;
+            border-right-color: #333333;
+            border-bottom-color: #333333;
+        }
+
+        body.dark-mode #newApptModal .adm-consent-side h3 {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-sig-clear {
+            background: #444;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-sig-clear:hover {
+            background: #555;
+            border-color: #666;
+            color: #ffffff;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]),
+        body.dark-mode #newApptModal .adm-form-side select,
+        body.dark-mode #newApptModal .adm-form-side .flatpickr-input,
+        body.dark-mode #newApptModal .adm-form-side .adm-date-alt {
+            background: #1e1e1e;
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        /* Restate the chevron as a full shorthand so the repeat/position/size survive
+   and the arrow cannot tile across the field. Matches the patient-side rules
+   for #appointmentForm .adm-select > select. */
+        body.dark-mode #newApptModal .adm-form-side select,
+        body.dark-mode .adm-select>select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: #1e1e1e url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center / 24px 24px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side select:hover,
+        body.dark-mode #newApptModal .adm-form-side select:focus,
+        body.dark-mode .adm-select.is-open>select {
+            border-color: #64b5f6;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+            background: #262626 url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 10px center / 24px 24px;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side select option {
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side select option:checked {
+            background: #1e3a8a;
+            color: #dbeafe;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side input:not([type="radio"]):not([type="checkbox"]):focus,
+        body.dark-mode #newApptModal .adm-form-side .flatpickr-input:focus {
+            border-color: #64b5f6;
+            background-color: #1e1e1e;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.18);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side input::placeholder {
+            color: #7c8aa0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side input[type="date"] {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(78%) sepia(46%) saturate(1120%) hue-rotate(175deg) brightness(103%) contrast(101%);
+        }
+
+        /* Both date fields are Flatpickr alt inputs, so the original date input is
+   hidden - match on the flatpickr class, not only on input[type="date"].
+   This also needs to outrank the light rule's :has() specificity, which the
+   generic dark label rule above does not. */
+        body.dark-mode #newApptModal .adm-form-side .form-group:has(input[type="date"])>label,
+        body.dark-mode #newApptModal .adm-form-side .form-group:has(.flatpickr-input)>label,
+        body.dark-mode #newApptModal .adm-form-side .form-group:has(.adm-date-alt)>label {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #newApptModal .adm-women-box {
+            background: #1a1a1a;
+            border-color: #333333;
+        }
+
+        body.dark-mode #newApptModal .adm-women-box p {
+            color: #e0e0e0;
+        }
+
+        /* =========================
+   SHARED MODAL CLOSE (X) BUTTON
+   Matches the patient-side .close design
+========================== */
+        .modal-x {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            flex-shrink: 0;
+            padding: 0;
+            margin: 0;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 50%;
+            background: #f5f5f5;
+            color: #0d47a1;
+            font-size: 22px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .modal-x svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .modal-x:hover {
+            background: #0d47a1;
+            color: #ffffff;
+            border-color: #0d47a1;
+            transform: rotate(90deg);
+        }
+
+        .modal-x:focus-visible {
+            outline: 2px solid #0d47a1;
+            outline-offset: 2px;
+        }
+
+        body.dark-mode .modal-x {
+            background: #2d2d2d;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .modal-x:hover {
+            background: #64b5f6;
+            color: #0b1220;
+            border-color: #64b5f6;
+        }
+
+        /* The appointment header is white, so it uses the default .modal-x styling */
+        #editPatientModal .modal-x {
+            display: flex !important;
+            visibility: visible !important;
+        }
+
+        #logoutModal .modal-x {
+            float: right;
+            margin-bottom: 10px;
+        }
+
+        #unblockConfirmModal .modal-x {
+            float: right;
+            margin-bottom: 10px;
+        }
+
+        /* Live / Saved chart modals use an icon button instead of a glyph */
+        .chart-modal-close {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            flex-shrink: 0;
+            padding: 0;
+            margin: 0;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 50%;
+            background: #f5f5f5;
+            color: #0d47a1;
+            transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+        }
+
+        .chart-modal-close .material-symbols-rounded {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .chart-modal-close:hover {
+            background: #0d47a1;
+            color: #ffffff;
+            border-color: #0d47a1;
+        }
+
+        .chart-modal-close:focus-visible {
+            outline: 2px solid #0d47a1;
+            outline-offset: 2px;
+        }
+
+        body.dark-mode .chart-modal-close {
+            background: #2d2d2d;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .chart-modal-close:hover {
+            background: #64b5f6;
+            color: #0b1220;
+            border-color: #64b5f6;
+        }
+
+        /* The live chart modal has a dark header, so invert the resting state */
+        .chart-modal-header .chart-modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .chart-modal-header .chart-modal-close:hover {
+            background: #ffffff;
+            color: #0d47a1;
+            border-color: #ffffff;
+        }
+
+        body.dark-mode .chart-modal-header .chart-modal-close {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        body.dark-mode .chart-modal-header .chart-modal-close:hover {
+            background: #64b5f6;
+            color: #0b1220;
+            border-color: #64b5f6;
+        }
+
+        @media (max-width: 600px) {
+            .modal-x {
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+                font-size: 18px;
+            }
+
+            .modal-x svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .chart-modal-close {
+                width: 36px;
+                height: 36px;
+                min-width: 36px;
+                font-size: 18px;
+            }
+
+            .chart-modal-close .material-symbols-rounded {
+                font-size: 18px;
+            }
+        }
+
+        /* Unblock Confirmation Modal - styled buttons */
+        .unblock-modal-btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            letter-spacing: 0.3px;
+        }
+
+        .unblock-modal-btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+
+        .unblock-modal-btn-danger:hover {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+        }
+
+        .unblock-modal-btn-danger:active {
+            transform: translateY(0);
+        }
+
+        .unblock-modal-btn-cancel {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+
+        .unblock-modal-btn-cancel:hover {
+            background: #e2e8f0;
+            color: #334155;
+            border-color: #94a3b8;
+        }
+
+        .unblock-modal-btn-cancel:active {
+            transform: translateY(0);
+        }
+
+        body.dark-mode .unblock-modal-btn-cancel {
+            background: #334155;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+
+        body.dark-mode .unblock-modal-btn-cancel:hover {
+            background: #475569;
+            color: #ffffff;
+            border-color: #64748b;
+        }

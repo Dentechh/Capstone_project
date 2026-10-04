@@ -1,0 +1,213 @@
+
+        <div id="editPatientModal" class="modal ep-modal" style="display:none;">
+            <div class="modal-content ep-card">
+
+                <div class="ep-head">
+                    <div class="ep-head-text">
+                        <h2>Edit Patient</h2>
+                        <p class="ep-sub" id="editPatientSubtitle"></p>
+                    </div>
+                    <span class="modal-x" role="button" tabindex="0" aria-label="Close"
+                        onclick="closeEditPatientModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg></span>
+                </div>
+
+                <form id="editPatientForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" id="editPatientUid" name="uid">
+                    <input type="hidden" id="editPatientPatientId" name="patient_id">
+
+                    <div class="ep-body">
+
+                        <section class="ep-group">
+                            <h3 class="ep-group-title">Name</h3>
+                            <div class="ep-grid">
+                                <div class="ep-field">
+                                    <label for="editFirstName">First Name <span class="ep-req">*</span></label>
+                                    <input type="text" id="editFirstName" name="first_name" autocomplete="given-name"
+                                        required>
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editMiddleName">Middle Name</label>
+                                    <input type="text" id="editMiddleName" name="middle_name"
+                                        autocomplete="additional-name">
+                                </div>
+                                <div class="ep-field ep-field--full">
+                                    <label for="editLastName">Last Name <span class="ep-req">*</span></label>
+                                    <input type="text" id="editLastName" name="last_name" autocomplete="family-name"
+                                        required>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="ep-group">
+                            <h3 class="ep-group-title">Contact</h3>
+                            <div class="ep-grid">
+                                <div class="ep-field">
+                                    <label for="editContactNumber">Contact Number</label>
+                                    <input type="text" id="editContactNumber" name="contact_number" inputmode="tel"
+                                        autocomplete="tel">
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editEmail">Email</label>
+                                    <input type="email" id="editEmail" name="email" autocomplete="email">
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="ep-group">
+                            <h3 class="ep-group-title">Profile</h3>
+                            <div class="ep-grid">
+                                <div class="ep-field">
+                                    <label for="editSex">Sex</label>
+                                    <select id="editSex" name="sex">
+                                        <option value="">-- Not set --</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editCivilStatus">Civil Status</label>
+                                    <select id="editCivilStatus" name="civil_status">
+                                        <option value="">-- Not set --</option>
+                                        <option value="Single">Single</option>
+                                        <option value="Married">Married</option>
+                                        <option value="Widowed">Widowed</option>
+                                        <option value="Separated">Separated</option>
+                                        <option value="Divorced">Divorced</option>
+                                    </select>
+                                    <p class="ep-hint">Auto-filled from the patient's most recent appointment. Correct
+                                        it here if needed.</p>
+                                </div>
+                            </div>
+                        </section>
+
+                    </div>
+
+                    <div class="ep-actions">
+                        <button type="button" class="btn-action ep-cancel"
+                            onclick="closeEditPatientModal()">Cancel</button>
+                        <button type="submit" class="btn-action accept ep-save">Save changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="confirmModal" class="modal ci-danger-modal" style="display:none;">
+            <div class="modal-content ci-danger-card">
+                <span class="ci-danger-icon" id="confirmModalIcon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path>
+                        <path d="M12 17h.01"></path>
+                    </svg>
+                </span>
+
+                <h3 class="ci-danger-title" id="confirmModalTitle">Please confirm</h3>
+                <ul class="ci-danger-details" id="confirmModalDetails" hidden></ul>
+                <p class="ci-danger-text" id="confirmModalMessage"></p>
+                <p class="ci-danger-note" id="confirmModalNote" hidden></p>
+
+                <div class="ci-danger-actions">
+                    <button type="button" id="confirmModalCancelBtn" class="btn-action ci-danger-cancel">Cancel</button>
+                    <button type="button" id="confirmModalOkBtn" class="btn-action ci-danger-confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/patient-edit-confirm-modals.js') }}?v=1"></script>
+
+        <div id="checkInfoModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="ci-head">
+                    <div class="ci-head-text">
+                        <h2>Treatment Information</h2>
+                        <p class="ci-sub" id="ciSubtitle"></p>
+                    </div>
+                    <span class="modal-x" role="button" tabindex="0" aria-label="Close"
+                        onclick="closeCheckInfoModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg></span>
+                </div>
+
+                <div class="ci-table-scroll">
+                    <table class="treatment-table">
+                        <thead>
+                            <tr>
+                                <th>Assigned Dentist</th>
+                                <th>Medicine</th>
+                                <th>Visit Date</th>
+                                <th>Procedure</th>
+                                <th>Value</th>
+                                <th>Fee Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                                <th>Next Appointment</th>
+                                <th>Chart</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkInfoBody">
+                            <tr>
+                                <td colspan="11" style="text-align:center;">No treatment information found.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deliberately separate from the shared #confirmModal used by the patient
+    REMOVE flow, so this one can be styled for treatment records without
+    touching that dialog. -->
+        <div id="deleteTreatmentModal" class="modal ci-danger-modal" style="display:none;">
+            <div class="modal-content ci-danger-card">
+                <span class="ci-danger-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                        <path d="M10 11v6"></path>
+                        <path d="M14 11v6"></path>
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+                    </svg>
+                </span>
+
+                <h3 class="ci-danger-title">Delete this treatment record?</h3>
+                <p class="ci-danger-text" id="deleteTreatmentMessage">This row will be removed from the patient's
+                    history.</p>
+
+                <ul class="ci-danger-details" id="deleteTreatmentDetails"></ul>
+
+                <p class="ci-danger-note">
+                    This also subtracts the row from the clinic's income and outstanding totals.
+                    It cannot be undone.
+                </p>
+
+                <div class="ci-danger-actions">
+                    <button type="button" class="btn-action ci-danger-cancel"
+                        id="deleteTreatmentCancelBtn">Cancel</button>
+                    <button type="button" class="btn-action ci-danger-confirm" id="deleteTreatmentOkBtn">Delete
+                        record</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/check-info-modal.js') }}?v=1"></script>
+
+
+        <script src="{{ url_for('static', filename='js/patient-profile-modal.js') }}?v=1"></script>
+
+
+
+
+
+
+
+

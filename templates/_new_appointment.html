@@ -1,0 +1,546 @@
+    <div id="newApptModal" class="modal" style="display:none;">
+        <div class="adm-modal-box">
+            <div class="adm-modal-header">
+                <h2>Book Appointment (Admin)</h2>
+                <button type="button" class="modal-x" aria-label="Close"
+                    onclick="document.getElementById('newApptModal').style.display='none'"><svg viewBox="0 0 24 24"
+                        width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+
+            <!-- Step indicator -->
+            <ol class="adm-steps" id="admSteps">
+                <li class="adm-step is-active" data-adm-step-tab="1">
+                    <span class="adm-step__num" aria-hidden="true">1</span>
+                    <span class="adm-step__text">
+                        <span class="adm-step__title">Appointment Details</span>
+                        <span class="adm-step__hint">Patient, schedule &amp; medical history</span>
+                    </span>
+                </li>
+                <li class="adm-step" data-adm-step-tab="2">
+                    <span class="adm-step__num" aria-hidden="true">2</span>
+                    <span class="adm-step__text">
+                        <span class="adm-step__title">Consent &amp; Signature</span>
+                        <span class="adm-step__hint">Read the consent, then sign</span>
+                    </span>
+                </li>
+            </ol>
+
+            <div class="adm-modal-body">
+                <!-- One form spans both steps so the consent checkbox and the signature
+            are submitted together with the appointment fields. -->
+                <form id="newApptForm" class="adm-wizard">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- ============ STEP 1 : APPOINTMENT DETAILS ============ -->
+                    <section class="adm-page is-active" data-adm-step="1" aria-label="Appointment details">
+                        <div class="adm-form-side">
+                            <h2>Appointment Details</h2>
+
+                            <!-- Patient Type -->
+                            <div class="form-group">
+                                <label>Patient Type</label>
+
+                                <div class="adm-patient-toggle">
+                                    <label>
+                                        <input type="radio" name="patientMode" value="existing" checked
+                                            onchange="togglePatientMode()">
+                                        <span class="adm-opt">
+                                            <span class="adm-opt-title">Existing Patient</span>
+                                            <span class="adm-opt-hint">Search current records</span>
+                                        </span>
+                                    </label>
+
+                                    <label>
+                                        <input type="radio" name="patientMode" value="new"
+                                            onchange="togglePatientMode()">
+                                        <span class="adm-opt">
+                                            <span class="adm-opt-title">New Patient</span>
+                                            <span class="adm-opt-hint">Register a new record</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+
+                            <!-- Existing Patient -->
+                            <div id="existingPatientSection">
+
+                                <div class="form-group">
+                                    <label for="admPatientSearch">
+                                        Search Existing Patient
+                                    </label>
+
+                                    <input type="text" id="admPatientSearch" class="form-control"
+                                        placeholder="Search patient name..." autocomplete="off">
+
+                                    <select id="admPatientSelect" name="patient_id" class="form-control"
+                                        style="margin-top: 8px;">
+                                        <option value="">Select a patient</option>
+                                    </select>
+                                </div>
+
+                                <!-- Used by the existing backend for compatibility -->
+                                <input type="hidden" id="admPatientUid" name="uid" value="">
+
+                            </div>
+
+
+                            <!-- New Patient -->
+                            <div id="newPatientSection" style="display: none;">
+
+                                <div class="form-group">
+                                    <label for="admFirstName">First Name</label>
+                                    <input type="text" id="admFirstName" name="First_Name" class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="admMiddleName">Middle Name</label>
+                                    <input type="text" id="admMiddleName" name="Middle_Name" class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="admLastName">Last Name</label>
+                                    <input type="text" id="admLastName" name="Last_Name" class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="admBirthday">Birthday</label>
+                                    <input type="date" id="admBirthday" name="Birthday"
+                                        class="form-control adm-date-native">
+                                </div>
+
+                            </div>
+
+                            <div id="admDuplicateWarning"
+                                style="display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px; margin-top:10px; font-size:13px;">
+                                ⚠️ A patient named <strong id="admDupName"></strong> already exists in the system.
+                                <div style="margin-top:8px; display:flex; gap:8px;">
+                                    <button type="button" id="admUseDupBtn" class="btn-action accept"
+                                        style="padding:6px 12px; font-size:12px;">Use This Existing Patient</button>
+                                    <button type="button" id="admDismissDupBtn" class="btn-action"
+                                        style="padding:6px 12px; font-size:12px; background:#6b7280; color:#fff;">Continue
+                                        as New</button>
+                                </div>
+                            </div>
+
+
+                            <!-- Contact & Personal Info -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admContactNumber">Contact Number</label>
+                                    <input type="tel" id="admContactNumber" name="Contact_number" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admAge">Age</label>
+                                    <input type="number" id="admAge" name="Age" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admSexSelect">Sex</label>
+                                    <select id="admSexSelect" name="Sex" class="form-control">
+                                        <option value="" disabled selected>Sex</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admHouseNo">House No.</label>
+                                    <input type="text" id="admHouseNo" name="House_No" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admStreet">Street</label>
+                                    <input type="text" id="admStreet" name="Street" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admBrgy">Barangay</label>
+                                    <input type="text" id="admBrgy" name="Brgy" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admMunicipality">Municipality/City</label>
+                                    <input type="text" id="admMunicipality" name="Municipality" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admCity">Province</label>
+                                    <input type="text" id="admCity" name="City" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admNationality">Nationality</label>
+                                    <input type="text" id="admNationality" name="Nationality" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admReligion">Religion</label>
+                                    <select id="admReligion" name="Religion" class="form-control">
+                                        <option value="" disabled selected>Religion</option>
+                                        <option value="Roman Catholic">Roman Catholic</option>
+                                        <option value="Christian">Christian</option>
+                                        <option value="Islam">Islam</option>
+                                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
+                                        <option value="Baptist">Baptist</option>
+                                        <option value="Methodist">Methodist</option>
+                                        <option value="Born Again Christian">Born Again Christian</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admOccupation">Occupation</label>
+                                    <select id="admOccupation" name="Occupation" class="form-control">
+                                        <option value="" disabled selected>Occupation</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Employee">Employee</option>
+                                        <option value="Self-Employed">Self-Employed</option>
+                                        <option value="Teacher">Teacher</option>
+                                        <option value="Nurse">Nurse</option>
+                                        <option value="Doctor">Doctor</option>
+                                        <option value="Business Owner">Business Owner</option>
+                                        <option value="Housewife">Housewife</option>
+                                        <option value="Retired">Retired</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admCivilStatus">Civil Status</label>
+                                    <select id="admCivilStatus" name="Civil_Status" class="form-control">
+                                        <option value="" disabled selected>Civil Status</option>
+                                        <option value="Single">Single</option>
+                                        <option value="Married">Married</option>
+                                        <option value="Widowed">Widowed</option>
+                                        <option value="Separated">Separated</option>
+                                        <option value="Divorced">Divorced</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Service -->
+                            <div class="form-group">
+                                <label for="admService">Service</label>
+                                <select id="admService" name="Service" class="form-control" required>
+                                    <option value="" disabled selected>Choose a service</option>
+                                    <option value="Dental Consultation">Dental Consultation</option>
+                                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                                    <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                                    <option value="Crowns and Bridges">Crowns and Bridges</option>
+                                    <option value="Teeth Whitening">Teeth Whitening</option>
+                                    <option value="Fluoride Treatment">Fluoride Treatment</option>
+                                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                                    <option value="Periapical Xray">Periapical Xray</option>
+                                </select>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admUrgencyLevel">Urgency Level</label>
+                                    <select id="admUrgencyLevel" name="UrgencyLevel" class="form-control">
+                                        <option value="Normal" selected>Normal</option>
+                                        <option value="Emergency">Emergency</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admApptDate">Date of Appointment</label>
+                                    <input type="date" id="admApptDate" class="form-control adm-date-native">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admApptTime">Time of Appointment</label>
+                                    <select id="admApptTime" class="form-control" required>
+                                        <option value="" disabled selected>Select time</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="13:00">1:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="16:00">4:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" name="appointment_date" id="admApptDateHidden">
+
+                            <div class="form-group">
+                                <label for="admDentistName">Dentist Name <span class="adm-req"
+                                        aria-hidden="true">*</span></label>
+                                <div class="dentist-field">
+                                    <input type="text" id="admDentistName" name="dentist_name" class="dentist-input"
+                                        placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
+                                        spellcheck="false" role="combobox" aria-autocomplete="list"
+                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
+                                        aria-label="Dentist name">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
+                                        title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Medical History -->
+                            <div class="form-group">
+                                <label>Medical History</label>
+
+                                <div class="adm-q-row">
+                                    <span>1. Are you in good health?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q1" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="q1" value="No"> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="adm-q-row">
+                                    <span>2. Under medical treatment now?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q2" value="Yes"
+                                                onclick="admToggleSpec('q2', false)"> Yes</label>
+                                        <label><input type="radio" name="q2" value="No"
+                                                onclick="admToggleSpec('q2', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q2_spec" id="adm_q2_spec" placeholder="If so, what condition?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>3. Serious illness / surgical operation?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q3" value="Yes"
+                                                onclick="admToggleSpec('q3', false)"> Yes</label>
+                                        <label><input type="radio" name="q3" value="No"
+                                                onclick="admToggleSpec('q3', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q3_spec" id="adm_q3_spec" placeholder="What illness/operation?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>4. Ever been hospitalized?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q4" value="Yes"
+                                                onclick="admToggleSpec('q4', false)"> Yes</label>
+                                        <label><input type="radio" name="q4" value="No"
+                                                onclick="admToggleSpec('q4', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q4_spec" id="adm_q4_spec" placeholder="When and why?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>5. Taking any medication?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q5" value="Yes"
+                                                onclick="admToggleSpec('q5', false)"> Yes</label>
+                                        <label><input type="radio" name="q5" value="No"
+                                                onclick="admToggleSpec('q5', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q5_spec" id="adm_q5_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>6. Use tobacco products?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q6" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="q6" value="No"> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="adm-q-row">
+                                    <span>7. Any allergy?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q7" value="Yes"
+                                                onclick="admToggleSpec('q7', false)"> Yes</label>
+                                        <label><input type="radio" name="q7" value="No"
+                                                onclick="admToggleSpec('q7', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q7_spec" id="adm_q7_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>9. Any medical condition/s?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q9" value="Yes"
+                                                onclick="admToggleSpec('q9', false)"> Yes</label>
+                                        <label><input type="radio" name="q9" value="No"
+                                                onclick="admToggleSpec('q9', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q9_spec" id="adm_q9_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+                            </div>
+
+                            <!-- Women's Health -->
+                            <div id="admWomenSection" class="adm-women-box">
+                                <p style="margin:0 0 8px;font-weight:600;">For Women Only</p>
+                                <div class="adm-q-row">
+                                    <span>Pregnant?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_preg" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_preg" value="No"> No</label>
+                                    </div>
+                                </div>
+                                <div class="adm-q-row">
+                                    <span>Nursing?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_nurse" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_nurse" value="No"> No</label>
+                                    </div>
+                                </div>
+                                <div class="adm-q-row">
+                                    <span>Birth control pills?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_pill" value="No"> No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- Appointment Source -->
+                            <div class="form-group">
+                                <label>Appointment Source</label>
+
+                                <div class="adm-patient-toggle">
+                                    <label>
+                                        <input type="radio" name="appointment_source" value="walk-in" checked>
+                                        <span class="adm-opt">
+                                            <span class="adm-opt-title">Walk-in</span>
+                                            <span class="adm-opt-hint">Came to the clinic</span>
+                                        </span>
+                                    </label>
+
+                                    <label>
+                                        <input type="radio" name="appointment_source" value="online">
+                                        <span class="adm-opt">
+                                            <span class="adm-opt-title">Online</span>
+                                            <span class="adm-opt-hint">Booked via website</span>
+                                        </span>
+                                    </label>
+
+                                    <label>
+                                        <input type="radio" name="appointment_source" value="admin">
+                                        <span class="adm-opt">
+                                            <span class="adm-opt-title">Admin/Staff</span>
+                                            <span class="adm-opt-hint">Set by the front desk</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div><!-- /.adm-form-side -->
+                    </section><!-- /step 1 -->
+
+                    <!-- ============ STEP 2 : INFORMED CONSENT + SIGNATURE ============ -->
+                    <section class="adm-page" data-adm-step="2" aria-label="Informed consent and signature" hidden>
+                        <div class="adm-consent-side">
+                            <h3>Informed Consent</h3>
+                            <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment
+                                done by the dentist after the procedure, risk, benefits &amp; cost have been fully
+                                explained. These include, but are not limited to, X-rays, cleaning, periodontal
+                                treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or
+                                dentures, local anesthetics &amp; surgical cases.</p>
+                            <p><strong>DRUGS &amp; MEDICATIONS:</strong> I understand that antibiotics, analgesics,
+                                &amp; other medications can cause allergic reactions like redness &amp; swelling of
+                                tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
+                            <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be
+                                necessary to change/add procedures because of conditions found while working on the
+                                teeth that were not discovered during examination.</p>
+                            <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or radiograph may be necessary as
+                                part of diagnostic aid, but that will not give a 100% assurance for the accuracy of the
+                                treatment.</p>
+                            <p><strong>REMOVAL OF TEETH:</strong> I understand alternatives to tooth removal exist and I
+                                authorize the dentist to proceed after these have been explained to me.</p>
+                            <p><strong>CROWNS (CAPS) &amp; BRIDGES:</strong> Preparing a tooth may irritate the nerve
+                                tissue, leaving it sensitive to heat, cold &amp; pressure.</p>
+                            <p><strong>ENDODONTICS (ROOT CANAL):</strong> There is no guarantee that a root canal
+                                treatment will save a tooth.</p>
+                            <p><strong>PERIODONTAL DISEASE:</strong> This is a serious condition causing gum &amp; bone
+                                inflammation and/or loss.</p>
+                            <p><strong>FILLINGS:</strong> Care must be exercised in chewing on a new filling, especially
+                                during the first 24 hours.</p>
+                            <p><strong>DENTURES:</strong> Wearing dentures can be difficult at first — sore spots,
+                                altered speech &amp; difficulty eating are common.</p>
+                            <hr>
+                            <p style="font-style:italic;">I understand that dentistry is not an exact science and that
+                                no dentist can properly guarantee accurate results all the time.</p>
+
+                            <!-- Consent acknowledgement -->
+                            <div class="form-group adm-consent-ack">
+                                <label class="adm-consent-label">
+                                    <input type="checkbox" id="admConsentCheck" required>
+                                    <span class="adm-consent-check-text">
+                                        I confirm that the patient information is correct, and that the
+                                        risks, benefits and costs of the proposed treatment have been explained to me.
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Signature: last block on the page -->
+                            <div class="adm-sign-block">
+                                <div class="adm-sign-block__head">
+                                    <p class="adm-sign-block__label">Patient Signature</p>
+                                    <p class="adm-sign-block__meta">
+                                        Signed on <span id="admSignDate">—</span>
+                                        <span class="adm-sign-block__sep">&middot;</span>
+                                        <span id="admSignPatientName">this patient</span>
+                                    </p>
+                                </div>
+
+                                <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
+
+                                <div class="adm-sign-block__actions">
+                                    <button type="button" class="adm-sig-clear"
+                                        onclick="admClearSignature()">Clear</button>
+                                    <span class="adm-sign-block__hint">Sign inside the box with a mouse, stylus or
+                                        finger.</span>
+                                </div>
+
+                                <div class="adm-sign-block__line">
+                                    <span class="adm-sign-block__rule" aria-hidden="true"></span>
+                                    <span class="adm-sign-block__caption">Signature of Patient / Authorized
+                                        Representative</span>
+                                </div>
+                            </div>
+                        </div><!-- /.adm-consent-side -->
+                    </section><!-- /step 2 -->
+
+                    <!-- Wizard navigation -->
+                    <footer class="adm-wizard-nav">
+                        <button type="button" id="admStepBack" class="adm-nav-btn" hidden>
+                            <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+                            Back
+                        </button>
+                        <span class="adm-wizard-nav__status" id="admStepStatus">Step 1 of 2</span>
+                        <span class="adm-wizard-nav__spacer"></span>
+                        <button type="button" id="admStepNext" class="adm-nav-btn adm-nav-btn--primary">
+                            Next
+                            <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+                        </button>
+                        <button type="submit" id="admSubmitBtn" class="btn btn-primary adm-nav-btn adm-nav-btn--primary"
+                            hidden>
+                            <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                            Confirm Appointment
+                        </button>
+                    </footer>
+
+                </form>
+            </div>
+        </div>
+    </div>
+

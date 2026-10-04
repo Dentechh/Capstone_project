@@ -1,0 +1,155 @@
+        <div id="section-dashboard" class="content-section active-section">
+            <div class="metric-cards">
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 data-target="{{ approved_count }}">0</h3>
+                        <p>Accepted Patients</p>
+                    </div>
+                    <div class="metric-bg-icon">&#128101;</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 data-target="{{ pending_count }}">0</h3>
+                        <p>Pending Requests</p>
+                    </div>
+                    <div class="metric-bg-icon">&#9203;</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
+                    <div class="metric-data">
+                        <h3 data-target="{{ total_patients }}">0</h3>
+                        <p>Total Patients</p>
+                    </div>
+                    <div class="metric-bg-icon">&#128197;</div>
+                </div>
+            </div>
+
+            <!-- Mini Stats Row -->
+            <div class="mini-stats-row">
+                <div class="mini-stat-card emergency">
+                    <div class="mini-stat-icon">🚨</div>
+                    <div class="mini-stat-data">
+                        <h3 data-target="{{ urgency_counts.Emergency | default(0) }}">0</h3>
+                        <p>Emergency</p>
+                    </div>
+                </div>
+
+                <div class="mini-stat-card normal">
+                    <div class="mini-stat-icon">📋</div>
+                    <div class="mini-stat-data">
+                        <h3 data-target="{{ urgency_counts.Normal | default(0) }}">0</h3>
+                        <p>Normal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="dashboard-charts">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Patient Status</h3>
+                        <p>Accepted vs Pending distribution</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="statusDonut"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Appointment Urgency</h3>
+                        <p>Breakdown by urgency level</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="urgencyBar"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD THIS BUTTON GROUP HERE -->
+            <div class="proc-period-btn-group">
+                <button class="proc-period-btn active" data-period="overall"
+                    onclick="loadProcedureCharts('overall')">Overall</button>
+                <button class="proc-period-btn" data-period="today"
+                    onclick="loadProcedureCharts('today')">Today</button>
+                <button class="proc-period-btn" data-period="weekly"
+                    onclick="loadProcedureCharts('weekly')">Weekly</button>
+                <button class="proc-period-btn" data-period="monthly"
+                    onclick="loadProcedureCharts('monthly')">Monthly</button>
+                <button class="proc-period-btn" data-period="yearly"
+                    onclick="loadProcedureCharts('yearly')">Yearly</button>
+            </div>
+
+            <div class="dashboard-charts" style="margin-top:24px;">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Procedures Performed</h3>
+                        <p>Count of each procedure across all patients</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="procedureCountChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Revenue by Procedure</h3>
+                        <p>Total amount paid, grouped by procedure</p>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="procedureRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Approved Patients -->
+            <div class="recent-activity">
+                <div class="recent-header">
+                    <h3>Recent Accepted Patients</h3>
+                    <a href="javascript:void(0)" onclick="showSection('mypatients')" class="view-all">View All
+                        &rarr;</a>
+                </div>
+                <div class="recent-list">
+                    {% if recent_approve %}
+                    {% for patient in recent_approve %}
+                    <div class="recent-item">
+                        <div class="recent-avatar">{{ patient.FirstName[0]|default('?') }}</div>
+                        <div class="recent-info">
+                            <strong>{{ patient.FirstName }}</strong>
+                            <span>Account No: {{ patient.uid }}</span>
+                        </div>
+                        <div class="recent-meta">
+                            <span class="recent-date">{{ patient.accepted_at|default('N/A') }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p style="text-align:center; color:#546e7a;">No approved patients yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+

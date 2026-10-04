@@ -1,0 +1,37 @@
+
+
+        <div id="section-records" class="content-section">
+            <div class="search-bar-container">
+                <input type="text" id="patientSearch" placeholder="Search patients..." class="search-input"
+                    onkeyup="filterPatients()">
+            </div>
+            <section class="content-panel">
+                <table class="appointment-table" id="recordsTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Last Visit</th>
+                            <th>Contact</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#PT-001</td>
+                            <td>Jericho Manalo</td>
+                            <td>Mar 15, 2026</td>
+                            <td>0912-345-6789</td>
+                            <td><button class="btn-action accept" data-name="Jericho Manalo" data-uid="#PT-001"
+                                    data-sex="Male" data-age="26" data-blood="B+" data-lastname="" data-middlename=""
+                                    data-birthday="" data-nationality="" data-religion="" data-occupation=""
+                                    data-civilstatus="" data-contact="" data-service="" data-q1="N" data-q2="N"
+                                    data-q3="N" data-q4="N" data-q5="N" data-q6="N" data-q7="N" data-q9="N"
+                                    data-w-preg="N" data-w-nurse="N" data-w-pill="N">View History</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+
+        <!-- Patient Dental Chart -->

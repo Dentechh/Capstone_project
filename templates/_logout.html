@@ -1,0 +1,19 @@
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal" style="display: none;">
+        <div class="modal-content auth-card" style="max-width: 400px;">
+            <span class="modal-x" role="button" tabindex="0" aria-label="Close" onclick="closeLogoutModal()"><svg
+                    viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg></span>
+            <h2>Confirm Logout</h2>
+            <p style="margin: 20px 0; text-align: center;">Are you sure you want to logout?</p>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="confirmLogout()" class="unblock-modal-btn unblock-modal-btn-danger">Yes,
+                    Logout</button>
+                <button onclick="closeLogoutModal()" class="unblock-modal-btn unblock-modal-btn-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+

@@ -1,0 +1,92 @@
+        <div id="section-mypatients" class="content-section">
+            <section class="content-panel">
+                <div class="filter-bar">
+                    <div class="filter-search-wrap">
+                        <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
+                        <input type="text" id="myPatientSearch" placeholder="Search patients by name..."
+                            class="search-input filter-search" aria-label="Search patients by name"
+                            onkeyup="filterMyPatients()">
+                    </div>
+                    <div class="filter-group">
+                        <button type="button" id="sortMyPatientsBtn" class="btn-action filter-btn filter-btn--sort"
+                            onclick="sortMyPatients()">
+                            <span class="material-symbols-rounded" aria-hidden="true">sort_by_alpha</span>
+                            <span class="filter-btn__label">A-Z</span>
+                            <span class="material-symbols-rounded filter-btn__dir"
+                                aria-hidden="true">arrow_upward</span>
+                        </button>
+                        <button type="button" id="sortMyPatientsDateBtn" class="btn-action filter-btn filter-btn--sort"
+                            onclick="sortMyPatientsByDate()">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_today</span>
+                            <span class="filter-btn__label">Newest</span>
+                            <span class="material-symbols-rounded filter-btn__dir"
+                                aria-hidden="true">arrow_downward</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="myPatientsCursor" data-cursor="{{ my_patients_next_cursor or '' }}" style="display:none;">
+                </div>
+                <table class="appointment-table" id="myPatientsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Birthday</th>
+                            <th>Sex</th>
+                            <th>Civil Status</th>
+                            <th>Mobile Number</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in my_patients %}
+                        <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
+                            <td data-cell="name">{{ appointment.full_name or appointment.FirstName or '' }}</td>
+                            <td>{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
+                            <td>{{ appointment.get('birthday') or '-' }}</td>
+                            <td data-cell="sex">{{ appointment.get('sex') or '-' }}</td>
+                            <td data-cell="civil">{{ appointment.get('civil_status') or '-' }}</td>
+                            <td data-cell="mobile">{{ appointment.get('contact_number') or '-' }}</td>
+                            <td>
+                                <div class="mp-actions">
+                                    <button type="button" class="btn-action accept mp-info-btn"
+                                        title="Treatment information" aria-label="Treatment information"
+                                        onclick="openCheckInfoModal('{{ appointment.patient_id }}', this.closest('tr').querySelector('td').textContent.trim())">
+                                        <span class="material-symbols-rounded" aria-hidden="true">info</span>
+                                    </button>
+
+                                    <button type="button" class="btn-action edit-patient-btn" title="Edit patient"
+                                        aria-label="Edit patient" data-uid="{{ appointment.uid }}"
+                                        data-patient-id="{{ appointment.patient_id }}"
+                                        data-firstname="{{ appointment.get('firstname', appointment.get('first_name', '')) }}"
+                                        data-middlename="{{ appointment.get('middlename', appointment.get('middle_name', '')) }}"
+                                        data-lastname="{{ appointment.get('lastname', appointment.get('last_name', '')) }}"
+                                        data-contact="{{ appointment.get('contact_number', '') }}"
+                                        data-email="{{ appointment.get('email', '') }}"
+                                        data-sex="{{ appointment.get('sex', '') }}"
+                                        data-civilstatus="{{ appointment.get('civil_status', '') }}">
+                                        <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+                                    </button>
+
+                                    <button type="button" class="btn-action delete-patient-btn" title="Remove patient"
+                                        aria-label="Remove patient" data-uid="{{ appointment.uid }}"
+                                        data-patient-id="{{ appointment.patient_id }}"
+                                        data-name="{{ appointment.full_name or appointment.FirstName or 'this patient' }}">
+                                        <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div style="text-align:center; margin-top:16px;">
+                    <button type="button" id="myPatientsLoadMoreBtn" class="btn-action filter-btn" {% if not
+                        my_patients_next_cursor %}style="display:none;" {% endif %}>
+                        Load More
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/mypatients-list.js') }}?v=1"></script>

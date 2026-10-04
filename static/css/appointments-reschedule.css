@@ -1,0 +1,374 @@
+        /* ---- Appointments table: blocked flag + reschedule button ---- */
+        .appt-actions .appt-reschedule-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #b45309;
+        }
+
+        .appt-actions .appt-reschedule-btn:hover {
+            background: #fef3c7;
+        }
+
+        .appt-blocked-chip {
+            display: block;
+            width: fit-content;
+            margin-top: 5px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        tr.appt-row--blocked td:first-child {
+            box-shadow: inset 3px 0 0 #ef4444;
+        }
+
+        tr.appt-row--blocked .appt-reschedule-btn {
+            background: #fef3c7;
+            box-shadow: 0 0 0 2px #f59e0b;
+        }
+
+        body.dark-mode .appt-actions .appt-reschedule-btn {
+            color: #fbbf24;
+        }
+
+        body.dark-mode .appt-actions .appt-reschedule-btn:hover {
+            background: rgba(251, 191, 36, 0.15);
+        }
+
+        body.dark-mode .appt-blocked-chip {
+            background: #450a0a;
+            color: #fca5a5;
+        }
+
+        body.dark-mode tr.appt-row--blocked .appt-reschedule-btn {
+            background: rgba(251, 191, 36, 0.18);
+        }
+
+        /* ---- Reschedule modal ---- */
+        #rescheduleModal .rs-card {
+            position: relative;
+            width: 94%;
+            max-width: 880px;
+            padding: 28px 30px 24px;
+            border-radius: 18px;
+            box-sizing: border-box;
+        }
+
+        #rescheduleModal .rs-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: #64748b;
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        #rescheduleModal .rs-close:hover {
+            background: #f1f5f9;
+        }
+
+        #rescheduleModal h2 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        #rescheduleModal .rs-patient {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        #rescheduleModal .rs-current {
+            margin: 6px 0 18px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        #rescheduleModal .rs-current .rs-flag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        #rescheduleModal .rs-body {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 26px;
+            align-items: start;
+        }
+
+        #rescheduleModal .rs-cal {
+            display: flex;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-calendar {
+            box-shadow: none;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-day.rs-partial::after {
+            content: "";
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        #rescheduleModal .rs-slots-title {
+            margin-bottom: 10px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        #rescheduleModal .rs-slot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        #rescheduleModal .rs-hint {
+            grid-column: 1 / -1;
+            padding: 26px 8px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #rescheduleModal .rs-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 11px 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            background: #ffffff;
+            color: #1e293b;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease;
+        }
+
+        #rescheduleModal .rs-slot-time {
+            font-size: 14.5px;
+            font-weight: 800;
+        }
+
+        #rescheduleModal .rs-slot-note {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #16a34a;
+        }
+
+        #rescheduleModal .rs-slot.is-open:hover {
+            background: #eff6ff;
+            border-color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-slot.is-selected {
+            background: #0d47a1;
+            border-color: #0d47a1;
+            color: #ffffff;
+        }
+
+        #rescheduleModal .rs-slot.is-selected .rs-slot-note {
+            color: #bfdbfe;
+        }
+
+        #rescheduleModal .rs-slot:disabled {
+            cursor: not-allowed;
+        }
+
+        #rescheduleModal .rs-slot.is-blocked {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        #rescheduleModal .rs-slot.is-blocked .rs-slot-note {
+            color: #b91c1c;
+        }
+
+        #rescheduleModal .rs-slot.is-taken,
+        #rescheduleModal .rs-slot.is-past {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        #rescheduleModal .rs-slot.is-taken .rs-slot-note,
+        #rescheduleModal .rs-slot.is-past .rs-slot-note {
+            color: #94a3b8;
+        }
+
+        #rescheduleModal .rs-slot.is-current {
+            background: #eff6ff;
+            border: 1px dashed #93c5fd;
+            color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-slot.is-current .rs-slot-note {
+            color: #1e63cd;
+        }
+
+        #rescheduleModal .rs-summary {
+            margin: 20px 0 16px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: #334155;
+            font-size: 14.5px;
+            font-weight: 700;
+        }
+
+        #rescheduleModal .rs-summary.is-ready {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        #rescheduleModal .rs-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        #rescheduleModal .rs-btn {
+            min-width: 120px;
+            padding: 12px 22px;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        #rescheduleModal .rs-btn-ghost {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #475569;
+        }
+
+        #rescheduleModal .rs-btn-primary {
+            background: #0d47a1;
+            color: #ffffff;
+        }
+
+        #rescheduleModal .rs-btn-primary:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        body.dark-mode #rescheduleModal .rs-card {
+            background: #1e293b;
+        }
+
+        body.dark-mode #rescheduleModal h2,
+        body.dark-mode #rescheduleModal .rs-slots-title {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #rescheduleModal .rs-patient {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-current,
+        body.dark-mode #rescheduleModal .rs-close {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #rescheduleModal .rs-close:hover {
+            background: #334155;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot {
+            background: #0f172a;
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-open:hover {
+            background: #172554;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-selected {
+            background: #1e63cd;
+            border-color: #1e63cd;
+            color: #ffffff;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-blocked {
+            background: #450a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-taken,
+        body.dark-mode #rescheduleModal .rs-slot.is-past {
+            background: #1e293b;
+            color: #64748b;
+        }
+
+        body.dark-mode #rescheduleModal .rs-slot.is-current {
+            background: #172554;
+            border-color: #1e40af;
+            color: #93c5fd;
+        }
+
+        body.dark-mode #rescheduleModal .rs-summary {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode #rescheduleModal .rs-summary.is-ready {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-ghost {
+            background: #1e293b;
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+
+        body.dark-mode #rescheduleModal .rs-cal .flatpickr-calendar {
+            background: #0f172a;
+            border-color: #334155;
+        }
+
+        @media (max-width: 760px) {
+            #rescheduleModal .rs-body {
+                grid-template-columns: 1fr;
+            }
+
+            #rescheduleModal .rs-slot-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }

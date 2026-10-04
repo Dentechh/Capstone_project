@@ -1,0 +1,120 @@
+    <!-- Live Dental Chart Modal -->
+    <div id="liveChartModal" class="chart-modal-overlay" style="display: none;">
+        <div class="chart-modal-content">
+            <div class="chart-modal-header">
+                <h3>Dental Record Chart</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="modal-download-pdf-btn" onclick="downloadDentalChartPDF()"
+                        style="background: var(--gold); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">download</span>
+                        Download PDF
+                    </button>
+                    <button class="chart-modal-close" onclick="closeLiveChartModal()" title="Close">
+                        <span class="material-symbols-rounded">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="live-modal-chart-content" class="chart-modal-body">
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Chart View Modal -->
+    <div id="chartViewModal" class="chart-view-modal-overlay" style="display: none;">
+        <div class="chart-view-modal-content">
+
+            <div class="chart-view-modal-header">
+                <div class="chart-view-heading">
+                    <h3>Saved Dental Chart</h3>
+                    <p class="chart-view-meta" id="chartViewMeta"></p>
+                </div>
+                <button class="chart-modal-close" onclick="closeChartViewModal()" title="Close chart viewer"
+                    aria-label="Close chart viewer">
+                    <span class="material-symbols-rounded" aria-hidden="true">close</span>
+                </button>
+            </div>
+
+            <div class="chart-view-toolbar" role="toolbar" aria-label="Chart viewer controls">
+                <div class="chart-tool-group">
+                    <button type="button" class="chart-tool-btn" id="chartZoomOutBtn" onclick="chartViewerZoomBy(0.8)"
+                        title="Zoom out (-)" aria-label="Zoom out">
+                        <span class="material-symbols-rounded" aria-hidden="true">zoom_out</span>
+                    </button>
+                    <output class="chart-zoom-readout" id="chartZoomReadout" aria-live="polite"
+                        aria-label="Zoom level">100%</output>
+                    <button type="button" class="chart-tool-btn" id="chartZoomInBtn" onclick="chartViewerZoomBy(1.25)"
+                        title="Zoom in (+)" aria-label="Zoom in">
+                        <span class="material-symbols-rounded" aria-hidden="true">zoom_in</span>
+                    </button>
+                </div>
+
+                <span class="chart-tool-sep" aria-hidden="true"></span>
+
+                <div class="chart-tool-group">
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerFit()" title="Fit to window (0)"
+                        aria-label="Fit to window">
+                        <span class="material-symbols-rounded" aria-hidden="true">fit_screen</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerActualSize()"
+                        title="Actual size 1:1 (1)" aria-label="Actual size">
+                        <span class="material-symbols-rounded" aria-hidden="true">looks_one</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerReset()"
+                        title="Reset all transforms" aria-label="Reset viewer">
+                        <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
+                    </button>
+                </div>
+
+                <span class="chart-tool-sep" aria-hidden="true"></span>
+
+                <div class="chart-tool-group">
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerRotate(-90)" title="Rotate left"
+                        aria-label="Rotate left">
+                        <span class="material-symbols-rounded" aria-hidden="true">rotate_left</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerRotate(90)" title="Rotate right"
+                        aria-label="Rotate right">
+                        <span class="material-symbols-rounded" aria-hidden="true">rotate_right</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" id="chartFlipHBtn" onclick="chartViewerFlip('h')"
+                        title="Flip horizontal" aria-label="Flip horizontal">
+                        <span class="material-symbols-rounded" aria-hidden="true">flip</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" id="chartFlipVBtn" onclick="chartViewerFlip('v')"
+                        title="Flip vertical" aria-label="Flip vertical">
+                        <span class="material-symbols-rounded" aria-hidden="true">swap_vert</span>
+                    </button>
+                </div>
+
+                <span class="chart-tool-sep chart-tool-sep--push" aria-hidden="true"></span>
+
+                <div class="chart-tool-group">
+                    <button type="button" class="chart-tool-btn" id="chartFullscreenBtn"
+                        onclick="chartViewerToggleFullscreen()" title="Fullscreen (F)" aria-label="Toggle fullscreen">
+                        <span class="material-symbols-rounded" aria-hidden="true">fullscreen</span>
+                    </button>
+                    <button type="button" class="chart-tool-btn" onclick="chartViewerDownload()" title="Download image"
+                        aria-label="Download image">
+                        <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="chart-view-modal-body" id="chartViewViewport">
+                <div class="chart-view-loading" id="chartViewLoading" hidden>
+                    <span class="material-symbols-rounded chart-view-spinner" id="chartViewLoadingIcon"
+                        aria-hidden="true">progress_activity</span>
+                    <p class="chart-view-loading-text" id="chartViewLoadingText">Loading chart…</p>
+                </div>
+                <img id="viewSavedChartImage" alt="Saved Dental Chart" draggable="false">
+            </div>
+
+            <div class="chart-view-status">
+                <span id="chartViewDims">—</span>
+                <span class="chart-view-hint">Drag to pan · Scroll to zoom · +/− zoom · 0 fit · 1 actual size · R rotate
+                    · F fullscreen</span>
+            </div>
+
+        </div>
+    </div>
