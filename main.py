@@ -220,6 +220,9 @@ class DentalClinicApp(BaseFlaskApp):
 
         # One lock per cache so only one request refills it at a time
         self._done_procedures_lock = threading.Lock()
+        # account uid -> identity fields already saved back to the account by
+        # _heal_account_identity(), so a list render never repeats that write.
+        self._identity_healed = {}
         self._accounts_lock = threading.Lock()
         self._patients_lock = threading.Lock()
 
@@ -243,7 +246,14 @@ class DentalClinicApp(BaseFlaskApp):
             if cached is not None:
                 return cached
             docs = []
-            for doc in self.db.collection_group("Done_procedure").stream():
+            # Only these fields are ever used from the cached scan (checked
+            # against every consumer). Leaving out "chart" and "chart_image"
+            # keeps the big dental-chart images out of memory. This does NOT
+            # reduce billed reads (Firestore bills per document).
+            done_query = self.db.collection_group("Done_procedure").select(
+                ["procedures", "uid", "Patient_unq_id"]
+            )
+            for doc in done_query.stream():
                 d = doc.to_dict() or {}
                 # Which account this record lives under; used to look up the
                 # patient's name when the record itself has no usable uid.
@@ -473,11 +483,149 @@ class DentalClinicApp(BaseFlaskApp):
             fb_contact, fb_sex, fb_civil = self._get_account_contact_and_sex(
                 account_uid, cache
             )
+            # Save what the fallback found onto the account (only the fields
+            # the account itself was missing) so the next render reads it
+            # straight from the account and skips the appointment lookup.
+            self._heal_account_identity(
+                account_uid,
+                account_data,
+                contact="" if contact else fb_contact,
+                sex="" if sex else fb_sex,
+                civil="" if civil else fb_civil,
+            )
             contact = contact or fb_contact
             sex = sex or fb_sex
             civil = civil or fb_civil
 
         return (contact, sex, civil)
+
+    def _fill_account_identity_if_blank(self, account_ref, contact="", sex="", civil=""):
+        """
+        Write contact number / sex / civil status onto a Customer_Account
+        document, but ONLY into fields that are blank there. A value that is
+        already on the account (for example one an admin corrected in My
+        Patients) is never overwritten.
+
+        The account is read fresh each time, so a stale cached copy can never
+        cause an overwrite. Field names match what _resolve_account_identity()
+        already reads: contact_number, last_sex, CivilStatus.
+
+        Never raises. Returns the dict of fields written ({} if nothing needed
+        writing) or None if something went wrong.
+        """
+        try:
+            contact = str(contact or "").strip()
+            sex = str(sex or "").strip()
+            civil = str(civil or "").strip()
+            if not (contact or sex or civil):
+                return {}
+
+            snap = account_ref.get()
+            if not snap.exists:
+                return {}
+            current = snap.to_dict() or {}
+
+            updates = {}
+            if contact and not str(
+                current.get("contact_number") or current.get("ContactNumber") or ""
+            ).strip():
+                updates["contact_number"] = contact
+            if sex and not str(
+                current.get("last_sex") or current.get("sex") or ""
+            ).strip():
+                updates["last_sex"] = sex
+            if civil and not str(
+                current.get("CivilStatus") or current.get("civil_status") or ""
+            ).strip():
+                updates["CivilStatus"] = civil
+
+            if updates:
+                account_ref.update(updates)
+            return updates
+        except Exception as e:
+            print("IDENTITY FILL FAILED:", e)
+            return None
+
+    def _heal_account_identity(self, account_uid, account_data, contact="", sex="", civil=""):
+        """
+        Self-healing step for _resolve_account_identity(): the caller passes
+        only the values the appointment-history fallback found for fields the
+        account was missing. They are saved once, fill-if-blank, and also
+        placed into the in-memory account dict so any cached copy stops
+        triggering the fallback. Never raises.
+        """
+        try:
+            if not account_uid:
+                return
+            done = self._identity_healed.setdefault(account_uid, set())
+            want = {}
+            if contact and "contact_number" not in done:
+                want["contact_number"] = str(contact).strip()
+            if sex and "last_sex" not in done:
+                want["last_sex"] = str(sex).strip()
+            if civil and "CivilStatus" not in done:
+                want["CivilStatus"] = str(civil).strip()
+            want = {k: v for k, v in want.items() if v}
+            if not want:
+                return
+
+            account_ref = self.db.collection(self.Customer_Account).document(account_uid)
+            written = self._fill_account_identity_if_blank(
+                account_ref,
+                contact=want.get("contact_number", ""),
+                sex=want.get("last_sex", ""),
+                civil=want.get("CivilStatus", ""),
+            )
+            if written is None:
+                return  # failed; allow a retry on a later render
+            done.update(want.keys())
+            if written and isinstance(account_data, dict):
+                account_data.update(written)
+        except Exception as e:
+            print("IDENTITY HEAL FAILED:", e)
+
+    def _merge_identity_fill(self, source_ref, target_ref, account_update):
+        """
+        Used by both merge functions. Adds contact number / sex / civil status
+        from the source account to `account_update` for any field the TARGET
+        account has blank. Never overwrites a value the target already has,
+        and never overrides a last_sex the merge already computed.
+
+        Never raises: if the reads fail, merge simply proceeds without it.
+        """
+        try:
+            source_snap = source_ref.get()
+            target_snap = target_ref.get()
+            source_data = (source_snap.to_dict() or {}) if source_snap.exists else {}
+            target_data = (target_snap.to_dict() or {}) if target_snap.exists else {}
+
+            def first(d, *keys):
+                for k in keys:
+                    v = str(d.get(k) or "").strip()
+                    if v:
+                        return v
+                return ""
+
+            if not first(target_data, "contact_number", "ContactNumber"):
+                v = first(source_data, "contact_number", "ContactNumber")
+                if v:
+                    account_update["contact_number"] = v
+
+            if (
+                not first(target_data, "last_sex", "sex")
+                and not account_update.get("last_sex")
+            ):
+                v = first(source_data, "last_sex", "sex")
+                if v:
+                    account_update["last_sex"] = v
+
+            if not first(target_data, "CivilStatus", "civil_status"):
+                v = first(source_data, "CivilStatus", "civil_status")
+                if v:
+                    account_update["CivilStatus"] = v
+        except Exception as e:
+            print("MERGE IDENTITY FILL FAILED:", e)
+        return account_update
 
     # ============================================================
     # PATIENT IDENTITY MANAGEMENT
@@ -1224,6 +1372,9 @@ class DentalClinicApp(BaseFlaskApp):
         }
         if latest_sex:
             account_update["last_sex"] = latest_sex
+        # Phase 2: carry contact / sex / civil status over, only into fields
+        # the target account has blank.
+        self._merge_identity_fill(source_ref, target_ref, account_update)
         target_ref.update(account_update)
 
         source_ref.delete()
@@ -2296,20 +2447,34 @@ class DentalClinicApp(BaseFlaskApp):
         session.modified = True
     
 
+    def _get_profile_pic(self, uid, email):
+        """
+        The logged-in visitor's profile_pic for the public pages.
+
+        Was: a Customer_Account query on EVERY page view (and a second,
+        identical query whenever the first came back empty). Now: asked once
+        per login session and remembered in the session. The session value is
+        dropped on login (so one user's picture is never shown to the next)
+        and replaced when a new picture is uploaded; logout clears it.
+        """
+        if not (uid and email):
+            return ''
+        if 'profile_pic' in session:
+            return session.get('profile_pic') or ''
+        user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+        profile_pic = ''
+        if user_query:
+            profile_pic = user_query[0].to_dict().get('profile_pic', '') or ''
+        session['profile_pic'] = profile_pic
+        return profile_pic
+
     def index(self):
         uid = session.get('uid', '')
         name = session.get('name', 'Guest')
         email = session.get('email', '')
         profile_pic = ''
     
-        if uid and email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-            if user_query:
-                profile_pic = user_query[0].to_dict().get('profile_pic', '')
-            else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-                if user_query:
-                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+        profile_pic = self._get_profile_pic(uid, email)
     
         pending_match = session.pop('pending_patient_match', None)
         return render_template("index.html", uid=uid, name=name, email=email,
@@ -2324,14 +2489,7 @@ class DentalClinicApp(BaseFlaskApp):
         email = session.get('email', '')
         profile_pic = ''
     
-        if uid and email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-            if user_query:
-                profile_pic = user_query[0].to_dict().get('profile_pic', '')
-            else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-                if user_query:
-                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+        profile_pic = self._get_profile_pic(uid, email)
     
         pending_match = session.pop('pending_patient_match', None)
         return render_template("index.html", uid=uid, name=name, email=email,
@@ -2407,6 +2565,7 @@ class DentalClinicApp(BaseFlaskApp):
         session["name"] = user_data.get("firstname", "")
         session["email"] = email
         session["uid"] = uid
+        session.pop("profile_pic", None)  # never carry a previous login's picture over
         
         self.maybe_flag_patient_match(
             uid, 
@@ -2442,6 +2601,7 @@ class DentalClinicApp(BaseFlaskApp):
             session['uid'] = uid
             session['email'] = google_account["email"]
             session['name'] = google_account.get("name", "User")
+            session.pop('profile_pic', None)  # never carry a previous login's picture over
 
             update_data = {
                 "uid": session['uid'],
@@ -2615,14 +2775,7 @@ class DentalClinicApp(BaseFlaskApp):
         profile_pic = ''
         uid = session.get('uid', '')
     
-        if uid and email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-            if user_query:
-                profile_pic = user_query[0].to_dict().get('profile_pic', '')
-            else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-                if user_query:
-                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+        profile_pic = self._get_profile_pic(uid, email)
     
         return render_template("about.html", name=name, email=email, profile_pic=profile_pic)
     
@@ -2901,6 +3054,15 @@ class DentalClinicApp(BaseFlaskApp):
                 "w_pill": w_pill
             })
 
+            # Phase 2: save contact number / sex / civil status onto the
+            # account the first time they are known (fill-if-blank).
+            self._fill_account_identity_if_blank(
+                self.db.collection(self.Customer_Account).document(uid),
+                contact=ContactNumber,
+                sex=Sex,
+                civil=CivilStatus,
+            )
+
             flash(
                 "Appointment successfully booked!",
                 "success"
@@ -3173,6 +3335,15 @@ class DentalClinicApp(BaseFlaskApp):
                 "w_nurse": w_nurse,
                 "w_pill": w_pill
             })
+
+            # Phase 2: save contact number / sex / civil status onto the
+            # account the first time they are known (fill-if-blank).
+            self._fill_account_identity_if_blank(
+                self.db.collection(self.Customer_Account).document(uid),
+                contact=ContactNumber,
+                sex=Sex,
+                civil=CivilStatus,
+            )
 
             flash(
                 "Appointment successfully booked!",
@@ -3476,6 +3647,14 @@ class DentalClinicApp(BaseFlaskApp):
                 if data.get("Sex"):
                     account_update["last_sex"] = data["Sex"]
                 user_ref.update(account_update)
+
+                # Phase 2: also save contact number / civil status onto the
+                # account the first time they are known (fill-if-blank).
+                self._fill_account_identity_if_blank(
+                    user_ref,
+                    contact=data.get("ContactNumber", ""),
+                    civil=data.get("CivilStatus", ""),
+                )
 
 
             elif action == "decline":
@@ -4180,6 +4359,14 @@ class DentalClinicApp(BaseFlaskApp):
                 self.Customer_Account
             ).document(uid).update(account_update)
 
+            # Phase 2: also save contact number / civil status onto the
+            # account the first time they are known (fill-if-blank).
+            self._fill_account_identity_if_blank(
+                self.db.collection(self.Customer_Account).document(uid),
+                contact=data.get("ContactNumber", ""),
+                civil=data.get("CivilStatus", ""),
+            )
+
             return jsonify({
                 "success": True,
                 "message": "Appointment created and approved",
@@ -4489,6 +4676,7 @@ class DentalClinicApp(BaseFlaskApp):
 
         rows = []
         identity_cache = {}
+        account_data_cache = {}  # account_uid -> account data, one read per account per page
 
         for doc in docs:
             data = doc.to_dict()
@@ -4503,14 +4691,18 @@ class DentalClinicApp(BaseFlaskApp):
             # look like it never saved: the account got the new value but
             # this list kept returning the old one.
             try:
-                account_doc = (
-                    self.db.collection(self.Customer_Account)
-                    .document(account_uid)
-                    .get()
-                )
-                account_data = (
-                    account_doc.to_dict() if account_doc.exists else {}
-                )
+                if account_uid in account_data_cache:
+                    account_data = account_data_cache[account_uid]
+                else:
+                    account_doc = (
+                        self.db.collection(self.Customer_Account)
+                        .document(account_uid)
+                        .get()
+                    )
+                    account_data = (
+                        account_doc.to_dict() if account_doc.exists else {}
+                    )
+                    account_data_cache[account_uid] = account_data
                 _, resolved_sex, _ = self._resolve_account_identity(
                     account_uid, account_data, identity_cache
                 )
@@ -5859,6 +6051,7 @@ class DentalClinicApp(BaseFlaskApp):
             
             if user_ref.get().exists:
                 user_ref.update({"profile_pic": profile_pic_url})
+                session['profile_pic'] = profile_pic_url
             else:
                 return jsonify({"success": False, "message": "User not found"}), 404
             
@@ -5885,14 +6078,7 @@ class DentalClinicApp(BaseFlaskApp):
         if not service:
             abort(404)
 
-        if uid and email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-            if user_query:
-                profile_pic = user_query[0].to_dict().get('profile_pic', '')
-            else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-                if user_query:
-                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+        profile_pic = self._get_profile_pic(uid, email)
             
         return render_template('service.html', service=service, name=name, email=email, uid=uid, profile_pic=profile_pic)
     
@@ -5903,14 +6089,7 @@ class DentalClinicApp(BaseFlaskApp):
         uid = session.get('uid', '')
         profile_pic = ''
 
-        if uid and email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-            if user_query:
-                profile_pic = user_query[0].to_dict().get('profile_pic', '')
-            else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
-                if user_query:
-                    profile_pic = user_query[0].to_dict().get('profile_pic', '')
+        profile_pic = self._get_profile_pic(uid, email)
             
         return render_template("location.html",name=name, email=email, profile_pic=profile_pic)
     
@@ -6537,6 +6716,9 @@ class DentalClinicApp(BaseFlaskApp):
         }
         if latest_sex:
             account_update["last_sex"] = latest_sex
+        # Phase 2: carry contact / sex / civil status over, only into fields
+        # the target account has blank.
+        self._merge_identity_fill(source_acc_ref, target_acc_ref, account_update)
         target_acc_ref.update(account_update)
 
         if birthday_to_keep and birthday_to_keep != target_birthday:
@@ -6993,6 +7175,70 @@ class DentalClinicApp(BaseFlaskApp):
             print(e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
     
+    def _find_unlinked_patient_by_name_parts(self, first_name, middle_name, last_name, birthday=""):
+        """
+        Strict, login-card-only lookup. Deliberately NOT used by find_patient()
+        or anything that creates, links or merges records.
+
+        A candidate must be an UNLINKED patient (no account, or a walkin_
+        placeholder) and one name must be completely contained in the other:
+        every word of the shorter name appears in the longer one, with at
+        least two shared words. "Felix Adrian Prieto Roa" matches a walk-in
+        "Felix Adrian" + "Prieto Roa", but "Adrian Porras Prieto" does not
+        (Porras is not in that name). If two different patients tie, nothing
+        is suggested rather than guessing. Never raises.
+        """
+        try:
+            def words(*parts):
+                return set(" ".join(
+                    self.normalize_patient_name(x) for x in parts if x
+                ).split())
+
+            query = words(first_name, middle_name, last_name)
+            birthday = str(birthday or "").strip()
+            if len(query) < 2:
+                return None
+
+            found = []
+            for patient_id, data in self._get_patients_cached():
+                data = data or {}
+                uid = data.get("account_uid") or ""
+                if uid and not uid.startswith("walkin_"):
+                    continue
+                stored = words(
+                    data.get("first_name_normalized", ""),
+                    data.get("middle_name_normalized", ""),
+                    data.get("last_name_normalized", ""),
+                )
+                shared = query & stored
+                if len(shared) < 2 or not (shared == query or shared == stored):
+                    continue
+                stored_bday = str(data.get("birthday", "") or "").strip()
+                if birthday and stored_bday and birthday != stored_bday:
+                    continue
+                found.append((len(shared), patient_id))
+
+            if not found:
+                return None
+            found.sort(reverse=True)
+            if len(found) > 1 and found[0][0] == found[1][0]:
+                return None  # ambiguous: do not guess
+
+            # Re-read the winner so a stale cache can't suggest a patient who
+            # has since been linked, renamed or deleted.
+            snap = self.db.collection(self.Doc_Patients).document(found[0][1]).get()
+            if not snap.exists:
+                return None
+            fresh = snap.to_dict() or {}
+            uid = fresh.get("account_uid") or ""
+            if uid and not uid.startswith("walkin_"):
+                return None
+            fresh["patient_id"] = snap.id
+            return fresh
+        except Exception as e:
+            print("NAME-PART PATIENT MATCH FAILED:", e)
+            return None
+
     def find_unlinked_patient_match(self, first_name, last_name, middle_name="", birthday=""):
         match = self.find_patient(
             first_name=first_name, 
@@ -7000,6 +7246,16 @@ class DentalClinicApp(BaseFlaskApp):
             last_name=last_name,
             birthday=birthday
         )
+        if not match:
+            # find_patient() only sees patients whose whole first or last
+            # name equals the query's, so it misses a walk-in saved as
+            # "Felix Adrian" / "Prieto Roa" when a Google sign-in splits the
+            # same name as "Felix" / "Adrian Prieto Roa". For this prompt only
+            # (the patient still has to press "Yes, that's me"), try a strict
+            # name-part match against unlinked walk-in records.
+            match = self._find_unlinked_patient_by_name_parts(
+                first_name, middle_name, last_name, birthday
+            )
         if not match:
             return None
         account_uid = match.get("account_uid") or ""
@@ -7016,8 +7272,9 @@ class DentalClinicApp(BaseFlaskApp):
             print(f"Searching for: First='{first_name}', Last='{last_name}', Middle='{middle_name}', Bday='{birthday}'")
             
             account_ref = self.db.collection(self.Customer_Account).document(uid)
-            account_doc = account_ref.get()
-            account_data = account_doc.to_dict() if account_doc.exists else {}
+            # (The account doc used to be read here only to feed the guard
+            # below. While that guard is switched off the read was wasted, so
+            # it is skipped. If the guard is re-enabled, read the account again.)
             
             # TEMPORARY FIX: Ignore the 'patient_match_checked' flag so it runs again
             # if account_data.get("patient_match_checked"):
