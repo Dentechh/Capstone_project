@@ -541,6 +541,8 @@ class DentalClinicApp(BaseFlaskApp):
 
             if updates:
                 account_ref.update(updates)
+                print(f"[WRITES] account {getattr(account_ref, 'id', '?')}: filled blank "
+                      f"{', '.join(sorted(updates))}")
             return updates
         except Exception as e:
             print("IDENTITY FILL FAILED:", e)
@@ -2476,7 +2478,9 @@ class DentalClinicApp(BaseFlaskApp):
     
         profile_pic = self._get_profile_pic(uid, email)
     
-        pending_match = session.pop('pending_patient_match', None)
+        # Read, don't pop: link_patient_account() must still find the pending
+        # match when the patient presses Yes / No on the card. It removes it.
+        pending_match = session.get('pending_patient_match')
         return render_template("index.html", uid=uid, name=name, email=email,
                             profile_pic=profile_pic, pending_match=pending_match)
     
@@ -2491,7 +2495,9 @@ class DentalClinicApp(BaseFlaskApp):
     
         profile_pic = self._get_profile_pic(uid, email)
     
-        pending_match = session.pop('pending_patient_match', None)
+        # Read, don't pop: link_patient_account() must still find the pending
+        # match when the patient presses Yes / No on the card. It removes it.
+        pending_match = session.get('pending_patient_match')
         return render_template("index.html", uid=uid, name=name, email=email,
                             profile_pic=profile_pic, pending_match=pending_match)
     
