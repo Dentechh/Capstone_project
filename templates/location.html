@@ -6,7 +6,8 @@
     <title>Location | Capizonda Dental Clinic</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
@@ -19,85 +20,8 @@
      data-callback="handleCredentialResponse">
 </div>
 
-<header>
-    <nav class="navbar">
-        <a href="/" class="logo-container">
-            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Logo" class="logo-icon">
-            <div class="logo-text">
-                <span class="brand-name">CAPIZONDA</span>
-                <span class="brand-sub">DENTAL CLINIC</span>
-            </div>
-        </a>
-
-        <ul class="nav-links" id="navLinks">
-            <li><a href="/">HOME</a></li>
-            <li><a href="/about">ABOUT</a></li>
-            <li class="dropdown">
-                    <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn">SERVICES ▾</a>
-                    <div class="dropdown-content" id="servicesDropdownMenu">
-                        <a href="/services/consultation">Dental Consultation</a>
-                        <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
-                        <a href="/services/pasta">Tooth Restoration (Pasta)</a>
-                        <a href="/services/extraction">Tooth Extraction (Gabot)</a>
-                        <a href="/services/dentures">Dentures (Pustiso)</a>
-                        <a href="/services/crowns-bridges">Crowns and Bridges</a>
-                        <a href="/services/whitening">Teeth Whitening</a>
-                        <a href="/services/fluoride">Fluoride Treatment</a>
-                        <a href="/services/sealant">Pit and Fissure Sealant</a>
-                        <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
-                        <a href="/services/root-canal">Root Canal Treatment</a>
-                        <a href="/services/xray">Periapical Xray</a>
-                    </div>
-                </li>
-            <li><a href="/location" class="active">LOCATION</a></li>
-            {% if name == "Guest" or not name %}
-            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">LOGIN</a></li>
-            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">REGISTER</a></li>
-            {% endif %}
-        </ul>
-
-<div class="nav-actions">
-
-            <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
-                <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
-                </svg>
-                <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-            </button>
-
-            {% if name == "Guest" or not name %}
-            <div class="auth-buttons">
-                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
-                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
-            </div>
-            {% else %}
-
-            <div class="profile-nav">
-                <div class="user-info-brief">
-                    <span>{{ name }}</span>
-                    <small>Patient Account</small>
-                </div>
-
-                    <div class="profile-img-container" id="profileDropdownTrigger">
-                        <img src="{% if profile_pic %}{{ profile_pic }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img">
-                    
-                        <div class="dropdown-menu" id="profileDropdown">
-                            <a href="/patient-profile">PROFILE</a>
-                            <a href="/logout">LOGOUT</a>
-                        </div>
-                    </div>
-            </div>
-            {% endif %}
+{% set active_page = 'location' %}
+{% include '_patient_header.html' %}
 
             <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
                 <span></span>

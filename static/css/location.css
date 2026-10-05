@@ -181,10 +181,6 @@ body.dark-mode .nav-links a.active {
     color: #64b5f6;
 }
 
-body.dark-mode .user-info-brief {
-    color: #e0e0e0;
-}
-
 body.dark-mode .profile-nav {
     border-left-color: rgba(255,255,255,0.1);
 }
