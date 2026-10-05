@@ -1,5 +1,8 @@
-import firebase_admin
+import os
 from firebase_admin import credentials
 
-cred = credentials.Certificate("dentech_key.json")
-firebase_admin.initialize_app(cred)
+key_path = "/etc/secrets/dentech_key.json"
+if not os.path.exists(key_path):
+    key_path = "dentech_key.json"  # local development
+
+cred = credentials.Certificate(key_path)
