@@ -6126,7 +6126,7 @@ class DentalClinicApp(BaseFlaskApp):
         if session.get('admin_logged_in'):
             return redirect(url_for("adminDashboard"))
         
-        return render_template("admin_login.html")
+        return render_template("admin_login.html", google_client_id=self.CLIENT_ID)
 
     def update_profile(self):
         try:
