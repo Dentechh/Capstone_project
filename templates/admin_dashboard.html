@@ -15,17 +15,17 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=25">
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-theme.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-theme.css') }}?v=2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-extras.css') }}?v=1">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header-datetime.css') }}?v=1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointments-reschedule.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointments-reschedule.css') }}?v=2">
     <script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/jspdf.umd.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/chart.umd.min.js') }}"></script>
 
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-core.css') }}?v=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-core.css') }}?v=22">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment-modal.css') }}?v=1">
 </head>
 
@@ -35,7 +35,7 @@
 <body class="dashboard-body">
 
     <div class="toast-container" id="toastContainer"></div>
-    <script src="{{ url_for('static', filename='js/toast.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/toast.js') }}?v=2"></script>
 
     {% if admin_welcome_toast %}
     <!-- The message travels in a data attribute rather than being interpolated
@@ -92,20 +92,20 @@
 
 
 
-    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=4"></script>
 
-    <script src="{{ url_for('static', filename='js/app-shell-and-modals.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/app-shell-and-modals.js') }}?v=2"></script>
 
 {% include '_new_appointment.html' %}
 {% include '_chart_viewer.html' %}
 {% include '_logout.html' %}
 {% include '_reschedule.html' %}
 {% include '_unblock_confirm.html' %}
-    <script src="{{ url_for('static', filename='js/block-dates.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/block-dates.js') }}?v=2"></script>
 
-    <script src="{{ url_for('static', filename='js/reschedule.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/reschedule.js') }}?v=4"></script>
 
-    <script src="{{ url_for('static', filename='js/financial-reports.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/financial-reports.js') }}?v=5"></script>
 
 </body>
 

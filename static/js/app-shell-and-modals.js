@@ -134,7 +134,7 @@
                         windowHeight: chartSection.scrollHeight,
                         width: chartSection.scrollWidth,
                         height: chartSection.scrollHeight,
-                        ignoreElements: (el) => el.classList.contains("action-palette"),
+                        ignoreElements: (el) => el.classList.contains("action-palette") || el.hasAttribute("data-chart-ui"),
                         logging: false,
                     });
                 } finally {
@@ -1218,12 +1218,53 @@
             }
             const approvedCount = typeof dashboardData.approvedCount === 'number' ? dashboardData.approvedCount : 0;
             const pendingCount = typeof dashboardData.pendingCount === 'number' ? dashboardData.pendingCount : 0;
-            const otherCount = Math.max(0, (typeof dashboardData.totalPatients === 'number' ? dashboardData.totalPatients : 0) - approvedCount);
+            const totalPatients = typeof dashboardData.totalPatients === 'number' ? dashboardData.totalPatients : 0;
+            /* "Registered" = everyone on the roster who is neither accepted nor
+               waiting. This used to be total - approved, which counted the
+               pending group twice and made the three slices sum to more than the
+               whole (e.g. 128 + 14 + 214 = 356 against a total of 342), so every
+               percentage in the donut was understated. A doughnut has to
+               partition one whole, so pending is subtracted too. */
+            const otherCount = Math.max(0, totalPatients - approvedCount - pendingCount);
             const urgencyCounts = (typeof dashboardData.urgencyCounts === 'object' && dashboardData.urgencyCounts !== null) ? dashboardData.urgencyCounts : {};
 
             const isDark = document.body.classList.contains('dark-mode');
             const textColor = isDark ? '#ffffff' : '#37474f';
             const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)';
+
+            /* Shared tooltip look, so every chart on the dashboard reads as one
+               set instead of two default-styled and four custom ones. */
+            const tooltipStyle = {
+                backgroundColor: isDark ? '#0b1220' : '#1e293b',
+                titleColor: '#ffffff',
+                bodyColor: '#e2e8f0',
+                borderColor: 'rgba(255,255,255,0.14)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: true,
+                boxPadding: 6,
+                titleFont: { family: 'Kumbh Sans', size: 13, weight: '700' },
+                bodyFont: { family: 'Kumbh Sans', size: 12 }
+            };
+
+            /* Lighten a hex colour toward white. Used for the gradient fills. */
+            function tintHex(hex, amount) {
+                const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex || '').trim());
+                if (!m) return hex;
+                const ch = [1, 2, 3].map((i) => {
+                    const v = parseInt(m[i], 16);
+                    return Math.round(v + (255 - v) * amount);
+                });
+                return 'rgb(' + ch.join(',') + ')';
+            }
+
+            const STATUS_COLORS = ['#0d47a1', '#1565c0', '#90caf9'];
+            /* Shown in the middle of the donut. Uses the slice sum rather than
+               totalPatients so the number in the ring always equals what the
+               ring actually shows - normally identical, but the three counts
+               come from different collections and can overlap. */
+            const statusTotal = approvedCount + pendingCount + otherCount;
 
             // Donut Chart - Patient Status
             const donutCtx = document.getElementById('statusDonut');
@@ -1235,9 +1276,14 @@
                         labels: ['Approved', 'Pending', 'Registered'],
                         datasets: [{
                             data: [approvedCount, pendingCount, otherCount],
-                            backgroundColor: ['#0d47a1', '#1565c0', '#90caf9'],
-                            borderWidth: 0,
-                            hoverOffset: 8
+                            backgroundColor: STATUS_COLORS,
+                            /* A hairline in the page colour separates the arcs.
+                               borderWidth: 0 left them touching, so the three
+                               slices read as one solid ring. */
+                            borderColor: isDark ? '#1a2130' : '#ffffff',
+                            borderWidth: 2,
+                            hoverOffset: 10,
+                            hoverBorderColor: isDark ? '#1a2130' : '#ffffff'
                         }]
                     },
                     options: {
@@ -1246,6 +1292,7 @@
                         cutout: '70%',
                         animation: {
                             animateRotate: true,
+                            animateScale: true,
                             duration: 1500
                         },
                         plugins: {
@@ -1253,12 +1300,53 @@
                                 position: 'bottom',
                                 labels: {
                                     padding: 20,
+                                    pointStyle: 'circle',
+                                    pointHoverRadius: 6,
+                                    usePointStyle: true,
                                     font: { family: 'Kumbh Sans', size: 12, weight: '600' },
                                     color: textColor
                                 }
-                            }
+                            },
+                            tooltip: Object.assign({}, tooltipStyle, {
+                                callbacks: {
+                                    label: function (item) {
+                                        const total = item.dataset.data.reduce(function (a, b) { return a + b; }, 0);
+                                        const pct = total ? Math.round((item.raw / total) * 100) : 0;
+                                        return item.label + ': ' + item.raw + ' (' + pct + '%)';
+                                    }
+                                }
+                            })
                         }
-                    }
+                    },
+                    /* The 70% cutout leaves an empty hole, so the total goes in
+                       the middle. Drawn as an inline plugin rather than a
+                       separate element so it re-centres with the canvas. */
+                    plugins: [{
+                        id: 'statusDonutCentre',
+                        afterDraw: function (chart) {
+                            const meta = chart.getDatasetMeta(0);
+                            if (!meta || !meta.data || !meta.data.length) return;
+                            const arc = meta.data[0];
+                            if (!arc || !arc.x || !arc.y) return;
+
+                            const ctx = chart.ctx;
+                            const cx = (arc.x + arc.x) / 2;
+                            const cy = (arc.y + arc.y) / 2;
+
+                            ctx.save();
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+
+                            ctx.fillStyle = isDark ? '#90caf9' : '#0d47a1';
+                            ctx.font = '800 26px "Kumbh Sans", system-ui, sans-serif';
+                            ctx.fillText(String(statusTotal), cx, cy - 6);
+
+                            ctx.fillStyle = isDark ? '#94a3b8' : '#64748b';
+                            ctx.font = '600 11px "Kumbh Sans", system-ui, sans-serif';
+                            ctx.fillText('PATIENTS', cx, cy + 15);
+                            ctx.restore();
+                        }
+                    }]
                 });
             }
 
@@ -1266,16 +1354,38 @@
             const barCtx = document.getElementById('urgencyBar');
             if (barCtx) {
                 if (dashboardBarInstance) dashboardBarInstance.destroy();
+
+                const emergency = urgencyCounts.Emergency || 0;
+                const normal = urgencyCounts.Normal || 0;
+                /* Matches the urgency palette the badges use in the tables:
+                   red for Emergency, quiet slate for Normal. Both were shades of
+                   the same blue before, so the one that matters was hard to
+                   pick out. */
+                const urgencyColors = ['#b91c1c', '#64748b'];
+
                 dashboardBarInstance = new Chart(barCtx, {
                     type: 'bar',
                     data: {
                         labels: ['Emergency', 'Normal'],
                         datasets: [{
                             label: 'Appointments',
-                            data: [urgencyCounts.Emergency || 0, urgencyCounts.Normal || 0],
-                            backgroundColor: ['#0d47a1', '#1565c0', '#90caf9'],
+                            data: [emergency, normal],
+                            /* Scriptable so each bar gets its own vertical
+                               gradient, measured against the real chart area. */
+                            backgroundColor: function (c) {
+                                const chart = c.chart;
+                                const area = chart.chartArea;
+                                const base = urgencyColors[c.dataIndex] || '#0d47a1';
+                                if (!area) return base;
+                                const g = chart.ctx.createLinearGradient(0, area.bottom, 0, area.top);
+                                g.addColorStop(0, tintHex(base, isDark ? 0.18 : 0.1));
+                                g.addColorStop(1, base);
+                                return g;
+                            },
+                            hoverBackgroundColor: urgencyColors.map(function (c) { return tintHex(c, 0.3); }),
                             borderRadius: 8,
-                            borderSkipped: false
+                            borderSkipped: false,
+                            maxBarThickness: 72
                         }]
                     },
                     options: {
@@ -1284,8 +1394,10 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
+                                /* Whole-appointment steps only; a fractional
+                                   tick like 2.5 appointments is meaningless. */
                                 ticks: {
-                                    stepSize: 1,
+                                    precision: 0,
                                     font: { family: 'Kumbh Sans', size: 12 },
                                     color: textColor
                                 },
@@ -1293,18 +1405,23 @@
                             },
                             x: {
                                 ticks: {
-                                    font: { family: 'Kumbh Sans', size: 12, weight: '600' },
-                                    color: textColor
+                                    font: { family: 'Kumbh Sans', size: 13, weight: '700' },
+                                    color: isDark ? '#cbd5e1' : '#334155'
                                 },
                                 grid: { display: false }
                             }
                         },
                         plugins: {
-                            legend: { display: false }
+                            legend: { display: false },
+                            tooltip: Object.assign({}, tooltipStyle, {
+                                callbacks: {
+                                    label: function (item) {
+                                        return item.raw + (item.raw === 1 ? ' appointment' : ' appointments');
+                                    }
+                                }
+                            })
                         },
-                        animation: {
-                            duration: 1500
-                        }
+                        animation: { duration: 1500 }
                     }
                 });
             }
@@ -1554,7 +1671,12 @@
                         const res = await fetch('/admin/create_appointment', { method: 'POST', body: formData });
                         const result = await res.json();
                         if (result.success) {
-                            location.reload();
+                            /* The dashboard re-fetches its lists on load, so a
+                               reload is what refreshes the Appointments table.
+                               Route the confirmation through the toast-after-reload
+                               helper instead of showToast(): a toast raised just
+                               before location.reload() is destroyed unread. */
+                            showToastAfterReload(result.message || 'Appointment created successfully.', 'success');
                         } else {
                             showToast(result.message || 'Failed to create appointment.');
                         }
@@ -1730,7 +1852,13 @@
                     { el: modal, scroller: '.adm-form-side', allowFlip: true },
                     // Tall scrolling bodies: always open downwards.
                     { el: document.getElementById('editPatientModal'), scroller: '.ep-body', allowFlip: false },
-                    { el: document.getElementById('checkInfoModal'), scroller: '.ci-table-scroll', allowFlip: false }
+                    { el: document.getElementById('checkInfoModal'), scroller: '.ci-table-scroll', allowFlip: false },
+                    // Financial Reports' Month / Year stepper. Its <select>s were
+                    // repopulated on every period change, and a native option popup
+                    // cannot be styled, so it uses the same listbox as the modals.
+                    // The panel is body-level and flips, so the page scroll container
+                    // can never clip it.
+                    { el: document.getElementById('financialNav'), scroller: '.content-section', allowFlip: true }
                 ].filter(function (r) { return r.el; });
 
                 if (!roots.length) return;
@@ -2077,8 +2205,39 @@
 
                     const apptDate = document.getElementById('admApptDate');
                     if (apptDate) {
-                        flatpickr('#admApptDate', Object.assign({}, baseOptions, {
+                        window.__admApptDatePicker = flatpickr('#admApptDate', Object.assign({}, baseOptions, {
                             minDate: 'today',
+
+                            /* A fully blocked day cannot host an appointment at
+                               all, so grey it out in the calendar instead of
+                               letting the admin pick it and only then having
+                               the change handler clear it with a toast.
+
+                               Only `full_day` blocks disable the DATE. Days with
+                               just some times blocked stay selectable and are
+                               handled by disabling those time options instead,
+                               so a partly-blocked morning is still bookable in
+                               the afternoon.
+
+                               Keys in the blocked map are the Mongo document id,
+                               i.e. Y-m-d, which is the same shape flatpickr's
+                               dateFormat produces; the key is derived from the
+                               Date object rather than the passed-in string so it
+                               cannot drift from locale/format settings.
+
+                               MUST be an array. flatpickr's config setter calls
+                               disable.slice(), so a bare function throws
+                               "e.slice is not a function" during initialisation,
+                               the altInput is never built, and the cleanup loop
+                               below then hides the native input too - leaving no
+                               visible date control at all. */
+                            disable: [function (dObj) {
+                                if (!(dObj instanceof Date)) return false;
+                                const map = window.__blockedSlotsMap || {};
+                                const info = map[dObj.toLocaleDateString('en-CA')];
+                                return !!(info && info.full_day);
+                            }],
+
                             onChange: function () {
                                 admCombineDateTime();
                             }

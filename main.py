@@ -131,6 +131,17 @@ class DentalClinicApp(BaseFlaskApp):
 
         self._app.jinja_env.globals["patient_flashed_messages"] = patient_flashed_messages
 
+        # Server-rendered cards show a stored DentistName. Older rows hold the
+        # short "Dr. Capizonda", so they are rendered through the same
+        # display helper the API uses, otherwise the same dentist appears under
+        # two spellings in one page. Registered as a global (not a filter) to
+        # match the existing pattern above.
+        self._app.jinja_env.globals["dentist_display"] = self.display_dentist_name
+
+        # Same deal for the appointment date on the Accepted Patients cards.
+        self._app.jinja_env.globals["appt_datetime_display"] = self.display_appt_datetime
+        self._app.jinja_env.globals["appt_datetime_short"] = self.display_appt_datetime_short
+
     def _setup_config(self):
         self.app.config["MAIL_SERVER"] = "smtp.gmail.com"
         self.app.config["MAIL_PORT"] = 587
@@ -711,20 +722,147 @@ class DentalClinicApp(BaseFlaskApp):
         )
 
 
+    def display_appt_datetime(self, value):
+        """
+        Render a stored appointment_date for the admin cards.
+
+        Firestore stores "YYYY-MM-DD HH:MM" because that exact string is what the
+        blocked-slot lookups and the order_by cursor compare against, so it must
+        never be rewritten - only displayed differently. This mirrors
+        formatApptDateTime() in static/js/appointments-helpers.js exactly; the
+        admin renders these cards from JS, and the two paths must not disagree.
+        """
+
+        raw = str(value or "").strip()
+        if not raw:
+            return "Not scheduled"
+
+        match = re.match(
+            r"^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?", raw
+        )
+        if not match:
+            return raw
+
+        months = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"]
+        month_index = int(match.group(2)) - 1
+        if month_index < 0 or month_index >= len(months):
+            return raw
+
+        date_part = f"{months[month_index]} {int(match.group(3))}, {match.group(1)}"
+        if match.group(4) is None:
+            return date_part
+
+        # Stored hours are 24-hour ("13:00"), so the meridiem has to be derived
+        # and the hour converted. The picker offers real PM slots (12:00 PM to
+        # 5:00 PM), so appending "AM" unconditionally would print "13:00AM" for a
+        # 1:00 PM appointment.
+        hour24 = int(match.group(4))
+        meridiem = "PM" if hour24 >= 12 else "AM"
+        hour12 = hour24 % 12 or 12
+        hours = f"{hour12:02d}"
+
+        return f"{date_part} - {hours}:{match.group(5)}{meridiem}"
+
+    def display_appt_datetime_short(self, value):
+        """
+        Compact appointment date for the dashboard cards: "6 Oct 2026, 9:00 AM".
+
+        display_appt_datetime() is deliberately verbose ("October 6, 2026 -
+        09:00AM") because it is read on its own line under a heading. In a card
+        row it competes with the name for horizontal space, so this drops to
+        abbreviated months and a 12-hour clock. Same 24-hour input, same
+        meridiem handling.
+        """
+
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+
+        match = re.match(
+            r"^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?", raw
+        )
+        if not match:
+            return raw
+
+        months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        month_index = int(match.group(2)) - 1
+        if month_index < 0 or month_index >= len(months):
+            return raw
+
+        out = f"{int(match.group(3))} {months[month_index]} {match.group(1)}"
+        if match.group(4) is None:
+            return out
+
+        hour24 = int(match.group(4))
+        meridiem = "AM" if hour24 < 12 else "PM"
+        hour12 = hour24 % 12 or 12
+
+        return f"{out}, {hour12}:{match.group(5)} {meridiem}"
+
+    def display_dentist_name(self, value):
+        """
+        Human-facing spelling of a stored dentist name.
+
+        Records saved before the rename hold "Dr. Capizonda"; the admin now
+        enters "Dr. Julix Dionne Capizonda". Returning the canonical spelling
+        keeps one dentist from appearing under two names across the schedule,
+        the conflict messages and the admin tables. Anything unrecognised is
+        returned trimmed but otherwise untouched, so other/future dentists
+        keep working.
+        """
+
+        raw = str(value or "").strip()
+        if not raw:
+            return ""
+
+        normalized = " ".join(raw.lower().split())
+
+        if normalized in ("dr. capizonda", "dr capizonda", "capizonda",
+                          "dr. julix dionne capizonda",
+                          "dr julix dionne capizonda",
+                          "julix dionne capizonda"):
+            return "Dr. Julix Dionne Capizonda"
+
+        return raw
+
     def normalize_dentist_name(self, value):
         """
-        Same normalization as normalize_patient_name, used to compare
-        dentist names for double-booking checks. dentist_name is a free
-        text field, so this keeps "Dr. Capizonda" and " dr. capizonda "
-        matching as the same dentist.
+        Reduce a dentist name to an identity key for double-booking checks.
+
+        dentist_name is a free-text field, so this has to absorb the ways one
+        practitioner can be spelled: case, stray whitespace, and the honorific
+        being present or absent.
+
+        It also has to absorb the rename. Records saved before the dentist was
+        listed by his full name carry "Dr. Capizonda", while anything saved now
+        carries "Dr. Julix Dionne Capizonda". A plain case-fold would treat those
+        as two different dentists, so the conflict check would stop matching old
+        rows and the same slot could be booked twice. Both spellings therefore
+        collapse to the same key. Unknown names pass through unchanged, so any
+        other or future dentist keeps working without a code change.
         """
 
         if not value:
             return ""
 
-        return " ".join(
-            str(value).strip().lower().split()
-        )
+        normalized = " ".join(str(value).strip().lower().split())
+
+        # Known spellings of the same practitioner -> one key.
+        if normalized in ("dr. capizonda", "dr capizonda", "capizonda",
+                          "dr. julix dionne capizonda",
+                          "dr julix dionne capizonda",
+                          "julix dionne capizonda"):
+            return "capizonda"
+
+        # Anything else: drop the honorific so "Dr. Smith" and "Smith" agree.
+        if normalized.startswith("dr. "):
+            normalized = normalized[4:]
+        elif normalized.startswith("dr "):
+            normalized = normalized[3:]
+
+        return normalized
 
 
     def find_appointment_conflict(self, dentist_name, appointment_date, exclude_doc_id=None):
@@ -789,7 +927,7 @@ class DentalClinicApp(BaseFlaskApp):
                 return {
                     "appointment_id": doc.id,
                     "patient_name": f"{data.get('FirstName','')} {data.get('LastName','')}".strip(),
-                    "dentist_name": data.get("DentistName", ""),
+                    "dentist_name": self.display_dentist_name(data.get("DentistName", "")),
                     "appointment_date": existing_date
                 }
 
@@ -1114,7 +1252,7 @@ class DentalClinicApp(BaseFlaskApp):
                     "time": parts[1] if len(parts) > 1 else "",
                     "patient_name": name or "Unknown patient",
                     "service": data.get("Service", ""),
-                    "dentist": data.get("DentistName", ""),
+                    "dentist": self.display_dentist_name(data.get("DentistName", "")),
                     "status": status,
                     # Needed to reschedule the record from the Doctors Calendar.
                     "id": doc.id,
@@ -3379,13 +3517,20 @@ class DentalClinicApp(BaseFlaskApp):
             service = appointment_data.get("Service", "your appointment")
             dentist = appointment_data.get("DentistName", "our dentist")
             appointment_date = appointment_data.get("appointment_date", "")
+
+            # The bodies below address the doctor as "by Dr. <name>", but
+            # DentistName already carries the honorific ("Dr. Julix Dionne
+            # Capizonda"), which rendered "Dr. Dr. Capizonda" in patient-facing
+            # email. Strip a leading honorific so the sentence stays correct for
+            # every spelling.
+            email_dentist = re.sub(r"^\s*dr\.?\s+", "", str(dentist), flags=re.IGNORECASE) or dentist
     
             if action == "accept":
                 subject = "Appointment Accepted - Capizonda Dental Clinic"
                 body = f"""
     Hello {fullname},
     
-    Good news! Your appointment for {service} has been accepted by Dr. {dentist}.
+    Good news! Your appointment for {service} has been accepted by Dr. {email_dentist}.
     {f'Appointment Date: {appointment_date}' if appointment_date else ''}
     
     Please arrive 10 minutes before your scheduled time.
@@ -3415,7 +3560,7 @@ class DentalClinicApp(BaseFlaskApp):
                 body = f"""
     Hello {fullname},
     
-    We regret to inform you that your appointment request for {service} has been declined by Dr. {dentist}.
+    We regret to inform you that your appointment request for {service} has been declined by Dr. {email_dentist}.
     {f'Your previously scheduled appointment date was: {appointment_date}' if appointment_date else ''}
     
     Please feel free to book another appointment at your convenience.

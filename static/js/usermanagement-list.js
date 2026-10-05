@@ -29,12 +29,12 @@
                         <td>${a.email || '-'}</td>
                         <td>
                             <div class="mp-actions">
+                                <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"
+                                    data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}"><span class="material-symbols-rounded" aria-hidden="true">${isDisabled ? 'lock_open' : 'block'}</span></button>
                                 <button type="button" class="btn-action edit-patient-btn" title="Edit patient" aria-label="Edit patient"
                                     data-uid="${a.uid}" data-patient-id="${a.patient_id}"
                                     data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
                                     data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}" data-sex="${a.sex || ''}" data-civilstatus="${a.CivilStatus || ''}"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
-                                <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"
-                                    data-uid="${a.uid}" data-name="${a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}"><span class="material-symbols-rounded" aria-hidden="true">${isDisabled ? 'lock_open' : 'block'}</span></button>
                                 <button type="button" class="btn-action delete-patient-btn" title="Delete account" aria-label="Delete account"
                                     data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${a.full_name}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
                             </div>

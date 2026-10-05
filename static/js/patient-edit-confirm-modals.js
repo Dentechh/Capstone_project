@@ -1,5 +1,6 @@
             const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path>';
             const CONFIRM_ICON_TRASH = '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>';
+            const CONFIRM_ICON_BLOCK = '<circle cx="12" cy="12" r="10"></circle><path d="M4.9 4.9l14.2 14.2"></path>';
 
             // Shared confirmation dialog. opts:
             //   title        - heading text
@@ -7,7 +8,11 @@
             //   details      - [[label, value], ...] rendered as a summary list
             //   confirmLabel - override the confirm button's label
             //   danger       - red icon + red confirm button
-            //   icon         - 'question' (default) | 'trash'
+//   icon         - 'question' (default) | 'trash' | 'block'
+            //                  'block' is a red "no entry" sign, used by the
+            //                  decline-appointment confirm: the request is removed
+            //                  but the patient is NOT deleted, so a trash can would
+            //                  read as more destructive than it is.
             // Only `message` is required, so the existing callers keep working unchanged.
             function showConfirm(message, opts) {
                 opts = opts || {};
@@ -37,9 +42,15 @@
                     modal.setAttribute('data-variant', danger ? 'danger' : 'default');
 
                     if (iconEl) {
-                        iconEl.innerHTML = (opts.icon === 'trash' || danger)
-                            ? CONFIRM_ICON_TRASH
-                            : CONFIRM_ICON_QUESTION;
+                        // An explicit icon always wins, so a destructive-looking
+                        // dialog can be shown without implying a hard delete.
+                        if (opts.icon === 'block') {
+                            iconEl.innerHTML = CONFIRM_ICON_BLOCK;
+                        } else if (opts.icon === 'trash' || danger) {
+                            iconEl.innerHTML = CONFIRM_ICON_TRASH;
+                        } else {
+                            iconEl.innerHTML = CONFIRM_ICON_QUESTION;
+                        }
                     }
 
                     if (noteEl) {

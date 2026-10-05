@@ -15,7 +15,7 @@
                 'financialreports': 'Financial Reports',
                 'doctorscalendar': 'Doctors Calendar',
                 'appointments': 'Appointment Requests',
-                'WeeklyClients': 'My Weekly Clients',
+                'WeeklyClients': 'My Weekly Patients',
                 'records': 'Patient Database',
                 'patientdashboard': 'Patient Dashboard',
                 'mypatients': 'My Patients',
@@ -204,7 +204,7 @@
 
                         history.innerHTML += `
         <tr>
-            <td>${p.dentist || ""}</td>
+            <td>${formatDentistName(p.dentist)}</td>
             <td class="pd-visits__chart">
                 <button type="button" class="pd-icon-btn"
                     onclick="openChartViewModal(${index})"
@@ -519,6 +519,60 @@
         var addBtn = document.getElementById('td-add-row-btn');
         if (addBtn) addBtn.addEventListener('click', addTreatmentRow);
 
+        // Delete a Treatment Records row. Delegated from the tbody so it covers
+        // the placeholder row in the markup and every row appendRow() builds,
+        // now and in the future, without per-row wiring.
+        //
+        // Nothing tracks rows by index -- saveTreatmentNotes() and the FormData
+        // submit both walk the live <tr> list -- so removing the element is the
+        // whole delete. What matters is tearing down what those rows own first:
+        // each enhanced <select> can have its option panel portalled to <body>,
+        // and each date field owns a flatpickr calendar also appended to <body>.
+        // Dropping the <tr> alone would orphan both on the page.
+        (function wireTreatmentRowDelete() {
+            var tbody = document.querySelector('#td-treatment-table tbody');
+            if (!tbody) return;
+
+            tbody.addEventListener('click', function (e) {
+                var btn = e.target.closest('[data-td-delete-row]');
+                if (!btn) return;
+                var row = btn.closest('tr');
+                if (!row) return;
+
+                // The panel reads "one row per treatment", so keep at least one:
+                // deleting the last row would leave an empty tbody, and both
+                // save paths plus the empty-state handling assume rows exist.
+                var rows = tbody.querySelectorAll('tr');
+                if (rows.length <= 1) {
+                    showToast('At least one treatment row is required.');
+                    return;
+                }
+
+                doDeleteTreatmentRow(row);
+            });
+        })();
+
+        // Removes one row and releases the body-level nodes it owned. Split out
+        // so it can be called from the click handler and, if ever needed, from
+        // elsewhere without duplicating the cleanup.
+        function doDeleteTreatmentRow(row) {
+            // Undo the .adm-select wrappers first: their panels live on <body>
+            // while open and would otherwise outlive the row.
+            if (typeof window.admDestroySelects === 'function') {
+                window.admDestroySelects(row);
+            }
+
+            // flatpickr appends its calendar to <body> and only removes it on
+            // destroy(), so the instance has to be told.
+            row.querySelectorAll('input.adm-date-native').forEach(function (input) {
+                if (input._flatpickr && typeof input._flatpickr.destroy === 'function') {
+                    input._flatpickr.destroy();
+                }
+            });
+
+            row.remove();
+        }
+
         // The placeholder row that ships in the markup needs the same
         // listboxes and date pickers before any patient is opened.
         refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
@@ -633,6 +687,83 @@
                 line.style.display = 'block';
             }
             closeModal();
+        }
+
+        // Wipe every mark this chart can hold: tooth segment fills, the
+        // extraction X and root-canal line, the status text inputs, and the
+        // Check tick boxes. Confirmed first, since a mis-click would discard
+        // a chart the dentist filled in by hand.
+        //
+        // This is a view-level reset only. The chart is not persisted on its
+        // own -- what gets saved is the Treatment Records table below it
+        // (saveTreatmentNotes), which this deliberately leaves untouched, so
+        // clearing the picture cannot silently wipe the patient's history.
+        function clearDentalChart() {
+            var chart = document.querySelector('#section-chart .dental-chart')
+                || document.querySelector('.dental-chart');
+            if (!chart) return;
+
+            // Nothing to do if the chart is already blank. The mark checks compare
+            // against the pristine values a fresh tooth is built with, so a chart
+            // that has already been cleared is correctly seen as empty.
+            var painted = chart.querySelectorAll('.segment[style*="fill"]');
+            var xsShown = chart.querySelectorAll('.mark-x[style*="block"]');
+            var linesShown = chart.querySelectorAll('.mark-line[style*="block"]');
+            var typed = Array.prototype.some.call(chart.querySelectorAll('.grid-input'), function (i) { return i.value !== ''; });
+            var ticked = Array.prototype.some.call(chart.querySelectorAll('.grid-checkbox'), function (c) { return c.checked; });
+            if (!painted.length && !xsShown.length && !linesShown.length && !typed && !ticked) {
+                showToast('The chart is already clear.');
+                return;
+            }
+
+            var doClear = function () {
+                // Tooth markings. Removing the inline fill is what puts each
+                // segment back to its stylesheet colour, which is the same
+                // blank state the Healthy tool produces.
+                chart.querySelectorAll('.tooth-unit .segment').forEach(function (s) { s.style.removeProperty('fill'); });
+
+                // Extraction X and the root-canal line are toggled with an INLINE
+                // display, and .mark-x carries an inline stroke. There is no CSS
+                // rule for either, so clearing must put the pristine inline
+                // values back rather than drop the properties: removing
+                // display leaves the SVG default (inline), which shows the X on
+                // every tooth and makes the first click look like a no-op, and
+                // removing stroke drops it to none so the X paints invisibly.
+                // The root-canal colour is a presentation ATTRIBUTE (set in
+                // applyModalChoice), so it needs removeAttribute as well.
+                chart.querySelectorAll('.mark-x').forEach(function (m) {
+                    m.style.display = 'none';
+                    m.style.stroke = '#ff4d4d';
+                });
+                chart.querySelectorAll('.mark-line').forEach(function (m) {
+                    m.style.display = 'none';
+                    m.removeAttribute('stroke');
+                });
+
+                // Status rows: free text and Check tick boxes.
+                chart.querySelectorAll('.grid-input').forEach(function (i) { i.value = ''; });
+                chart.querySelectorAll('.grid-checkbox').forEach(function (c) { c.checked = false; });
+
+                // Drop the tooth the palette was last armed against so a later
+                // palette click cannot repaint a tooth the dentist just cleared.
+                lastClickedTooth = null;
+
+                showToast('Chart cleared.', 'success');
+            };
+
+            // showConfirm() lives in a later script block, so on first paint it
+            // may not be defined yet; fall back to clearing directly rather than
+            // doing nothing.
+            if (typeof showConfirm === 'function') {
+                showConfirm('Clear all tooth markings, status text and checks on this chart?', {
+                    title: 'Clear the chart?',
+                    note: 'Treatment records are not affected.',
+                    confirmLabel: 'Yes, clear it',
+                    danger: true
+                }).then(function (ok) { if (ok) doClear(); });
+            } else {
+                doClear();
+            }
         }
 
         function closeModal() { document.getElementById('tool-modal').style.display = 'none'; }
@@ -774,7 +905,9 @@
                    FormData submit and the row validation all read. */
                 '<td>' +
                 '<div class="dentist-field">' +
-                '<input type="text" class="dentist-input td-dentist" value="' + escHtml(data.dentist || '') + '" placeholder="Select or type a dentist"' +
+                /* Loaded value goes through formatDentistName() so treatment rows saved
+                   under the old short name still read as the full name. */
+                '<input type="text" class="dentist-input td-dentist" value="' + escHtml(formatDentistName(data.dentist)) + '" placeholder="Select or type a dentist"' +
                 ' autocomplete="off" autocapitalize="off" spellcheck="false"' +
                 ' role="combobox" aria-autocomplete="list" aria-expanded="false"' +
                 ' aria-controls="dentistMenu" aria-label="Treating dentist">' +
@@ -808,6 +941,15 @@
                 '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
                 '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
                 '</select>' +
+                '</td>' +
+
+                /* Row actions. The delete control is handled by ONE delegated
+                   listener on the tbody (see below), so a row built here needs
+                   no per-row wiring. */
+                '<td class="td-row-actions">' +
+                '<button type="button" class="td-delete-row" data-td-delete-row title="Delete this treatment row" aria-label="Delete this treatment row">' +
+                '<span class="material-symbols-rounded" aria-hidden="true">delete</span>' +
+                '</button>' +
                 '</td>';
 
             tableBody.appendChild(tr);
@@ -837,6 +979,44 @@
             return d.innerHTML;
         }
 
+        // Ask before declining. Declining deletes the request document on the
+        // server and immediately emails the patient, so a mis-click cannot be
+        // taken back from this screen. Reuses the shared danger confirm, which
+        // already focuses Cancel rather than the destructive button and refuses
+        // to close on a stray backdrop click.
+        function confirmDeclineAppointment(a) {
+            const name = [a.FirstName, a.MiddleName, a.LastName]
+                .filter(Boolean).join(' ') || 'this patient';
+
+            const details = [['Patient', name]];
+            if (a.Service) details.push(['Service', a.Service]);
+            if (a.appointment_date) {
+                details.push([
+                    'Appointment',
+                    typeof formatApptDateTime === 'function'
+                        ? formatApptDateTime(a.appointment_date)
+                        : a.appointment_date
+                ]);
+            }
+
+            // If the confirm dialog is unavailable for any reason, still allow
+            // the action rather than leaving the admin unable to decline at all.
+            if (typeof showConfirm !== 'function') return Promise.resolve(true);
+
+            return showConfirm(
+                'Decline the appointment request for ' + name + '?',
+                {
+                    title: 'Decline appointment request?',
+                    details: details,
+                    note: 'The request is removed and the patient is emailed ' +
+                        'that it was declined. This cannot be undone from here.',
+                    confirmLabel: 'Yes, decline it',
+                    icon: 'block',
+                    danger: true
+                }
+            );
+        }
+
         // Update status function for accepting/declining appointments
         function updateStatus(rowElement, action) {
             // Get appointment data from the data-appointment attribute
@@ -857,6 +1037,21 @@
                 showToast('Please select or type the consulting dentist before accepting.');
                 return;
             }
+
+            if (action === 'decline') {
+                confirmDeclineAppointment(appointmentData).then(function (ok) {
+                    if (ok) commitStatus(rowElement, action, appointmentData, dentist_name);
+                });
+                return;
+            }
+
+            commitStatus(rowElement, action, appointmentData, dentist_name);
+        }
+
+        // The request that actually talks to the server. Kept separate so the
+        // decline path can be gated behind the confirmation without duplicating
+        // any of the accept logic.
+        function commitStatus(rowElement, action, appointmentData, dentist_name) {
 
             // Prepare data object
             const data = {
@@ -1045,10 +1240,28 @@
         if (savedTheme === 'dark') {
             body.classList.add('dark-mode');
         }
-        themeToggle.addEventListener('click', function () {
+
+        /* Keeps the toggle's accessible name and state honest. Without it the
+           button announced nothing at all (no aria-label) and its title stayed
+           "Toggle Dark Mode" even in dark mode, so a screen-reader user was
+           never told which theme they were in or what the control would do. */
+        function syncThemeToggleState() {
+            var toggle = document.getElementById('themeToggle');
+            if (!toggle) return;
+            var isDark = body.classList.contains('dark-mode');
+            var label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+            toggle.setAttribute('aria-label', label);
+            toggle.setAttribute('title', label);
+            toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        }
+
+        syncThemeToggleState();
+
+        if (themeToggle) themeToggle.addEventListener('click', function () {
             body.classList.toggle('dark-mode');
             var isDark = body.classList.contains('dark-mode');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            syncThemeToggleState();
             // Rebuild income chart with theme-appropriate colors
             if (typeof incomeChartInstance !== 'undefined' && incomeChartInstance) {
                 var activePeriod = 'weekly';

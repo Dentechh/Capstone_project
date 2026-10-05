@@ -81,7 +81,7 @@
                         windowHeight: chartSection.scrollHeight,
                         width: chartSection.scrollWidth,
                         height: chartSection.scrollHeight,
-                        ignoreElements: (el) => el.classList.contains("action-palette"),
+                        ignoreElements: (el) => el.classList.contains("action-palette") || el.hasAttribute("data-chart-ui"),
                         logging: false,
                     });
                 } finally {

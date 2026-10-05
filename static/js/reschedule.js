@@ -39,8 +39,16 @@
                 return m ? { date: m[1], time: pad(Number(m[2])) + ':' + m[3] } : null;
             }
 
-            // Same normalisation the server uses for dentist names.
-            const normName = n => String(n || '').trim().toLowerCase().split(/\s+/).join(' ');
+            /* Same normalisation the server uses for dentist names.
+               Delegates to the shared dentistIdentityKey() so this "same dentist?"
+               test agrees with the server's double-booking check: records saved
+               before the rename read "Dr. Capizonda" and new ones read
+               "Dr. Julix Dionne Capizonda", and a plain case-fold would treat
+               those as two different people and let the same slot be booked
+               twice. Falls back to the old behaviour if the helper is absent. */
+            const normName = n => (typeof dentistIdentityKey === 'function')
+                ? dentistIdentityKey(n)
+                : String(n || '').trim().toLowerCase().split(/\s+/).join(' ');
 
             function isBlocked(date, time) {
                 const info = blockedMap[date];
@@ -177,6 +185,20 @@
                         loadDay(dateStr);
                     }
                 });
+
+                /* Swap flatpickr's native month <select> for the admin's shared
+                   .adm-month-dd listbox. The native control's opened <option>
+                   list is OS-drawn and cannot be styled, so it would show a
+                   default grey dropdown inside this calendar's navy header.
+                   Guarded: if block-dates.js ever fails to load, the native
+                   select simply stays visible and usable. */
+                if (typeof window.admBuildMonthDropdown === 'function') {
+                    try {
+                        window.admBuildMonthDropdown(fp, '#rescheduleModal .rs-cal');
+                    } catch (err) {
+                        console.warn('Reschedule: month dropdown unavailable:', err);
+                    }
+                }
             }
 
             function closeModal() {
@@ -254,12 +276,17 @@
                 window.markBlockedAppointments();
             }
 
-            async function submit() {
-                if (busy || !chosenDate || !chosenTime || !curAppt) return;
-                busy = true;
-                const btn = $('rsConfirmBtn');
-                btn.disabled = true;
-                btn.textContent = 'Saving...';
+async function submit() {
+            if (busy || !chosenDate || !chosenTime || !curAppt) return;
+            busy = true;
+            const btn = $('rsConfirmBtn');
+            const btnLabel = $('rsConfirmLabel');
+            btn.disabled = true;
+            // The label span, NOT btn.textContent: the button now carries a
+            // Material Symbol alongside the text, and assigning textContent
+            // would delete the icon node.
+            if (btnLabel) btnLabel.textContent = 'Saving...';
+            btn.classList.add('is-busy');
 
                 const fd = new FormData();
                 fd.append('user_id', curAppt.uid);
@@ -292,7 +319,8 @@
                     showToast('Failed to reschedule. Please try again.');
                 } finally {
                     busy = false;
-                    btn.textContent = 'Reschedule';
+                    if (btnLabel) btnLabel.textContent = 'Reschedule';
+                    btn.classList.remove('is-busy');
                     if (done) closeModal(); else updateSummary();
                 }
             }

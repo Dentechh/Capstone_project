@@ -6364,6 +6364,34 @@ body.dark-mode .datetime-text {
     border-color: var(--navy);
 }
 
+/* Fully blocked days (dentist unavailable) are disabled by the picker's
+   `disable` predicate. flatpickr's own disabled rule is
+   rgba(57,57,57,0.1) - effectively invisible, so a blocked day read as
+   bookable and the only clue was that the click did nothing. Struck through in
+   the admin's "blocked" red (#b91c1c, same as .appt-blocked-chip) so the reason
+   is legible, and deliberately distinct from .notAllowed (past dates, outside
+   minDate) which stays faint grey.
+
+   Not scoped to a modal on purpose: in popup mode flatpickr renders the
+   calendar on <body> rather than inside the modal, so a #id-scoped selector
+   would not match - which is why the rules above are written this way too. */
+.adm-datepicker .flatpickr-day.flatpickr-disabled,
+.adm-datepicker .flatpickr-day.flatpickr-disabled:hover {
+    background: transparent;
+    border-color: transparent;
+    color: #b91c1c;
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+    cursor: not-allowed;
+}
+
+/* Past / out-of-range days: still unavailable, but not "blocked" - keep them
+   faint so the blocked red above stays meaningful. */
+.adm-datepicker .flatpickr-day.notAllowed {
+    color: #cbd5e1;
+    cursor: not-allowed;
+}
+
 .adm-datepicker .flatpickr-nav-prev svg,
 .adm-datepicker .flatpickr-nav-next svg {
     fill: #ffffff;
@@ -6411,6 +6439,21 @@ body.dark-mode .adm-datepicker .flatpickr-day.endRange {
 
 body.dark-mode .adm-datepicker .flatpickr-weekday {
     color: #94a3b8;
+}
+
+/* Blocked days in dark mode: same strike treatment, softened so it does not
+   glare against the dark calendar. */
+body.dark-mode .adm-datepicker .flatpickr-day.flatpickr-disabled,
+body.dark-mode .adm-datepicker .flatpickr-day.flatpickr-disabled:hover {
+    background: transparent;
+    border-color: transparent;
+    color: #f87171;
+    cursor: not-allowed;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-day.notAllowed {
+    color: #475569;
+    cursor: not-allowed;
 }
 
 /* Money inputs follow the right-aligned money columns. */

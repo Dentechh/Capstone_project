@@ -59,25 +59,6 @@
             box-sizing: border-box;
         }
 
-        #rescheduleModal .rs-close {
-            position: absolute;
-            top: 14px;
-            right: 16px;
-            width: 34px;
-            height: 34px;
-            border: none;
-            border-radius: 50%;
-            background: transparent;
-            color: #64748b;
-            font-size: 24px;
-            line-height: 1;
-            cursor: pointer;
-        }
-
-        #rescheduleModal .rs-close:hover {
-            background: #f1f5f9;
-        }
-
         #rescheduleModal h2 {
             margin: 0 0 4px;
             font-size: 22px;
@@ -116,29 +97,8 @@
             align-items: start;
         }
 
-        #rescheduleModal .rs-cal {
-            display: flex;
-            justify-content: center;
-            min-height: 280px;
-        }
-
-        #rescheduleModal .rs-cal .flatpickr-calendar {
-            box-shadow: none;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-        }
-
-        #rescheduleModal .rs-cal .flatpickr-day.rs-partial::after {
-            content: "";
-            position: absolute;
-            bottom: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: #f59e0b;
-        }
+        /* Calendar host + the .rs-partial dot are defined further down, alongside the
+           rest of the modal polish. */
 
         #rescheduleModal .rs-slots-title {
             margin-bottom: 10px;
@@ -253,37 +213,244 @@
             color: #166534;
         }
 
+        /* ---- Footer buttons ----
+           Icon + label, matching the admin's .btn-action geometry (10px radius,
+           38px-ish height, 600 weight) rather than the old 12px-radius slabs,
+           with proper hover, active and focus states. */
         #rescheduleModal .rs-actions {
             display: flex;
             justify-content: flex-end;
+            align-items: center;
             gap: 12px;
+            padding-top: 4px;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 4px;
         }
 
         #rescheduleModal .rs-btn {
-            min-width: 120px;
-            padding: 12px 22px;
-            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 42px;
+            min-width: 132px;
+            padding: 11px 20px;
+            border-radius: 10px;
             border: 1px solid transparent;
             font-family: inherit;
-            font-size: 15px;
-            font-weight: 800;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+            line-height: 1.2;
             cursor: pointer;
+            transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+        }
+
+        #rescheduleModal .rs-btn__icon {
+            font-size: 19px;
+            line-height: 1;
+            font-weight: normal;
+            font-style: normal;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            flex-shrink: 0;
         }
 
         #rescheduleModal .rs-btn-ghost {
             background: #ffffff;
             border-color: #cbd5e1;
             color: #475569;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+
+        #rescheduleModal .rs-btn-ghost:hover:not(:disabled) {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #334155;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
         }
 
         #rescheduleModal .rs-btn-primary {
-            background: #0d47a1;
+            background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%);
+            border-color: #0d47a1;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(13, 71, 161, 0.32);
+        }
+
+        #rescheduleModal .rs-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(13, 71, 161, 0.42);
+            filter: brightness(1.06);
+        }
+
+        #rescheduleModal .rs-btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
+        }
+
+        #rescheduleModal .rs-btn:focus-visible {
+            outline: 2px solid #0d47a1;
+            outline-offset: 2px;
+        }
+
+        #rescheduleModal .rs-btn:disabled {
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Disabled primary kept a hard grey fill that read as a dead control
+           even when it was merely waiting on a date+time choice. Muted surface
+           plus reduced opacity says "not yet" without shouting. */
+        #rescheduleModal .rs-btn-primary:disabled {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        #rescheduleModal .rs-btn-primary.is-busy .rs-btn__icon {
+            /* busy state: a slow spin, so "Saving..." has motion behind it */
+            animation: rs-icon-spin 0.9s linear infinite;
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+
+        @keyframes rs-icon-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            #rescheduleModal .rs-btn-primary.is-busy .rs-btn__icon {
+                animation: none;
+            }
+
+            #rescheduleModal .rs-btn:hover:not(:disabled) {
+                transform: none;
+            }
+        }
+
+        body.dark-mode #rescheduleModal .rs-actions {
+            border-top-color: #334155;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-ghost {
+            background: #1e293b;
+            border-color: #475569;
+            color: #e2e8f0;
+            box-shadow: none;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-ghost:hover:not(:disabled) {
+            background: #334155;
+            border-color: #64748b;
             color: #ffffff;
         }
 
-        #rescheduleModal .rs-btn-primary:disabled {
-            background: #cbd5e1;
-            cursor: not-allowed;
+        /* Was left unstyled in dark mode, so the primary kept the light-mode
+           navy gradient - the one button on the card that ignored the theme. */
+        body.dark-mode #rescheduleModal .rs-btn-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            border-color: #3b82f6;
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+            filter: none;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn:focus-visible {
+            outline-color: #64b5f6;
+        }
+
+        body.dark-mode #rescheduleModal .rs-btn-primary:disabled {
+            background: #1e293b;
+            border-color: #334155;
+            color: #64748b;
+        }
+
+/* ---- Modal header / body polish ---- */
+        /* The close button's appearance is the shared .modal-x rule in
+           appointment-modal.css (same 40px circle the Book Appointment modal and
+           the other admin modals use). Only its placement is modal-specific:
+           this card is position: relative and has no header bar of its own. */
+        #rescheduleModal .modal-x {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            z-index: 2;
+        }
+
+        /* The "Blocked: reason" pill had no dark-mode rule, so a light pink
+           chip sat on the dark card. */
+        body.dark-mode #rescheduleModal .rs-current .rs-flag {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        body.dark-mode #rescheduleModal .rs-hint {
+            color: #94a3b8;
+        }
+
+        /* Calendar host. The flatpickr theme itself now applies here as well
+           (see doctors-calendar-theme.css, scoped to .rs-cal), so this only
+           provides the frame the calendar sits in. */
+        #rescheduleModal .rs-cal {
+            display: flex;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-calendar {
+            box-shadow: none;
+        }
+
+        /* The partially-blocked day dot: kept, but re-anchored for the shared
+           38px round day cells and given a light ring so it reads on top of
+           both the selected fill and the amber hover. */
+        #rescheduleModal .rs-cal .flatpickr-day.rs-partial::after {
+            content: "";
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f59e0b;
+            box-shadow: 0 0 0 1.5px #ffffff;
+            z-index: 2;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-day.rs-partial.today::after {
+            box-shadow: 0 0 0 1.5px #eff6ff;
+        }
+
+        #rescheduleModal .rs-cal .flatpickr-day.rs-partial.selected::after {
+            box-shadow: 0 0 0 1.5px #1e63cd;
+        }
+
+        body.dark-mode #rescheduleModal .rs-cal .flatpickr-day.rs-partial::after {
+            box-shadow: 0 0 0 1.5px #1e293b;
+        }
+
+        body.dark-mode #rescheduleModal .rs-cal .flatpickr-day.rs-partial.today::after {
+            box-shadow: 0 0 0 1.5px #172554;
+        }
+
+        body.dark-mode #rescheduleModal .rs-cal .flatpickr-day.rs-partial.selected::after {
+            box-shadow: 0 0 0 1.5px #2563eb;
         }
 
         body.dark-mode #rescheduleModal .rs-card {
@@ -299,13 +466,8 @@
             color: #e2e8f0;
         }
 
-        body.dark-mode #rescheduleModal .rs-current,
-        body.dark-mode #rescheduleModal .rs-close {
+        body.dark-mode #rescheduleModal .rs-current {
             color: #94a3b8;
-        }
-
-        body.dark-mode #rescheduleModal .rs-close:hover {
-            background: #334155;
         }
 
         body.dark-mode #rescheduleModal .rs-slot {
@@ -352,16 +514,9 @@
             color: #bbf7d0;
         }
 
-        body.dark-mode #rescheduleModal .rs-btn-ghost {
-            background: #1e293b;
-            border-color: #475569;
-            color: #cbd5e1;
-        }
-
-        body.dark-mode #rescheduleModal .rs-cal .flatpickr-calendar {
-            background: #0f172a;
-            border-color: #334155;
-        }
+        /* The calendar's own colours come from the shared theme
+           (doctors-calendar-theme.css, scoped to .rs-cal), including dark mode.
+           Only the calendar SHELL is set here. */
 
         @media (max-width: 760px) {
             #rescheduleModal .rs-body {

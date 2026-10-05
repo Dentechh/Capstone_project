@@ -597,26 +597,87 @@
         flex-wrap: wrap;
     }
 
-    .period-btn {
-        padding: 8px 16px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 13px;
+    /* Financial Reports: the period buttons and the Unpaid Procedures range
+       buttons are the same control in two toolbars, so they share one base.
+       Styling mirrors the admin's .filter-btn--sort (outlined white surface,
+       navy hover, navy focus ring, tinted selected state) instead of the old
+       flat grey pills with a solid navy fill. */
+    .period-btn,
+    .unpaid-filter-btn,
+    .proc-period-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 38px;
+        padding: 9px 15px;
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        font-family: inherit;
+        font-size: 13.5px;
         font-weight: 600;
+        line-height: 1.2;
+        white-space: nowrap;
         cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
     }
 
-    .period-btn:hover {
-        background: #e3ecfa;
+    .period-btn>.material-symbols-rounded,
+    .unpaid-filter-btn>.material-symbols-rounded,
+    .proc-period-btn>.material-symbols-rounded,
+    .financial-download-btn>.material-symbols-rounded,
+    .fin-nav-btn>.material-symbols-rounded {
+        font-size: 18px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
     }
 
-    .period-btn.active {
-        background: var(--navy, #0d47a1);
-        color: #fff;
+    .period-btn:hover:not(:disabled),
+    .unpaid-filter-btn:hover:not(:disabled),
+    .proc-period-btn:hover:not(:disabled) {
+        background: #eaf2fc;
+        color: var(--navy-dark, #0a3b7d);
         border-color: var(--navy, #0d47a1);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(13, 71, 161, 0.16);
+    }
+
+    .period-btn:focus-visible,
+    .unpaid-filter-btn:focus-visible,
+    .proc-period-btn:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 2px;
+    }
+
+    .period-btn.active,
+    .unpaid-filter-btn.active,
+    .proc-period-btn.active {
+        background: #eff6ff;
+        color: var(--navy, #0d47a1);
+        border-color: #bfdbfe;
+    }
+
+    .period-btn:disabled,
+    .unpaid-filter-btn:disabled,
+    .proc-period-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
 
     body.dark-mode .income-trend-card {
@@ -633,20 +694,53 @@
         color: #42A5F6;
     }
 
-    body.dark-mode .period-btn {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(45, 55, 75, 0.75);
-        color: #cbd5e1;
+    body.dark-mode .period-btn,
+    body.dark-mode .unpaid-filter-btn,
+    body.dark-mode .proc-period-btn {
+        background: #131a26;
+        color: #e2e8f0;
+        border-color: #33415a;
     }
 
-    body.dark-mode .period-btn:hover {
-        background: rgba(60, 70, 95, 0.85);
+    body.dark-mode .period-btn:hover:not(:disabled),
+    body.dark-mode .unpaid-filter-btn:hover:not(:disabled),
+    body.dark-mode .proc-period-btn:hover:not(:disabled) {
+        background: #1e3a8a;
+        color: #dbeafe;
+        border-color: var(--gold, #64b5f6);
     }
 
-    body.dark-mode .period-btn.active {
-        background: #42A5F6;
-        border-color: #42A5F6;
-        color: #1e293b;
+    /* Selected state in dark mode. The previous rule used a 12% blue tint with
+       blue text, which left the label riding on whatever the section's blurred
+       photo backdrop happened to be: over a light patch that is ~1.7:1, far
+       under the 4.5:1 minimum. An opaque chip with a dark label removes the
+       backdrop from the equation entirely (~8.5:1) and matches the dark-mode
+       select chips, where #64b5f6 is already the accent-on-dark colour. */
+    body.dark-mode .period-btn.active,
+    body.dark-mode .unpaid-filter-btn.active,
+    body.dark-mode .proc-period-btn.active {
+        background: #64b5f6;
+        color: #0b1220;
+        border-color: #90caf9;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Hovering the selected button must not drop it back to the neutral hover
+       surface; it keeps the chip and just lightens, so the current period stays
+       identifiable while the pointer is on it. */
+    body.dark-mode .period-btn.active:hover:not(:disabled),
+    body.dark-mode .unpaid-filter-btn.active:hover:not(:disabled),
+    body.dark-mode .proc-period-btn.active:hover:not(:disabled) {
+        background: #90caf9;
+        color: #0b1220;
+        border-color: #bae6fd;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    body.dark-mode .period-btn.active>.material-symbols-rounded,
+    body.dark-mode .unpaid-filter-btn.active>.material-symbols-rounded,
+    body.dark-mode .proc-period-btn.active>.material-symbols-rounded {
+        font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
     }
 
     /* ---------- Financial Reports: Unpaid Procedures table ---------- */
@@ -662,37 +756,29 @@
     }
 
     .unpaid-filter-btn {
-        padding: 8px 16px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .unpaid-filter-btn:hover { background: #e3ecfa; }
-
-    .unpaid-filter-btn.active {
-        background: var(--navy, #0d47a1);
-        color: #fff;
-        border-color: var(--navy, #0d47a1);
+        /* Shared with .period-btn above; see that block for the full treatment. */
     }
 
     .unpaid-search {
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #fff;
-        color: #263238;
-        font-size: 13px;
         min-width: 230px;
+        padding: 10px 14px;
+        background: #ffffff;
+        color: #1a1a1a;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        font-family: inherit;
+        font-size: 14px;
         outline: none;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
-    .unpaid-search:focus { border-color: #42A5F6; }
+    .unpaid-search::placeholder { color: #94a3b8; }
+
+    .unpaid-search:focus {
+        border-color: var(--navy, #0d47a1);
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+    }
 
     .unpaid-table-wrap {
         max-height: 420px;
@@ -740,24 +826,15 @@
         border-bottom: none;
     }
 
-    body.dark-mode .unpaid-filter-btn {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(45, 55, 75, 0.75);
-        color: #cbd5e1;
-    }
-
-    body.dark-mode .unpaid-filter-btn:hover { background: rgba(60, 70, 95, 0.85); }
-
-    body.dark-mode .unpaid-filter-btn.active {
-        background: #42A5F6;
-        border-color: #42A5F6;
-        color: #1e293b;
-    }
-
     body.dark-mode .unpaid-search {
-        background: rgba(45, 55, 75, 0.75);
-        border-color: rgba(255, 255, 255, 0.15);
-        color: #e2e8f0;
+        background: #131a26;
+        border-color: #33415a;
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .unpaid-search:focus {
+        border-color: var(--gold, #64b5f6);
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
     }
 
     body.dark-mode .unpaid-table-wrap { border-color: rgba(255, 255, 255, 0.12); }
@@ -778,23 +855,77 @@
         margin-bottom: 16px;
     }
 
+    /* The Download Report action is the section's primary CTA, so it takes the
+       same treatment as #newAppointmentBtn: the admin's navy gradient, a soft
+       coloured shadow, and a lift on hover. A flat fill looked like the other
+       neutral buttons and gave the one destructive-free primary action on the
+       page no visual weight. */
     .financial-download-btn {
-        background: #0d47a1;
-        color: #fff;
-        border-color: #0d47a1;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        min-height: 40px;
+        padding: 10px 20px;
+        background: var(--grad-gold);
+        background-color: #0d47a1;
+        color: #ffffff;
+        border: 1px solid #0a3b7d;
+        border-radius: 10px;
+        box-shadow: 0 4px 14px rgba(30, 64, 175, 0.28),
+            inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        line-height: 1.2;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease,
+            filter 0.15s ease;
     }
 
-    .financial-download-btn:hover {
-        background: #0b3d8f;
+    .financial-download-btn:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(30, 64, 175, 0.38),
+            inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    }
+
+    .financial-download-btn:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3),
+            inset 0 1px 2px rgba(15, 23, 42, 0.25);
+    }
+
+    .financial-download-btn:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 3px;
     }
 
     .financial-download-btn:disabled {
-        opacity: 0.6;
+        opacity: 0.65;
         cursor: not-allowed;
+        transform: none;
+        filter: none;
+        box-shadow: none;
+    }
+
+    body.dark-mode .financial-download-btn {
+        background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+        border-color: #3b82f6;
+        color: #dbeafe;
+    }
+
+    body.dark-mode .financial-download-btn:hover:not(:disabled) {
+        background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+        color: #eff6ff;
     }
 
     /* Financial Reports: previous / next picker under the period buttons
-       (Weekly, Monthly, Yearly). Styled like .period-btn so it blends in. */
+       (Weekly, Monthly, Yearly). Shares the .period-btn surface so the whole
+       toolbar reads as one control set. */
     .financial-nav {
         display: flex;
         align-items: center;
@@ -803,79 +934,174 @@
     }
 
     .fin-nav-btn {
-        width: 34px;
-        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
         padding: 0;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 20px;
-        font-weight: 700;
-        line-height: 1;
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
         cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+    }
+
+    .fin-nav-btn>.material-symbols-rounded {
+        font-size: 22px;
     }
 
     .fin-nav-btn:hover:not(:disabled) {
-        background: #e3ecfa;
+        background: #eaf2fc;
+        color: var(--navy-dark, #0a3b7d);
+        border-color: var(--navy, #0d47a1);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(13, 71, 161, 0.16);
+    }
+
+    .fin-nav-btn:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 2px;
     }
 
     .fin-nav-btn:disabled {
         opacity: 0.4;
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
     }
 
     .fin-nav-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         min-width: 180px;
+        min-height: 38px;
         padding: 8px 16px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 13px;
+        background: #f8fafc;
+        color: #1e293b;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-size: 13.5px;
         font-weight: 700;
         text-align: center;
     }
 
-    .fin-nav-select {
-        min-width: 120px;
-        height: 34px;
-        padding: 0 12px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 13px;
-        font-weight: 700;
+    /* The stepper's <select>s are wrapped in the shared .adm-select listbox.
+       That wrapper is width:100% with a vertical margin for the tall modal
+       forms; inside this single-line row it must shrink to the control instead. */
+    #financialNav .adm-select {
+        width: auto;
+        margin: 0;
+    }
+
+    /* Select chip copied from the admin's dropdown design (#newApptModal
+       .adm-form-side select): tinted navy field with a chevron tile. Rules are
+       id-scoped because appointment-modal.css sets a global
+       "body.dark-mode .adm-select>select" that would otherwise outrank a plain
+       .fin-nav-select class rule and repaint this row's chrome. */
+    #financialNav .fin-nav-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        min-width: 148px;
+        height: 38px;
+        padding: 0 42px 0 14px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f8ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#f1f8ff, #f1f8ff);
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 8px center, 0 0;
+        background-size: 24px 24px, 100% 100%;
+        color: #0d47a1;
+        box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
         font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
         cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease,
+            background-color 0.25s ease;
     }
 
-    .fin-nav-select:hover {
-        background: #e3ecfa;
+    #financialNav .fin-nav-select:hover {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
     }
 
-    body.dark-mode .fin-nav-select {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(45, 55, 75, 0.75);
-        color: #cbd5e1;
+    #financialNav .fin-nav-select:focus-visible {
+        outline: none;
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
     }
 
-    body.dark-mode .fin-nav-select option {
-        background: #1e293b;
-        color: #cbd5e1;
+    /* The open listbox state, which the enhancement drives off the wrapper. */
+    #financialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    body.dark-mode #financialNav .fin-nav-select {
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+    }
+
+    body.dark-mode #financialNav .fin-nav-select:hover,
+    body.dark-mode #financialNav .fin-nav-select:focus-visible {
+        border-color: #64b5f6;
+        background-color: #262626;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    body.dark-mode #financialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #64b5f6;
+        background-color: #262626;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
     }
 
     body.dark-mode .fin-nav-btn,
     body.dark-mode .fin-nav-label {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(45, 55, 75, 0.75);
-        color: #cbd5e1;
+        background: #131a26;
+        border-color: #33415a;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .fin-nav-label {
+        background: #0b1220;
     }
 
     body.dark-mode .fin-nav-btn:hover:not(:disabled) {
-        background: rgba(60, 70, 95, 0.85);
+        background: #1e3a8a;
+        color: #dbeafe;
+        border-color: var(--gold, #64b5f6);
     }
 
     .status-badge {
@@ -1042,46 +1268,1532 @@
         margin-bottom: 20px;
     }
 
+    /* The Dashboard's "Procedures Performed" selector is the same segmented
+       control as Financial Reports, so it shares the .period-btn base too
+       rather than keeping the retired flat grey treatment alive next to it. */
     .proc-period-btn {
-        padding: 8px 16px;
-        border-radius: 8px;
-        border: 1px solid #cfd8dc;
-        background: #f5f7fa;
-        color: #37474f;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-    }
-
-    .proc-period-btn:hover {
-        background: #e3ecfa;
-    }
-
-    .proc-period-btn.active {
-        background: var(--navy, #0d47a1);
-        color: #fff;
-        border-color: var(--navy, #0d47a1);
-    }
-
-    body.dark-mode .proc-period-btn {
-        border-color: rgba(255, 255, 255, 0.15);
-        background: rgba(45, 55, 75, 0.75);
-        color: #cbd5e1;
-    }
-
-    body.dark-mode .proc-period-btn:hover {
-        background: rgba(60, 70, 95, 0.85);
-    }
-
-    body.dark-mode .proc-period-btn.active {
-        background: #42A5F6;
-        border-color: #42A5F6;
-        color: #1e293b;
+        /* Shared with .period-btn above; see that block for the full treatment. */
     }
 
     .income-chart-wrapper {
         position: relative;
         height: 350px;
         width: 100%;
+    }
+
+    /* ---------- Financial Reports: stat card watermark icons ----------
+       These were emoji (₱ as a bare character, 📄, 🧾). Emoji render through a
+       fallback font at whatever weight and baseline the OS picks, which is why
+       they sat differently from the rest of the card and looked pasted on.
+       Material Symbols ligatures now carry all three, so they need the standard
+       reset or the font falls back to spelling the word. */
+    #section-financialreports .metric-bg-icon>.material-symbols-rounded {
+        font-size: 68px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+        user-select: none;
+    }
+
+    /* ---------- Treatment Records: delete-row action ----------
+       Same 38px icon-button geometry and red destructive palette as the
+       Appointments / My Patients row actions, so every action column in the
+       dashboard matches. */
+    .td-records .td-row-actions {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    .td-records .td-delete-row {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0;
+        margin: 0;
+        border: 1px solid transparent;
+        border-radius: 10px;
+        background: #ef4444;
+        border-color: #dc2626;
+        color: #ffffff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+        cursor: pointer;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease,
+            transform 0.12s ease;
+    }
+
+    .td-records .td-delete-row>.material-symbols-rounded {
+        font-size: 21px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
+        margin-bottom: 0;
+    }
+
+    .td-records .td-delete-row:hover:not(:disabled) {
+        background: #dc2626;
+        border-color: #b91c1c;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+    }
+
+    .td-records .td-delete-row:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .td-records .td-delete-row:focus-visible {
+        outline: 2px solid var(--navy);
+        outline-offset: 2px;
+    }
+
+    .td-records .td-delete-row:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* The header label sits in a 60px column, so it cannot read at the table's
+       normal header size. Marked for assistive tech and hidden visually. */
+    .td-records .td-actions-head {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    body.dark-mode .td-records .td-delete-row {
+        background: #b91c1c;
+        border-color: #ef4444;
+        color: #ffe4e4;
+    }
+
+    body.dark-mode .td-records .td-delete-row:hover:not(:disabled) {
+        background: #991b1b;
+        border-color: #dc2626;
+    }
+
+    @media (max-width: 1024px) {
+        .td-records .td-delete-row {
+            width: 42px;
+            height: 42px;
+            min-width: 42px;
+            min-height: 42px;
+        }
+
+        .td-records .td-delete-row>.material-symbols-rounded {
+            font-size: 23px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* The table already scrolls sideways inside .td-records__scroll, so the
+           delete cell stays a normal cell rather than stacking. */
+        .td-records .td-row-actions {
+            text-align: center;
+        }
+    }
+
+    /* ---------- Dashboard: stat cards, urgency row, recent list ---------- */
+    /* The stat cards are <a> elements now, so each one opens the tab it counts.
+       Only the anchor defaults are reset - the existing .metric-card surface,
+       icon, colours and nth-child accents in admin.css are all left to apply. */
+    #section-dashboard .metric-card--link {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        /* Lift slightly less than a plain hover so the "this goes somewhere"
+           affordance stays clear of the already-raised resting state. */
+        transition: transform 0.25s ease, box-shadow 0.25s ease,
+            border-color 0.25s ease;
+    }
+
+    #section-dashboard .metric-card--link:hover {
+        border-color: rgba(13, 71, 161, 0.28);
+    }
+
+    #section-dashboard .metric-card--link:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 3px;
+    }
+
+    /* ---------- Dashboard: label legibility ----------
+       Recomputed against the effective card background (rgba(255,255,255,.75) over
+       the blurred photo in light, rgba(30,35,45,.75) in dark).
+
+       Every secondary label here was failing WCAG AA. The pre-existing uppercase
+       labels (.metric-data p, .mini-stat-data p) carried opacity:0.9 on top of a
+       mid grey, which lands at 3.99:1 - the worst of the set. My own hint rules
+       copied that opacity and so also failed at 3.55:1.
+
+       Fix: drop the opacity, move to slate-600 (#475569) light / slate-300
+       (#cbd5e1) dark, and nudge the sizes up a point. Opacity is removed rather
+       than compensated with a darker colour because it also flattens the text
+       weight and is the reason it read as "faded" rather than merely light. */
+    #section-dashboard .metric-data p,
+    #section-dashboard .mini-stat-data p {
+        font-size: 12px;
+        color: #334155;
+        opacity: 1;
+    }
+
+    #section-dashboard .metric-data__hint,
+    #section-dashboard .mini-stat-hint {
+        font-size: 12.5px;
+        line-height: 1.4;
+        color: #475569;
+        opacity: 1;
+        margin-top: 4px;
+    }
+
+    /* .dashboard-subhead__hint is NOT grouped here: it sits on the glass panel
+       defined further down and keeps its own colour with it. */
+    #section-dashboard .recent-header__text p,
+    #section-dashboard .recent-empty__hint {
+        font-size: 12.5px;
+        color: #475569;
+        opacity: 1;
+    }
+
+    /* The dark-mode counterparts in admin.css use #b0bec5 / #94a3b8, which sit
+       fine on a flat dark panel but go muddy against the blurred photo. */
+    body.dark-mode #section-dashboard .metric-data p,
+    body.dark-mode #section-dashboard .mini-stat-data p {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode #section-dashboard .metric-data__hint,
+    body.dark-mode #section-dashboard .mini-stat-hint {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode #section-dashboard .dashboard-subhead__hint,
+    body.dark-mode #section-dashboard .recent-header__text p,
+    body.dark-mode #section-dashboard .recent-empty__hint {
+        color: #cbd5e1;
+    }
+
+    /* Stat card hints. */
+    #section-dashboard .metric-data__hint {
+        margin-top: 3px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    body.dark-mode #section-dashboard .metric-data__hint {
+        color: #cbd5e1;
+    }
+
+    /* The background watermark is a Material Symbol now instead of an emoji, so
+       the ligature needs resetting or the font falls back to the word. */
+    #section-dashboard .metric-bg-icon>.material-symbols-rounded {
+        font-size: 68px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+        user-select: none;
+    }
+
+    /* The two section headings ("Urgency Breakdown", "Reporting Period") and their
+       hints sit directly on the blurred photo backdrop with no surface of their
+       own, so light-grey text over it read inconsistently.
+
+       Now that they have a panel, it is the SAME panel every other block on the
+       dashboard uses - the glass card from .chart-card / .metric-card /
+       .recent-activity: translucent white, backdrop blur, soft white border and
+       the standard 20px radius. An earlier attempt used a dark slab here, which
+       was the only dark block on a light page and did not match anything. */
+    #section-dashboard .dashboard-subhead-block {
+        margin: 26px 0 12px;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(13, 71, 161, 0.08);
+    }
+
+    /* Navy on the light glass, matching .chart-header h3 so the two heading
+       levels read as one system. */
+    #section-dashboard .dashboard-subhead {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0;
+        text-transform: none;
+        color: #0d47a1;
+    }
+
+    /* Tucks the hint up under its heading. */
+    #section-dashboard .dashboard-subhead__hint {
+        margin: 3px 0 0;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.4;
+        color: #475569;
+    }
+
+    body.dark-mode #section-dashboard .dashboard-subhead-block {
+        background: rgba(30, 35, 45, 0.75);
+        border-color: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    body.dark-mode #section-dashboard .dashboard-subhead {
+        color: #90caf9;
+    }
+
+    body.dark-mode #section-dashboard .dashboard-subhead__hint {
+        color: #cbd5e1;
+    }
+
+    /* THE EMPTY ROW: this was repeat(3, 1fr) with only two children, so a third
+       empty cell was rendered next to Emergency and Normal. Two cards, two
+       columns. */
+    #section-dashboard .mini-stats-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    /* The emoji glyph was laid out as text inside a 44px box, which sat off
+       centre and inherited emoji metrics. A Material Symbol is centred properly
+       and matches every other icon in the admin. */
+    #section-dashboard .mini-stat-icon>.material-symbols-rounded {
+        font-size: 24px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
+    }
+
+    #section-dashboard .mini-stat-hint {
+        display: block;
+        margin-top: 4px;
+        font-weight: 600;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    /* Emergency and Normal were both the same blue, so the one number that
+       actually matters could not be told apart at a glance. Reuse the urgency
+       palette the Appointments badges already use: red for Emergency, quiet
+       slate for Normal. */
+    #section-dashboard .mini-stat-card.emergency .mini-stat-icon {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    #section-dashboard .mini-stat-card.normal .mini-stat-icon {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    #section-dashboard .mini-stat-card.emergency .mini-stat-data h3 {
+        color: #b91c1c;
+    }
+
+    #section-dashboard .mini-stat-card.normal .mini-stat-data h3 {
+        color: #334155;
+    }
+
+    body.dark-mode #section-dashboard .mini-stat-card.emergency .mini-stat-icon {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+    }
+
+    body.dark-mode #section-dashboard .mini-stat-card.normal .mini-stat-icon {
+        background: #334155;
+        color: #cbd5e1;
+    }
+
+    body.dark-mode #section-dashboard .mini-stat-card.emergency .mini-stat-data h3 {
+        color: #fca5a5;
+    }
+
+    body.dark-mode #section-dashboard .mini-stat-card.normal .mini-stat-data h3 {
+        color: #cbd5e1;
+    }
+
+    /* ---------- Recent Accepted Patients: View all + clickable rows ---------- */
+    #section-dashboard .recent-header {
+        gap: 16px;
+    }
+
+    #section-dashboard .recent-header__text h3 {
+        margin: 0;
+    }
+
+    #section-dashboard .recent-header__text p {
+        margin: 3px 0 0;
+        font-weight: 600;
+    }
+
+    /* Was bare underlined-on-hover text with a "→" character. Now a real chip:
+       it reads as tappable, has a focus ring, and the arrow is an icon that can
+       slide on hover instead of a glyph that cannot. */
+    #section-dashboard .view-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--navy, #0d47a1);
+        font-size: 12.5px;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: background-color 0.2s ease, color 0.2s ease,
+            border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #section-dashboard .view-all:hover {
+        background: var(--navy, #0d47a1);
+        border-color: var(--navy, #0d47a1);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(13, 71, 161, 0.24);
+    }
+
+    #section-dashboard .view-all:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 3px;
+    }
+
+    #section-dashboard .view-all__icon {
+        font-size: 17px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        transition: transform 0.2s ease;
+    }
+
+    #section-dashboard .view-all:hover .view-all__icon {
+        transform: translateX(3px);
+    }
+
+    body.dark-mode #section-dashboard .view-all {
+        background: #131a26;
+        border-color: #33415a;
+        color: #7dd3fc;
+    }
+
+    body.dark-mode #section-dashboard .view-all:hover {
+        background: #1e3a8a;
+        border-color: var(--gold, #64b5f6);
+        color: #eff6ff;
+    }
+
+    /* The rows are anchors now. Keep the existing card look, add the anchor
+       reset, a focus ring, and a chevron that only appears on hover so the row
+       does not look busier than before. */
+    #section-dashboard .recent-item {
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        transition: background-color 0.2s ease, border-color 0.2s ease,
+            transform 0.2s ease;
+    }
+
+    #section-dashboard .recent-item:hover {
+        transform: translateX(3px);
+    }
+
+    #section-dashboard .recent-item:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 2px;
+    }
+
+    #section-dashboard .recent-go {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 8px;
+        font-size: 18px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        color: var(--navy, #0d47a1);
+        opacity: 0;
+        transform: translateX(-4px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    #section-dashboard .recent-item:hover .recent-go,
+    #section-dashboard .recent-item:focus-visible .recent-go {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    body.dark-mode #section-dashboard .recent-go {
+        color: #64b5f6;
+    }
+
+    #section-dashboard .recent-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 34px 16px;
+        text-align: center;
+    }
+
+    #section-dashboard .recent-empty__icon {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 32;
+        color: #94a3b8;
+    }
+
+    #section-dashboard .recent-empty p {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: #334155;
+    }
+
+    #section-dashboard .recent-empty__hint {
+        font-weight: 600;
+    }
+
+    body.dark-mode #section-dashboard .recent-empty p {
+        color: #cbd5e1;
+    }
+
+    /* ---------- Procedures period buttons: motion ----------
+       The Overall / Today / Weekly / Monthly / Yearly group shares .period-btn
+       with the Financial Reports period row, so the animation is expressed here
+       rather than in the shared rule, to keep that row's behaviour untouched. */
+    .proc-period-btn {
+        will-change: transform;
+        transition: background-color 0.2s ease, color 0.2s ease,
+            border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* A small overshoot on the way up reads as "pressable", where the shared
+       rule's flat translateY(-1px) reads as nothing happening. */
+    .proc-period-btn:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.03);
+    }
+
+    /* Press in, so the click is acknowledged. */
+    .proc-period-btn:active:not(:disabled) {
+        transform: translateY(0) scale(0.97);
+        transition-duration: 0.08s;
+    }
+
+    /* The active period stays put instead of lifting, so it never looks like
+       the cursor is over it when it is not. */
+    .proc-period-btn.active {
+        transform: none;
+    }
+
+    .proc-period-btn.active:hover:not(:disabled) {
+        transform: translateY(-1px);
+    }
+
+    /* Respect the OS "reduce motion" setting rather than animating regardless. */
+    @media (prefers-reduced-motion: reduce) {
+        .proc-period-btn,
+        .proc-period-btn:hover:not(:disabled),
+        .proc-period-btn:active:not(:disabled) {
+            transform: none !important;
+            transition: background-color 0.2s ease, color 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        #section-dashboard .view-all__icon,
+        #section-dashboard .recent-go,
+        #section-dashboard .recent-item {
+            transition: opacity 0.2s ease;
+            transform: none !important;
+        }
+    }
+
+    /* ---------- Recent Accepted Patients: row layout ---------- */
+    /* The rows are <a> elements, so each needs its display restored: an anchor
+       is inline by default, which would collapse the flex row. admin.css
+       styles .recent-item as flex, so this only matters as a safety net for the
+       newer <span> children used inside it. */
+    #section-dashboard .recent-info,
+    #section-dashboard .recent-sub,
+    #section-dashboard .recent-meta,
+    #section-dashboard .recent-date {
+        display: flex;
+    }
+
+    #section-dashboard .recent-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 3px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    /* The service / dentist line is the replacement for the account number.
+       Truncates with an ellipsis rather than wrapping, so a long procedure name
+       cannot push the date off the row. */
+    #section-dashboard .recent-sub {
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: #475569;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    #section-dashboard .recent-sub__service {
+        color: #475569;
+    }
+
+    #section-dashboard .recent-sub__dentist {
+        color: var(--navy, #0d47a1);
+        font-weight: 700;
+    }
+
+    #section-dashboard .recent-sub__sep {
+        color: #94a3b8;
+        font-weight: 700;
+    }
+
+    body.dark-mode #section-dashboard .recent-sub,
+    body.dark-mode #section-dashboard .recent-sub__service {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode #section-dashboard .recent-sub__dentist {
+        color: #7dd3fc;
+    }
+
+    body.dark-mode #section-dashboard .recent-sub__sep {
+        color: #64748b;
+    }
+
+    /* Date column: a calendar glyph plus the formatted date, stacked against
+       the chevron. Was a bare raw ISO string with no icon and no structure. */
+    #section-dashboard .recent-meta {
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: 12px;
+    }
+
+    #section-dashboard .recent-date {
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        background: rgba(13, 71, 161, 0.08);
+        border: 1px solid rgba(13, 71, 161, 0.16);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.2;
+        color: #0d47a1;
+        white-space: nowrap;
+    }
+
+    #section-dashboard .recent-date--muted {
+        background: rgba(100, 116, 139, 0.1);
+        border-color: rgba(100, 116, 139, 0.2);
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    #section-dashboard .recent-date__icon {
+        font-size: 15px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+        flex-shrink: 0;
+    }
+
+    body.dark-mode #section-dashboard .recent-date {
+        background: rgba(100, 181, 246, 0.14);
+        border-color: rgba(100, 181, 246, 0.32);
+        color: #7dd3fc;
+    }
+
+    body.dark-mode #section-dashboard .recent-date--muted {
+        background: rgba(100, 116, 139, 0.16);
+        border-color: rgba(148, 163, 184, 0.24);
+        color: #94a3b8;
+    }
+
+    @media (max-width: 640px) {
+        /* admin.css already stacks .recent-item at 768px; this keeps the date
+           pill from being crushed once the row is vertical. */
+        #section-dashboard .recent-meta {
+            margin-left: 0;
+        }
+    }
+
+    /* ---------- Dark / light mode toggle ----------
+       Scoped to .admin-profile, which only exists in the dashboard header, so the
+       admin login page's own .theme-toggle styling is untouched.
+
+       The original control had no hover state at all (background: none and no
+       :hover rule), so it read as decoration rather than a button. It also had no
+       :focus-visible ring on a borderless button, and swapped the two icons with
+       display:none, which cannot be animated. */
+    .admin-profile .theme-toggle {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        padding: 0;
+        background: rgba(255, 255, 255, 0.62);
+        border: 1px solid rgba(13, 71, 161, 0.14);
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        color: var(--navy, #0d47a1);
+        cursor: pointer;
+        /* Clips the rotating icons to the rounded surface. */
+        overflow: hidden;
+        transition: background-color 0.2s ease, border-color 0.2s ease,
+            box-shadow 0.2s ease, transform 0.15s ease;
+    }
+
+    /* Both icons are stacked and cross-faded. `display: block` is set
+       explicitly to beat admin.css's `.sun-icon { display: none }`, which would
+       otherwise keep the sun out of the stacking context entirely. */
+    .admin-profile .theme-toggle .theme-icon {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        margin: auto;
+        display: block;
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+        transition: opacity 0.26s ease, transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    /* Light mode shows the moon (switch to dark). The sun sits rotated away. */
+    .admin-profile .theme-toggle .moon-icon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+        color: #0d47a1;
+    }
+
+    .admin-profile .theme-toggle .sun-icon {
+        opacity: 0;
+        transform: rotate(-90deg) scale(0.4);
+        /* The admin's gold, so the sun matches the brand rather than the old
+           off-palette orange. */
+        color: #d4af37;
+    }
+
+    body.dark-mode .admin-profile .theme-toggle .moon-icon {
+        opacity: 0;
+        transform: rotate(90deg) scale(0.4);
+    }
+
+    body.dark-mode .admin-profile .theme-toggle .sun-icon {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+
+    .admin-profile .theme-toggle:hover {
+        background: #ffffff;
+        border-color: rgba(13, 71, 161, 0.32);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 71, 161, 0.18);
+    }
+
+    .admin-profile .theme-toggle:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(13, 71, 161, 0.16);
+    }
+
+    .admin-profile .theme-toggle:focus-visible {
+        outline: 2px solid var(--navy, #0d47a1);
+        outline-offset: 3px;
+    }
+
+    /* Dark mode: the surface has to lift off the dark topbar rather than reading
+       as a pale chip. */
+    body.dark-mode .admin-profile .theme-toggle {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #7dd3fc;
+        box-shadow: none;
+    }
+
+    body.dark-mode .admin-profile .theme-toggle .moon-icon {
+        color: #7dd3fc;
+    }
+
+    body.dark-mode .admin-profile .theme-toggle .sun-icon {
+        color: var(--gold, #64b5f6);
+    }
+
+    body.dark-mode .admin-profile .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(100, 181, 246, 0.45);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    body.dark-mode .admin-profile .theme-toggle:focus-visible {
+        outline-color: var(--gold, #64b5f6);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .admin-profile .theme-toggle,
+        .admin-profile .theme-toggle .theme-icon {
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .admin-profile .theme-toggle:hover,
+        .admin-profile .theme-toggle .moon-icon,
+        .admin-profile .theme-toggle .sun-icon,
+        body.dark-mode .admin-profile .theme-toggle .moon-icon,
+        body.dark-mode .admin-profile .theme-toggle .sun-icon {
+            transform: none;
+        }
+    }
+
+    /* ---------- Admin sidebar ----------
+       admin.css carried two unreadable active states that this replaces:
+       light mode painted the active row white on --gold-light (#85ceff) and dark
+       mode white on --gold (#64b5f6) - roughly 1.5:1 in both. Active is now a
+       solid navy fill with white text in light mode and a light-blue fill with
+       dark text in dark mode, so the label is legible against its own fill
+       either way.
+
+       Layout note: .sidebar is fixed at 260px and .main-content is offset by the
+       same amount (admin.css:137), so the width is left alone - changing it would
+       push the whole page sideways. */
+
+    .sidebar {
+        padding: 22px 16px 18px;
+        gap: 0;
+        border-right: 1px solid rgba(13, 71, 161, 0.16);
+        box-shadow: 2px 0 18px rgba(13, 71, 161, 0.08);
+        transition: background 0.35s ease, border-color 0.35s ease;
+    }
+
+    /* ---- Brand block ---- */
+    .sidebar-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 24px;
+        padding: 0 4px;
+    }
+
+    /* The brand spans the row and the mobile-only logout sits beside it; without
+       this the button gets squeezed by the full-width brand. */
+    .sidebar-logout-btn.mobile-only {
+        flex: 0 0 auto;
+    }
+
+    /* Stacked lockup: logo centred on top, wordmark beneath. */
+    .sidebar-brand {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0;
+    }
+
+    /* Two artwork variants are supplied: logo_lightMode.png for the light sidebar
+       and logo_darkMode.png for the dark one. No filter is used any more -
+       each file is already tuned for its background, so greyscale/invert only
+       degraded them. They are stacked and CSS reveals the matching one, which
+       means the right file is always in the DOM (no swap flash on toggle) and
+       the correct variant is pre-cached.
+
+       The tile background mirrors the artwork's own backing so a sub-pixel gap
+       at the rounded corners cannot show a frame. Sampled from the PNG corners:
+       the light file's backing is a gradient (#0f4ca6 -> #1360bb), the dark
+       file's is flat (#121b31). */
+    .sidebar-logo {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 74px;
+        height: 74px;
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0f4ca6 0%, #1360bb 100%);
+        border: 1px solid rgba(212, 175, 55, 0.55);
+        box-shadow: 0 4px 14px rgba(13, 71, 161, 0.22);
+    }
+
+    .sidebar-logo__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        /* The hidden one must not be announced or reachable by tab order. */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, visibility 0.2s;
+    }
+
+    .sidebar-logo__img--light {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    body.dark-mode .sidebar-logo__img--light {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    body.dark-mode .sidebar-logo__img--dark {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .sidebar-brand__text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    .sidebar-brand__name {
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        line-height: 1.2;
+        color: #0d47a1;
+        white-space: nowrap;
+    }
+
+    .sidebar-brand__sub {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 1.6px;
+        line-height: 1.3;
+        text-transform: uppercase;
+        color: #475569;
+        white-space: nowrap;
+    }
+
+    /* Small gold pill so the admin area is distinguishable from the public site
+       at a glance, and not just from the text. */
+    .sidebar-brand__badge {
+        align-self: center;
+        margin-top: 5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        background: rgba(13, 71, 161, 0.1);
+        border: 1px solid rgba(13, 71, 161, 0.2);
+        color: #0d47a1;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    /* ---- Nav list ---- */
+    .sidebar-nav {
+        gap: 4px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .sidebar .nav-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 14px;
+        border-radius: 11px;
+        border: 1px solid transparent;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: 0.1px;
+        line-height: 1.25;
+        color: #334155;
+        /* The old opacity: 0.6 greyed out every unselected row, which read as
+           disabled rather than merely inactive. */
+        opacity: 1;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.15s ease;
+    }
+
+    /* Tinted icon chip, matching the treatment-records delete button's geometry. */
+    .sidebar .nav-item__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: rgba(13, 71, 161, 0.08);
+        color: #0d47a1;
+        font-size: 19px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
+        transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .sidebar .nav-item__label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .sidebar .nav-item:hover {
+        background-color: rgba(13, 71, 161, 0.08);
+        border-color: rgba(13, 71, 161, 0.16);
+        color: #0d47a1;
+        transform: translateX(2px);
+        opacity: 1;
+    }
+
+    .sidebar .nav-item:hover .nav-item__icon {
+        background: rgba(13, 71, 161, 0.14);
+    }
+
+    /* Active: solid navy, white label, gold rail on the leading edge. The old
+       rule set border-left instead, which shifted the row's content sideways by
+       4px on every section change. */
+    .sidebar .nav-item.active {
+        background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+        border-color: #0a3b7d;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(13, 71, 161, 0.28);
+        opacity: 1;
+        transform: none;
+    }
+
+    .sidebar .nav-item.active::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 20px;
+        border-radius: 0 3px 3px 0;
+        background: #d4af37;
+    }
+
+    .sidebar .nav-item.active .nav-item__icon {
+        background: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .sidebar .nav-item:focus-visible {
+        outline: 2px solid #0d47a1;
+        outline-offset: 2px;
+    }
+
+    .sidebar .nav-item.active:focus-visible {
+        outline-color: #d4af37;
+    }
+
+    /* ---- Footer / logout ---- */
+    .sidebar-footer {
+        padding-top: 12px;
+        margin-top: 10px;
+        border-top: 1px solid rgba(13, 71, 161, 0.14);
+    }
+
+    .sidebar .nav-item.logout {
+        color: #b91c1c;
+    }
+
+    .sidebar .nav-item.logout .nav-item__icon {
+        background: rgba(185, 28, 28, 0.1);
+        color: #dc2626;
+    }
+
+    .sidebar .nav-item.logout:hover {
+        background-color: #b91c1c;
+        border-color: #991b1b;
+        color: #ffffff;
+    }
+
+    .sidebar .nav-item.logout:hover .nav-item__icon {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+    }
+
+    /* ---- Dark mode ---- */
+    body.dark-mode .sidebar {
+        background: linear-gradient(180deg, #0f172a 0%, #16203a 100%);
+        border-right-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 2px 0 18px rgba(0, 0, 0, 0.45);
+    }
+
+    body.dark-mode .sidebar-brand__name {
+        color: #90caf9;
+    }
+
+    body.dark-mode .sidebar-brand__sub {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .sidebar-brand__badge {
+        background: rgba(100, 181, 246, 0.14);
+        border-color: rgba(100, 181, 246, 0.34);
+        color: #7dd3fc;
+    }
+
+    /* Tile backing matches logo_darkMode.png's own corner colour (#121b31) so no
+       frame shows at the rounded corners. No filter here any more - the dark
+       artwork is already authored for this background. */
+    body.dark-mode .sidebar-logo {
+        background: #121b31;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    body.dark-mode .sidebar-footer {
+        border-top-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body.dark-mode .sidebar .nav-item {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .sidebar .nav-item__icon {
+        background: rgba(100, 181, 246, 0.12);
+        color: #7dd3fc;
+    }
+
+    body.dark-mode .sidebar .nav-item:hover {
+        background-color: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+
+    body.dark-mode .sidebar .nav-item:hover .nav-item__icon {
+        background: rgba(100, 181, 246, 0.2);
+    }
+
+    /* Light-blue fill with DARK text. The old rule kept white text here, which
+       is what made the active row unreadable in dark mode. */
+    body.dark-mode .sidebar .nav-item.active {
+        background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
+        border-color: #bae6fd;
+        color: #0b1220;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    body.dark-mode .sidebar .nav-item.active::before {
+        background: #0f172a;
+    }
+
+    body.dark-mode .sidebar .nav-item.active .nav-item__icon {
+        background: rgba(11, 18, 32, 0.16);
+        color: #0b1220;
+    }
+
+    body.dark-mode .sidebar .nav-item:focus-visible {
+        outline-color: #64b5f6;
+    }
+
+    body.dark-mode .sidebar .nav-item.active:focus-visible {
+        outline-color: #bae6fd;
+    }
+
+    body.dark-mode .sidebar .nav-item.logout {
+        color: #fca5a5;
+    }
+
+    body.dark-mode .sidebar .nav-item.logout .nav-item__icon {
+        background: rgba(239, 68, 68, 0.18);
+        color: #fca5a5;
+    }
+
+    body.dark-mode .sidebar .nav-item.logout:hover {
+        background-color: #b91c1c;
+        border-color: #ef4444;
+        color: #ffffff;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sidebar .nav-item,
+        .sidebar .nav-item:hover {
+            transform: none;
+            transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease;
+        }
+    }
+
+    /* ---------- Appointments: empty state ----------
+       Same shape as the Patient Dashboard's .pd-empty block, so the two tables
+       read identically. The row spans all 24 columns; the hidden columns are
+       display:none, so the cell still lays out across the 7 visible ones. */
+    .appt-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 44px 16px;
+        text-align: center;
+    }
+
+    .appt-empty__icon {
+        font-size: 34px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 32;
+        user-select: none;
+        color: #94a3b8;
+    }
+
+    .appt-empty__text {
+        font-size: 14.5px;
+        font-weight: 700;
+        line-height: 1.4;
+        color: #334155;
+    }
+
+    .appt-empty__hint {
+        font-size: 13px;
+        line-height: 1.5;
+        color: #64748b;
+        max-width: 46ch;
+    }
+
+    /* The placeholder is hidden until a fetch actually reports zero rows, so the
+       table never flashes "no appointments" while the first page is in flight.
+       `hidden` is restated so it wins over the appointment-table row display. */
+    #section-appointments .appt-empty-row[hidden] {
+        display: none !important;
+    }
+
+    body:not(.dark-mode) .appointment-table td:has(> .appt-empty),
+    body:not(.dark-mode) .appointment-table .appt-empty-row:hover {
+        background: transparent;
+        box-shadow: none;
+    }
+
+    body.dark-mode .appt-empty__icon {
+        color: #475569;
+    }
+
+    body.dark-mode .appt-empty__text {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .appt-empty__hint {
+        color: #94a3b8;
+    }
+
+    /* ---------- Action Palette: hover / focus tooltips ----------
+       Each .tool carries a data-tip describing what it paints. The bubble is
+       drawn with a ::after pseudo-element, so there is no JavaScript involved
+       and nothing for setTool() to keep in sync.
+
+       Shown on hover AND on :focus-visible, so keyboard users get the same
+       description a mouse user does. */
+
+    .action-palette {
+        /* The rail is the FIRST child of .chart-container and the odontogram card
+           the second, so at equal z-index the chart paints on top. The tooltip
+           opens to the right, straight over the odontogram, so the whole rail has
+           to sit above it -- a z-index on the bubble alone is not enough. */
+        position: relative;
+        z-index: 30;
+    }
+
+    .action-palette .tool {
+        /* Anchor for the bubble. */
+        position: relative;
+    }
+
+    /* :hover already applies a transform, which creates a stacking context and
+       traps the bubble's z-index inside the tile. Raising the tile itself on
+       hover lifts the bubble above the odontogram card with it. */
+    .action-palette .tool:hover,
+    .action-palette .tool:focus-visible {
+        z-index: 40;
+    }
+
+    .action-palette .tool::after {
+        content: attr(data-tip);
+        position: absolute;
+        /* Opens to the right of the rail, which is where the odontogram is, so
+           it floats over the chart rather than pushing the layout. */
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%) translateX(-4px);
+
+        z-index: 60;
+        width: max-content;
+        max-width: 230px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: #0b1220;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 8px 22px rgba(2, 6, 23, 0.45);
+
+        color: #f8fafc;
+        font-family: inherit;
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: 0;
+        text-align: left;
+        white-space: normal;
+        hyphens: none;
+        overflow-wrap: break-word;
+
+        /* Never intercept the pointer: the bubble must not steal the hover
+           that is keeping it open. */
+        pointer-events: none;
+
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s;
+    }
+
+    .action-palette .tool:hover::after,
+    .action-palette .tool:focus-visible::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(0);
+    }
+
+    /* A tooltip only makes sense where hovering is possible. */
+    @media (hover: none) {
+        .action-palette .tool::after {
+            display: none;
+        }
+    }
+
+    /* Short rails on phones: open the bubble to the left instead, so it cannot
+       run off the viewport beside the chart. */
+    @media (max-width: 768px) {
+        .action-palette .tool::after {
+            left: auto;
+            right: calc(100% + 12px);
+            max-width: 190px;
+        }
+
+        .action-palette .tool:hover::after,
+        .action-palette .tool:focus-visible::after {
+            transform: translateY(-50%) translateX(0);
+        }
+    }
+
+
+    /* .chart-title keeps its own margin in the base stylesheet. */
+    #section-chart .chart-head>.chart-title {
+        margin-bottom: 0;
+        text-align: center;
+    }
+
+    /* Pinned to the chart's top-right corner. The small offsets keep it off the
+       heading row's own edges so it reads as inset rather than jammed into the
+       corner, and nudge it down to sit on the same optical line as the title. */
+    #section-chart .chart-head>.chart-clear-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+
+    #section-chart .chart-clear-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 9px 16px;
+        background: #ffffff;
+        color: #b91c1c;
+        border: 1px solid #fca5a5;
+        border-radius: 10px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        line-height: 1.2;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+    }
+
+    #section-chart .chart-clear-btn>.material-symbols-rounded {
+        font-size: 20px;
+        line-height: 1;
+        font-weight: normal;
+        font-style: normal;
+        letter-spacing: normal;
+        text-transform: none;
+        white-space: nowrap;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        font-feature-settings: 'liga';
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        user-select: none;
+    }
+
+    #section-chart .chart-clear-btn:hover:not(:disabled) {
+        background: #fef2f2;
+        color: #991b1b;
+        border-color: #ef4444;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(185, 28, 28, 0.18);
+    }
+
+    #section-chart .chart-clear-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    #section-chart .chart-clear-btn:focus-visible {
+        outline: 2px solid #dc2626;
+        outline-offset: 2px;
+    }
+
+    #section-chart .chart-clear-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* The chart is cloned for PDF/image export. Those two html2canvas calls
+       pass ignoreElements keyed on [data-chart-ui], so the button is dropped
+       from the clone without any extra display rule here -- hiding it in CSS
+       would also hide it on screen. */
+
+    body.dark-mode #section-chart .chart-clear-btn {
+        background: #131a26;
+        color: #fca5a5;
+        border-color: #7f1d1d;
+    }
+
+    body.dark-mode #section-chart .chart-clear-btn:hover:not(:disabled) {
+        background: #7f1d1d;
+        color: #fee2e2;
+        border-color: #ef4444;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    /* Narrow layouts: the button stays pinned to the corner, just smaller, and the
+       reserved gutter shrinks with it so the title keeps its room. */
+    @media (max-width: 768px) {
+        #section-chart .chart-head {
+            padding-right: 124px;
+            padding-top: 12px;
+            margin-bottom: 12px;
+        }
+
+        #section-chart .chart-head>.chart-clear-btn {
+            top: 8px;
+            right: 8px;
+            min-height: 36px;
+            padding: 7px 12px;
+            font-size: 12.5px;
+        }
     }

@@ -122,7 +122,7 @@
                         list.forEach(a => {
                             const chip = '<span class="dc-chip ' + (a.status === 'Accepted' ? 'accepted' : 'pending') + '">' + esc(a.status) + '</span>';
                             const warn = blocked ? '<span class="dc-chip blocked">Slot is blocked</span>' : '';
-                            const sub = [a.service, a.dentist].filter(Boolean).map(esc).join(' &middot; ');
+                            const sub = [a.service, formatDentistName(a.dentist)].filter(Boolean).map(esc).join(' &middot; ');
                             const canMove = a.id && a.uid;
                             html += '<div class="dc-row is-booked' + (blocked ? ' is-conflict' : '') + '">' +
                                 '<div class="dc-time">' + esc(timeLabel(t)) + '</div>' +
@@ -197,14 +197,20 @@
                The native <select> flatpickr renders is hidden by CSS because its
                opened <option> list is drawn with OS chrome that CSS cannot restyle.
                We hide it but keep using it as the source of truth for which months are
-               selectable, and drive the calendar through fp.changeMonth(). */
+               selectable, and drive the calendar through fp.changeMonth().
+
+               scope: the panel the calendar lives in. flatpickr inserts
+               .flatpickr-calendar as a SIBLING of the input, so the input's own id
+               matches nothing as a descendant selector - the wrapping panel is the
+               only reliable root. Both calendars (Doctors Calendar and the
+               Reschedule modal) use the same .adm-month-dd markup and CSS, so the
+               control is built once here and reused. */
             const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'];
 
-            function buildMonthDropdown(fp) {
-                // Scope via .doctor-cal-panel, NOT #doctorCalendarPicker: the calendar
-                // is a sibling of the picker, so a descendant selector matches nothing.
-                const host = document.querySelector('.doctor-cal-panel .flatpickr-current-month');
+            function buildMonthDropdown(fp, scope) {
+                const root = scope || '.doctor-cal-panel';
+                const host = document.querySelector(root + ' .flatpickr-current-month');
                 if (!host) return;
                 const sel = host.querySelector('select.flatpickr-monthDropdown-months');
                 if (!sel) return;
@@ -274,9 +280,15 @@
                 // Signal that the custom control is live, which is what allows the CSS
                 // to hide the native select. Done last so a failure above leaves the
                 // native dropdown in place.
-                const card = document.querySelector('.doctor-cal-panel .flatpickr-calendar');
+                const card = document.querySelector(root + ' .flatpickr-calendar');
                 if (card) card.classList.add('has-custom-month');
             }
+
+            /* Exposed so any other calendar in the admin can adopt the same control.
+               The markup (.adm-month-dd / .adm-month-dd-list / .adm-month-dd-item)
+               and all of its CSS - including dark mode - are global, so reuse needs
+               nothing else. Pass the panel the calendar lives in. */
+            window.admBuildMonthDropdown = buildMonthDropdown;
 
             function pad(n) { return n < 10 ? "0" + n : "" + n; }
             function toDateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -299,6 +311,17 @@
                     blockedMap = {};
                     data.forEach(item => { blockedMap[item.date] = item; });
                     window.__blockedSlotsMap = blockedMap; // shared with the New Appointment modal
+
+                    /* The New Appointment modal's date picker greys out fully
+                       blocked days using this map. flatpickr evaluates its
+                       `disable` predicate when the calendar renders, so a month
+                       grid built before this fetch would keep showing a date
+                       that has since been blocked. Nudge it to rebuild. */
+                    if (window.__admApptDatePicker) {
+                        const picker = window.__admApptDatePicker;
+                        if (typeof picker.redraw === 'function') picker.redraw();
+                        else if (typeof picker.update === 'function') picker.update();
+                    }
                     renderUpcomingBlocked();
                     if (window.markBlockedAppointments) window.markBlockedAppointments();
                     if (calendarInstance) {

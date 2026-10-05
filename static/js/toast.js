@@ -62,4 +62,45 @@
                     remove();
                 });
             };
+
+            /* Park a toast to be shown on the NEXT page load, then reload.
+               The New Appointment form used to call location.reload() straight
+               after a successful create, which tore down any toast before it
+               could be read. sessionStorage survives a reload in the same tab,
+               so the message is handed across and painted afterwards. It is the
+               same toast component with the same design - only the delivery
+               point moves. */
+            var PENDING_KEY = 'adminPendingToast';
+
+            window.showToastAfterReload = function (message, type, delay) {
+                try {
+                    sessionStorage.setItem(PENDING_KEY, JSON.stringify({
+                        message: String(message),
+                        type: type || classifyToast(message)
+                    }));
+                } catch (err) {
+                    // Storage unavailable (private mode, quota). Still reload, just
+                    // without the confirmation - never block the reload itself.
+                }
+                setTimeout(function () { location.reload(); }, delay || 700);
+            };
+
+            // Show anything parked by showToastAfterReload(), exactly once.
+            (function flushPendingToast() {
+                document.addEventListener('DOMContentLoaded', function () {
+                    var raw = null;
+                    try {
+                        raw = sessionStorage.getItem(PENDING_KEY);
+                        // Cleared before showing so a later reload cannot repeat it.
+                        sessionStorage.removeItem(PENDING_KEY);
+                    } catch (err) {
+                        return;
+                    }
+                    if (!raw) return;
+                    var data = null;
+                    try { data = JSON.parse(raw); } catch (err) { return; }
+                    if (!data || !data.message) return;
+                    window.showToast(data.message, data.type || 'success');
+                });
+            })();
         })();

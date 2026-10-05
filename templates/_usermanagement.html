@@ -27,7 +27,21 @@
                             <td data-cell="mobile">{{ account.contact_number or '-' }}</td>
                             <td>{{ account.email or '-' }}</td>
                             <td>
+                                {# Edit sits in the middle so every row-action group in the
+                                   admin reads the same way: neutral action, edit, then the
+                                   destructive one on the end. Matches My Patients, where
+                                   edit already sits between INFO and delete. #}
                                 <div class="mp-actions">
+                                    <button type="button" class="btn-action block-user-btn"
+                                        title="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
+                                        aria-label="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
+                                        data-uid="{{ account.uid }}"
+                                        data-name="{{ account.full_name or account.first_name or 'this account' }}"
+                                        data-disabled="{{ 'true' if is_disabled else 'false' }}">
+                                        <span class="material-symbols-rounded" aria-hidden="true">{% if is_disabled
+                                            %}lock_open{% else %}block{% endif %}</span>
+                                    </button>
+
                                     <button type="button" class="btn-action edit-patient-btn" title="Edit patient"
                                         aria-label="Edit patient" data-uid="{{ account.uid }}"
                                         data-patient-id="{{ account.patient_id }}"
@@ -39,16 +53,6 @@
                                         data-sex="{{ account.get('sex', '') }}"
                                         data-civilstatus="{{ account.get('CivilStatus', '') }}">
                                         <span class="material-symbols-rounded" aria-hidden="true">edit</span>
-                                    </button>
-
-                                    <button type="button" class="btn-action block-user-btn"
-                                        title="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
-                                        aria-label="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"
-                                        data-uid="{{ account.uid }}"
-                                        data-name="{{ account.full_name or account.first_name or 'this account' }}"
-                                        data-disabled="{{ 'true' if is_disabled else 'false' }}">
-                                        <span class="material-symbols-rounded" aria-hidden="true">{% if is_disabled
-                                            %}lock_open{% else %}block{% endif %}</span>
                                     </button>
 
                                     <button type="button" class="btn-action delete-patient-btn" title="Delete account"

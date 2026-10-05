@@ -1,30 +1,53 @@
         <div id="section-financialreports" class="content-section">
             <div class="financial-period-toolbar">
-                <div class="period-btn-group">
-                    <button class="period-btn" data-period="today" onclick="loadFinancialChart('today')">Today</button>
-                    <button class="period-btn active" data-period="weekly"
-                        onclick="loadFinancialChart('weekly')">Weekly</button>
-                    <button class="period-btn" data-period="monthly"
-                        onclick="loadFinancialChart('monthly')">Monthly</button>
-                    <button class="period-btn" data-period="yearly"
-                        onclick="loadFinancialChart('yearly')">Yearly</button>
-                    <button class="period-btn" data-period="overall"
-                        onclick="loadFinancialChart('overall')">Overall</button>
+                <div class="period-btn-group" role="group" aria-label="Report period">
+                    <button type="button" class="period-btn" data-period="today"
+                        onclick="loadFinancialChart('today')">
+                        <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                        <span>Today</span>
+                    </button>
+                    <button type="button" class="period-btn active" data-period="weekly"
+                        onclick="loadFinancialChart('weekly')">
+                        <span class="material-symbols-rounded" aria-hidden="true">calendar_view_week</span>
+                        <span>Weekly</span>
+                    </button>
+                    <button type="button" class="period-btn" data-period="monthly"
+                        onclick="loadFinancialChart('monthly')">
+                        <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                        <span>Monthly</span>
+                    </button>
+                    <button type="button" class="period-btn" data-period="yearly"
+                        onclick="loadFinancialChart('yearly')">
+                        <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                        <span>Yearly</span>
+                    </button>
+                    <button type="button" class="period-btn" data-period="overall"
+                        onclick="loadFinancialChart('overall')">
+                        <span class="material-symbols-rounded" aria-hidden="true">all_inclusive</span>
+                        <span>Overall</span>
+                    </button>
                 </div>
-                <button type="button" id="download-financial-report-btn" class="period-btn financial-download-btn"
-                    onclick="downloadFinancialReportPDF()">⬇ Download Report</button>
+                <button type="button" id="download-financial-report-btn" class="financial-download-btn"
+                    onclick="downloadFinancialReportPDF()">
+                    <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                    <span>Download Report</span>
+                </button>
             </div>
 
             <div class="financial-nav" id="financialNav" style="display:none;">
                 <button type="button" class="fin-nav-btn" id="finNavPrev" aria-label="Previous period"
-                    onclick="financialNavStep(-1)">&lsaquo;</button>
+                    onclick="financialNavStep(-1)">
+                    <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+                </button>
                 <span class="fin-nav-label" id="finNavLabel" aria-live="polite"></span>
                 <select class="fin-nav-select" id="finMonthSel" aria-label="Choose month" style="display:none;"
                     onchange="financialNavPick()"></select>
                 <select class="fin-nav-select" id="finYearSel" aria-label="Choose year" style="display:none;"
                     onchange="financialNavPick()"></select>
                 <button type="button" class="fin-nav-btn" id="finNavNext" aria-label="Next period"
-                    onclick="financialNavStep(1)">&rsaquo;</button>
+                    onclick="financialNavStep(1)">
+                    <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+                </button>
             </div>
 
             <div class="metric-cards">
@@ -40,7 +63,16 @@
                         <h3 id="finTotalIncome">₱{{ "{:,.2f}".format(total_income|default(0)) }}</h3>
                         <p>Total Income Collected</p>
                     </div>
-                    <div class="metric-bg-icon">₱</div>
+                    {# Same banknote glyph as Outstanding Balance below. A
+                       currency-sign glyph was tried here first and rejected: it
+                       reads as a dollar sign in this country, which is wrong.
+                       ("currency_peso" is also not a real Material Symbols
+                       name -- it silently rendered as the literal text.)
+                       The peso sign itself is already in the value above, so the
+                       watermark does not need to repeat it. #}
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">payments</span>
+                    </div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">
@@ -55,7 +87,13 @@
                         <h3 id="finTotalOutstanding">₱{{ "{:,.2f}".format(total_outstanding|default(0)) }}</h3>
                         <p>Outstanding Balance</p>
                     </div>
-                    <div class="metric-bg-icon">📄</div>
+                    {# A banknote, not an hourglass. Outstanding Balance is money still owed, and
+                       an hourglass reads as time/waiting, which is unrelated to
+                       billing. "payments" is the collected/owed money glyph and
+                       is visually distinct from receipt_long below. #}
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">payments</span>
+                    </div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-icon">
@@ -70,7 +108,9 @@
                         <h3 id="finUnpaidProcedures">{{ unpaid_procedures|default(0) }}</h3>
                         <p>Unpaid Procedures</p>
                     </div>
-                    <div class="metric-bg-icon">🧾</div>
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">receipt_long</span>
+                    </div>
                 </div>
             </div>
 
@@ -101,12 +141,33 @@
                 </div>
 
                 <div class="unpaid-toolbar">
-                    <div class="period-btn-group" id="unpaidRangeGroup">
-                        <button type="button" class="unpaid-filter-btn active" data-range="all" onclick="setUnpaidRange('all')">All</button>
-                        <button type="button" class="unpaid-filter-btn" data-range="today" onclick="setUnpaidRange('today')">Today</button>
-                        <button type="button" class="unpaid-filter-btn" data-range="7d" onclick="setUnpaidRange('7d')">Last 7 Days</button>
-                        <button type="button" class="unpaid-filter-btn" data-range="30d" onclick="setUnpaidRange('30d')">Last 30 Days</button>
-                        <button type="button" class="unpaid-filter-btn" data-range="12m" onclick="setUnpaidRange('12m')">Last 12 Months</button>
+                    <div class="period-btn-group" id="unpaidRangeGroup" role="group"
+                        aria-label="Filter unpaid procedures by date range">
+                        <button type="button" class="unpaid-filter-btn active" data-range="all"
+                            onclick="setUnpaidRange('all')">
+                            <span class="material-symbols-rounded" aria-hidden="true">format_list_bulleted</span>
+                            <span>All</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="today"
+                            onclick="setUnpaidRange('today')">
+                            <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                            <span>Today</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="7d"
+                            onclick="setUnpaidRange('7d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                            <span>Last 7 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="30d"
+                            onclick="setUnpaidRange('30d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                            <span>Last 30 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="12m"
+                            onclick="setUnpaidRange('12m')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_view_month</span>
+                            <span>Last 12 Months</span>
+                        </button>
                     </div>
                     <input type="text" id="unpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search unpaid procedures by patient name" oninput="renderUnpaidTable()">
                 </div>

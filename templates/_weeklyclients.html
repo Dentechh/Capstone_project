@@ -43,6 +43,11 @@
                 value is only twice as long as its length. #}
                 {% set accepted_shown = accepted_raw[:16]|replace('T', ' ') if accepted_raw
                 else 'Not recorded' %}
+                {# The scheduled date sits above Accepted: it is what the visit is
+                FOR, whereas Accepted is bookkeeping about when it was confirmed.
+                appointment_date is never rewritten, only rendered - see
+                display_appt_datetime(), which mirrors formatApptDateTime() in JS. #}
+                {% set appt_shown = appt_datetime_display(appointment.appointment_date) %}
                 <div class="patient-card appt-card appt-card--{{ urg_key }}" data-name="{{ full_name }}"
                     data-accepted-at="{{ accepted_raw }}">
 
@@ -58,6 +63,15 @@
                     </div>
 
                     <div class="appt-card__rows">
+                        {% if appointment.appointment_date %}
+                        <div class="appt-card__row">
+                            <span class="appt-card__key">
+                                <span class="material-symbols-rounded" aria-hidden="true">event</span>
+                                Appointment date
+                            </span>
+                            <span class="appt-card__val appt-card__val--date">{{ appt_shown }}</span>
+                        </div>
+                        {% endif %}
                         <div class="appt-card__row">
                             <span class="appt-card__key">
                                 <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
@@ -71,7 +85,7 @@
                                 Assigned dentist
                             </span>
                             {% if (appointment.DentistName or '')|trim %}
-                            <span class="appt-card__val appt-card__val--dentist">{{ appointment.DentistName }}</span>
+                            <span class="appt-card__val appt-card__val--dentist">{{ dentist_display(appointment.DentistName) }}</span>
                             {% else %}
                             <span class="appt-dentist">
                                 <span class="dentist-field">

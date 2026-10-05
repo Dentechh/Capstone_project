@@ -98,8 +98,8 @@
             const showYear = period === 'monthly' || period === 'yearly';
             const showMonth = period === 'monthly';
             label.style.display = (showYear || showMonth) ? 'none' : '';
-            monthSel.style.display = showMonth ? '' : 'none';
-            yearSel.style.display = showYear ? '' : 'none';
+            setFinNavVisible(monthSel, showMonth);
+            setFinNavVisible(yearSel, showYear);
 
             if (showYear && financialNav.minYear != null) {
                 const selYear = period === 'monthly'
@@ -133,6 +133,18 @@
 
         const FIN_MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
+
+        // Show/hide a stepper dropdown. The Month/Year <select>s ship with an inline
+        // "display:none" AND are wrapped in the shared .adm-select listbox
+        // (app-shell-and-modals.js). Hiding needs to clear both: dropping only the
+        // inline style leaves the <select> hidden inside a visible wrapper, and
+        // dropping only the wrapper leaves an empty div in the row.
+        function setFinNavVisible(select, visible) {
+            if (!select) return;
+            select.style.display = visible ? '' : 'none';
+            const wrapper = select.closest('.adm-select');
+            if (wrapper) wrapper.style.display = visible ? '' : 'none';
+        }
 
         // Called when the Month or Year dropdown changes.
         function financialNavPick() {
@@ -189,7 +201,9 @@
         }
 
         function updateIncomeChart(labels, dataValues, chartType) {
-            const ctx = document.getElementById('incomeChart').getContext('2d'); // Ensure ID matches your canvas
+            const canvas = document.getElementById('incomeChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
             if (incomeChartInstance) {
                 incomeChartInstance.destroy();
@@ -197,60 +211,130 @@
 
             const isDark = document.body.classList.contains('dark-mode');
             const lineColor = '#42A5F6';
-            const fillColor = isDark ? 'rgba(66, 165, 246, 0.15)' : 'rgba(66, 165, 246, 0.1)';
-            const textColor = '#42A5F6';
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+            const axisColor = isDark ? '#cbd5e1' : '#475569';
+            const gridColor = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(15,23,42,0.07)';
 
             // Overall (one point per year) reads better as bars; everything
             // else is the same line chart as before.
             const isBar = chartType === 'bar';
+
+            /* Axis ticks used to print the raw number with a peso sign, so a
+               ₱1,200,000 total rendered as "₱1200000" and ate the width of the
+               axis. Compact form keeps the unit visible and the tick short:
+               1.2M / 250K / 900. */
+            function pesoTick(value) {
+                const abs = Math.abs(value);
+                if (abs >= 1000000) return '₱' + (value / 1000000).toFixed(abs >= 10000000 ? 0 : 1) + 'M';
+                if (abs >= 1000) return '₱' + Math.round(value / 1000) + 'K';
+                return '₱' + value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            }
+
+            function pesoFull(value) {
+                const n = Number(value) || 0;
+                return '₱' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            const tooltipStyle = {
+                backgroundColor: isDark ? '#0b1220' : '#1e293b',
+                titleColor: '#ffffff',
+                bodyColor: '#e2e8f0',
+                borderColor: 'rgba(255,255,255,0.14)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 10,
+                displayColors: true,
+                boxPadding: 6,
+                titleFont: { family: 'Kumbh Sans', size: 13, weight: '700' },
+                bodyFont: { family: 'Kumbh Sans', size: 12 }
+            };
 
             incomeChartInstance = new Chart(ctx, {
                 type: isBar ? 'bar' : 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Revenue (₱)',
+                        label: 'Revenue',
                         data: dataValues,
-                        borderColor: lineColor, // Matches unpaid procedures number color
-                        backgroundColor: isBar ? 'rgba(66, 165, 246, 0.55)' : fillColor,
+                        borderColor: lineColor,
+                        /* Vertical gradient under the line, measured against the
+                           real chart area. Flat rgba() looked like a default
+                           Chart.js sample. */
+                        backgroundColor: function (c) {
+                            const chart = c.chart;
+                            const area = chart.chartArea;
+                            if (!area) return isDark ? 'rgba(66,165,246,0.28)' : 'rgba(66,165,246,0.16)';
+                            const g = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                            if (isBar) {
+                                g.addColorStop(0, 'rgba(66,165,246,0.95)');
+                                g.addColorStop(1, 'rgba(66,165,246,0.45)');
+                            } else {
+                                g.addColorStop(0, 'rgba(66,165,246,0.38)');
+                                g.addColorStop(1, 'rgba(66,165,246,0.02)');
+                            }
+                            return g;
+                        },
                         fill: true,
                         tension: 0.4,
                         cubicInterpolationMode: 'monotone',
                         borderRadius: isBar ? 8 : 0,
-                        maxBarThickness: 60
+                        borderSkipped: false,
+                        borderWidth: isBar ? 0 : 2.5,
+                        maxBarThickness: 56,
+                        /* Points were invisible at 3px on a busy week axis. */
+                        pointRadius: labels.length > 20 ? 0 : 4,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: isDark ? '#0f172a' : '#ffffff',
+                        pointBorderColor: lineColor,
+                        pointBorderWidth: 2,
+                        pointHoverBorderWidth: 3,
+                        pointHoverBackgroundColor: '#ffffff'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: {
                             beginAtZero: true,
                             ticks: {
-                                color: textColor, // Matches unpaid procedures number color
-                                callback: function (value) { return '₱' + value; }
+                                color: axisColor,
+                                font: { family: 'Kumbh Sans', size: 12 },
+                                callback: pesoTick,
+                                maxTicksLimit: 6
                             },
                             grid: {
-                                color: gridColor
-                            }
+                                color: gridColor,
+                                drawTicks: false,
+                                /* Dashed value grid reads lighter than the solid
+                                   default and stops competing with the line. */
+                                borderDash: [4, 4],
+                                lineWidth: 0
+                            },
+                            border: { display: false }
                         },
                         x: {
                             ticks: {
-                                color: textColor
+                                color: axisColor,
+                                font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                                maxRotation: 0,
+                                autoSkipPadding: 12
                             },
-                            grid: {
-                                color: gridColor
-                            }
+                            grid: { display: false },
+                            border: { color: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.12)' }
                         }
                     },
                     plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor
+                        /* One dataset: the legend was just a repeated label. */
+                        legend: { display: false },
+                        tooltip: Object.assign({}, tooltipStyle, {
+                            callbacks: {
+                                title: function (items) { return items[0].label; },
+                                label: function (item) { return pesoFull(item.raw); }
                             }
-                        }
-                    }
+                        })
+                    },
+                    animation: { duration: 1200, easing: 'easeOutQuart' }
                 }
             });
         }
@@ -276,8 +360,31 @@
                 });
         }
 
+        /* Mix a hex colour toward white. Used for the bar gradient's light end. */
+        function tintHex(hex, amount) {
+            const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex || '').trim());
+            if (!m) return hex;
+            const ch = [1, 2, 3].map((i) => {
+                const v = parseInt(m[i], 16);
+                return Math.round(v + (255 - v) * amount);
+            });
+            return 'rgb(' + ch.join(',') + ')';
+        }
+
+        /* Horizontal bar chart shared by the two procedure charts on the
+           Dashboard (Procedures Performed, Revenue by Procedure).
+
+           This was the only chart on the page still using Chart.js defaults:
+           square bars, no font set, no animation, aspect ratio left on, and a
+           one-entry legend. It now matches the house style used by the urgency
+           bar and the income chart - 8px rounded bars with no skipped edge,
+           Kumbh Sans throughout, maintainAspectRatio off so the fixed-height
+           .chart-wrapper actually governs the size, a left-to-right gradient
+           instead of a flat fill, and matching tooltips. */
         function updateBarChart(canvasId, labels, dataValues, labelName, currentInstance, setInstance, barColor) {
-            const ctx = document.getElementById(canvasId).getContext('2d'); // Ensure IDs match your canvases
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
             if (currentInstance) {
                 currentInstance.destroy();
@@ -286,7 +393,22 @@
             const isDark = document.body.classList.contains('dark-mode');
             const resolvedColor = barColor || '#1e40af';
             const textColor = isDark ? '#ffffff' : '#37474f';
+            const axisColor = isDark ? '#cbd5e1' : '#475569';
             const gridColor = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.05)';
+            const isCurrency = /revenue/i.test(labelName);
+
+            /* Procedure names are long and sit on the category axis, so the
+               fixed 260px wrapper squeezes them into each other once there are
+               more than a handful. Resize to fit the current row count, capped so
+               a long tail cannot push the page into a wall of chart. Always
+               assigns when it differs, so switching back to a shorter period
+               shrinks the card again instead of leaving it stranded tall. */
+            const wrapper = canvas.closest('.chart-wrapper');
+            if (wrapper) {
+                const rows = Math.max(1, (labels || []).length);
+                const needed = Math.min(560, Math.max(260, rows * 34 + 48));
+                if (wrapper.clientHeight !== needed) wrapper.style.height = needed + 'px';
+            }
 
             const newChart = new Chart(ctx, {
                 type: 'bar',
@@ -295,30 +417,77 @@
                     datasets: [{
                         label: labelName,
                         data: dataValues,
-                        backgroundColor: resolvedColor
+                        /* Procedure charts. Scriptable so the gradient is built against
+                           the real chart area once layout is known; falls back to the
+                           flat colour before the first draw. */
+                        backgroundColor: function (c) {
+                            const chart = c.chart;
+                            const area = chart.chartArea;
+                            if (!area) return resolvedColor;
+                            const g = chart.ctx.createLinearGradient(area.left, 0, area.right, 0);
+                            g.addColorStop(0, tintHex(resolvedColor, isDark ? 0.34 : 0.22));
+                            g.addColorStop(1, resolvedColor);
+                            return g;
+                        },
+                        hoverBackgroundColor: tintHex(resolvedColor, isDark ? 0.5 : 0.36),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 28
                     }]
                 },
                 options: {
                     indexAxis: 'y', // Horizontal bar chart
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         x: {
                             beginAtZero: true,
-                            ticks: { color: textColor },
+                            ticks: {
+                                color: textColor,
+                                font: { family: 'Kumbh Sans', size: 12 },
+                                callback: function (value) {
+                                    return isCurrency ? '₱' + value.toLocaleString('en-PH') : value;
+                                }
+                            },
                             grid: { color: gridColor }
                         },
                         y: {
-                            ticks: { color: textColor },
+                            ticks: {
+                                color: axisColor,
+                                font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                                /* Keep long procedure names on one line instead of
+                                   wrapping them into overlapping rows. */
+                                crossAlign: 'far',
+                                maxRotation: 0,
+                                autoSkip: false
+                            },
                             grid: { display: false }
                         }
                     },
                     plugins: {
-                        legend: {
-                            labels: {
-                                color: textColor
+                        /* One dataset, so the legend is just noise. */
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: isDark ? '#0b1220' : '#1e293b',
+                            titleColor: '#ffffff',
+                            bodyColor: '#e2e8f0',
+                            borderColor: 'rgba(255,255,255,0.14)',
+                            borderWidth: 1,
+                            padding: 12,
+                            cornerRadius: 10,
+                            displayColors: false,
+                            titleFont: { family: 'Kumbh Sans', size: 13, weight: '700' },
+                            bodyFont: { family: 'Kumbh Sans', size: 12 },
+                            callbacks: {
+                                label: function (item) {
+                                    return isCurrency
+                                        ? '₱' + Number(item.raw || 0).toLocaleString('en-PH')
+                                        : item.raw + (item.raw === 1 ? ' procedure' : ' procedures');
+                                }
                             }
                         }
-                    }
+                    },
+                    animation: { duration: 1200, easing: 'easeOutQuart' }
                 }
             });
             setInstance(newChart);
@@ -549,7 +718,7 @@
                         '<td>' + unpaidEsc(r.patient_name) + '</td>' +
                         '<td>' + proc + '</td>' +
                         '<td>' + unpaidEsc(unpaidFormatDate(r.date)) + '</td>' +
-                        '<td>' + unpaidEsc(r.dentist || '\u2014') + '</td>' +
+                        '<td>' + unpaidEsc(formatDentistName(r.dentist) || '\u2014') + '</td>' +
                         '<td class="num">' + unpaidPeso(r.value) + '</td>' +
                         '<td class="num">' + unpaidPeso(r.paid) + '</td>' +
                         '<td class="num unpaid-balance-cell">' + unpaidPeso(r.balance) + '</td>' +
@@ -587,102 +756,184 @@
                 });
         }
 
+        /* Compact date for the PDF table: "6 Oct 2026".
+           The screen formatter (unpaidFormatDate) renders "Oct 6, 2026", which
+           is about as wide as the Date column allows at the body size. */
+        function unpaidFormatDatePdf(str) {
+            const d = unpaidParseDate(str);
+            if (!d) return '-';
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+
+        /* Money for a table CELL. No "PHP " prefix: the currency is stated once
+           in the column header instead. The prefix cost about 10mm per column
+           and "PHP 1,260,000.00" is wider than the 21mm column it was being
+           drawn into, so the figures were colliding with the next column. */
+        function unpaidAmountForPdf(value) {
+            const num = typeof value === 'number' ? value : parseFloat(String(value).replace(/,/g, '')) || 0;
+            return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         function drawUnpaidSectionInPdf(pdf, startY, margin) {
             const pageW = pdf.internal.pageSize.getWidth();
             const pageH = pdf.internal.pageSize.getHeight();
             const rows = getUnpaidFiltered();
             const total = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
 
-            // [header, width in mm, right-aligned?]
+            /* [header, width in mm, right-aligned?]. The widths are a design choice, but
+               the LAST one is derived from the page so the row always spans the
+               full content width: A4 comes back from jsPDF as 180.0015mm, not
+               180, which left a hairline gap at the right edge. Numeric columns
+               are sized so the widest plausible figure still fits: "12,500,000.00"
+               measures 19.0mm at 8.5pt, and with 1.6mm padding each side a
+               column needs >= 22.3mm. */
             const cols = [
-                ['Patient', 46, false],
-                ['Procedure', 46, false],
-                ['Date', 24, false],
-                ['Total', 21, true],
-                ['Paid', 21, true],
-                ['Balance', 22, true]
+                ['Patient', 29, false],
+                ['Procedure', 34, false],
+                ['Date', 19, false],
+                ['Dentist', 22, false],
+                ['Total (PHP)', 25, true],
+                ['Paid (PHP)', 24, true],
+                ['Balance (PHP)', 0, true]
             ];
-            const lineH = 4.2;
+            const fixedW = cols.reduce((s, c) => s + c[1], 0);
+            cols[cols.length - 1][1] = Math.round(((pageW - margin * 2) - fixedW) * 1000) / 1000;
+
+            const lineH = 3.8;
+            const headH = 7;
+            const padX = 1.6;
             let y = startY;
 
             const searchEl = document.getElementById('unpaidSearch');
             const q = searchEl ? searchEl.value.trim() : '';
-            const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) + (q ? ' / Search: "' + q + '"' : '');
+            const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) + (q ? '  ·  Search: "' + q + '"' : '');
 
-            function drawHeader() {
-                pdf.setFontSize(9);
-                pdf.setTextColor(90, 90, 90);
+            /* Repeated at the top of every page the table spills onto, so a
+               continued table is still readable without the bands. */
+            function drawTableHeader() {
+                pdf.setFillColor(13, 71, 161);
+                pdf.rect(margin, y, pageW - margin * 2, headH, 'F');
+
+                pdf.setFontSize(7.5);
+                pdf.setTextColor(255, 255, 255);
                 pdf.setFont(undefined, 'bold');
-                let x = margin;
+                let hx = margin;
                 cols.forEach(([label, w, right]) => {
-                    pdf.text(label, right ? x + w - 1 : x + 1, y, right ? { align: 'right' } : undefined);
-                    x += w;
+                    pdf.text(label.toUpperCase(), right ? hx + w - padX : hx + padX, y + headH - 2.4,
+                        right ? { align: 'right' } : undefined);
+                    hx += w;
                 });
                 pdf.setFont(undefined, 'normal');
-                y += 2;
-                pdf.setDrawColor(200, 200, 200);
-                pdf.line(margin, y, pageW - margin, y);
-                y += 5;
+                y += headH;
             }
 
             if (y + 40 > pageH - margin) { pdf.addPage(); y = margin; }
 
-            pdf.setFontSize(11);
-            pdf.setTextColor(40, 40, 40);
-            pdf.text('Unpaid Procedures', margin, y);
-            pdf.setFontSize(9);
-            pdf.setTextColor(90, 90, 90);
+            /* Section heading: navy accent bar + title, matching the report's
+               own heading rather than plain body text. */
+            pdf.setFillColor(13, 71, 161);
+            pdf.rect(margin, y - 3.4, 1.6, 5.4, 'F');
+
+            pdf.setFontSize(11.5);
+            pdf.setTextColor(13, 71, 161);
+            pdf.setFont(undefined, 'bold');
+            pdf.text('Unpaid Procedures', margin + 4, y);
+
+            pdf.setFontSize(8);
+            pdf.setTextColor(120, 120, 120);
+            pdf.setFont(undefined, 'normal');
             pdf.text(filterText, pageW - margin, y, { align: 'right' });
-            y += 7;
+            y += 6;
 
             if (!rows.length) {
-                pdf.setFontSize(10);
-                pdf.text('No unpaid procedures found.', margin, y);
+                pdf.setFontSize(9);
+                pdf.setTextColor(130, 130, 130);
+                pdf.setFont(undefined, 'italic');
+                pdf.text('No unpaid procedures found for this filter.', margin, y + 1);
+                pdf.setFont(undefined, 'normal');
                 return;
             }
 
-            drawHeader();
+            drawTableHeader();
 
-            rows.forEach(r => {
+            rows.forEach((r, i) => {
                 const procText = (r.procedure || '-') + (r.tooth ? ' (Tooth ' + r.tooth + ')' : '');
-                const nameLines = pdf.splitTextToSize(String(r.patient_name || ''), cols[0][1] - 2);
-                const procLines = pdf.splitTextToSize(procText, cols[1][1] - 2);
-                const nLines = Math.max(nameLines.length, procLines.length);
-                const rowH = nLines * lineH + 2;
+                const dentist = formatDentistName(r.dentist) || '-';
+                const cellLines = [
+                    pdf.splitTextToSize(String(r.patient_name || ''), cols[0][1] - padX * 2),
+                    pdf.splitTextToSize(procText, cols[1][1] - padX * 2),
+                    [unpaidFormatDatePdf(r.date)],
+                    pdf.splitTextToSize(dentist, cols[3][1] - padX * 2)
+                ];
+                const nLines = Math.max(1, ...cellLines.map((l) => l.length));
+                const rowH = nLines * lineH + 3;
 
-                if (y + rowH > pageH - margin - 10) {
+                if (y + rowH > pageH - margin - 12) {
                     pdf.addPage();
                     y = margin;
-                    drawHeader();
+                    drawTableHeader();
                 }
 
-                pdf.setFontSize(9);
-                pdf.setTextColor(40, 40, 40);
+                /* Zebra banding. Without it a 40-row billing table is very
+                   hard to follow across. */
+                if (i % 2 === 1) {
+                    pdf.setFillColor(245, 248, 252);
+                    pdf.rect(margin, y, pageW - margin * 2, rowH, 'F');
+                }
+
+                const firstBaseline = y + lineH + 0.6;
+                pdf.setFontSize(8.5);
+                pdf.setTextColor(35, 35, 35);
+
                 let x = margin;
-                pdf.text(nameLines, x + 1, y); x += cols[0][1];
-                pdf.text(procLines, x + 1, y); x += cols[1][1];
-                pdf.text(unpaidFormatDate(r.date), x + 1, y); x += cols[2][1];
-                pdf.text(formatPesoForPdf(r.value), x + cols[3][1] - 1, y, { align: 'right' }); x += cols[3][1];
-                pdf.text(formatPesoForPdf(r.paid), x + cols[4][1] - 1, y, { align: 'right' }); x += cols[4][1];
-                pdf.setFont(undefined, 'bold');
-                pdf.text(formatPesoForPdf(r.balance), x + cols[5][1] - 1, y, { align: 'right' });
+                // text columns
+                [0, 1, 2, 3].forEach((ci) => {
+                    pdf.setFont(undefined, ci === 3 ? 'bold' : 'normal');
+                    if (ci === 3) pdf.setTextColor(13, 71, 161);
+                    pdf.text(cellLines[ci], x + padX, firstBaseline);
+                    if (ci === 3) pdf.setTextColor(35, 35, 35);
+                    x += cols[ci][1];
+                });
+                pdf.setFont(undefined, 'normal');
+
+                // numeric columns, right aligned
+                const nums = [
+                    unpaidAmountForPdf(r.value),
+                    unpaidAmountForPdf(r.paid),
+                    unpaidAmountForPdf(r.balance)
+                ];
+                [3, 4, 5].forEach((ci, k) => {
+                    const isBalance = ci === 5;
+                    pdf.setFont(undefined, isBalance ? 'bold' : 'normal');
+                    if (isBalance) pdf.setTextColor(13, 71, 161);
+                    pdf.text(nums[k], x + cols[ci][1] - padX, firstBaseline, { align: 'right' });
+                    if (isBalance) pdf.setTextColor(35, 35, 35);
+                    x += cols[ci][1];
+                });
                 pdf.setFont(undefined, 'normal');
 
                 y += rowH;
-                pdf.setDrawColor(235, 235, 235);
-                pdf.line(margin, y - 3, pageW - margin, y - 3);
+                pdf.setDrawColor(224, 230, 237);
+                pdf.setLineWidth(0.1);
+                pdf.line(margin, y, pageW - margin, y);
             });
 
+            // Totals band, shaded so it reads as the end of the table.
+            const totalLabel = 'Total balance (' + rows.length + ' procedure' + (rows.length === 1 ? '' : 's') + ')';
             if (y + 12 > pageH - margin) { pdf.addPage(); y = margin; }
-            y += 2;
-            pdf.setDrawColor(150, 150, 150);
-            pdf.line(margin, y, pageW - margin, y);
-            y += 6;
-            pdf.setFontSize(10);
+            y += 2.5;
+
+            pdf.setFillColor(226, 235, 250);
+            pdf.rect(margin, y, pageW - margin * 2, 8, 'F');
+
+            pdf.setFontSize(9.5);
             pdf.setFont(undefined, 'bold');
             pdf.setTextColor(13, 71, 161);
-            pdf.text('Total balance (' + rows.length + ')', margin + 1, y);
-            pdf.text(formatPesoForPdf(total), pageW - margin - 1, y, { align: 'right' });
+            pdf.text(totalLabel, margin + padX, y + 5.4);
+            pdf.setFontSize(10);
+            pdf.text(formatPesoForPdf(total), pageW - margin - padX, y + 5.4, { align: 'right' });
             pdf.setFont(undefined, 'normal');
         }
 

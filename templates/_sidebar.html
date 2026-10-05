@@ -12,10 +12,24 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-brand">
-                <h2>CAPIZONDA</h2>
-                <span>ADMIN PANEL</span>
+                <span class="sidebar-logo" aria-hidden="true">
+                    {# Two variants supplied as artwork: one tuned for the light
+                       sidebar, one for the dark sidebar. Both are stacked and CSS
+                       shows the right one, so the correct file is already in the
+                       DOM and there is no swap flash on theme change. #}
+                    <img class="sidebar-logo__img sidebar-logo__img--light"
+                        src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                    <img class="sidebar-logo__img sidebar-logo__img--dark"
+                        src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+                </span>
+                <span class="sidebar-brand__text">
+                    <span class="sidebar-brand__name">CAPIZONDA</span>
+                    <span class="sidebar-brand__sub">Dental Clinic</span>
+                    <span class="sidebar-brand__badge">Admin Panel</span>
+                </span>
             </div>
-            <button class="sidebar-logout-btn mobile-only" id="sidebarLogoutBtn" title="Logout">
+            <button class="sidebar-logout-btn mobile-only" id="sidebarLogoutBtn" title="Logout"
+                aria-label="Logout">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -24,28 +38,57 @@
                 </svg>
             </button>
         </div>
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label="Admin sections">
+            {# Icons are Material Symbols (the font is already loaded on this page).
+               Every id="nav-*" and every showSection() call is unchanged - showSection
+               uses the ids for its active-state highlight. #}
             <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active"
-                onclick="showSection('dashboard')">Dashboard</a>
+                onclick="showSection('dashboard')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">space_dashboard</span>
+                <span class="nav-item__label">Dashboard</span>
+            </a>
             <a href="javascript:void(0)" id="nav-financialreports" class="nav-item"
-                onclick="showSection('financialreports')">Financial Reports</a>
+                onclick="showSection('financialreports')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">monitoring</span>
+                <span class="nav-item__label">Financial Reports</span>
+            </a>
             <a href="javascript:void(0)" id="nav-doctorscalendar" class="nav-item"
-                onclick="showSection('doctorscalendar')">Doctors Calendar</a>
+                onclick="showSection('doctorscalendar')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">calendar_month</span>
+                <span class="nav-item__label">Doctors Calendar</span>
+            </a>
             <a href="javascript:void(0)" id="nav-appointments" class="nav-item"
-                onclick="showSection('appointments')">Appointments</a>
+                onclick="showSection('appointments')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">event_note</span>
+                <span class="nav-item__label">Appointments</span>
+            </a>
             <!-- <a href="javascript:void(0)" id="nav-Income" class="nav-item" onclick="showSection('Income')">Income</a>-->
             <!-- <a href="javascript:void(0)" id="nav-Analytics" class="nav-item" onclick="showSection('Analytics')">Analytics</a>-->
             <a href="javascript:void(0)" id="nav-WeeklyClients" class="nav-item"
-                onclick="showSection('WeeklyClients')">Accepted Patients</a>
-            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">My
-                Patients</a>
+                onclick="showSection('WeeklyClients')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">how_to_reg</span>
+                <span class="nav-item__label">Accepted Patients</span>
+            </a>
+            <a href="javascript:void(0)" id="nav-mypatients" class="nav-item" onclick="showSection('mypatients')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">people_alt</span>
+                <span class="nav-item__label">My Patients</span>
+            </a>
             <a href="javascript:void(0)" id="nav-patientdashboard" class="nav-item"
-                onclick="showSection('patientdashboard')" style="display: none;">Patient Dashboard</a>
+                onclick="showSection('patientdashboard')" style="display: none;">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">clinical_notes</span>
+                <span class="nav-item__label">Patient Dashboard</span>
+            </a>
             <a href="javascript:void(0)" id="nav-usermanagement" class="nav-item"
-                onclick="showSection('usermanagement')">User Management</a>
+                onclick="showSection('usermanagement')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">manage_accounts</span>
+                <span class="nav-item__label">User Management</span>
+            </a>
         </nav>
         <div class="sidebar-footer">
-            <a href="/logoutadmin" class="nav-item logout">Logout</a>
+            <a href="/logoutadmin" class="nav-item logout">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">logout</span>
+                <span class="nav-item__label">Logout</span>
+            </a>
         </div>
     </aside>
 

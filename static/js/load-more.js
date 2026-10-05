@@ -18,6 +18,23 @@
                                     return;
                                 }
 
+                                // Empty-state row, built here rather than server-rendered on
+                                // purpose: loadSectionOnce() in app-core.js clears this
+                                // whole tbody with innerHTML = '' before the first
+                                // request, which would drop a template-provided row
+                                // on the floor. Creating it per response keeps it
+                                // correct on every lazy-load and Load More pass.
+                                // Static markup only -- no patient data is involved.
+                                const APPT_COLUMNS = 24;   // 7 visible + 17 hidden
+                                const APPT_EMPTY_HTML =
+                                    '<tr class="appt-empty-row">' +
+                                    '<td colspan="' + APPT_COLUMNS + '">' +
+                                    '<div class="appt-empty">' +
+                                    '<span class="material-symbols-rounded appt-empty__icon" aria-hidden="true">event_available</span>' +
+                                    '<span class="appt-empty__text">No pending appointments right now.</span>' +
+                                    '<span class="appt-empty__hint">New booking requests will appear here as soon as they come in.</span>' +
+                                    '</div></td></tr>';
+
                                 result.rows.forEach(function (appt) {
                                     const tr = document.createElement('tr');
                                     tr.setAttribute('data-appointment', JSON.stringify(appt));
@@ -59,6 +76,16 @@
                                     apptTbody.appendChild(tr);
                                 });
 
+                                // Swap in the empty state only when this response left the table
+                                // with no real rows. Keyed off tr[data-appointment]
+                                // rather than a row count so it cannot be fooled by
+                                // anything else in the tbody.
+                                const emptyRow = apptTbody.querySelector('.appt-empty-row');
+                                if (emptyRow) emptyRow.remove();
+                                if (!apptTbody.querySelector('tr[data-appointment]')) {
+                                    apptTbody.insertAdjacentHTML('beforeend', APPT_EMPTY_HTML);
+                                }
+
                                 if (window.markBlockedAppointments) window.markBlockedAppointments();
 
                                 if (result.next_cursor) {
@@ -74,6 +101,20 @@
                                 showToast('Failed to load more appointments. Please try again.');
                                 apptBtn.disabled = false;
                                 apptBtn.textContent = 'Load More';
+                                // Show a failure state rather than "no appointments":
+                                // the table is not empty, the request failed, and the
+                                // two should not look the same. Kept distinct from the
+                                // success empty state so it cannot be mistaken for one.
+                                if (!apptTbody.querySelector('tr[data-appointment]') &&
+                                    !apptTbody.querySelector('.appt-empty-row')) {
+                                    apptTbody.insertAdjacentHTML('beforeend',
+                                        '<tr class="appt-empty-row"><td colspan="' + APPT_COLUMNS + '">' +
+                                        '<div class="appt-empty">' +
+                                        '<span class="material-symbols-rounded appt-empty__icon" aria-hidden="true">error</span>' +
+                                        '<span class="appt-empty__text">Could not load appointments.</span>' +
+                                        '<span class="appt-empty__hint">Check your connection and use Load More to try again.</span>' +
+                                        '</div></td></tr>');
+                                }
                             });
                     });
                 }

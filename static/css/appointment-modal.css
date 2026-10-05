@@ -743,6 +743,22 @@
             user-select: none;
         }
 
+        /* The wizard footer hides Back on step 1 and Next on the last step via
+           the `hidden` attribute. The UA's [hidden] { display: none } rule is
+           weaker than the .adm-nav-btn display above, so without this the
+           attribute is set but the button still paints.
+
+           The submit button needs its own selector: it is matched by
+           ".adm-wizard-nav button[type=submit].btn-primary", which is more
+           specific than a plain button[hidden] and also sets display, so it
+           would win and the Confirm button would stay visible on step 1. */
+        #newApptModal .adm-nav-btn[hidden],
+        #newApptModal .adm-wizard-nav button[hidden],
+        #newApptModal .adm-wizard-nav .adm-nav-btn--primary[hidden],
+        #newApptModal .adm-wizard-nav button[type="submit"].btn-primary[hidden] {
+            display: none;
+        }
+
         #newApptModal .adm-nav-btn:hover {
             background: #f1f5f9;
             border-color: #94a3b8;
@@ -948,15 +964,19 @@
 
         body.dark-mode #newApptModal .adm-nav-btn--primary,
         body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary {
+            /* White, not the near-black this used to specify: the fill is the
+               dark navy #0d47a1, so black-on-navy was both unreadable and
+               inconsistent with the admin's other solid-navy primaries. */
             background: #0d47a1;
             border-color: #d4af37;
-            color: #0b1220;
+            color: #ffffff;
         }
 
         body.dark-mode #newApptModal .adm-nav-btn--primary:hover,
         body.dark-mode #newApptModal .adm-wizard-nav button[type="submit"].btn-primary:hover {
             background: #164e9e;
             border-color: #d4af37;
+            color: #ffffff;
         }
 
         body.dark-mode #newApptModal .adm-sign-block {

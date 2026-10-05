@@ -1,7 +1,13 @@
         <div id="section-dashboard" class="content-section active-section">
+            {# Each stat card links to the tab it counts, so a number is a way in
+               rather than just a number. showSection() also highlights the sidebar,
+               retitles the page and lazy-loads that list, exactly as the sidebar
+               nav does. event.preventDefault() keeps the URL clean. #}
             <div class="metric-cards">
-                <div class="metric-card">
-                    <div class="metric-icon">
+                <a class="metric-card metric-card--link" href="#section-WeeklyClients"
+                    onclick="event.preventDefault(); showSection('WeeklyClients');"
+                    aria-label="Accepted patients. Open My Weekly Patients.">
+                    <div class="metric-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -13,11 +19,16 @@
                     <div class="metric-data">
                         <h3 data-target="{{ approved_count }}">0</h3>
                         <p>Accepted Patients</p>
+                        <span class="metric-data__hint">Approved and scheduled visits</span>
                     </div>
-                    <div class="metric-bg-icon">&#128101;</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-icon">
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">group</span>
+                    </div>
+                </a>
+                <a class="metric-card metric-card--link" href="#section-appointments"
+                    onclick="event.preventDefault(); showSection('appointments');"
+                    aria-label="Pending requests. Open Appointment Requests.">
+                    <div class="metric-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10" />
@@ -27,11 +38,16 @@
                     <div class="metric-data">
                         <h3 data-target="{{ pending_count }}">0</h3>
                         <p>Pending Requests</p>
+                        <span class="metric-data__hint">Waiting on your review</span>
                     </div>
-                    <div class="metric-bg-icon">&#9203;</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-icon">
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">hourglass_top</span>
+                    </div>
+                </a>
+                <a class="metric-card metric-card--link" href="#section-mypatients"
+                    onclick="event.preventDefault(); showSection('mypatients');"
+                    aria-label="Total patients. Open My Patients.">
+                    <div class="metric-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -43,26 +59,45 @@
                     <div class="metric-data">
                         <h3 data-target="{{ total_patients }}">0</h3>
                         <p>Total Patients</p>
+                        <span class="metric-data__hint">Everyone on record</span>
                     </div>
-                    <div class="metric-bg-icon">&#128197;</div>
-                </div>
+                    <div class="metric-bg-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">badge</span>
+                    </div>
+                </a>
             </div>
 
-            <!-- Mini Stats Row -->
+            <!-- Urgency breakdown. Two cards, so the grid is two columns: it was
+                 repeat(3, 1fr) with only two children, which left a visibly empty
+                 third cell under the stat cards.
+
+                 Titled "Urgency Breakdown", not "Appointment Urgency": the chart
+                 further down already carries that exact title, and two headings
+                 with the same words on one page read as a mistake. -->
+            <div class="dashboard-subhead-block">
+                <h2 class="dashboard-subhead">Urgency Breakdown</h2>
+                <p class="dashboard-subhead__hint">How the current requests are prioritised</p>
+            </div>
             <div class="mini-stats-row">
                 <div class="mini-stat-card emergency">
-                    <div class="mini-stat-icon">🚨</div>
+                    <div class="mini-stat-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">emergency_home</span>
+                    </div>
                     <div class="mini-stat-data">
                         <h3 data-target="{{ urgency_counts.Emergency | default(0) }}">0</h3>
                         <p>Emergency</p>
+                        <span class="mini-stat-hint">Needs immediate attention</span>
                     </div>
                 </div>
 
                 <div class="mini-stat-card normal">
-                    <div class="mini-stat-icon">📋</div>
+                    <div class="mini-stat-icon" aria-hidden="true">
+                        <span class="material-symbols-rounded">checklist</span>
+                    </div>
                     <div class="mini-stat-data">
                         <h3 data-target="{{ urgency_counts.Normal | default(0) }}">0</h3>
                         <p>Normal</p>
+                        <span class="mini-stat-hint">Routine, no rush</span>
                     </div>
                 </div>
             </div>
@@ -89,18 +124,39 @@
                 </div>
             </div>
 
-            <!-- ADD THIS BUTTON GROUP HERE -->
-            <div class="proc-period-btn-group">
-                <button class="proc-period-btn active" data-period="overall"
-                    onclick="loadProcedureCharts('overall')">Overall</button>
-                <button class="proc-period-btn" data-period="today"
-                    onclick="loadProcedureCharts('today')">Today</button>
-                <button class="proc-period-btn" data-period="weekly"
-                    onclick="loadProcedureCharts('weekly')">Weekly</button>
-                <button class="proc-period-btn" data-period="monthly"
-                    onclick="loadProcedureCharts('monthly')">Monthly</button>
-                <button class="proc-period-btn" data-period="yearly"
-                    onclick="loadProcedureCharts('yearly')">Yearly</button>
+            <!-- Period selector for the two procedure charts below. This group had no
+                 heading at all, so the buttons looked like they belonged to the
+                 charts above them. -->
+            <div class="dashboard-subhead-block">
+                <h2 class="dashboard-subhead">Reporting Period</h2>
+                <p class="dashboard-subhead__hint">Applies to both procedure charts</p>
+            </div>
+            <div class="proc-period-btn-group" role="group" aria-label="Procedure chart period">
+                <button type="button" class="proc-period-btn active" data-period="overall"
+                    onclick="loadProcedureCharts('overall')">
+                    <span class="material-symbols-rounded" aria-hidden="true">all_inclusive</span>
+                    <span>Overall</span>
+                </button>
+                <button type="button" class="proc-period-btn" data-period="today"
+                    onclick="loadProcedureCharts('today')">
+                    <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                    <span>Today</span>
+                </button>
+                <button type="button" class="proc-period-btn" data-period="weekly"
+                    onclick="loadProcedureCharts('weekly')">
+                    <span class="material-symbols-rounded" aria-hidden="true">calendar_view_week</span>
+                    <span>Weekly</span>
+                </button>
+                <button type="button" class="proc-period-btn" data-period="monthly"
+                    onclick="loadProcedureCharts('monthly')">
+                    <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                    <span>Monthly</span>
+                </button>
+                <button type="button" class="proc-period-btn" data-period="yearly"
+                    onclick="loadProcedureCharts('yearly')">
+                    <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                    <span>Yearly</span>
+                </button>
             </div>
 
             <div class="dashboard-charts" style="margin-top:24px;">
@@ -127,26 +183,68 @@
             <!-- Recent Approved Patients -->
             <div class="recent-activity">
                 <div class="recent-header">
-                    <h3>Recent Accepted Patients</h3>
-                    <a href="javascript:void(0)" onclick="showSection('mypatients')" class="view-all">View All
-                        &rarr;</a>
+                    <div class="recent-header__text">
+                        <h3>Recent Accepted Patients</h3>
+                        <p>{% if recent_approve %}Newest {{ recent_approve | length }} of the approved list{% else %}No approvals yet{% endif %}</p>
+                    </div>
+                    <a href="#section-WeeklyClients" class="view-all"
+                        onclick="event.preventDefault(); showSection('WeeklyClients');">
+                        <span>View all</span>
+                        <span class="material-symbols-rounded view-all__icon" aria-hidden="true">arrow_forward</span>
+                    </a>
                 </div>
                 <div class="recent-list">
                     {% if recent_approve %}
                     {% for patient in recent_approve %}
-                    <div class="recent-item">
-                        <div class="recent-avatar">{{ patient.FirstName[0]|default('?') }}</div>
-                        <div class="recent-info">
-                            <strong>{{ patient.FirstName }}</strong>
-                            <span>Account No: {{ patient.uid }}</span>
-                        </div>
-                        <div class="recent-meta">
-                            <span class="recent-date">{{ patient.accepted_at|default('N/A') }}</span>
-                        </div>
-                    </div>
+                    {% set rc_name = ([patient.FirstName or '', patient.MiddleName or '',
+                    patient.LastName or ''] | map('trim') | select | join(' '))
+                    or (patient.FirstName or '') or 'Unnamed patient' %}
+                    {% set rc_service = (patient.Service or '')|trim %}
+                    {% set rc_dentist = dentist_display(patient.DentistName) if (patient.DentistName or '')|trim else '' %}
+                    {% set rc_when = appt_datetime_short(patient.appointment_date) %}
+                    {% set rc_accepted = (patient.accepted_at or '')|string %}
+                    <a class="recent-item" href="#section-WeeklyClients"
+                        onclick="event.preventDefault(); showSection('WeeklyClients');"
+                        data-accepted-at="{{ rc_accepted }}">
+                        <span class="recent-avatar" aria-hidden="true">{{ patient.FirstName[0]|default('?') }}</span>
+                        <span class="recent-info">
+                            <strong>{{ rc_name }}</strong>
+                            {# Service and the assigned dentist are what an admin
+                               actually needs here; the account number was an
+                               internal id that meant nothing at a glance. #}
+                            <span class="recent-sub">
+                                {% if rc_service %}
+                                <span class="recent-sub__service">{{ rc_service }}</span>
+                                {% endif %}
+                                {% if rc_dentist %}
+                                <span class="recent-sub__sep" aria-hidden="true">·</span>
+                                <span class="recent-sub__dentist">{{ rc_dentist }}</span>
+                                {% endif %}
+                                {% if not rc_service and not rc_dentist %}Awaiting service details{% endif %}
+                            </span>
+                        </span>
+                        <span class="recent-meta">
+                            {% if rc_when %}
+                            <span class="recent-date">
+                                <span class="material-symbols-rounded recent-date__icon" aria-hidden="true">event</span>
+                                <span>{{ rc_when }}</span>
+                            </span>
+                            {% else %}
+                            <span class="recent-date recent-date--muted">
+                                <span class="material-symbols-rounded recent-date__icon" aria-hidden="true">event_busy</span>
+                                <span>Not scheduled</span>
+                            </span>
+                            {% endif %}
+                            <span class="material-symbols-rounded recent-go" aria-hidden="true">chevron_right</span>
+                        </span>
+                    </a>
                     {% endfor %}
                     {% else %}
-                    <p style="text-align:center; color:#546e7a;">No approved patients yet.</p>
+                    <div class="recent-empty">
+                        <span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span>
+                        <p>No accepted patients yet.</p>
+                        <span class="recent-empty__hint">Approved requests will appear here.</span>
+                    </div>
                     {% endif %}
                 </div>
             </div>

@@ -288,41 +288,49 @@
                         </div>
                         <div class="palette-tools" role="group" aria-label="Chart action tools">
                             <button type="button" class="tool active" data-tool="healthy" aria-pressed="true"
+                                data-tip="Clears the tooth back to white. Use this to undo any other mark on the same tooth."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">verified</span>
                                 <span class="tool__label">Healthy</span>
                             </button>
                             <button type="button" class="tool" data-tool="caries" aria-pressed="false"
+                                data-tip="Marks decay. Click one part of the tooth to paint just that surface red."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">brush</span>
                                 <span class="tool__label">Caries</span>
                             </button>
                             <button type="button" class="tool" data-tool="filling" aria-pressed="false"
+                                data-tip="Marks a filling. Click one part of the tooth to paint just that surface blue."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">format_color_fill</span>
                                 <span class="tool__label">Filling</span>
                             </button>
                             <button type="button" class="tool" data-tool="crown" aria-pressed="false"
+                                data-tip="Marks a crown. Click the tooth to shade the whole tooth red, then pick the exact shade."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">workspace_premium</span>
                                 <span class="tool__label">Crown</span>
                             </button>
                             <button type="button" class="tool" data-tool="rootcanal" aria-pressed="false"
+                                data-tip="Marks a root canal. Click the tooth to shade it blue and add the canal line."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
                                 <span class="tool__label">Root Canal</span>
                             </button>
                             <button type="button" class="tool" data-tool="missing" aria-pressed="false"
+                                data-tip="Marks the tooth as missing or already extracted. Shades the whole tooth black."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">cancel</span>
                                 <span class="tool__label">Missing Tooth</span>
                             </button>
                             <button type="button" class="tool" data-tool="extraction" aria-pressed="false"
+                                data-tip="Marks an extraction. Click the tooth to add a red cross; click again to remove it."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">content_cut</span>
                                 <span class="tool__label">Extraction</span>
                             </button>
                             <button type="button" class="tool" data-tool="check" aria-pressed="false"
+                                data-tip="Ticks a box in the status row below the chart. Only works on the check boxes, not the teeth."
                                 onclick="setTool(this)">
                                 <span class="material-symbols-rounded" aria-hidden="true">task_alt</span>
                                 <span class="tool__label">Check</span>
@@ -333,7 +341,20 @@
 
 
                     <section class="dental-chart">
-                        <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                        <div class="chart-head">
+                            <h2 class="chart-title">DENTAL RECORD CHART</h2>
+                            {# Quick reset for the markings, status text and check boxes in
+                               this chart only. Wrapped in its own header row so .chart-title's
+                               existing margins keep working, and marked
+                               data-chart-ui so the PDF/image exports skip it (they clone the
+                               whole .dental-chart). #}
+                            <button type="button" class="chart-clear-btn" data-chart-ui="1"
+                                id="clearDentalChartBtn" onclick="clearDentalChart()"
+                                title="Clear all markings, status text and checks on this chart">
+                                <span class="material-symbols-rounded chart-clear-btn__icon" aria-hidden="true">ink_eraser</span>
+                                <span class="chart-clear-btn__text">Clear Chart</span>
+                            </button>
+                        </div>
                         <div class="odontogram-container">
                             <div class="axis-v"></div>
                             <div class="status-row-wrapper">
@@ -396,7 +417,7 @@
                 </div>
                 <div class="td-records__scroll">
                     <table class="treatment-table td-records__table" id="td-treatment-table"
-                        style="min-width:1270px; table-layout:fixed;">
+                        style="min-width:1330px; table-layout:fixed;">
                         <colgroup>
                             <col style="width:134px;"> <!-- Date -->
                             <col style="width:80px;"> <!-- Tooth# -->
@@ -408,6 +429,7 @@
                             <col style="width:156px;"> <!-- Next Appointment -->
                             <col style="width:150px;"> <!-- Medicine -->
                             <col style="width:110px;"> <!-- Status -->
+                            <col style="width:60px;"> <!-- Row actions -->
                         </colgroup>
                         <thead>
                             <tr>
@@ -421,6 +443,7 @@
                                 <th>Next Appointment</th>
                                 <th>Medicine</th>
                                 <th>Status</th>
+                                <th><span class="td-actions-head">Actions</span></th>
                             </tr>
                         </thead>
 
@@ -484,6 +507,12 @@
                                         <option value="Not Paid" selected>Not Paid</option>
                                         <option value="Paid">Paid</option>
                                     </select>
+                                </td>
+                                <td class="td-row-actions">
+                                    <button type="button" class="td-delete-row" data-td-delete-row
+                                        title="Delete this treatment row" aria-label="Delete this treatment row">
+                                        <span class="material-symbols-rounded" aria-hidden="true">delete</span>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>

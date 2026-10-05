@@ -155,7 +155,7 @@
                     tr.dataset.procIndex = item.proc_index;
 
                     tr.innerHTML = `
-            <td data-label="Assigned Dentist">${item.dentist || "-"}</td>
+            <td data-label="Assigned Dentist">${formatDentistName(item.dentist) || "-"}</td>
             <td data-label="Medicine">${item.medicine || "-"}</td>
             <td data-label="Visit Date">${item.date || "-"}</td>
             <td data-label="Procedure">${item.procedure || "-"}</td>
@@ -330,7 +330,7 @@
 
                     const rows = [
                         ["Procedure", (item.procedure || "").trim() || "—"],
-                        ["Assigned dentist", (item.dentist || "").trim() || "—"],
+                        ["Assigned dentist", formatDentistName(item.dentist) || "—"],
                         ["Visit date", (item.date || "").trim() || "—"],
                         ["Value", peso(item.value)],
                         ["Fee paid", peso(item.paid)],

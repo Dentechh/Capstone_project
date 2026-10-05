@@ -116,7 +116,9 @@
                 appointment; an inline editor only while there is nothing to show,
                 so a filled-in card and an edited card end up looking identical. */
             function apptCardDentistValue(name) {
-                return '<span class="appt-card__val appt-card__val--dentist">' + apptText(name) + '</span>';
+                // Rendered through formatDentistName() so a card built from an older
+                // record ("Dr. Capizonda") reads the same as a freshly assigned one.
+                return '<span class="appt-card__val appt-card__val--dentist">' + apptText(formatDentistName(name)) + '</span>';
             }
 
             function apptCardDentistEditor(a) {
@@ -157,6 +159,23 @@
                     + '</span>'
                     + valueHtml
                     + '</div>';
+            }
+
+            /* The scheduled date, shown above Accepted: it is what the visit is
+               FOR, whereas Accepted is bookkeeping about when it was confirmed.
+               appointment_date keeps its stored "YYYY-MM-DD HH:MM" value - only the
+               display is reformatted. Returns '' when there is no date, so the row
+               is simply absent rather than showing a placeholder for an accepted
+               appointment that predates scheduling. */
+            function apptCardAppointmentDateRow(a) {
+                const raw = String((a && a.appointment_date) || '').trim();
+                if (!raw) return '';
+                return apptCardRow(
+                    'event',
+                    'Appointment date',
+                    '<span class="appt-card__val appt-card__val--date">' +
+                    apptText(formatApptDateTime(raw)) + '</span>'
+                );
             }
 
                 /* Save handler for the "no dentist assigned" editor. Only swaps the
@@ -236,6 +255,7 @@
         </div>
 
         <div class="appt-card__rows">
+            ${apptCardAppointmentDateRow(a)}
             ${apptCardRow('event_available', 'Accepted', '<span class="appt-card__val appt-card__val--date">' + apptText(formatAcceptedAt(a.accepted_at)) + '</span>')}
             ${apptCardRow('dentistry', 'Assigned dentist', apptCardDentistCell(a))}
         </div>

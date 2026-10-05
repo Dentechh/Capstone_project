@@ -3,12 +3,12 @@
         VERIFIED (headless browser): in inline mode flatpickr inserts
         .flatpickr-calendar as a SIBLING of the target element, and the
         className option does NOT land on the calendar. Both picker and
-        calendar are children of .doctor-cal-panel, so that panel is the
+        calendar are children of :is(.doctor-cal-panel, .rs-cal), so that panel is the
         only reliable scope root. No JS class-tagging required.
        */
 
         /* ---- Card shell ---- */
-        .doctor-cal-panel .flatpickr-calendar {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar {
             width: 100% !important;
             background: #ffffff !important;
             border: 1px solid #e2e8f0 !important;
@@ -20,23 +20,23 @@
         }
 
         /* ---- Month / year header ---- */
-        .doctor-cal-panel .flatpickr-months,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-months,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-months {
             background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
             padding: 14px 10px 10px !important;
         }
 
-        .doctor-cal-panel .flatpickr-current-month .cur-month,
-        .doctor-cal-panel .flatpickr-current-month input.cur-year,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month .cur-month,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-current-month .cur-month,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-current-month input.cur-year,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-current-month .cur-month,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-current-month input.cur-year {
             color: #ffffff !important;
             font-weight: 700 !important;
             font-size: 15px !important;
         }
 
-        .doctor-cal-panel .flatpickr-current-month input.cur-year,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-current-month input.cur-year {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-current-month input.cur-year,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-current-month input.cur-year {
             background: transparent !important;
             border: none !important;
         }
@@ -52,7 +52,7 @@
         built - buildMonthDropdown() adds .has-custom-month when it succeeds.
         If that JS ever fails, the native control stays visible and usable
         rather than leaving a blank header with no way to change month. */
-        .doctor-cal-panel .flatpickr-calendar.has-custom-month .flatpickr-monthDropdown-months {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar.has-custom-month .flatpickr-monthDropdown-months {
             display: none !important;
         }
 
@@ -109,13 +109,13 @@
         box) and nests .flatpickr-current-month inside it, which clips the
         dropdown list completely. Let it overflow, and lift the whole header
        subtree above the day grid so the open list is not painted behind it. */
-        .doctor-cal-panel .flatpickr-month,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-month {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-month,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-month {
             overflow: visible !important;
         }
 
-        .doctor-cal-panel .flatpickr-months,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-months,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-months {
             position: relative !important;
             z-index: 20 !important;
         }
@@ -148,45 +148,45 @@
             color: #ffffff;
         }
 
-        .doctor-cal-panel .flatpickr-current-month .numInputWrapper:hover,
-        .doctor-cal-panel .numInputWrapper:hover,
-        .doctor-cal-panel .flatpickr-calendar .numInputWrapper:hover {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-current-month .numInputWrapper:hover,
+        :is(.doctor-cal-panel, .rs-cal) .numInputWrapper:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .numInputWrapper:hover {
             background: rgba(255, 255, 255, 0.18) !important;
             border-radius: 6px !important;
         }
 
-        .doctor-cal-panel .numInputWrapper span,
-        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span {
+        :is(.doctor-cal-panel, .rs-cal) .numInputWrapper span,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .numInputWrapper span {
             border-color: rgba(255, 255, 255, 0.45) !important;
         }
 
-        .doctor-cal-panel .numInputWrapper span.arrowUp::after,
-        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowUp::after {
+        :is(.doctor-cal-panel, .rs-cal) .numInputWrapper span.arrowUp::after,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .numInputWrapper span.arrowUp::after {
             border-bottom-color: #ffffff !important;
         }
 
-        .doctor-cal-panel .numInputWrapper span.arrowDown::after,
-        .doctor-cal-panel .flatpickr-calendar .numInputWrapper span.arrowDown::after {
+        :is(.doctor-cal-panel, .rs-cal) .numInputWrapper span.arrowDown::after,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .numInputWrapper span.arrowDown::after {
             border-top-color: #ffffff !important;
         }
 
-        .doctor-cal-panel .flatpickr-prev-month svg,
-        .doctor-cal-panel .flatpickr-next-month svg,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-prev-month svg,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-next-month svg {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-prev-month svg,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-next-month svg,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-prev-month svg,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-next-month svg {
             fill: #ffffff !important;
         }
 
         /* ---- Weekday header: light slate band instead of a second navy bar ---- */
-        .doctor-cal-panel .flatpickr-weekdays,
-        .doctor-cal-panel span.flatpickr-weekday,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
-        .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-weekdays,
+        :is(.doctor-cal-panel, .rs-cal) span.flatpickr-weekday,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-weekdays,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar span.flatpickr-weekday {
             background: #f1f5f9 !important;
         }
 
-        .doctor-cal-panel .flatpickr-weekday,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-weekday,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-weekday {
             color: #64748b !important;
             font-size: 11px !important;
             font-weight: 800 !important;
@@ -198,22 +198,22 @@
         /* flatpickr renders .flatpickr-rContainer as a flex item inside
        .flatpickr-innerContainer, which makes it shrink instead of filling
        the card. Force block layout down the whole chain. */
-        .doctor-cal-panel .flatpickr-innerContainer,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-innerContainer {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-innerContainer,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-innerContainer {
             display: block !important;
             overflow: hidden !important;
             width: auto !important;
         }
 
-        .doctor-cal-panel .flatpickr-rContainer,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-rContainer {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-rContainer,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-rContainer {
             display: block !important;
             width: 100% !important;
             padding: 0 !important;
         }
 
-        .doctor-cal-panel .flatpickr-days,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-days {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-days,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-days {
             display: block !important;
             width: 100% !important;
             box-sizing: border-box !important;
@@ -221,8 +221,8 @@
             border: none !important;
         }
 
-        .doctor-cal-panel .dayContainer,
-        .doctor-cal-panel .flatpickr-calendar .dayContainer {
+        :is(.doctor-cal-panel, .rs-cal) .dayContainer,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .dayContainer {
             display: grid !important;
             grid-template-columns: repeat(7, 38px) !important;
             justify-content: center !important;
@@ -237,8 +237,8 @@
             box-shadow: none !important;
         }
 
-        .doctor-cal-panel .flatpickr-day,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day {
             background: none !important;
             border: 1px solid transparent !important;
             border-radius: 50% !important;
@@ -258,10 +258,10 @@
                 transform 0.15s ease, box-shadow 0.15s ease !important;
         }
 
-        .doctor-cal-panel .flatpickr-day:hover,
-        .doctor-cal-panel .flatpickr-day:focus,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day:focus,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day:focus {
             background: #dbeafe !important;
             border-color: transparent !important;
             color: #0d47a1 !important;
@@ -270,31 +270,31 @@
         }
 
         /* Today */
-        .doctor-cal-panel .flatpickr-day.today,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.today,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.today {
             border: 2px solid #1e63cd !important;
             background: #eff6ff !important;
             color: #0d47a1 !important;
             font-weight: 800 !important;
         }
 
-        .doctor-cal-panel .flatpickr-day.today:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today:hover {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.today:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.today:hover {
             background: #dbeafe !important;
             border-color: #0d47a1 !important;
         }
 
         /* Selected */
-        .doctor-cal-panel .flatpickr-day.selected,
-        .doctor-cal-panel .flatpickr-day.startRange,
-        .doctor-cal-panel .flatpickr-day.endRange,
-        .doctor-cal-panel .flatpickr-day.selected:hover,
-        .doctor-cal-panel .flatpickr-day.startRange:hover,
-        .doctor-cal-panel .flatpickr-day.endRange:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.startRange,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.endRange,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.startRange:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.endRange:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.startRange,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.endRange,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected:hover {
             background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
             border-color: transparent !important;
             color: #ffffff !important;
@@ -304,20 +304,20 @@
         }
 
         /* Adjacent-month + disabled days */
-        .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
-        .doctor-cal-panel .flatpickr-day.prevMonthDay,
-        .doctor-cal-panel .flatpickr-day.nextMonthDay,
-        .doctor-cal-panel .flatpickr-day.notAllowed,
-        .doctor-cal-panel .flatpickr-day.flatpickr-disabled:hover,
-        .doctor-cal-panel .flatpickr-day.prevMonthDay:hover,
-        .doctor-cal-panel .flatpickr-day.nextMonthDay:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.notAllowed,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay:hover,
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay:hover {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.flatpickr-disabled,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.prevMonthDay,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.nextMonthDay,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.notAllowed,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.flatpickr-disabled:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.prevMonthDay:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.nextMonthDay:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.prevMonthDay,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.nextMonthDay,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.notAllowed,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.flatpickr-disabled:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.prevMonthDay:hover,
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.nextMonthDay:hover {
             background: transparent !important;
             border-color: transparent !important;
             color: #cbd5e1 !important;
@@ -327,38 +327,38 @@
         }
 
         /* Blocked-day dot (built inline by onDayCreate) */
-        .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"],
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day>span[style*="border-radius:50%"],
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
             width: 5px !important;
             height: 5px !important;
             box-shadow: 0 0 0 1.5px #ffffff !important;
             z-index: 2 !important;
         }
 
-        .doctor-cal-panel .flatpickr-day.selected>span[style*="border-radius:50%"],
-        .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected>span[style*="border-radius:50%"],
+        :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
             box-shadow: 0 0 0 1.5px #1e63cd !important;
         }
 
         /* ============================ DARK MODE ============================ */
-        /* NOTE: target the CALENDAR only. Writing bare .doctor-cal-panel here
+        /* NOTE: target the CALENDAR only. Writing bare :is(.doctor-cal-panel, .rs-cal) here
        would repaint the outer panel and undo its transparent background. */
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar {
             background: #1e293b !important;
             border-color: #334155 !important;
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3),
                 0 14px 32px -12px rgba(0, 0, 0, 0.55) !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-months,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-months {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-months,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-months {
             background: linear-gradient(135deg, #0b1a3a 0%, #14346b 100%) !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-weekdays,
-        body.dark-mode .doctor-cal-panel span.flatpickr-weekday,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekdays,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar span.flatpickr-weekday {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-weekdays,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) span.flatpickr-weekday,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-weekdays,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar span.flatpickr-weekday {
             background: #0f172a !important;
         }
 
@@ -384,61 +384,61 @@
             color: #ffffff;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-weekday,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-weekday {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-weekday,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-weekday {
             color: #7dd3fc !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day {
             color: #cbd5e1 !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day:hover,
-        body.dark-mode .doctor-cal-panel .flatpickr-day:focus,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:hover,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day:focus {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day:hover,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day:focus,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day:hover,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day:focus {
             background: #1e3a8a !important;
             color: #dbeafe !important;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45) !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day.today,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.today {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.today,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.today {
             border-color: #60a5fa !important;
             background: #172554 !important;
             color: #bfdbfe !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day.selected,
-        body.dark-mode .doctor-cal-panel .flatpickr-day.startRange,
-        body.dark-mode .doctor-cal-panel .flatpickr-day.endRange,
-        body.dark-mode .doctor-cal-panel .flatpickr-day.selected:hover,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.startRange,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.endRange,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected:hover {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.startRange,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.endRange,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected:hover,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.startRange,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.endRange,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected:hover {
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
             border-color: transparent !important;
             color: #ffffff !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
-        body.dark-mode .doctor-cal-panel .flatpickr-day.prevMonthDay,
-        body.dark-mode .doctor-cal-panel .flatpickr-day.nextMonthDay,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.prevMonthDay,
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.nextMonthDay {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.flatpickr-disabled,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.prevMonthDay,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.nextMonthDay,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.prevMonthDay,
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.nextMonthDay {
             color: #475569 !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"],
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day>span[style*="border-radius:50%"],
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day>span[style*="border-radius:50%"] {
             box-shadow: 0 0 0 1.5px #1e293b !important;
         }
 
-        body.dark-mode .doctor-cal-panel .flatpickr-day.selected>span[style*="border-radius:50%"],
-        body.dark-mode .doctor-cal-panel .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-day.selected>span[style*="border-radius:50%"],
+        body.dark-mode :is(.doctor-cal-panel, .rs-cal) .flatpickr-calendar .flatpickr-day.selected>span[style*="border-radius:50%"] {
             box-shadow: 0 0 0 1.5px #2563eb !important;
         }
 
