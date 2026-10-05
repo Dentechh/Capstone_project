@@ -45,11 +45,13 @@ from datetime import UTC, datetime, timedelta
 try:
     import firebase_admin
     from firebase_admin import credentials, firestore
+    from google.cloud import firestore as gcf
     from google.cloud.firestore_v1.base_query import FieldFilter
 except ImportError:  # allows --dry-run without firebase-admin installed
     firebase_admin = None
     credentials = None
     firestore = None
+    gcf = None
     FieldFilter = None
 
 # ---------------------------------------------------------------
@@ -261,9 +263,9 @@ def build_procedure(visit_dt):
 def stat_increments(income, outstanding, unpaid):
     """Same fields main.py increments whenever a treatment is saved or paid."""
     return {
-        "total_income": firestore.Increment(round(income, 2)),
-        "total_outstanding": firestore.Increment(round(outstanding, 2)),
-        "unpaid_procedures": firestore.Increment(unpaid),
+        "total_income": gcf.Increment(round(income, 2)),
+        "total_outstanding": gcf.Increment(round(outstanding, 2)),
+        "unpaid_procedures": gcf.Increment(unpaid),
     }
 
 
@@ -311,7 +313,7 @@ def seed(dry_run=False, count=NUM_PATIENTS, days=DAYS_SPREAD, assume_yes=False):
         batch.set(seed_ref, {
             "seed_batch_id": SEED_BATCH_ID,
             "created_at": datetime.now(UTC).isoformat(),
-            "patients": firestore.Increment(chunk_patients),
+            "patients": gcf.Increment(chunk_patients),
             **inc,
         }, merge=True)
         batch.commit()
@@ -357,6 +359,8 @@ def seed(dry_run=False, count=NUM_PATIENTS, days=DAYS_SPREAD, assume_yes=False):
             "uid": account_uid,
             "firstname": first,
             "middlename": middle,
+            "last_sex": random.choice(["Male", "Female"]),
+            "CivilStatus": random.choice(["Single", "Married"]),
             "lastname": last,
             "email": "",
             "contact_number": f"09{random.randint(100000000, 999999999)}",
@@ -388,9 +392,10 @@ def seed(dry_run=False, count=NUM_PATIENTS, days=DAYS_SPREAD, assume_yes=False):
                 "Patient_unq_id": patient_id,
                 "chart": {},
                 "chart_image": "",
+                "has_unpaid": any(p["balance"] > 0 for p in procedures),
                 "procedures": procedures,
                 "seed_batch_id": SEED_BATCH_ID,
-                "updated_at": firestore.SERVER_TIMESTAMP,
+                "updated_at": gcf.SERVER_TIMESTAMP,
             })
 
             chunk_income += p_income

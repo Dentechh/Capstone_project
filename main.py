@@ -150,7 +150,10 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
         self.app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_USERNAME")
         self.app.config["MAIL_TIMEOUT"] = 10
-        self.app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+        secret = os.environ.get("SECRET_KEY")
+        if not secret or secret.startswith("<") or len(secret) < 32:
+            raise RuntimeError("SECRET_KEY is missing or is a placeholder")
+        self.app.secret_key = secret
         self.app.permanent_session_lifetime = timedelta(hours=8)
         self.app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
         self.app.config["SESSION_COOKIE_HTTPONLY"] = True
@@ -1466,7 +1469,18 @@ class DentalClinicApp(BaseFlaskApp):
             self.Doc_Patients
         ).document(patient_id).set(patient_data)
 
-        self._invalidate_patients_cache()
+        # Add the new patient to the cached list instead of throwing the
+        # whole cache away (which made the next search / list page re-read
+        # every patient). If nothing is cached yet, clear it as before.
+        cached_patients = self.cache.get("patients_all")
+        if cached_patients is not None:
+            self.cache.set(
+                "patients_all",
+                list(cached_patients) + [(patient_id, patient_data)],
+                ttl_seconds=self.CACHE_TTL_SECONDS
+            )
+        else:
+            self._invalidate_patients_cache()
 
         return patient_id
     
@@ -1886,6 +1900,9 @@ class DentalClinicApp(BaseFlaskApp):
                             value
                         )
 
+                        # Phase 3: remember the row as it was before it is marked paid.
+                        agg_old_row = dict(p)
+
                         # -------------------------------------------------
                         # UPDATE PROCEDURE
                         # -------------------------------------------------
@@ -1908,6 +1925,8 @@ class DentalClinicApp(BaseFlaskApp):
 
                             "procedures": procedures,
 
+                            "has_unpaid": self._agg_has_unpaid(procedures),
+
                             "updated_at":
                                 firestore.SERVER_TIMESTAMP
 
@@ -1918,6 +1937,8 @@ class DentalClinicApp(BaseFlaskApp):
                             "total_outstanding": firestore.Increment(-old_balance),
                             "unpaid_procedures": firestore.Increment(-1)
                         }, merge=True)
+                        # Phase 3: keep the daily aggregates in step (never raises).
+                        self._agg_apply_rows(add=[procedures[index]], remove=[agg_old_row])
                         
                         print("========================================")
                         print("✅ PAYMENT UPDATED SUCCESSFULLY")
@@ -2856,7 +2877,8 @@ class DentalClinicApp(BaseFlaskApp):
 
 
     def logout(self):
-        session.clear()
+        for k in ("uid", "email", "name", "profile_pic", "pending_patient_match"):
+            session.pop(k, None)
         return redirect(url_for("index"))
     
 
@@ -5449,6 +5471,9 @@ class DentalClinicApp(BaseFlaskApp):
                 ):
                     for sub_doc in account_ref.collection(sub_name).stream():
                         sub_doc.reference.delete()
+                        # Phase 3: take this treatment record out of the daily aggregates.
+                        if sub_name == "Done_procedure":
+                            self._agg_remove_done_doc(sub_doc)
 
                 account_ref.delete()
                 self._invalidate_accounts_cache()
@@ -5563,6 +5588,7 @@ class DentalClinicApp(BaseFlaskApp):
         try:
             done_ref.update({
                 "procedures": procedures,
+                "has_unpaid": self._agg_has_unpaid(procedures),
                 "updated_at": firestore.SERVER_TIMESTAMP
             })
 
@@ -5576,6 +5602,9 @@ class DentalClinicApp(BaseFlaskApp):
                 "total_outstanding": firestore.Increment(delta_outstanding),
                 "unpaid_procedures": firestore.Increment(delta_unpaid)
             }, merge=True)
+
+            # Phase 3: keep the daily aggregates in step (never raises).
+            self._agg_apply_rows(add=[procedures[proc_index]], remove=[existing])
 
             # =================================================
             # REFRESH "NEXT VISIT" SUGGESTION FOR THIS RECORD
@@ -5685,6 +5714,7 @@ class DentalClinicApp(BaseFlaskApp):
             if procedures:
                 done_ref.update({
                     "procedures": procedures,
+                    "has_unpaid": self._agg_has_unpaid(procedures),
                     "updated_at": firestore.SERVER_TIMESTAMP
                 })
             else:
@@ -5698,6 +5728,9 @@ class DentalClinicApp(BaseFlaskApp):
                 "total_outstanding": firestore.Increment(-removed_balance),
                 "unpaid_procedures": firestore.Increment(-(1 if removed_balance > 0 else 0))
             }, merge=True)
+
+            # Phase 3: keep the daily aggregates in step (never raises).
+            self._agg_apply_rows(remove=[removed])
 
             # =================================================
             # REFRESH "NEXT VISIT" SUGGESTION FOR THIS RECORD
@@ -6479,11 +6512,15 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "procedures": done_procedures,
 
+                "has_unpaid": self._agg_has_unpaid(done_procedures),
+
                 "updated_at":
                     firestore.SERVER_TIMESTAMP
             })
 
             print("DONE_PROCEDURE SAVED SUCCESSFULLY.")
+            # Phase 3: keep the daily aggregates in step (never raises).
+            self._agg_apply_rows(add=done_procedures)
             self._invalidate_financial_cache()
 
             # NEW: cache history flag on the account doc
@@ -6957,6 +6994,11 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
 
+        # Phase 3: when the aggregate switch is on (and the aggregates have
+        # been built) answer from the daily aggregates instead of the scan.
+        if self._agg_enabled() and self._agg_ready():
+            return self._agg_admin_financial_chart_data()
+
         period = request.args.get("period", "weekly").strip().lower()
         if period not in ("today", "weekly", "monthly", "yearly", "overall"):
             period = "weekly"
@@ -7155,6 +7197,10 @@ class DentalClinicApp(BaseFlaskApp):
         """
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        # Phase 3: aggregate switch on and built -> read only the has_unpaid documents.
+        if self._agg_enabled() and self._agg_ready():
+            return self._agg_admin_unpaid_procedures()
 
         try:
             # --- name sources, best first -------------------------------------
@@ -7397,6 +7443,14 @@ class DentalClinicApp(BaseFlaskApp):
             last_name=last_name,
             birthday=birthday
         )
+        if match:
+            # find_patient() returns its single best match even when that
+            # patient is already linked to a real account. That is not a
+            # candidate for this prompt, and it must not stop the strict
+            # name-part search below from finding the unlinked walk-in.
+            linked_uid = match.get("account_uid") or ""
+            if linked_uid and not linked_uid.startswith("walkin_"):
+                match = None
         if not match:
             # find_patient() only sees patients whose whole first or last
             # name equals the query's, so it misses a walk-in saved as
@@ -7477,6 +7531,10 @@ class DentalClinicApp(BaseFlaskApp):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
             
+        # Phase 3: aggregate switch on and built -> answer from the daily aggregates.
+        if self._agg_enabled() and self._agg_ready():
+            return self._agg_admin_procedure_chart_data()
+
         period = request.args.get("period", "overall").strip().lower()
         today = datetime.now(UTC).date()
         
@@ -7498,6 +7556,971 @@ class DentalClinicApp(BaseFlaskApp):
         
         try:
             done_docs = self._get_done_procedures_cached()
+            for data in done_docs:
+                for p in data.get("procedures", []):
+                    # Filter by date if a period is selected (not overall)
+                    if start_date is not None:
+                        date_str = str(p.get("date", "")).strip()
+                        if not date_str:
+                            continue
+                        try:
+                            proc_date = datetime.fromisoformat(date_str).date()
+                            if proc_date < start_date:
+                                continue
+                        except ValueError:
+                            continue # Skip invalid dates
+                    
+                    name = str(p.get("procedure", "")).strip()
+                    if not name:
+                        continue
+                    key = name.lower()
+                    display_names.setdefault(key, name)
+                    counts[key] = counts.get(key, 0) + 1
+                    revenue[key] = revenue.get(key, 0) + self.safe_float(p.get("paid", 0))
+        except Exception as e:
+            print("PROCEDURE CHART DATA ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        def top_n(metric_dict, limit=10):
+            sorted_keys = sorted(metric_dict.keys(), key=lambda k: metric_dict[k], reverse=True)
+            top_keys = sorted_keys[:limit]
+            other_keys = sorted_keys[limit:]
+            labels = [display_names[k] for k in top_keys]
+            values = [round(metric_dict[k], 2) for k in top_keys]
+            if other_keys:
+                other_total = round(sum(metric_dict[k] for k in other_keys), 2)
+                if other_total > 0:
+                    labels.append("Other")
+                    values.append(other_total)
+            return labels, values
+
+        count_labels, count_values = top_n(counts)
+        revenue_labels, revenue_values = top_n(revenue)
+        
+        return jsonify({
+            "success": True,
+            "counts": {"labels": count_labels, "data": count_values},
+            "revenue": {"labels": revenue_labels, "data": revenue_values}
+        })
+
+
+    # ============================================================
+    # PHASE 3: DAILY FINANCIAL AGGREGATES  (purely additive)
+    # ============================================================
+    # Nothing above this block was changed by Phase 3. What it adds:
+    #
+    #  * Stats_daily/{YYYY-MM-DD | undated}: one small document per day with
+    #    that day's income, outstanding balance and per-procedure count and
+    #    revenue. No uids are stored in it. Kept in step by tiny hook calls
+    #    placed next to the existing Stats/financial_summary writes.
+    #  * has_unpaid (bool) on every Done_procedure document.
+    #  * _agg_admin_* : copies of the three scan-based endpoints with ONLY the
+    #    data source swapped. The originals are untouched and still run
+    #    whenever the switch is off, the aggregates were never built, or an
+    #    aggregate read fails.
+    #  * Admin-only tools: /admin/aggregates/repair, /compare and /switch.
+    #
+    # Every hook is wrapped so that an aggregate problem can never break the
+    # save, edit, delete or payment it sits next to; the worst case is a
+    # small drift that /admin/aggregates/repair rebuilds from the real data.
+    AGG_COLLECTION = "Stats_daily"
+    AGG_UNDATED = "undated"
+    AGG_META = "_meta"
+    AGG_UNPAID_TTL_SECONDS = 120
+    _agg_lock = threading.Lock()
+    _agg_repair_lock = threading.Lock()
+    _agg_gen = 0
+    _AGG_DATE_KEY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+    def _agg_enabled(self):
+        """In-memory override (set by /admin/aggregates/switch) wins, then
+        the USE_AGGREGATES environment variable. Off by default."""
+        override = getattr(self, "_agg_override", None)
+        if override is not None:
+            return bool(override)
+        return os.getenv("USE_AGGREGATES", "").strip().lower() in ("1", "true", "yes", "on")
+
+    def _agg_num(self, value):
+        """safe_float, but never NaN/inf, so an aggregate write can't fail."""
+        n = self.safe_float(value)
+        try:
+            if n != n or n in (float("inf"), float("-inf")):
+                return 0.0
+            return float(n)
+        except Exception:
+            return 0.0
+
+    def _agg_has_unpaid(self, procedures):
+        """True when any row might still be listed as unpaid. Deliberately
+        over-inclusive (a false True is harmless because the Unpaid table
+        still filters row by row; a false False would hide a debt). Never
+        raises."""
+        try:
+            if not isinstance(procedures, list):
+                return False
+            for p in procedures:
+                if isinstance(p, dict) and not (self.safe_float(p.get("balance", 0)) <= 0):
+                    return True
+            return False
+        except Exception:
+            return True
+
+    def _agg_invalidate_caches(self):
+        try:
+            self._agg_gen += 1
+            self.cache.invalidate("agg_daily_all")
+            self.cache.invalidate("agg_unpaid_docs")
+        except Exception as e:
+            print("AGGREGATE CACHE INVALIDATE FAILED:", e)
+
+    # --- turning treatment rows into daily contributions ---------------
+    def _agg_row_parts(self, p):
+        """The pieces of one treatment row the aggregates care about, using
+        exactly the same reading rules as the scan-based code."""
+        if not isinstance(p, dict):
+            return None
+        paid = self._agg_num(p.get("paid", 0))
+        balance = self._agg_num(p.get("balance", 0))
+        bucket = self.AGG_UNDATED
+        canon = False
+        date_str = str(p.get("date", "")).strip()
+        if date_str:
+            try:
+                parsed = datetime.fromisoformat(date_str).date()
+                bucket = parsed.isoformat()
+                # The day-by-day charts only count a row whose date text is
+                # exactly YYYY-MM-DD; the monthly/yearly ones accept anything
+                # fromisoformat understands. "canon" keeps the two apart.
+                canon = (date_str == bucket)
+            except Exception:
+                bucket = self.AGG_UNDATED
+        name = str(p.get("procedure", "")).strip()
+        pid = ""
+        if name:
+            pid = "p" + hashlib.sha1(name.lower().encode("utf-8", "replace")).hexdigest()[:20]
+        return {
+            "bucket": bucket, "canon": canon, "paid": paid, "balance": balance,
+            "name": name, "pid": pid,
+        }
+
+    def _agg_new_bucket(self):
+        return {"rows": 0, "paid": 0.0, "paid_alt": 0.0, "outstanding": 0.0, "unpaid": 0, "procs": {}}
+
+    def _agg_accumulate(self, net, parts, sign):
+        key = parts["bucket"]
+        b = net.get(key)
+        if b is None:
+            b = net[key] = self._agg_new_bucket()
+        b["rows"] += sign
+        field = "paid" if (parts["canon"] or key == self.AGG_UNDATED) else "paid_alt"
+        b[field] += sign * parts["paid"]
+        if parts["balance"] > 0:
+            b["outstanding"] += sign * parts["balance"]
+            b["unpaid"] += sign
+        if parts["pid"]:
+            pr = b["procs"].get(parts["pid"])
+            if pr is None:
+                pr = b["procs"][parts["pid"]] = {"n": parts["name"], "c": 0, "r": 0.0}
+            pr["c"] += sign
+            pr["r"] += sign * parts["paid"]
+            if sign > 0 or not pr["n"]:
+                pr["n"] = parts["name"]
+
+    def _agg_delta_is_zero(self, b):
+        if b["rows"] != 0 or b["unpaid"] != 0:
+            return False
+        for f in ("paid", "paid_alt", "outstanding"):
+            if abs(b[f]) > 1e-9:
+                return False
+        for pr in b["procs"].values():
+            if pr["c"] != 0 or abs(pr["r"]) > 1e-9:
+                return False
+        return True
+
+    def _agg_increment_payload(self, b):
+        data = {
+            "rows": firestore.Increment(b["rows"]),
+            "paid": firestore.Increment(b["paid"]),
+            "paid_alt": firestore.Increment(b["paid_alt"]),
+            "outstanding": firestore.Increment(b["outstanding"]),
+            "unpaid": firestore.Increment(b["unpaid"]),
+        }
+        procs = {}
+        for pid, pr in b["procs"].items():
+            if pr["c"] == 0 and abs(pr["r"]) <= 1e-9:
+                continue
+            procs[pid] = {
+                "n": pr["n"],
+                "c": firestore.Increment(pr["c"]),
+                "r": firestore.Increment(pr["r"]),
+            }
+        if procs:
+            data["procs"] = procs
+        return data
+
+    def _agg_apply_rows(self, add=None, remove=None):
+        """Add the daily contribution of the `add` rows and take away that of
+        the `remove` rows (an edit passes both). Never raises; returns False
+        if the aggregate write failed so the caller can ignore it safely."""
+        try:
+            net = {}
+            for rows, sign in ((remove, -1), (add, 1)):
+                for p in (rows or []):
+                    parts = self._agg_row_parts(p)
+                    if parts is not None:
+                        self._agg_accumulate(net, parts, sign)
+            writes = [(k, b) for k, b in net.items() if not self._agg_delta_is_zero(b)]
+            for i in range(0, len(writes), 400):
+                batch = self.db.batch()
+                for key, b in writes[i:i + 400]:
+                    ref = self.db.collection(self.AGG_COLLECTION).document(key)
+                    batch.set(ref, self._agg_increment_payload(b), merge=True)
+                batch.commit()
+            return True
+        except Exception as e:
+            print("DAILY AGGREGATE UPDATE FAILED (run /admin/aggregates/repair):", e)
+            return False
+        finally:
+            self._agg_invalidate_caches()
+
+    def _agg_remove_done_doc(self, snap):
+        """delete_patient hook: take a just-deleted Done_procedure document's
+        rows out of the aggregates. Never raises."""
+        try:
+            rows = (snap.to_dict() or {}).get("procedures", [])
+            if isinstance(rows, list):
+                self._agg_apply_rows(remove=rows)
+        except Exception as e:
+            print("DAILY AGGREGATE REMOVE FAILED (run /admin/aggregates/repair):", e)
+
+    # --- reading the aggregates ------------------------------------------
+    def _agg_load_all(self, force=False):
+        """Every Stats_daily document (one per active day), cached like the
+        other admin caches and cleared by every aggregate write."""
+        if not force:
+            cached = self.cache.get("agg_daily_all")
+            if cached is not None:
+                return cached
+        with self._agg_lock:
+            if not force:
+                cached = self.cache.get("agg_daily_all")
+                if cached is not None:
+                    return cached
+            gen = self._agg_gen
+            data = {}
+            for doc in self.db.collection(self.AGG_COLLECTION).stream():
+                data[doc.id] = doc.to_dict() or {}
+            if gen == self._agg_gen:
+                self.cache.set("agg_daily_all", data, ttl_seconds=self.CACHE_TTL_SECONDS)
+            return data
+
+    def _agg_ready(self):
+        """True only once /admin/aggregates/repair has built the aggregates
+        at least once, so switching on early can never show empty charts.
+        Any read problem counts as 'not ready' (the old scan then answers)."""
+        try:
+            meta = self._agg_load_all().get(self.AGG_META) or {}
+            return bool(meta.get("repaired_at"))
+        except Exception as e:
+            print("AGGREGATES NOT READY:", e)
+            return False
+
+    def _agg_live_buckets(self, agg):
+        for key, d in agg.items():
+            if key == self.AGG_UNDATED or self._AGG_DATE_KEY.match(key):
+                if isinstance(d, dict) and self._agg_num(d.get("rows")) > 0:
+                    yield key, d
+
+    def _agg_alltime_stats(self, agg):
+        """Aggregate twin of _financial_alltime_stats(): same keys, same
+        rules (dates before 2000 or after today are ignored for the yearly
+        totals and the earliest year; everything else counts)."""
+        today = datetime.now(PH_TZ).date()
+        total_paid = 0.0
+        outstanding = 0.0
+        unpaid_count = 0
+        earliest = None
+        paid_by_year = {}
+        for key, d in self._agg_live_buckets(agg):
+            paid = self._agg_num(d.get("paid")) + self._agg_num(d.get("paid_alt"))
+            total_paid += paid
+            outstanding += self._agg_num(d.get("outstanding"))
+            unpaid_count += int(round(self._agg_num(d.get("unpaid"))))
+            if key == self.AGG_UNDATED:
+                continue
+            try:
+                day = datetime.fromisoformat(key).date()
+            except Exception:
+                continue
+            if day.year < 2000 or day > today:
+                continue
+            paid_by_year[day.year] = paid_by_year.get(day.year, 0.0) + paid
+            if earliest is None or day < earliest:
+                earliest = day
+        return {
+            "total_paid": total_paid,
+            "outstanding": outstanding,
+            "unpaid_count": unpaid_count,
+            "earliest": earliest,
+            "paid_by_year": paid_by_year,
+        }
+
+    def _agg_income_docs(self, agg):
+        """Stand-in for the Done_procedure scan, shaped so the unchanged
+        income-chart code reads the same totals from it: per day one row
+        with the exact YYYY-MM-DD text (counted by the day-by-day views) and
+        one row whose text has a time part (counted only by month/year)."""
+        rows = []
+        for key, d in self._agg_live_buckets(agg):
+            if key == self.AGG_UNDATED:
+                continue
+            rows.append({"date": key, "paid": self._agg_num(d.get("paid"))})
+            rows.append({"date": key + "T00:00:00", "paid": self._agg_num(d.get("paid_alt"))})
+        return [{"procedures": rows}]
+
+    def _agg_procedure_docs(self, agg):
+        """Stand-in scan for the procedure chart: each procedure per day
+        becomes `count` rows carrying the day's revenue, so the unchanged
+        counting code reproduces the same counts and revenue."""
+        out = []
+        for key, d in self._agg_live_buckets(agg):
+            date_val = "" if key == self.AGG_UNDATED else key
+            procs = d.get("procs") or {}
+            if not isinstance(procs, dict):
+                continue
+            for pr in procs.values():
+                if not isinstance(pr, dict):
+                    continue
+                count = int(round(self._agg_num(pr.get("c"))))
+                name = str(pr.get("n") or "").strip()
+                if count <= 0 or not name:
+                    continue
+                rows = [{"date": date_val, "procedure": name, "paid": self._agg_num(pr.get("r"))}]
+                for _ in range(count - 1):
+                    rows.append({"date": date_val, "procedure": name, "paid": 0.0})
+                out.append({"procedures": rows})
+        return out
+
+    def _agg_unpaid_docs(self):
+        """Stand-in for the scan used by the Unpaid table: only documents
+        flagged has_unpaid, in the same shape as the cached scan."""
+        cached = self.cache.get("agg_unpaid_docs")
+        if cached is not None:
+            return cached
+        with self._agg_lock:
+            cached = self.cache.get("agg_unpaid_docs")
+            if cached is not None:
+                return cached
+            gen = self._agg_gen
+            docs = []
+            try:
+                query = (
+                    self.db.collection_group("Done_procedure")
+                    .where(filter=FieldFilter("has_unpaid", "==", True))
+                    .select(["procedures", "uid", "Patient_unq_id"])
+                )
+                for doc in query.stream():
+                    d = doc.to_dict() or {}
+                    try:
+                        d["_account_uid"] = doc.reference.parent.parent.id
+                    except Exception:
+                        d["_account_uid"] = ""
+                    docs.append(d)
+            except Exception as e:
+                # Usually the has_unpaid collection-group index has not been
+                # created yet. Fall back to the existing cached scan, which
+                # gives the same rows (the table still filters row by row).
+                print("UNPAID QUERY FAILED, using the full scan instead "
+                      "(create the has_unpaid collection-group index):", e)
+                docs = [
+                    d for d in self._get_done_procedures_cached()
+                    if self._agg_has_unpaid(d.get("procedures"))
+                ]
+            if gen == self._agg_gen:
+                self.cache.set("agg_unpaid_docs", docs, ttl_seconds=self.AGG_UNPAID_TTL_SECONDS)
+            return docs
+
+    # --- repair / compare -------------------------------------------------
+    def _agg_scan_truth(self, fix_flags=False):
+        """Fresh scan of every Done_procedure document (bypasses the cache).
+        Returns the daily buckets the real data adds up to, plus how the
+        has_unpaid flags look. With fix_flags=True it also writes the flag
+        on documents where it is missing or wrong."""
+        buckets = {}
+        docs = 0
+        rows = 0
+        flags_missing = 0
+        flags_wrong = 0
+        unpaid_not_flagged = 0
+        to_fix = []
+        query = self.db.collection_group("Done_procedure").select(["procedures", "has_unpaid"])
+        for doc in query.stream():
+            d = doc.to_dict() or {}
+            procs = d.get("procedures", [])
+            if not isinstance(procs, list):
+                procs = []
+            docs += 1
+            for p in procs:
+                parts = self._agg_row_parts(p)
+                if parts is not None:
+                    self._agg_accumulate(buckets, parts, 1)
+                    rows += 1
+            want = self._agg_has_unpaid(procs)
+            have = d.get("has_unpaid")
+            if "has_unpaid" not in d:
+                flags_missing += 1
+            elif have is not want:
+                flags_wrong += 1
+            if want and have is not True:
+                unpaid_not_flagged += 1
+            if have is not want:
+                to_fix.append((doc.reference, want))
+        flags_fixed = 0
+        if fix_flags:
+            for i in range(0, len(to_fix), 400):
+                batch = self.db.batch()
+                for ref, want in to_fix[i:i + 400]:
+                    batch.update(ref, {"has_unpaid": want})
+                batch.commit()
+            flags_fixed = len(to_fix)
+        return {
+            "buckets": buckets, "docs": docs, "rows": rows,
+            "flags_missing": flags_missing, "flags_wrong": flags_wrong,
+            "unpaid_not_flagged": unpaid_not_flagged, "flags_fixed": flags_fixed,
+        }
+
+    def _agg_rebuild(self):
+        """Rebuild every daily aggregate from the real Done_procedure
+        documents and backfill has_unpaid. Safe to run any time (best when
+        nobody is saving); running it again gives the same result."""
+        with self._agg_repair_lock:
+            truth = self._agg_scan_truth(fix_flags=True)
+            coll = self.db.collection(self.AGG_COLLECTION)
+            existing = [doc.id for doc in coll.stream()]
+            new_docs = {}
+            for key, b in truth["buckets"].items():
+                if b["rows"] <= 0:
+                    continue
+                doc = {
+                    "rows": int(b["rows"]),
+                    "paid": round(b["paid"], 6),
+                    "paid_alt": round(b["paid_alt"], 6),
+                    "outstanding": round(b["outstanding"], 6),
+                    "unpaid": int(b["unpaid"]),
+                }
+                procs = {
+                    pid: {"n": pr["n"], "c": int(pr["c"]), "r": round(pr["r"], 6)}
+                    for pid, pr in b["procs"].items() if pr["c"] > 0
+                }
+                if procs:
+                    doc["procs"] = procs
+                new_docs[key] = doc
+            items = list(new_docs.items())
+            for i in range(0, len(items), 400):
+                batch = self.db.batch()
+                for key, doc in items[i:i + 400]:
+                    batch.set(coll.document(key), doc)
+                batch.commit()
+            stale = [k for k in existing if k not in new_docs and k != self.AGG_META]
+            for i in range(0, len(stale), 400):
+                batch = self.db.batch()
+                for key in stale[i:i + 400]:
+                    batch.delete(coll.document(key))
+                batch.commit()
+            summary = {
+                "documents_scanned": truth["docs"],
+                "rows_scanned": truth["rows"],
+                "days_written": len(new_docs),
+                "stale_days_removed": len(stale),
+                "flags_fixed": truth["flags_fixed"],
+            }
+            meta = dict(summary)
+            meta["repaired_at"] = datetime.now(UTC).isoformat()
+            meta["version"] = 1
+            coll.document(self.AGG_META).set(meta)
+            self._agg_invalidate_caches()
+            return summary
+
+    def admin_aggregates_repair(self):
+        """Admin-only: rebuild the daily aggregates + has_unpaid flags from
+        the real treatment records. Idempotent."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            summary = self._agg_rebuild()
+            summary["success"] = True
+            return jsonify(summary)
+        except Exception as e:
+            print("AGGREGATE REPAIR ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_aggregates_compare(self):
+        """Admin-only: read-only check of the stored aggregates against a
+        fresh scan of the real records (costs one full scan)."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            truth = self._agg_scan_truth(fix_flags=False)
+            stored = self._agg_load_all(force=True)
+            live = {k: d for k, d in self._agg_live_buckets(stored)}
+            tb_all = {k: b for k, b in truth["buckets"].items() if b["rows"] > 0}
+            mismatches = []
+
+            def num(d, field):
+                return self._agg_num((d or {}).get(field))
+
+            for key in sorted(set(tb_all) | set(live)):
+                tb = tb_all.get(key)
+                sb = live.get(key)
+                problems = []
+                if int(round(num(sb, "rows"))) != (tb["rows"] if tb else 0):
+                    problems.append("rows")
+                if int(round(num(sb, "unpaid"))) != (tb["unpaid"] if tb else 0):
+                    problems.append("unpaid")
+                for field in ("paid", "paid_alt", "outstanding"):
+                    if abs(num(sb, field) - (tb[field] if tb else 0.0)) > 0.01:
+                        problems.append(field)
+                t_procs = (tb or {}).get("procs", {})
+                s_procs = (sb or {}).get("procs", {}) if isinstance((sb or {}).get("procs", {}), dict) else {}
+                for pid in set(t_procs) | set(s_procs):
+                    tp = t_procs.get(pid) or {"c": 0, "r": 0.0}
+                    sp = s_procs.get(pid) or {}
+                    s_count = int(round(num(sp, "c")))
+                    t_count = tp["c"]
+                    if s_count <= 0 and t_count <= 0:
+                        continue
+                    if s_count != t_count or abs(num(sp, "r") - tp["r"]) > 0.01:
+                        problems.append("procedure:" + str(tp.get("n") or sp.get("n") or pid))
+                if problems:
+                    mismatches.append({"day": key, "differs": problems})
+
+            meta = stored.get(self.AGG_META) or {}
+            flags = {
+                "missing": truth["flags_missing"],
+                "wrong": truth["flags_wrong"],
+                "unpaid_not_flagged": truth["unpaid_not_flagged"],
+            }
+            return jsonify({
+                "success": True,
+                "ready": bool(meta.get("repaired_at")),
+                "last_repair": meta.get("repaired_at", ""),
+                "in_sync": (not mismatches and flags["missing"] == 0 and flags["wrong"] == 0),
+                "documents_scanned": truth["docs"],
+                "rows_scanned": truth["rows"],
+                "days_compared": len(set(tb_all) | set(live)),
+                "mismatch_count": len(mismatches),
+                "mismatches": mismatches[:50],
+                "flags": flags,
+            })
+        except Exception as e:
+            print("AGGREGATE COMPARE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_aggregates_switch(self):
+        """Admin-only: turn the aggregate-based charts on/off instantly
+        without a restart. ?on=1 / ?on=0 / ?on=env (back to the
+        USE_AGGREGATES setting). No parameter just reports the state."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        arg = request.args.get("on", "").strip().lower()
+        if arg in ("1", "true", "on", "yes"):
+            self._agg_override = True
+        elif arg in ("0", "false", "off", "no"):
+            self._agg_override = False
+        elif arg in ("env", "reset"):
+            self._agg_override = None
+        enabled = self._agg_enabled()
+        return jsonify({
+            "success": True,
+            "enabled": enabled,
+            "ready": self._agg_ready() if enabled else None,
+            "using_aggregates": bool(enabled and self._agg_ready()),
+        })
+
+    # ------------------------------------------------------------
+    # Aggregate-backed copies of the three scan-based endpoints. Each is
+    # the original function text with only the data source swapped (see
+    # the marked lines); they run only when the aggregate switch is on.
+    # ------------------------------------------------------------
+    def _agg_admin_financial_chart_data(self):
+        """
+        Returns income-over-time data for the Financial Reports trend chart.
+
+        period=today    -> today only
+        period=weekly   -> 7-day window ending today; &week=N steps back N weeks
+        period=monthly  -> one calendar month, day by day; &month=YYYY-MM
+        period=yearly   -> January to December of one year; &year=YYYY
+        period=overall  -> one point per year, earliest year to this year
+
+        Total income follows the selected period. Outstanding Balance and
+        Unpaid Procedures always cover everything unpaid (same as the table).
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        period = request.args.get("period", "weekly").strip().lower()
+        if period not in ("today", "weekly", "monthly", "yearly", "overall"):
+            period = "weekly"
+        today = datetime.now(PH_TZ).date()
+
+        def int_arg(name, default):
+            try:
+                return int(request.args.get(name, default))
+            except (TypeError, ValueError):
+                return default
+
+        try:
+            stats = self._agg_alltime_stats(self._agg_load_all())
+            done_docs = self._agg_income_docs(self._agg_load_all())
+        except Exception as e:
+            print("FINANCIAL CHART DATA ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        earliest = stats["earliest"]
+        # Earliest year the pickers/dropdowns offer: at least the last 5 years
+        # (this year + 4 before), or further back if there is older data. This
+        # keeps the dropdowns usable even when all data is from this year.
+        first_year = min(earliest.year if earliest else today.year, today.year - 4)
+
+        def respond(labels, values, total_income, range_label, **extra):
+            payload = {
+                "success": True,
+                "period": period,
+                "labels": labels,
+                "data": values,
+                "total_income": round(total_income, 2),
+                # Always everything unpaid, whatever period is on screen.
+                "total_outstanding": round(stats["outstanding"], 2),
+                "unpaid_procedures": stats["unpaid_count"],
+                "range_label": range_label,
+                "as_of_label": f"{today:%B} {today.day}, {today.year}",
+                "chart_type": "line",
+                "can_prev": False,
+                "can_next": False,
+                "min_year": first_year,
+                "max_year": today.year,
+                "max_month": today.month,  # last selectable month in max_year
+            }
+            payload.update(extra)
+            return jsonify(payload)
+
+        # --- Yearly: January to December of the chosen year ---
+        if period == "yearly":
+            min_year = first_year
+            year = max(min_year, min(int_arg("year", today.year), today.year))
+
+            income_by_month = {m: 0.0 for m in range(1, 13)}
+            total_income = 0.0
+            try:
+                for data in done_docs:
+                    for p in data.get("procedures", []):
+                        if not isinstance(p, dict):
+                            continue
+                        date_str = str(p.get("date", "")).strip()
+                        if not date_str:
+                            continue
+                        try:
+                            proc_date = datetime.fromisoformat(date_str).date()
+                        except Exception:
+                            continue
+                        if proc_date.year == year:
+                            paid = self.safe_float(p.get("paid", 0))
+                            income_by_month[proc_date.month] += paid
+                            total_income += paid
+            except Exception as e:
+                print("FINANCIAL CHART DATA ERROR:", e)
+                return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+            labels = [datetime(2000, m, 1).strftime("%b") for m in range(1, 13)]
+            # Months that haven't happened yet are left empty (null) so the
+            # line stops at the current month instead of dropping to zero.
+            values = [
+                None if (year == today.year and m > today.month) else round(income_by_month[m], 2)
+                for m in range(1, 13)
+            ]
+            return respond(
+                labels, values, total_income, str(year),
+                year=year,
+                can_prev=year > min_year,
+                can_next=year < today.year,
+            )
+
+        # --- Overall: one point per year ---
+        if period == "overall":
+            overall_first_year = earliest.year if earliest else today.year
+            years = list(range(overall_first_year, today.year + 1))
+            labels = [str(y) for y in years]
+            values = [round(stats["paid_by_year"].get(y, 0.0), 2) for y in years]
+            range_label = str(years[0]) if len(years) == 1 else f"{years[0]} to {years[-1]}"
+            return respond(
+                labels, values, stats["total_paid"], range_label,
+                chart_type="bar",
+            )
+
+        # --- Today / Weekly / Monthly: day-by-day ---
+        extra = {}
+        if period == "today":
+            start_date = today
+            num_days = 1
+            range_label = f"{today:%B} {today.day}, {today.year}"
+        elif period == "monthly":
+            raw_month = request.args.get("month", "").strip()
+            try:
+                y, m = int(raw_month[:4]), int(raw_month[5:7])
+                datetime(y, m, 1)  # rejects month 0 / 13
+            except (TypeError, ValueError):
+                y, m = today.year, today.month
+            cur = (today.year, today.month)
+            lowest = (first_year, 1)
+            y, m = max(lowest, min((y, m), cur))
+
+            start_date = today.replace(year=y, month=m, day=1)
+            next_first = (
+                today.replace(year=y + 1, month=1, day=1) if m == 12
+                else today.replace(year=y, month=m + 1, day=1)
+            )
+            # The current month stops at today so the line doesn't fall to
+            # zero for days that haven't happened yet.
+            last_day = min(next_first - timedelta(days=1), today)
+            num_days = (last_day - start_date).days + 1
+            range_label = f"{start_date:%B} {y}"
+            extra = {
+                "month": f"{y}-{m:02d}",
+                "can_prev": (y, m) > lowest,
+                "can_next": (y, m) < cur,
+            }
+        else:
+            period = "weekly"
+            max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
+            week = min(max(0, int_arg("week", 0)), max_week)
+            end_date = today - timedelta(days=7 * week)
+            start_date = end_date - timedelta(days=6)
+            num_days = 7
+            if start_date.year == end_date.year:
+                range_label = f"{start_date:%b} {start_date.day} to {end_date:%b} {end_date.day}, {end_date.year}"
+            else:
+                range_label = (
+                    f"{start_date:%b} {start_date.day}, {start_date.year} to "
+                    f"{end_date:%b} {end_date.day}, {end_date.year}"
+                )
+            extra = {
+                "week": week,
+                "can_prev": week < max_week,
+                "can_next": week > 0,
+            }
+
+        date_keys = [
+            (start_date + timedelta(days=i)).isoformat()
+            for i in range(num_days)
+        ]
+        income_by_date = {d: 0.0 for d in date_keys}
+        total_income = 0.0
+
+        try:
+            for data in done_docs:
+                for p in data.get("procedures", []):
+                    if not isinstance(p, dict):
+                        continue
+                    date_str = str(p.get("date", "")).strip()
+                    if date_str in income_by_date:
+                        paid = self.safe_float(p.get("paid", 0))
+                        income_by_date[date_str] += paid
+                        total_income += paid
+        except Exception as e:
+            print("FINANCIAL CHART DATA ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        if period == "today":
+            labels = ["Today"]
+        else:
+            labels = [
+                datetime.fromisoformat(d).strftime("%b %d")
+                for d in date_keys
+            ]
+        values = [round(income_by_date[d], 2) for d in date_keys]
+
+        return respond(labels, values, total_income, range_label, **extra)
+
+    def _agg_admin_unpaid_procedures(self):
+        """
+        Every procedure that still has an unpaid balance, with the patient's
+        name, for the "Unpaid Procedures" table on Financial Reports.
+
+        Costs no extra Firestore reads in the normal case: it reuses the
+        cached Done_procedure scan the financial cards already use and the
+        cached Patients list for names. The accounts cache is only touched
+        when a name can't be found in the Patients list.
+
+        "Unpaid" means balance > 0, the same rule the Unpaid Procedures card
+        and the Outstanding Balance card use, so the totals agree.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        try:
+            # --- name sources, best first -------------------------------------
+            # 1. Customer_Account firstname/lastname: the same editable name
+            #    My Patients and the Treatment Information window show. Walk-in
+            #    accounts are NOT in the User Management cache, so accounts
+            #    missing from it are read directly (a few reads, remembered).
+            # 2. Patients collection (by account link, then by patient id).
+            name_by_patient_id = {}
+            name_by_account = {}
+            for patient_id, pdata in self._get_patients_cached():
+                parts = [
+                    str(pdata.get("first_name", "")).strip(),
+                    str(pdata.get("middle_name", "")).strip(),
+                    str(pdata.get("last_name", "")).strip(),
+                ]
+                full = " ".join(part for part in parts if part)
+                if not full:
+                    continue
+                name_by_patient_id[patient_id] = full
+                linked_uid = pdata.get("account_uid") or ""
+                if linked_uid and linked_uid not in name_by_account:
+                    name_by_account[linked_uid] = full
+
+            managed = None  # uid -> account data, built on first use
+            direct_names = self.cache.get("unpaid_account_names")
+            if direct_names is None:
+                direct_names = {}
+            direct_changed = False
+
+            def account_name(account_uid):
+                nonlocal managed, direct_changed
+                if not account_uid:
+                    return ""
+                if managed is None:
+                    managed = {uid: acc for uid, acc in self._get_manageable_accounts_cached()}
+                acc = managed.get(account_uid)
+                if acc is None:
+                    if account_uid in direct_names:
+                        return direct_names[account_uid]
+                    try:
+                        snap = (
+                            self.db.collection(self.Customer_Account)
+                            .document(account_uid)
+                            .get()
+                        )
+                        acc = snap.to_dict() if snap.exists else {}
+                    except Exception as e:
+                        print("UNPAID NAME LOOKUP FAILED:", account_uid, e)
+                        return ""
+                    nm = (
+                        f"{acc.get('firstname') or ''} {acc.get('lastname') or ''}".strip()
+                        or str(acc.get("name") or "").strip()
+                    )
+                    direct_names[account_uid] = nm
+                    direct_changed = True
+                    return nm
+                return (
+                    f"{acc.get('firstname') or ''} {acc.get('lastname') or ''}".strip()
+                    or str(acc.get("name") or "").strip()
+                )
+
+            rows = []
+            total_balance = 0.0
+
+            for data in self._agg_unpaid_docs():
+                procs = data.get("procedures", [])
+                if not isinstance(procs, list):
+                    continue
+
+                # Two places can say which account this record belongs to: the
+                # uid saved inside the record, and the record's real location
+                # in the database. They can disagree (e.g. records copied by a
+                # patient merge keep the old uid), so try both.
+                field_uid = str(data.get("uid") or "").strip()
+                path_uid = str(data.get("_account_uid") or "").strip()
+                uid_candidates = []
+                for cand in (path_uid, field_uid):
+                    if cand and cand not in uid_candidates:
+                        uid_candidates.append(cand)
+                account_uid = path_uid or field_uid
+                patient_unq_id = str(data.get("Patient_unq_id") or "").strip()
+
+                resolved_name = None  # same patient for every row of this record
+
+                for p in procs:
+                    if not isinstance(p, dict):
+                        continue
+
+                    balance = self.safe_float(p.get("balance", 0))
+                    if balance <= 0:
+                        continue
+
+                    if resolved_name is None:
+                        resolved_name = ""
+                        for cand in uid_candidates:
+                            resolved_name = account_name(cand) or name_by_account.get(cand) or ""
+                            if resolved_name:
+                                break
+                        if not resolved_name:
+                            resolved_name = name_by_patient_id.get(patient_unq_id) or ""
+                        if not resolved_name:
+                            print(
+                                "UNPAID LIST: no name found. uid in record:", repr(field_uid),
+                                "| record stored under account:", repr(path_uid),
+                                "| Patient_unq_id:", repr(patient_unq_id),
+                            )
+
+                    rows.append({
+                        "patient_name": resolved_name or "Unknown patient",
+                        "uid": account_uid,
+                        "patient_id": patient_unq_id,
+                        "procedure": str(p.get("procedure", "") or ""),
+                        "tooth": str(p.get("tooth", "") or ""),
+                        "date": str(p.get("date", "") or "").strip(),
+                        "dentist": str(p.get("dentist", "") or ""),
+                        "value": round(self.safe_float(p.get("value", 0)), 2),
+                        "paid": round(self.safe_float(p.get("paid", 0)), 2),
+                        "balance": round(balance, 2),
+                    })
+                    total_balance += balance
+
+            if direct_changed:
+                self.cache.set("unpaid_account_names", direct_names, ttl_seconds=self.CACHE_TTL_SECONDS)
+
+            rows.sort(key=lambda r: r["balance"], reverse=True)
+
+            return jsonify({
+                "success": True,
+                "rows": rows,
+                "total_balance": round(total_balance, 2),
+            })
+
+        except Exception as e:
+            print("UNPAID PROCEDURES ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def _agg_admin_procedure_chart_data(self):
+        """
+        Returns per-procedure breakdown. Now supports period filtering.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+            
+        period = request.args.get("period", "overall").strip().lower()
+        today = datetime.now(UTC).date()
+        
+        # Determine start date for filtering
+        start_date = None
+        if period == "today":
+            start_date = today
+        elif period == "weekly":
+            start_date = today - timedelta(days=6)
+        elif period == "monthly":
+            start_date = today - timedelta(days=29)
+        elif period == "yearly":
+            start_date = today - timedelta(days=364) # Last 12 months
+        # 'overall' leaves start_date as None (no filter)
+
+        counts = {}
+        revenue = {}
+        display_names = {}
+        
+        try:
+            done_docs = self._agg_procedure_docs(self._agg_load_all())
             for data in done_docs:
                 for p in data.get("procedures", []):
                     # Filter by date if a period is selected (not overall)
@@ -7604,6 +8627,9 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/privacy-policy")(self.privacy_policy)
         self.app.route("/terms-of-service")(self.terms_of_service)
         self.app.route("/admin/procedure_chart_data")(self.admin_procedure_chart_data)
+        self.app.route("/admin/aggregates/repair")(self.admin_aggregates_repair)
+        self.app.route("/admin/aggregates/compare")(self.admin_aggregates_compare)
+        self.app.route("/admin/aggregates/switch")(self.admin_aggregates_switch)
 
 
 
