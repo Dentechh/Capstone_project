@@ -15,9 +15,9 @@
 
 {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
-    <div id="patient-flashes-data" 
-         data-flashes="{{ messages | tojson }}"
-         style="display: none;"></div>
+    <div id="patient-flashes-data"
+            data-flashes="{{ messages | tojson }}"
+            style="display: none;"></div>
     {% endif %}
 {% endwith %}
 
