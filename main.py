@@ -2741,7 +2741,11 @@ class DentalClinicApp(BaseFlaskApp):
         )
 
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({"success": True, "redirect": url_for("index")})
+            return jsonify({
+                "success": True,
+                "redirect": url_for("index"),
+                "name": user_data.get("firstname", "")
+            })
 
         flash(f"Welcome back, {user_data.get('firstname', '')}!", "success")
         return redirect(url_for("index"))
@@ -2805,6 +2809,7 @@ class DentalClinicApp(BaseFlaskApp):
                 guess_last = name_parts[1] if len(name_parts) > 1 else ""
                 self.maybe_flag_patient_match(session['uid'], guess_first, guess_last)
                 
+            flash(f"Welcome back, {session['name'].split()[0]}!", "success")
             return redirect(url_for("google_index"))
         except ValueError:
             return render_template("error.html", message="Invalid Google token")
@@ -2879,6 +2884,7 @@ class DentalClinicApp(BaseFlaskApp):
     def logout(self):
         for k in ("uid", "email", "name", "profile_pic", "pending_patient_match"):
             session.pop(k, None)
+        flash("You have been logged out.", "success")
         return redirect(url_for("index"))
     
 
@@ -5790,9 +5796,14 @@ class DentalClinicApp(BaseFlaskApp):
         - If the supplied value is a Firebase UID, load Customer_Account/{uid}
         - If the supplied value is a Patient ID such as P-000001,
         load Patients/{patient_id} and then use account_uid when available.
+
+        Access: admins (any record) and the account owner themselves.
+        The patient profile page calls this for the logged-in patient's
+        own records, dental history and payments, so the owner must be
+        allowed through, not just staff.
         """
         
-        if not self._is_admin():
+        if not self._is_owner_or_admin(uid):
             return jsonify({"error": "Unauthorized"}), 403
 
         # ============================================================

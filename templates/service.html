@@ -12,36 +12,6 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
-    <style>
-        /* Styling for the service image */
-        .service-image-container {
-            width: 100%;
-            max-height: 400px;
-            overflow: hidden;
-            border-radius: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-
-        .service-image-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        /* Adjusting the layout since sidebar is removed */
-        .service-details-container {
-            display: block; /* Removed flex to center the main content */
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 50px 20px;
-        }
-
-        .service-main {
-            width: 100%;
-        }
-    </style>
 </head>
 <body>
 
@@ -50,34 +20,48 @@
      data-callback="handleCredentialResponse">
 </div>
 
-    {% with messages = patient_flashed_messages() %}
-      {% if messages %}
-        <div id="flash-container" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; max-width: 400px;">
-          {% for category, message in messages %}
-            <div style="padding: 15px 20px; margin-bottom: 10px; border-radius: 12px; color: white; font-weight: 600; text-align: center; ">
-                {{ message }}
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+        <div id="patient-flashes-data" 
+            data-flashes="{{ messages | tojson }}"
+            style="display: none;"></div>
+        {% endif %}
     {% endwith %}
 
     <div class="toast-container" id="toast-container"></div>
 
-    <script>
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast toast-${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.transition = "opacity 0.3s ease";
-                toast.style.opacity = "0";
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Scroll animations using IntersectionObserver
+    const animatedElements = document.querySelectorAll('.scroll-animate');
+    
+    if (animatedElements.length === 0) return;
+    
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+        animatedElements.forEach(el => el.classList.add('animate'));
+        return;
+    }
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    animatedElements.forEach(el => observer.observe(el));
+});
+</script>
 
 {% set active_page = 'services' %}
 {% include '_patient_header.html' %}
@@ -91,24 +75,30 @@
 
     <section class="service-details-container">
         <div class="service-main">
-            <div class="service-image-container">
+            <div class="service-image-container scroll-animate fade-in-up">
                 <img src="{{ url_for('static', filename='img/services/' + service.image) if service.image else 'https://via.placeholder.com/800x400?text=Capizonda+Dental+Clinic' }}" alt="{{ service.title }}">
             </div>
 
-            <h2 style="color: var(--navy); margin-bottom: 20px;">Overview</h2>
-            <p>{{ service.full_desc }}</p>
+            <div class="service-section scroll-animate fade-in-up delay-1">
+                <h2 class="service-section-title">Overview</h2>
+                <div class="service-section-content">
+                    <p>{{ service.full_desc }}</p>
+                </div>
+            </div>
 
-            <h3 style="color: var(--navy); margin-top: 30px;">Benefits of this Treatment:</h3>
-            <ul class="service-benefits">
-                {% for benefit in service.benefits %}
+            <div class="service-section scroll-animate fade-in-up delay-2">
+                <h3 class="service-section-title">Benefits of this Treatment</h3>
+                <ul class="service-benefits">
+                    {% for benefit in service.benefits %}
                     <li>{{ benefit }}</li>
-                {% endfor %}
-            </ul>
+                    {% endfor %}
+                </ul>
+            </div>
 
-            <div class="service-cta-box">
+            <div class="service-cta-box scroll-animate zoom-in delay-3">
                 <h3>Ready for your {{ service.title }}?</h3>
-                <p>Book your appointment today and take advantage of our opening promo!</p>
-                <button class="btn-appointment" onclick="openModal()">Book Now - 40% Off</button>
+                <p>Book your appointment now to have proper assessment!</p>
+                <button class="btn-appointment" onclick="openModal()">BOOK NOW</button>
             </div>
         </div>
     </section>
@@ -286,7 +276,7 @@
                 </svg>
             </button>
             <h2>Welcome Back</h2>
-            <form action="/login" method="POST" id="loginForm">
+            <form action="/login" method="POST" id="loginForm" novalidate>
             <div class="login-error" id="loginError"></div>
             <input type="email" name="email" placeholder="Email" required>
             <div class="password-wrapper">
@@ -309,7 +299,23 @@
 
         <script>
             document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
+                // Custom validation for required fields
+                const emailInput = this.querySelector('input[name="email"]');
+                const passwordInput = this.querySelector('input[name="Password"]');
+                
+                if (!emailInput.value.trim()) {
+                    e.preventDefault();
+                    showToast('! Please fill out this field', 'warning');
+                    emailInput.focus();
+                    return;
+                }
+                if (!passwordInput.value) {
+                    e.preventDefault();
+                    showToast('! Please fill out this field', 'warning');
+                    passwordInput.focus();
+                    return;
+                }
+                
                 const errorDiv = document.getElementById('loginError');
                 errorDiv.style.display = 'none';
                 errorDiv.textContent = '';
@@ -380,7 +386,7 @@
                 </svg>
             </button>
         <h2>Create Account</h2>
-                <form id="signupForm" action="/sign-up" method="POST">
+                <form id="signupForm" action="/sign-up" method="POST" novalidate>
 
     <div style="display:flex; gap:10px;">
         <input type="text" name="FirstName" placeholder="First Name" required>
@@ -459,15 +465,57 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-document.getElementById("signupBtn").addEventListener("click", () => {
+document.getElementById("signupBtn").addEventListener("click", (e) => {
+    e.preventDefault();
 
+    const firstName = document.querySelector('#signupForm input[name="FirstName"]').value.trim();
+    const lastName = document.querySelector('#signupForm input[name="LastName"]').value.trim();
     const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+    const password = document.getElementById("password").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+    const mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value.trim();
+
+    // Check required fields
+    if (!firstName) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="FirstName"]').focus();
+        return;
+    }
+    if (!lastName) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="LastName"]').focus();
+        return;
+    }
+    if (!email) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("email").focus();
+        return;
+    }
+    if (!password) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("password").focus();
+        return;
+    }
+    if (!confirmPassword) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("confirmPassword").focus();
+        return;
+    }
+    if (!mobileNumber) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="MobileNumber"]').focus();
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showToast("Passwords do not match.", "error");
+        return;
+    }
 
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
 
-          alert("Account created!");
+          showToast("Account created!", "success");
           console.log(userCredential.user);
 
       })
@@ -476,7 +524,7 @@ document.getElementById("signupBtn").addEventListener("click", () => {
           console.log(error.code);
           console.log(error.message);
 
-          alert(error.message);
+          showToast(error.message, "error");
       });
 
 });
@@ -486,19 +534,19 @@ if (sendResetBtn) {
     sendResetBtn.addEventListener("click", async () => {
         const email = document.getElementById("resetEmail").value.trim();
         if (email === "") {
-            alert("Please enter your email.");
+            showToast("Please enter your email.", "warning");
             return;
         }
         try {
             await sendPasswordResetEmail(auth, email);
-            alert("Password reset email has been sent. Please check your spam folder.");
+            showToast("Password reset email has been sent. Please check your spam folder.", "success");
             document.getElementById("resetEmail").value = "";
             closeAuthModal("forgotPasswordModal");
         } catch (error) {
             if (error.code === "auth/user-not-found") {
-                alert("No account found with this email.");
+                showToast("No account found with this email.", "error");
             } else {
-                alert(error.message);
+                showToast(error.message, "error");
             }
         }
     });

@@ -13,41 +13,17 @@
 </head>
 <body>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+{% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
-        <div class="flash-container" id="flash-container">
-        {% for category, message in messages %}
-        <div class="flash-box flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
-        </div>
+    <div id="patient-flashes-data" 
+         data-flashes="{{ messages | tojson }}"
+         style="display: none;"></div>
     {% endif %}
 {% endwith %}
 
 <div class="toast-container" id="toast-container"></div>
 
-<script>
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.transition = "opacity 0.3s ease";
-            toast.style.opacity = "0";
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
-    }
-
-    setTimeout(() => {
-        const fc = document.getElementById('flash-container');
-        if(fc) {
-            fc.style.transition = "opacity 0.5s ease";
-            fc.style.opacity = "0";
-            setTimeout(() => fc.remove(), 500);
-        }
-    }, 4000);
-</script>
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
 
 
     <div id="g_id_onload"
@@ -536,7 +512,7 @@
 
         <h2>Welcome Back</h2>
 
-        <form action="/login" method="POST" id="loginForm">
+        <form action="/login" method="POST" id="loginForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="login-error" id="loginError"></div>
             <input type="email" id="loginEmail" name="email" placeholder="Email" required>
@@ -563,7 +539,23 @@
 
         <script>
             document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
+                // Custom validation for required fields
+                const emailInput = document.getElementById('loginEmail');
+                const passwordInput = this.querySelector('input[name="Password"]');
+                
+                if (!emailInput.value.trim()) {
+                    e.preventDefault();
+                    showToast('! Please fill out this field', 'warning');
+                    emailInput.focus();
+                    return;
+                }
+                if (!passwordInput.value) {
+                    e.preventDefault();
+                    showToast('! Please fill out this field', 'warning');
+                    passwordInput.focus();
+                    return;
+                }
+                
                 const errorDiv = document.getElementById('loginError');
                 errorDiv.style.display = 'none';
                 errorDiv.textContent = '';
@@ -653,7 +645,7 @@
                 </svg>
             </button>
         <h2>Create Account</h2>
-        <form id="signupForm">
+        <form id="signupForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div style="display:flex; gap:10px;">
@@ -743,7 +735,7 @@ sendResetBtn.addEventListener("click", async () => {
     const email = document.getElementById("resetEmail").value.trim();
 
     if (email === "") {
-        alert("Please enter your email.");
+        showToast("Please enter your email.", "warning");
         return;
     }
 
@@ -751,7 +743,7 @@ sendResetBtn.addEventListener("click", async () => {
 
         await sendPasswordResetEmail(auth, email);
 
-        alert("Password reset email has been sent. Please check your spam folder.");
+        showToast("Password reset email has been sent. Please check your spam folder.", "success");
 
         document.getElementById("resetEmail").value = "";
 
@@ -760,16 +752,16 @@ sendResetBtn.addEventListener("click", async () => {
     } catch (error) {
 
         if (error.code === "auth/user-not-found") {
-            alert("No account found with this email.");
+            showToast("No account found with this email.", "error");
         }
         else if (error.code === "auth/invalid-email") {
-            alert("Invalid email address.");
+            showToast("Invalid email address.", "error");
         }
         else if (error.code === "auth/too-many-requests") {
-            alert("Too many requests. Please try again later.");
+            showToast("Too many requests. Please try again later.", "warning");
         }
         else {
-            alert(error.message);
+            showToast(error.message, "error");
         }
 
     }
@@ -788,15 +780,47 @@ signupForm.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    let firstName = document.querySelector('#signupForm input[name="FirstName"]').value;
-    let lastName = document.querySelector('#signupForm input[name="LastName"]').value;
-    let email = document.getElementById("email").value;
+    let firstName = document.querySelector('#signupForm input[name="FirstName"]').value.trim();
+    let lastName = document.querySelector('#signupForm input[name="LastName"]').value.trim();
+    let email = document.getElementById("email").value.trim();
     let password = document.getElementById("password").value;
     let confirmPassword = document.getElementById("confirmPassword").value;
-    let mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value;
+    let mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value.trim();
+
+    // Check required fields
+    if (!firstName) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="FirstName"]').focus();
+        return;
+    }
+    if (!lastName) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="LastName"]').focus();
+        return;
+    }
+    if (!email) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("email").focus();
+        return;
+    }
+    if (!password) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("password").focus();
+        return;
+    }
+    if (!confirmPassword) {
+        showToast('! Please fill out this field', 'warning');
+        document.getElementById("confirmPassword").focus();
+        return;
+    }
+    if (!mobileNumber) {
+        showToast('! Please fill out this field', 'warning');
+        document.querySelector('#signupForm input[name="MobileNumber"]').focus();
+        return;
+    }
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match.");
+        showToast("Passwords do not match.", "error");
         return;
     }
 
@@ -830,12 +854,11 @@ signupForm.addEventListener("submit", async (e) => {
             throw new Error(await response.text());
         }
 
-        alert("Verification email sent. Please check your email.");
-        window.location.href = "/";
+        showToastAfterReload("Account created! Verification email sent - please check your inbox (and spam folder).", "success", "/");
 
     } catch (error) {
 
-        alert(error.message);
+        showToast(error.message, "error");
 
     }
 
@@ -854,7 +877,7 @@ resetPasswordBtn.addEventListener("click", async () => {
     const email = document.getElementById("loginEmail").value.trim();
 
     if (email === "") {
-        alert("Please enter your email first.");
+        showToast("Please enter your email first.", "warning");
         return;
     }
 
@@ -862,26 +885,26 @@ resetPasswordBtn.addEventListener("click", async () => {
 
         await sendPasswordResetEmail(auth, email);
 
-        alert("Password reset email has been sent. Please check your inbox.");
+        showToast("Password reset email has been sent. Please check your inbox.", "success");
 
     } catch (error) {
 
         switch (error.code) {
 
             case "auth/user-not-found":
-                alert("No account found with this email.");
+                showToast("No account found with this email.", "error");
                 break;
 
             case "auth/invalid-email":
-                alert("Invalid email address.");
+                showToast("Invalid email address.", "error");
                 break;
 
             case "auth/too-many-requests":
-                alert("Too many requests. Please try again later.");
+                showToast("Too many requests. Please try again later.", "warning");
                 break;
 
             default:
-                alert(error.message);
+                showToast(error.message, "error");
 
         }
 
@@ -1172,7 +1195,7 @@ resetPasswordBtn.addEventListener("click", async () => {
         confirmBtn.onclick = function() {
             const signatureData = document.getElementById("signatureData").value;
             if (!signatureData || signatureData === "") {
-                alert("Please provide your signature.");
+                showToast("Please provide your signature.", "warning");
                 return;
             }
             const form = document.getElementById("appointmentForm");

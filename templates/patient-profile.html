@@ -16,201 +16,20 @@
     </head>
     <body>
 
-    <style>
-    /* ---------- Toast notifications (replaces default window.alert()) ---------- */
-    .toast-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 100000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        max-width: 380px;
-        width: calc(100% - 40px);
-        pointer-events: none;
-    }
+<div class="toast-container" id="toast-container"></div>
 
-    .toast {
-        pointer-events: auto;
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        background: #ffffff;
-        border-radius: 10px;
-        padding: 14px 16px;
-        box-shadow: 0 10px 28px rgba(0,0,0,0.18);
-        border-left: 4px solid #607d8b;
-        font-size: 14px;
-        font-weight: 500;
-        line-height: 1.4;
-        color: #263238;
-        opacity: 0;
-        transform: translateX(30px);
-        transition: opacity 0.25s ease, transform 0.25s ease;
-        position: relative;
-        overflow: hidden;
-    }
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <div id="patient-flashes-data" 
+         data-flashes="{{ messages | tojson }}"
+         style="display: none;"></div>
+    {% endif %}
+{% endwith %}
 
-    .toast.show {
-        opacity: 1;
-        transform: translateX(0);
-    }
-
-    .toast.hide {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-
-    .toast-icon {
-        flex-shrink: 0;
-        width: 20px;
-        height: 20px;
-        margin-top: 1px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        color: #fff;
-    }
-
-    .toast-message {
-        flex: 1;
-        word-break: break-word;
-    }
-
-    .toast-close {
-        flex-shrink: 0;
-        background: none;
-        border: none;
-        font-size: 18px;
-        line-height: 1;
-        color: #90a4ae;
-        cursor: pointer;
-        padding: 0;
-    }
-
-    .toast-close:hover {
-        color: #37474f;
-    }
-
-    .toast-progress {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 3px;
-        background: rgba(0,0,0,0.14);
-        width: 100%;
-        transform-origin: left;
-        animation-name: toast-progress-shrink;
-        animation-timing-function: linear;
-        animation-fill-mode: forwards;
-    }
-
-    @keyframes toast-progress-shrink {
-        from { transform: scaleX(1); }
-        to { transform: scaleX(0); }
-    }
-
-    .toast.success { border-left-color: #16a34a; }
-    .toast.success .toast-icon { background: #16a34a; }
-    .toast.error { border-left-color: #ef4444; }
-    .toast.error .toast-icon { background: #ef4444; }
-    .toast.warning { border-left-color: #f59e0b; }
-    .toast.warning .toast-icon { background: #f59e0b; }
-    </style>
-
-    <div class="toast-container" id="toastContainer"></div>
-    <script>
-    (function() {
-        var icons = { success: '\u2713', error: '\u2715', warning: '!' };
-
-        function classifyToast(message) {
-            var m = String(message == null ? '' : message).trim();
-            if (/successfully/i.test(m) || m === 'Blocked slot saved.') return 'success';
-            if (/fail|error|not found|unauthorized|invalid|unavailable|missing|could not/i.test(m)) return 'error';
-            if (/^please\b/i.test(m) || /select/i.test(m) || /do not match/i.test(m)) return 'warning';
-            return 'error';
-        }
-
-        window.showToast = function(message, type, duration) {
-            type = type || classifyToast(message);
-            duration = duration || 4500;
-
-            var container = document.getElementById('toastContainer');
-            if (!container) return;
-
-            var toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-
-            var icon = document.createElement('div');
-            icon.className = 'toast-icon';
-            icon.textContent = icons[type] || icons.error;
-
-            var msg = document.createElement('div');
-            msg.className = 'toast-message';
-            msg.textContent = message;
-
-            var closeBtn = document.createElement('button');
-            closeBtn.className = 'toast-close';
-            closeBtn.type = 'button';
-            closeBtn.setAttribute('aria-label', 'Close');
-            closeBtn.innerHTML = '&times;';
-
-            var progress = document.createElement('div');
-            progress.className = 'toast-progress';
-            progress.style.animationDuration = duration + 'ms';
-
-            toast.appendChild(icon);
-            toast.appendChild(msg);
-            toast.appendChild(closeBtn);
-            toast.appendChild(progress);
-            container.appendChild(toast);
-
-            requestAnimationFrame(function() {
-                toast.classList.add('show');
-            });
-
-            var removed = false;
-            function remove() {
-                if (removed) return;
-                removed = true;
-                toast.classList.remove('show');
-                toast.classList.add('hide');
-                setTimeout(function() { toast.remove(); }, 250);
-            }
-
-            var timer = setTimeout(remove, duration);
-            closeBtn.addEventListener('click', function() {
-                clearTimeout(timer);
-                remove();
-            });
-        };
-    })();
-    </script>
-
-    <!-- Flash Messages Display - Fixed Position with Close Button -->
-<div class="flash-container" id="flashContainer">
-        {% with messages = patient_flashed_messages() %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="flash {{ category }}" id="flash-{{ loop.index }}">
-                {{ message }}
-                <button class="flash-close-btn" onclick="closeFlash('flash-{{ loop.index }}')" aria-label="Close">&times;</button>
-            </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-    </div>
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
 
 {% set active_page = 'profile' %}
 {% include '_patient_header.html' %}
-
-    <div class="container">
-        <!-- Back to Home Button -->
-        <a href="/" class="btn-back">← Back to Home</a>
 
         <script>
         function openAuthModal(modalId) {
@@ -330,10 +149,12 @@
         </script>
 
     <div class="container">
-        <!-- Back to Home Button -->
-        <a href="/" class="btn-back">← Back to Home</a>
-
             <div class="profile-card">
+            <a href="/" class="btn-back">
+                <span class="material-symbols-rounded btn-back__icon" aria-hidden="true">arrow_back</span>
+                <span class="btn-back__label">Back to Home</span>
+            </a>
+
             <div class="profile-left">
                 <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User">
                 <label for="profilePicInput" class="btn-edit-trigger" style="margin-top: 10px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem; cursor: pointer;">UPDATE AVATAR</label>
@@ -364,11 +185,6 @@
                             <label>Email Address</label>
                             <p>{{ user.get('email', 'N/A') }}</p>
                         </div>
-
-                        <div class="info-item">
-                        
-                        
-                        </div>
                     </div>
 
                 </div>
@@ -390,7 +206,7 @@
                 <!-- My next Schedule Card -->
     <a href="#" class="nav-card" id="scheduleBtn">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
-        <span>My Next Schedule</span>
+        <span>Schedule</span>
         
     </a>
 
@@ -398,7 +214,10 @@
         <div id="scheduleModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>My Next Schedule</h2>
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">calendar_month</span>
+                    <h2>Schedule</h2>
+                </div>
                 <button class="close" onclick="closeScheduleModal()" aria-label="Close">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -452,6 +271,37 @@
 
         scheduleCloseBtn.addEventListener("click", closeScheduleModal);
 
+        /* Firestore stores "YYYY-MM-DD HH:MM" for appointment_date
+           and date-only "YYYY-MM-DD" for next-appointment fields.
+           Render as "Month D, YYYY - hh:mmAM/PM", or "Month D, YYYY"
+           when no time is stored. Mirrors the admin's
+           formatApptDateTime() in appointments-helpers.js. */
+        function formatScheduleDateTime(raw) {
+            const value = String(raw == null ? '' : raw).trim();
+            if (!value) return '';
+
+            const match = value.match(
+                /^(\d{4})-(\d{1,2})-(\d{1,2})(?:[T ](\d{1,2}):(\d{2}))?/
+            );
+            if (!match) return value;
+
+            const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'];
+            const monthName = months[Number(match[2]) - 1];
+            if (!monthName) return value;
+
+            const datePart = monthName + ' ' + Number(match[3]) + ', ' + match[1];
+            if (match[4] === undefined) return datePart;
+
+            const hour24 = Number(match[4]);
+            const meridiem = hour24 >= 12 ? 'PM' : 'AM';
+            let hour12 = hour24 % 12;
+            if (hour12 === 0) hour12 = 12;
+            const hours = String(hour12).padStart(2, '0');
+
+            return datePart + ' - ' + hours + ':' + match[5] + meridiem;
+        }
+
         function loadApprove(uid) {
 
             const tbody = document.getElementById("scheduleTableBody");
@@ -501,7 +351,7 @@
 
                         tbody.innerHTML += `
                             <tr>
-                                <td>${item.appointment_date || item.Date || "-"}</td>
+                                <td>${formatScheduleDateTime(item.appointment_date || item.Date) || "-"}</td>
                                 <td>${item.Service || item.service || "-"}</td>
                                 <td>${item.DentistName || "-"}</td>
                             </tr>
@@ -533,7 +383,10 @@
     <div id="visitHistoryModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
             <div class="modal-header">
-                <h2>Dental Records</h2>
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">medical_services</span>
+                    <h2>Dental Records</h2>
+                </div>
                 <button class="close" onclick="closeVisitHistory()" aria-label="Close">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -542,6 +395,7 @@
                 </button>
             </div>
             <div class="modal-body">
+            <div class="table-container">
             <table class="payment-table">
 
                 <thead>
@@ -560,6 +414,7 @@
                 </tbody>
 
             </table>
+            </div>
 
         </div>
     </div>
@@ -633,7 +488,7 @@ function openVisitHistory(uid) {
                     <tr>
                         <td>${p.dentist || "-"}</td>
                         <td>${p.medicine || "-"}</td>
-                        <td>${p.date || "-"}</td>
+                        <td>${formatScheduleDateTime(p.date) || "-"}</td>
                         <td>${p.procedure || "-"}</td>
                         <td>
                             ${p.chart_image
@@ -641,7 +496,7 @@ function openVisitHistory(uid) {
                                 : "-"
                             }
                         </td>
-                        <td>${p.next_appointment || "-"}</td>
+                        <td>${formatScheduleDateTime(p.next_appointment) || "-"}</td>
                     </tr>
                 `;
             });
@@ -735,7 +590,10 @@ function closeChartView() {
     <div id="paymentModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
             <div class="modal-header">
-                <h2>Payments</h2>
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">payments</span>
+                    <h2>Payments</h2>
+                </div>
                 <button class="close" onclick="closePaymentModal()" aria-label="Close">
                     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -744,6 +602,7 @@ function closeChartView() {
                 </button>
             </div>
             <div class="modal-body">
+                <div class="table-container">
                 <table class="payment-table">
                 <thead>
                     <tr>
@@ -765,6 +624,7 @@ function closeChartView() {
                     </tr>
                 </tbody>
             </table>
+                </div>
 
         </div>
     </div>
@@ -813,7 +673,7 @@ function closeChartView() {
 
                 body.innerHTML += `
                     <tr>
-                        <td>${p.date || "-"}</td>
+                        <td>${formatScheduleDateTime(p.date) || "-"}</td>
                         <td>${p.procedure || "-"}</td>
                         <td>₱${p.value || 0}</td>
                         <td>₱${p.paid || 0}</td>
@@ -951,7 +811,10 @@ async function payGCash(amount, procedure) {
 <div class="modal" id="updateModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>EDIT PROFILE</h2>
+            <div class="modal-panel-head">
+                <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">manage_accounts</span>
+                <h2>UPDATE PROFILE</h2>
+            </div>
             <button class="close" onclick="closeUpdateModal()" aria-label="Close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -961,6 +824,7 @@ async function payGCash(amount, procedure) {
         </div>
         <div class="modal-body">
             <form class="modal-form" action="/update-profile" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
 
     <div class="info-item">
@@ -1019,6 +883,9 @@ async function payGCash(amount, procedure) {
 
             fetch('/upload_profile_pic', {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
                 body: formData
             })
             .then(res => res.json())
@@ -1111,49 +978,7 @@ async function payGCash(amount, procedure) {
         }
     </script>
 
-    <script>
-    function validatePasswords() {
-        let pass = document.getElementById("new_password").value;
-        let confirm = document.getElementById("confirm_password").value;
-
-        if (pass !== confirm) {
-            showToast("Passwords do not match!");
-            return false;
-        }
-        return true;
-    }
-    </script>
-
-    <script>
-    // Close flash message function
-    function closeFlash(flashId) {
-        const flash = document.getElementById(flashId);
-        if (flash) {
-            flash.style.animation = 'slideDown 0.3s ease-out reverse';
-            setTimeout(() => {
-                flash.remove();
-                // Hide container if no more flashes
-                const container = document.getElementById('flashContainer');
-                if (container && !container.querySelector('.flash')) {
-                    container.style.display = 'none';
-                }
-            }, 300);
-        }
-    }
-
-    // Auto-close after 5 seconds
-    document.addEventListener('DOMContentLoaded', function() {
-        const flashes = document.querySelectorAll('.flash');
-        flashes.forEach((flash, index) => {
-            setTimeout(() => {
-                closeFlash(flash.id);
-            }, 5000 + (index * 1000)); // Stagger if multiple
-        });
-    });
-</script>
-
     </div>
-</div>
 
     <footer class="main-footer">
         <div class="footer-grid">
@@ -1424,7 +1249,7 @@ async function payGCash(amount, procedure) {
             schedule.forEach(appt => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${appt.appointment_date || 'N/A'}</td>
+                    <td>${formatScheduleDateTime(appt.appointment_date) || 'N/A'}</td>
                     <td>${appt.Service || 'N/A'}</td>
                     <td>${appt.DentistName || 'Not Assigned'}</td>
                 `;
@@ -1447,10 +1272,10 @@ async function payGCash(amount, procedure) {
                 tr.innerHTML = `
                     <td>${proc.dentist || 'N/A'}</td>
                     <td>${proc.medicine || '-'}</td>
-                    <td>${proc.date || 'N/A'}</td>
+                    <td>${formatScheduleDateTime(proc.date) || 'N/A'}</td>
                     <td>${proc.procedure || 'N/A'}</td>
                     <td><a href="#" onclick="viewChart('${proc.chart_image || ''}')">View Chart</a></td>
-                    <td>${proc.next_appointment || '-'}</td>
+                    <td>${formatScheduleDateTime(proc.next_appointment) || '-'}</td>
                 `;
                 tbodyEl.appendChild(tr);
             });
@@ -1470,7 +1295,7 @@ async function payGCash(amount, procedure) {
                 const tr = document.createElement('tr');
                 const statusClass = proc.status === 'Paid' ? 'text-success' : 'text-warning';
                 tr.innerHTML = `
-                    <td>${proc.date || 'N/A'}</td>
+                    <td>${formatScheduleDateTime(proc.date) || 'N/A'}</td>
                     <td>${proc.procedure || 'N/A'}</td>
                     <td>₱${proc.value || 0}</td>
                     <td>₱${proc.paid || 0}</td>

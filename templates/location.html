@@ -20,6 +20,10 @@
      data-callback="handleCredentialResponse">
 </div>
 
+<div class="toast-container" id="toast-container"></div>
+
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
+
 {% set active_page = 'location' %}
 {% include '_patient_header.html' %}
 
@@ -256,15 +260,21 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = data.redirect || '/';
+                        if (data.name) {
+                            showToastAfterReload('Welcome back, ' + data.name + '!', 'success', data.redirect || '/');
+                        } else {
+                            window.location.href = data.redirect || '/';
+                        }
                     } else {
                         errorDiv.textContent = data.message || 'Login failed. Please try again.';
                         errorDiv.style.display = 'block';
+                        showToast(data.message || 'Login failed. Please try again.', 'error');
                     }
                 })
                 .catch(() => {
                     errorDiv.textContent = 'Something went wrong. Please try again.';
                     errorDiv.style.display = 'block';
+                    showToast('Something went wrong. Please try again.', 'error');
                 });
             });
         </script>
@@ -398,7 +408,7 @@ document.getElementById("signupBtn").addEventListener("click", () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
 
-          alert("Account created!");
+          showToast("Account created!", "success");
           console.log(userCredential.user);
 
       })
@@ -407,7 +417,7 @@ document.getElementById("signupBtn").addEventListener("click", () => {
           console.log(error.code);
           console.log(error.message);
 
-          alert(error.message);
+          showToast(error.message, "error");
       });
 
 });
@@ -417,19 +427,19 @@ if (sendResetBtn) {
     sendResetBtn.addEventListener("click", async () => {
         const email = document.getElementById("resetEmail").value.trim();
         if (email === "") {
-            alert("Please enter your email.");
+            showToast("Please enter your email.", "warning");
             return;
         }
         try {
             await sendPasswordResetEmail(auth, email);
-            alert("Password reset email has been sent. Please check your spam folder.");
+            showToast("Password reset email has been sent. Please check your spam folder.", "success");
             document.getElementById("resetEmail").value = "";
             closeAuthModal("forgotPasswordModal");
         } catch (error) {
             if (error.code === "auth/user-not-found") {
-                alert("No account found with this email.");
+                showToast("No account found with this email.", "error");
             } else {
-                alert(error.message);
+                showToast(error.message, "error");
             }
         }
     });

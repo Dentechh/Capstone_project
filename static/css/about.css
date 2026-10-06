@@ -53,7 +53,7 @@ body::before {
         header {
             background: linear-gradient(180deg, #e3f0ff 0%, #ffffff 100%);
             padding: 20px 5%;
-            box-shadow: 0 2px 10px rgba(13, 71, 161, 0.12);
+            box-shadow: 0 4px 14px rgba(13, 71, 161, 0.22);
             position: relative;
             z-index: 100;
         }
@@ -469,7 +469,7 @@ body::before {
     }
 }
 
-/* Toast Notification */
+/* Toast Notification (admin-style alert design, slightly larger) */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -478,31 +478,144 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    max-width: 420px;
+    width: calc(100% - 40px);
+    pointer-events: none;
 }
 
 .toast {
-    padding: 14px 20px;
+    pointer-events: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: #ffffff;
     border-radius: 10px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    animation: slideIn 0.3s ease, fadeOut 0.3s ease 3s forwards;
-    max-width: 350px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    border-left: 4px solid #3b82f6;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #263238;
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
 }
 
-.toast-success { background: #28a745; }
-.toast-error { background: #dc3545; }
-.toast-info { background: #17a2b8; }
-
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+.toast.hide {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+.toast-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.toast-message {
+    flex: 1;
+    word-break: break-word;
+}
+
+.toast-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: #90a4ae;
+    cursor: pointer;
+    padding: 0;
+}
+
+.toast-close:hover {
+    color: #37474f;
+}
+
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.14);
+    width: 100%;
+    transform-origin: left;
+    animation-name: toast-progress-shrink;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes toast-progress-shrink {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}
+
+.toast.success {
+    border-left-color: #16a34a;
+}
+
+.toast.success .toast-icon {
+    background: #16a34a;
+}
+
+.toast.error {
+    border-left-color: #ef4444;
+}
+
+.toast.error .toast-icon {
+    background: #ef4444;
+}
+
+.toast.warning {
+    border-left-color: #f59e0b;
+}
+
+.toast.warning .toast-icon {
+    background: #f59e0b;
+}
+
+.toast.info {
+    border-left-color: #3b82f6;
+}
+
+.toast.info .toast-icon {
+    background: #3b82f6;
+}
+
+body.dark-mode .toast {
+    background: #1e293b;
+    color: #e2e8f0;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .toast-close {
+    color: #64748b;
+}
+
+body.dark-mode .toast-close:hover {
+    color: #cbd5e1;
 }
 
         @media (max-width: 768px) {
@@ -1196,6 +1309,7 @@ body.dark-mode::before {
 
 body.dark-mode header {
     background: linear-gradient(180deg, #0f172a 0%, #16203a 100%);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
     transition: background 0.4s ease;
 }
 
@@ -1580,10 +1694,14 @@ footer,
 .modal-content,
 .auth-card,
 .auth-card input,
-.sign-up-btn,
-.divider,
-.close-btn {
+    .sign-up-btn,
+    .divider,
+    .close-btn {
     transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+.btn-appointment {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* =========================

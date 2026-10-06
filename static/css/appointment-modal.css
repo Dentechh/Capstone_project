@@ -1961,3 +1961,210 @@
             color: #ffffff;
             border-color: #64748b;
         }
+
+        /* =========================================
+           DENTIST NAME COMBOBOX
+           Ported from admin.css so the Consulting Dentist
+           field in the appointment wizard gets its styled
+           toggle and the popup listbox that lives on <body>.
+           The .dentist-menu rules are global by necessity
+           (the popup is portalled to <body>); the field
+           rules are scoped to #newApptModal so they cannot
+           leak onto the patient-side pages.
+           ========================================= */
+
+        /* The popup lives on <body>, so these rules are global by necessity. */
+        .dentist-menu {
+            position: fixed;
+            z-index: 9999;
+            margin: 0;
+            padding: 5px;
+            list-style: none;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 11px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18), 0 2px 6px rgba(15, 23, 42, 0.1);
+        }
+
+        .dentist-menu[hidden] {
+            display: none;
+        }
+
+        /* Opened from inside a modal: .modal is z-index 10000, so the popup has to
+           clear it. The toggle adds this class from JS. */
+        .dentist-menu.is-over-modal {
+            z-index: 100060;
+        }
+
+        .dentist-menu__option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 7px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        .dentist-menu__option:hover,
+        .dentist-menu__option.is-active {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .dentist-menu__name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Tick only on the keyboard-highlighted option, so hover and keyboard agree. */
+        .dentist-menu__tick {
+            display: none;
+            font-size: 18px;
+            line-height: 1;
+            font-weight: normal;
+            font-style: normal;
+            letter-spacing: normal;
+            text-transform: none;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+
+        .dentist-menu.has-active .dentist-menu__option.is-active .dentist-menu__tick {
+            display: inline-flex;
+        }
+
+        .dentist-menu__empty {
+            padding: 10px;
+            font-size: 12.5px;
+            font-style: italic;
+            color: #64748b;
+        }
+
+        body.dark-mode .dentist-menu {
+            background: #1f2937;
+            border-color: #475569;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode .dentist-menu__option {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .dentist-menu__option:hover,
+        body.dark-mode .dentist-menu__option.is-active {
+            background: #334155;
+            color: #d4af37;
+        }
+
+        body.dark-mode .dentist-menu__empty {
+            color: #94a3b8;
+        }
+
+        /* ---- Dentist Name combobox inside the appointment modal ----
+           The modal styles generic inputs by element selector and would
+           otherwise win on specificity, so these repeat the essentials
+           scoped to #newApptModal. */
+        #newApptModal .adm-form-side .dentist-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Only the right padding changes here; the modal's own rule keeps the rest
+           of the control looking like every other field in the form. */
+        #newApptModal .adm-form-side .dentist-field .dentist-input {
+            padding-right: 38px;
+        }
+
+        #newApptModal .adm-form-side .dentist-field .dentist-input:focus,
+        #newApptModal .adm-form-side .dentist-field .dentist-input[aria-expanded="true"] {
+            outline: none;
+        }
+
+        /* Required marker on the Dentist Name label. */
+        #newApptModal .adm-req {
+            color: #dc2626;
+        }
+
+        /* Same flagged-empty state the Appointments table uses. Scoped tightly because
+           the modal styles generic inputs by element selector, so anything looser here
+           would lose on specificity. */
+        #newApptModal .adm-form-side .dentist-field .dentist-input--invalid {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .dentist-field .dentist-input--invalid {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+
+        #newApptModal .adm-form-side .dentist-field__toggle {
+            position: absolute;
+            right: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            border-radius: 7px;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: background-color 0.18s ease, color 0.18s ease;
+        }
+
+        #newApptModal .adm-form-side .dentist-field__toggle:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        #newApptModal .adm-form-side .dentist-field__toggle:focus-visible {
+            outline: 2px solid #0d47a1;
+            outline-offset: 1px;
+        }
+
+        #newApptModal .adm-form-side .dentist-field__toggle > .material-symbols-rounded {
+            font-size: 22px;
+            line-height: 1;
+            font-weight: normal;
+            font-style: normal;
+            letter-spacing: normal;
+            text-transform: none;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: 'liga';
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+            transition: transform 0.18s ease;
+        }
+
+        #newApptModal .adm-form-side .dentist-field__toggle.is-open > .material-symbols-rounded {
+            transform: rotate(180deg);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle:hover {
+            background: #334155;
+            color: #e2e8f0;
+        }

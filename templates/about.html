@@ -22,20 +22,7 @@
 
 <div class="toast-container" id="toast-container"></div>
 
-<script>
-    function showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        toast.textContent = message;
-        container.appendChild(toast);
-        setTimeout(() => {
-            toast.style.transition = "opacity 0.3s ease";
-            toast.style.opacity = "0";
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
-    }
-</script>
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
 
 {% set active_page = 'about' %}
 {% include '_patient_header.html' %}
@@ -477,7 +464,7 @@ signupForm.addEventListener("submit", async (e) => {
     const mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value;
 
     if (password !== confirmPassword) {
-        alert("Passwords do not match.");
+        showToast("Passwords do not match.", "error");
         return;
     }
 
@@ -502,10 +489,9 @@ signupForm.addEventListener("submit", async (e) => {
             throw new Error(await response.text());
         }
 
-        alert("Verification email sent. Please check your spam folder.");
-        window.location.href = "/";
+        showToastAfterReload("Account created! Verification email sent - please check your inbox (and spam folder).", "success", "/");
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, "error");
     }
 });
 
@@ -514,19 +500,19 @@ if (sendResetBtn) {
     sendResetBtn.addEventListener("click", async () => {
         const email = document.getElementById("resetEmail").value.trim();
         if (email === "") {
-            alert("Please enter your email.");
+            showToast("Please enter your email.", "warning");
             return;
         }
         try {
             await sendPasswordResetEmail(auth, email);
-            alert("Password reset email has been sent. Please check your spam folder.");
+            showToast("Password reset email has been sent. Please check your spam folder.", "success");
             document.getElementById("resetEmail").value = "";
             closeAuthModal("forgotPasswordModal");
         } catch (error) {
             if (error.code === "auth/user-not-found") {
-                alert("No account found with this email.");
+                showToast("No account found with this email.", "error");
             } else {
-                alert(error.message);
+                showToast(error.message, "error");
             }
         }
     });
