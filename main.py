@@ -1593,6 +1593,9 @@ class DentalClinicApp(BaseFlaskApp):
     def _setup_csrf(self):
         self.app.config["WTF_CSRF_TIME_LIMIT"] = None
         self.csrf = CSRFProtect(self.app)
+        @self.app.context_processor
+        def inject_google_client_id():
+            return {"google_client_id": self.CLIENT_ID}
 
         @self.app.errorhandler(CSRFError)
         def handle_csrf(e):
