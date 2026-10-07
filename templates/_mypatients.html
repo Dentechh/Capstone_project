@@ -1,3 +1,14 @@
+<style>
+            /* My Patients: left-align the Name column (header + cells) so names
+               line up in a clean vertical edge. The other columns stay centred.
+               The #id selector outranks the shared .appointment-table rules. */
+            #myPatientsTable thead th:first-child,
+            #myPatientsTable tbody td[data-cell="name"] {
+                text-align: left;
+                padding-left: 24px;
+            }
+        </style>
+
         <div id="section-mypatients" class="content-section">
             <section class="content-panel">
                 <div class="filter-bar">
@@ -42,8 +53,8 @@
                         {% for appointment in my_patients %}
                         <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
                             <td data-cell="name">{{ appointment.full_name or appointment.FirstName or '' }}</td>
-                            <td>{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
-                            <td>{{ appointment.get('birthday') or '-' }}</td>
+                            <td data-cell="age">{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
+                            <td data-cell="birthday">{{ appointment.get('birthday') or '-' }}</td>
                             <td data-cell="sex">{{ appointment.get('sex') or '-' }}</td>
                             <td data-cell="civil">{{ appointment.get('civil_status') or '-' }}</td>
                             <td data-cell="mobile">{{ appointment.get('contact_number') or '-' }}</td>
@@ -64,6 +75,7 @@
                                         data-contact="{{ appointment.get('contact_number', '') }}"
                                         data-email="{{ appointment.get('email', '') }}"
                                         data-sex="{{ appointment.get('sex', '') }}"
+                                        data-birthday="{{ appointment.get('birthday', '') }}"
                                         data-civilstatus="{{ appointment.get('civil_status', '') }}">
                                         <span class="material-symbols-rounded" aria-hidden="true">edit</span>
                                     </button>

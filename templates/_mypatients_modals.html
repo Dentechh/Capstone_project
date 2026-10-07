@@ -1,5 +1,49 @@
+<style>
+    /* Birthday picker: the shared .ep-field rules only cover text/email/select,
+       so a native date input fell back to the browser default look. */
+    .ep-modal .ep-field input[type="date"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        box-sizing: border-box;
+        height: 42px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 14px;
+        color: inherit;
+        background-color: #fff;
+        border: 1px solid #c9d6ea;
+        border-radius: 10px;
+        outline: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
 
-        <div id="editPatientModal" class="modal ep-modal" style="display:none;">
+    .ep-modal .ep-field input[type="date"]:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, .15);
+    }
+
+    /* Keep the calendar icon, make it a clean click target. */
+    .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: .65;
+        padding: 4px;
+        border-radius: 6px;
+    }
+
+    .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+        background: rgba(13, 71, 161, .08);
+    }
+
+    /* Age is calculated, so it should read as "not typeable". */
+    .ep-modal .ep-field input[readonly] {
+        cursor: default;
+        background-color: #f4f7fc;
+    }
+</style>
+
+<div id="editPatientModal" class="modal ep-modal" style="display:none;">
             <div class="modal-content ep-card">
 
                 <div class="ep-head">
@@ -61,6 +105,18 @@
                         <section class="ep-group">
                             <h3 class="ep-group-title">Profile</h3>
                             <div class="ep-grid">
+                                <div class="ep-field">
+                                    <label for="editBirthday">Birthday</label>
+                                    <input type="date" id="editBirthday" name="birthday" min="1900-01-01"
+                                        autocomplete="bday">
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editAge">Age</label>
+                                    <input type="text" id="editAge" value="-" readonly tabindex="-1"
+                                        aria-describedby="editAgeHint">
+                                    <p class="ep-hint" id="editAgeHint">Calculated from the birthday. Fix the
+                                        birthday to fix the age.</p>
+                                </div>
                                 <div class="ep-field">
                                     <label for="editSex">Sex</label>
                                     <select id="editSex" name="sex">
@@ -143,6 +199,7 @@
                                 <th>Assigned Dentist</th>
                                 <th>Medicine</th>
                                 <th>Visit Date</th>
+                                <th>Tooth#</th>
                                 <th>Procedure</th>
                                 <th>Value</th>
                                 <th>Fee Paid</th>
@@ -155,7 +212,7 @@
                         </thead>
                         <tbody id="checkInfoBody">
                             <tr>
-                                <td colspan="11" style="text-align:center;">No treatment information found.</td>
+                                <td colspan="12" style="text-align:center;">No treatment information found.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -203,11 +260,3 @@
 
 
         <script src="{{ url_for('static', filename='js/patient-profile-modal.js') }}?v=1"></script>
-
-
-
-
-
-
-
-

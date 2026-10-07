@@ -1,4 +1,4 @@
-        function showSection(sectionId) {
+function showSection(sectionId) {
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             const activeNav = document.getElementById('nav-' + sectionId);
             if (activeNav) activeNav.classList.add('active');
@@ -894,6 +894,7 @@
                 '<option value="Wisdom Teeth Removal"' + (data.procedure === "Wisdom Teeth Removal" ? " selected" : "") + '>Wisdom Teeth Removal</option>' +
                 '<option value="Root Canal Treatment"' + (data.procedure === "Root Canal Treatment" ? " selected" : "") + '>Root Canal Treatment</option>' +
                 '<option value="Periapical Xray"' + (data.procedure === "Periapical Xray" ? " selected" : "") + '>Periapical Xray</option>' +
+                '<option value="Orthodontic Braces"' + (data.procedure === "Orthodontic Braces" ? " selected" : "") + '>Orthodontic Braces</option>' +
                 '<option value="Other"' + (data.procedure === "Other" ? " selected" : "") + '>Other</option>' +
                 '</select>' +
                 '</td>' +
@@ -928,6 +929,7 @@
                 '<td>' +
                 '<select class="td-medicine">' +
                 '<option value="">Select Medicine</option>' +
+                '<option value="None"' + (data.medicine === "None" ? " selected" : "") + '>None</option>' +
                 '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
                 '<option value="Tranexamic Acid"' + (data.medicine === "Tranexamic Acid" ? " selected" : "") + '>Tranexamic Acid</option>' +
                 '<option value="Amoxicillin"' + (data.medicine === "Amoxicillin" ? " selected" : "") + '>Amoxicillin</option>' +
@@ -1285,4 +1287,3 @@
                 rebuildDashboardCharts();
             }
         });
-

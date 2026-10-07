@@ -1,4 +1,4 @@
-            function buildMyPatientRow(p) {
+function buildMyPatientRow(p) {
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-recent-appointment', p.most_recent_appointment || '');
                 const ageDisplay = (p.age === null || p.age === undefined) ? '-' : p.age;
@@ -7,8 +7,8 @@
                 const civilStatusDisplay = p.civil_status || '-';
                 tr.innerHTML = `
             <td data-cell="name">${p.full_name || ''}</td>
-            <td>${ageDisplay}</td>
-            <td>${birthYearDisplay}</td>
+            <td data-cell="age">${ageDisplay}</td>
+            <td data-cell="birthday">${birthYearDisplay}</td>
             <td data-cell="sex">${sexDisplay}</td>
             <td data-cell="civil">${civilStatusDisplay}</td>
             <td data-cell="mobile">${p.contact_number || '-'}</td>
@@ -21,7 +21,7 @@
                     data-uid="${p.uid}" data-patient-id="${p.patient_id}"
                     data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
                     data-lastname="${p.last_name}" data-contact="${p.contact_number}" data-email="${p.email}"
-                    data-sex="${p.sex || ''}" data-civilstatus="${p.civil_status || ''}">
+                    data-sex="${p.sex || ''}" data-birthday="${p.birthday || ''}" data-civilstatus="${p.civil_status || ''}">
 <span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
                 <button type="button" class="btn-action delete-patient-btn" title="Remove patient" aria-label="Remove patient"
                     data-uid="${p.uid}" data-patient-id="${p.patient_id}" data-name="${p.full_name}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>

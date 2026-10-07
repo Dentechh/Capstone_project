@@ -1,4 +1,4 @@
-            const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path>';
+const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path>';
             const CONFIRM_ICON_TRASH = '<polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>';
             const CONFIRM_ICON_BLOCK = '<circle cx="12" cy="12" r="10"></circle><path d="M4.9 4.9l14.2 14.2"></path>';
 
@@ -99,7 +99,24 @@
                 });
             }
 
-            function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email, sex, civilStatus) {
+            // Whole years between a YYYY-MM-DD birthday and today; '-' when unusable.
+            function calcAgeFromBirthday(value) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+                if (!m) return '-';
+                const y = +m[1], mo = +m[2], d = +m[3];
+                const now = new Date();
+                let age = now.getFullYear() - y;
+                if ((now.getMonth() + 1) < mo || ((now.getMonth() + 1) === mo && now.getDate() < d)) age -= 1;
+                return age >= 0 ? age : '-';
+            }
+
+            function refreshEditAge() {
+                const b = document.getElementById('editBirthday');
+                const a = document.getElementById('editAge');
+                if (b && a) a.value = calcAgeFromBirthday(b.value);
+            }
+
+            function openEditPatientModal(uid, patientId, firstname, middlename, lastname, contact, email, sex, civilStatus, birthday) {
                 document.getElementById('editPatientUid').value = uid || '';
                 document.getElementById('editPatientPatientId').value = patientId || '';
                 document.getElementById('editFirstName').value = firstname || '';
@@ -109,6 +126,14 @@
                 document.getElementById('editEmail').value = email || '';
                 document.getElementById('editSex').value = sex || '';
                 document.getElementById('editCivilStatus').value = civilStatus || '';
+
+                const birthdayField = document.getElementById('editBirthday');
+                if (birthdayField) {
+                    // A birthday can't be in the future; keeps the picker honest.
+                    birthdayField.max = new Date().toISOString().slice(0, 10);
+                    birthdayField.value = (birthday || '').slice(0, 10);
+                }
+                refreshEditAge();
 
                 // Setting .value does not fire "change", so the custom listboxes would
                 // not move their tick marks. Nothing else listens to these selects.
@@ -163,7 +188,8 @@
                             editBtn.getAttribute('data-contact'),
                             editBtn.getAttribute('data-email'),
                             editBtn.getAttribute('data-sex'),
-                            editBtn.getAttribute('data-civilstatus')
+                            editBtn.getAttribute('data-civilstatus'),
+                            editBtn.getAttribute('data-birthday')
                         );
                         return;
                     }
@@ -278,6 +304,12 @@
                     }
                 });
 
+                const editBirthdayInput = document.getElementById('editBirthday');
+                if (editBirthdayInput) {
+                    editBirthdayInput.addEventListener('input', refreshEditAge);
+                    editBirthdayInput.addEventListener('change', refreshEditAge);
+                }
+
                 const editPatientForm = document.getElementById('editPatientForm');
                 if (editPatientForm) {
                     editPatientForm.addEventListener('submit', function (e) {
@@ -316,6 +348,14 @@
                                             const sexCell = cellBy('sex');
                                             const civilCell = cellBy('civil');
                                             const mobileCell = cellBy('mobile');
+                                            const birthdayCell = cellBy('birthday');
+                                            const ageCell = cellBy('age');
+                                            // Blank birthday = unchanged on the server, so leave the cells.
+                                            if (result.birthday) {
+                                                if (birthdayCell) birthdayCell.textContent = result.birthday;
+                                                if (ageCell) ageCell.textContent =
+                                                    (result.age === null || result.age === undefined) ? '-' : result.age;
+                                            }
                                             if (nameCell) nameCell.textContent = fullName;
                                             if (sexCell) sexCell.textContent = sex || '-';
                                             if (civilCell) civilCell.textContent = civilStatus || '-';
@@ -330,6 +370,7 @@
                                         editBtn.setAttribute('data-email', email);
                                         editBtn.setAttribute('data-sex', sex);
                                         editBtn.setAttribute('data-civilstatus', civilStatus);
+                                        if (result.birthday) editBtn.setAttribute('data-birthday', result.birthday);
                                     }
 
                                     closeEditPatientModal();

@@ -1,4 +1,4 @@
-            let currentCheckInfoPatientId = "";
+let currentCheckInfoPatientId = "";
             let currentCheckInfoPatientName = "";
 
 
@@ -15,6 +15,7 @@
                 "Wisdom Teeth Removal",
                 "Root Canal Treatment",
                 "Periapical Xray",
+                "Orthodontic Braces",
                 "Other"
             ];
 
@@ -73,12 +74,12 @@
                 if (!patientId) {
                     modal.style.display = "flex";
                     ciDestroyRowWidgets();
-                    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">This patient has no booking history yet.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">This patient has no booking history yet.</td></tr>`;
                     return;
                 }
 
                 ciDestroyRowWidgets();
-                tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">Loading...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">Loading...</td></tr>`;
                 modal.style.display = "flex";
 
                 try {
@@ -90,11 +91,11 @@
                         renderCheckInfoTable();
                     } else {
                         window.currentProcedures = [];
-                        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;">No treatment history found.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No treatment history found.</td></tr>`;
                     }
                 } catch (error) {
                     console.error("Error loading treatment info:", error);
-                    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#ef4444;">Failed to load treatment data.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#ef4444;">Failed to load treatment data.</td></tr>`;
                 }
             }
 
@@ -158,6 +159,7 @@
             <td data-label="Assigned Dentist">${formatDentistName(item.dentist) || "-"}</td>
             <td data-label="Medicine">${item.medicine || "-"}</td>
             <td data-label="Visit Date">${item.date || "-"}</td>
+            <td data-label="Tooth#">${escAttr(item.tooth) || "-"}</td>
             <td data-label="Procedure">${item.procedure || "-"}</td>
             <td data-label="Value">₱${item.value || 0}</td>
             <td data-label="Fee Paid">₱${item.paid || 0}</td>
@@ -186,6 +188,7 @@
         </td>
         <td data-label="Medicine"><input type="text" class="ci-medicine" value="${escAttr(item.medicine)}"></td>
         <td data-label="Visit Date"><input type="date" class="ci-date" value="${escAttr(item.date)}"></td>
+        <td data-label="Tooth#"><input type="text" class="ci-tooth" value="${escAttr(item.tooth)}"></td>
         <td data-label="Procedure">${buildProcedureSelect(item.procedure)}</td>
         <td data-label="Value"><input type="number" class="ci-value" value="${item.value || 0}" step="0.01"></td>
         <td data-label="Fee Paid"><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01"></td>
@@ -263,6 +266,7 @@
                 formData.append("dentist", row.querySelector(".ci-dentist").value.trim());
                 formData.append("medicine", row.querySelector(".ci-medicine").value.trim());
                 formData.append("date", row.querySelector(".ci-date").value.trim());
+                formData.append("tooth", row.querySelector(".ci-tooth").value.trim());
                 formData.append("procedure", row.querySelector(".ci-procedure").value.trim());
                 formData.append("value", row.querySelector(".ci-value").value.trim());
                 formData.append("paid", row.querySelector(".ci-paid").value.trim());
@@ -280,6 +284,7 @@
                         item.dentist = row.querySelector(".ci-dentist").value.trim();
                         item.medicine = row.querySelector(".ci-medicine").value.trim();
                         item.date = row.querySelector(".ci-date").value.trim();
+                        item.tooth = row.querySelector(".ci-tooth").value.trim();
                         item.procedure = row.querySelector(".ci-procedure").value.trim();
                         item.value = parseFloat(row.querySelector(".ci-value").value) || 0;
                         item.paid = parseFloat(row.querySelector(".ci-paid").value) || 0;

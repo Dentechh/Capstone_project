@@ -1101,6 +1101,22 @@ class DentalClinicApp(BaseFlaskApp):
             if not overlap:
                 continue
 
+            # No confirmed birthday match (one or both records lack a birthday):
+            # names alone must carry the decision, so be stricter. The query's
+            # first given name AND its surname must both appear in the stored
+            # name. This stops relatives who share a middle name and surname
+            # ("Faith Andreya Gulagula" vs "Hope Andreya Gulagula") from
+            # matching, while still tolerating compound names split across
+            # different fields.
+            birthday_confirmed = bool(birthday and existing_birthday and birthday == existing_birthday)
+            if not birthday_confirmed:
+                first_words = first_name.split()
+                last_words = last_name.split()
+                if not first_words or not last_words:
+                    continue
+                if first_words[0] not in existing_tokens or last_words[-1] not in existing_tokens:
+                    continue
+
             # Score = overlap relative to the shorter name, so
             # "Althea Marie Roa" fully matches inside
             # "Althea Marie Prieto Roa".
@@ -5731,6 +5747,30 @@ class DentalClinicApp(BaseFlaskApp):
                 "message": "Invalid civil status"
             }), 400
 
+        # Birthday is the editable source of truth; Age is never stored, it is
+        # always derived from it by compute_age_and_birth_year(). A blank value
+        # means "leave the saved birthday alone" so an edit that only touches
+        # the phone number can never wipe it.
+        birthday = bleach.clean(
+            request.form.get("birthday", "").strip()
+        )
+
+        if birthday:
+            try:
+                parsed_birthday = datetime.strptime(birthday, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({
+                    "success": False,
+                    "message": "Birthday must be a valid date"
+                }), 400
+
+            if (parsed_birthday > datetime.now(UTC).date()
+                    or parsed_birthday.year < 1900):
+                return jsonify({
+                    "success": False,
+                    "message": "Birthday is out of range"
+                }), 400
+
         if not uid:
             return jsonify({
                 "success": False,
@@ -5754,6 +5794,23 @@ class DentalClinicApp(BaseFlaskApp):
                     "success": False,
                     "message": "Account not found"
                 }), 404
+
+            # The birthday lives on the Patients record, not the account.
+            # Check that it exists BEFORE writing anything, so a rejected
+            # birthday cannot leave the name/contact half-saved.
+            if birthday:
+                birthday_ref_exists = False
+                if patient_id:
+                    birthday_ref_exists = self.db.collection(
+                        self.Doc_Patients
+                    ).document(patient_id).get().exists
+
+                if not birthday_ref_exists:
+                    return jsonify({
+                        "success": False,
+                        "message": "This account has no linked patient record, "
+                                   "so a birthday cannot be saved."
+                    }), 400
 
             account_ref.update({
                 "firstname": first_name,
@@ -5793,15 +5850,21 @@ class DentalClinicApp(BaseFlaskApp):
                         "last_name_normalized":
                             self.normalize_patient_name(last_name),
 
-                        "email": email
+                        "email": email,
+
+                        **({"birthday": birthday} if birthday else {})
                     })
                     self._invalidate_patients_cache()
 
             self._invalidate_accounts_cache()
 
+            age, _birth_year = self.compute_age_and_birth_year(birthday)
+
             return jsonify({
                 "success": True,
-                "message": "Patient updated successfully"
+                "message": "Patient updated successfully",
+                "birthday": birthday,
+                "age": age
             })
 
         except Exception as e:
