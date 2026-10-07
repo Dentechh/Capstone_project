@@ -815,6 +815,20 @@ class DentalClinicApp(BaseFlaskApp):
             str(value).strip().lower().split()
         )
 
+    def format_patient_display_name(self, first, middle, last):
+        """
+        Display-only name in 'LAST, FIRST MIDDLE' order for admin tables.
+        Stored name parts are never changed -- this is only for showing.
+        Falls back gracefully when a part is missing.
+        """
+        first = " ".join(str(first or "").split())
+        middle = " ".join(str(middle or "").split())
+        last = " ".join(str(last or "").split())
+        given = " ".join(p for p in (first, middle) if p)
+        if last and given:
+            return f"{last}, {given}"
+        return last or given
+
 
     def display_appt_datetime(self, value):
         """
@@ -5115,6 +5129,9 @@ class DentalClinicApp(BaseFlaskApp):
                 # genuinely have no name parts yet.
                 "full_name": f"{first} {last}".strip()
                 or account_data.get("name") or "",
+                "display_name": self.format_patient_display_name(
+                    first, account_data.get("middlename", ""), last
+                ) or account_data.get("name") or "",
                 "contact_number": contact_number,
                 "email": account_data.get("email", ""),
                 "birthday": birthday,
@@ -5211,6 +5228,9 @@ class DentalClinicApp(BaseFlaskApp):
                 # over a Google profile "name".
                 "full_name": f"{first} {last}".strip()
                 or account_data.get("name") or "",
+                "display_name": self.format_patient_display_name(
+                    first, account_data.get("middlename", ""), last
+                ) or account_data.get("name") or "",
                 "contact_number": contact_number,
                 "email": account_data.get("email", ""),
                 "sex": sex,

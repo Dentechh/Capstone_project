@@ -336,6 +336,10 @@ const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="
                                     const sex = formData.get('sex') || '';
                                     const civilStatus = formData.get('civil_status') || '';
                                     const fullName = [firstName, middleName, lastName].filter(Boolean).join(' ');
+                                    // Table shows "LAST, FIRST MIDDLE" (same as the server's display_name);
+                                    // fullName stays in natural order for the delete confirmation.
+                                    const givenNames = [firstName, middleName].filter(Boolean).join(' ');
+                                    const displayName = (lastName && givenNames) ? (lastName + ', ' + givenNames) : (lastName || givenNames);
 
                                     const editBtn = document.querySelector('.edit-patient-btn[data-uid="' + uid + '"]');
                                     if (editBtn) {
@@ -356,7 +360,7 @@ const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="
                                                 if (ageCell) ageCell.textContent =
                                                     (result.age === null || result.age === undefined) ? '-' : result.age;
                                             }
-                                            if (nameCell) nameCell.textContent = fullName;
+                                            if (nameCell) nameCell.textContent = displayName;
                                             if (sexCell) sexCell.textContent = sex || '-';
                                             if (civilCell) civilCell.textContent = civilStatus || '-';
                                             if (mobileCell) mobileCell.textContent = contact;
