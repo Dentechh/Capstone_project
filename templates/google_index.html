@@ -711,14 +711,7 @@ sendPasswordResetEmail
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
-    authDomain: "capizonda-dentech-dev.firebaseapp.com",
-    projectId: "capizonda-dentech-dev",
-    storageBucket: "capizonda-dentech-dev.firebasestorage.app",
-    messagingSenderId: "938908117708",
-    appId: "1:938908117708:web:77d10befb2f8917ccf3069"
-};
+const firebaseConfig = {{ firebase_config | tojson }};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);

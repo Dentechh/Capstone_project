@@ -1,10 +1,10 @@
     <!-- Reschedule Appointment Modal -->
     <div id="rescheduleModal" class="modal" style="display: none;">
         <div class="modal-content rs-card" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
-            {# .modal-x is the shared close button used by every other modal in the admin
-                   (40px circle, navy icon, rotates on hover) - the same markup the
-                   Book Appointment modal uses. No onclick: reschedule.js already
-                   binds this by id, and closeModal is scoped inside its IIFE. #}
+            {#  .modal-x is the shared close button used by every other modal in the admin
+                (40px circle, navy icon, rotates on hover) - the same markup the
+                Book Appointment modal uses. No onclick: reschedule.js already
+                binds this by id, and closeModal is scoped inside its IIFE. #}
             <button type="button" class="modal-x" id="rsCloseBtn" aria-label="Close"><svg
                     viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -33,10 +33,10 @@
                     <span class="material-symbols-rounded rs-btn__icon" aria-hidden="true">close</span>
                     <span>Cancel</span>
                 </button>
-                {# The confirm button carries a Material Symbol plus a label span.
-                   submit() swaps the LABEL's text for "Saving..." via
-                   #rsConfirmLabel; assigning btn.textContent instead would
-                   delete the icon node, so that must not be reintroduced. #}
+                {#  The confirm button carries a Material Symbol plus a label span.
+                    submit() swaps the LABEL's text for "Saving..." via
+                    #rsConfirmLabel; assigning btn.textContent instead would
+                    delete the icon node, so that must not be reintroduced. #}
                 <button type="button" class="rs-btn rs-btn-primary" id="rsConfirmBtn" disabled>
                     <span class="material-symbols-rounded rs-btn__icon" aria-hidden="true">event_available</span>
                     <span class="rs-btn__label" id="rsConfirmLabel">Reschedule</span>

@@ -27,10 +27,10 @@
                             <td data-cell="mobile">{{ account.contact_number or '-' }}</td>
                             <td>{{ account.email or '-' }}</td>
                             <td>
-                                {# Edit sits in the middle so every row-action group in the
-                                   admin reads the same way: neutral action, edit, then the
-                                   destructive one on the end. Matches My Patients, where
-                                   edit already sits between INFO and delete. #}
+                                {#  Edit sits in the middle so every row-action group in the
+                                    admin reads the same way: neutral action, edit, then the
+                                    destructive one on the end. Matches My Patients, where
+                                    edit already sits between INFO and delete. #}
                                 <div class="mp-actions">
                                     <button type="button" class="btn-action block-user-btn"
                                         title="{% if is_disabled %}Unblock account{% else %}Block account{% endif %}"

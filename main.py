@@ -168,13 +168,13 @@ class DentalClinicApp(BaseFlaskApp):
 
     def _setup_firebase(self):
         basedir = os.path.abspath(os.path.dirname(__file__))
-        key_path = os.path.join(basedir, "dentech_key.json")
+        key_path = os.path.join(basedir, os.getenv("FIREBASE_KEY_PATH", "dentech_key.json"))
         if not firebase_admin._apps:
             try:
                 if not os.path.exists(key_path):
                     raise FileNotFoundError(f"Firebase key not found at: {key_path}")
                 cred = credentials.Certificate(key_path)
-                firebase_admin.initialize_app(cred, {"projectId": "capizonda-dentech-dev"})
+                firebase_admin.initialize_app(cred, {"projectId": os.getenv("FIREBASE_PROJECT_ID")})
                 self._db = fb_firestore.client()
                 print("✅ Firebase initialized successfully")
             except Exception as e:
@@ -193,7 +193,7 @@ class DentalClinicApp(BaseFlaskApp):
             from google.auth.credentials import AnonymousCredentials
             from google.cloud import firestore as gc_firestore
             self._db = gc_firestore.Client(
-                project="capizonda-dentech-dev", credentials=AnonymousCredentials()
+                project=os.getenv("FIREBASE_PROJECT_ID"), credentials=AnonymousCredentials()
             )
             print(f"🧪 Firestore EMULATOR at {os.environ['FIRESTORE_EMULATOR_HOST']} (no real reads)")
 
@@ -203,7 +203,9 @@ class DentalClinicApp(BaseFlaskApp):
         self.Doc_Patients = "Patients"
         self.Blocked_Slots = "BlockedSlots"
         self.CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-        self.firebase_api_key = "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI"
+        self.firebase_api_key = os.getenv("FIREBASE_API_KEY", "")
+        if not self.firebase_api_key:
+            print("⚠️  FIREBASE_API_KEY is missing; set the FIREBASE_* values in .env")
         
         if not self.CLIENT_ID:
             
@@ -1596,6 +1598,17 @@ class DentalClinicApp(BaseFlaskApp):
         @self.app.context_processor
         def inject_google_client_id():
             return {"google_client_id": self.CLIENT_ID}
+
+        @self.app.context_processor
+        def inject_firebase_config():
+            return {"firebase_config": {
+                "apiKey": os.getenv("FIREBASE_API_KEY"),
+                "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN"),
+                "projectId": os.getenv("FIREBASE_PROJECT_ID"),
+                "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET"),
+                "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID"),
+                "appId": os.getenv("FIREBASE_APP_ID"),
+            }}
 
         @self.app.errorhandler(CSRFError)
         def handle_csrf(e):

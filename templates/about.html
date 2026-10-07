@@ -16,7 +16,7 @@
 <body>
 
     <div id="g_id_onload"
-        data-client_id="921529543911-okjlt4tgb56admos6msdlho9c6ibive8.apps.googleusercontent.com"
+        data-client_id="{{ google_client_id }}"
         data-callback="handleCredentialResponse">
     </div>
 
@@ -438,14 +438,7 @@ import {
     sendPasswordResetEmail
 } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCdFpvwEp_sm4PDOQXDCMTcNUruRH1gDfI",
-    authDomain: "capizonda-dentech-dev.firebaseapp.com",
-    projectId: "capizonda-dentech-dev",
-    storageBucket: "capizonda-dentech-dev.firebasestorage.app",
-    messagingSenderId: "938908117708",
-    appId: "1:938908117708:web:77d10befb2f8917ccf3069"
-};
+const firebaseConfig = {{ firebase_config | tojson }};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
