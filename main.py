@@ -44,6 +44,95 @@ from cache_store import SimpleCache
 # instead of 8 AM.
 PH_TZ = timezone(timedelta(hours=8))
 
+# Doctors Calendar: blocking several days at once.
+MAX_BLOCK_RANGE_DAYS = 90
+MAX_UNBLOCK_RANGE_DAYS = 366
+MAX_PAST_MARK_LOOKBACK_DAYS = 730
+
+
+def parse_ymd(value):
+    """'YYYY-MM-DD' -> date, or None when it is not a real calendar date."""
+    try:
+        return datetime.strptime(str(value or "").strip(), "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def expand_range_days(start, end, skip_weekdays=(), max_days=MAX_BLOCK_RANGE_DAYS):
+    """
+    Every day from `start` to `end` (both included) as 'YYYY-MM-DD', leaving
+    out the weekdays in `skip_weekdays` (Monday=0 ... Sunday=6).
+    Raises ValueError for a backwards range or one longer than `max_days`.
+    """
+    if end < start:
+        raise ValueError("The end date is before the start date.")
+    span = (end - start).days + 1
+    if span > max_days:
+        raise ValueError(f"Please choose {max_days} days or fewer at a time.")
+    skip = set(skip_weekdays)
+    days = []
+    for offset in range(span):
+        day = start + timedelta(days=offset)
+        if day.weekday() in skip:
+            continue
+        days.append(day.strftime("%Y-%m-%d"))
+    return days
+
+
+def group_blocked_days(entries):
+    """
+    Collapse per-day BlockedSlots entries into notices a patient can read.
+
+    `entries` are dicts with date, full_day, blocked_times, patient_message
+    and (optionally) range_id. Days saved together as one range share a
+    range_id and become one notice even when some days were skipped (such as
+    Sundays); other days are merged only when they are consecutive and carry
+    the same message. Only the patient message is used, never the internal
+    reason.
+    """
+    groups = []
+    by_range = {}
+    open_groups = {}
+
+    for e in sorted(entries, key=lambda x: x["date"]):
+        closed = bool(e.get("full_day"))
+        times = [] if closed else sorted(e.get("blocked_times") or [])
+        if not closed and not times:
+            continue
+        kind = "closed" if closed else "partial"
+        message = (e.get("patient_message") or "").strip()
+        rid = e.get("range_id") or ""
+        day = e["date"]
+
+        if rid and closed:
+            g = by_range.get(rid)
+            if g:
+                g["end"] = day
+                g["days"] += 1
+                continue
+            g = {"start": day, "end": day, "type": kind, "message": message,
+                 "times": [], "days": 1, "_key": "r:" + rid}
+            by_range[rid] = g
+            groups.append(g)
+            continue
+
+        key = (kind, message, tuple(times))
+        g = open_groups.get(key)
+        prev_day = (parse_ymd(g["end"]) + timedelta(days=1)).strftime("%Y-%m-%d") if g else None
+        if g and prev_day == day:
+            g["end"] = day
+            g["days"] += 1
+            continue
+        g = {"start": day, "end": day, "type": kind, "message": message,
+             "times": times, "days": 1, "_key": "d:" + day}
+        open_groups[key] = g
+        groups.append(g)
+
+    for g in groups:
+        raw = f"{g.pop('_key')}|{g['start']}|{g['end']}|{g['type']}|{g['message']}|{','.join(g['times'])}"
+        g["id"] = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
+    return sorted(groups, key=lambda x: (x["start"], x["end"]))
+
 sys.stdout.reconfigure(encoding="utf-8")
 load_dotenv()
 
@@ -1059,7 +1148,7 @@ class DentalClinicApp(BaseFlaskApp):
         print("No appointments found for this user.")
         return None
 
-    def is_slot_blocked(self, appointment_date):
+    def is_slot_blocked(self, appointment_date, for_patient=False):
         """
         appointment_date format: "YYYY-MM-DD HH:MM" (matches how it's stored everywhere else).
         Returns (True, reason) if the dentist has blocked this date/time, else (False, None).
@@ -1078,10 +1167,18 @@ class DentalClinicApp(BaseFlaskApp):
 
         data = doc.to_dict()
 
+        # Patients only ever see the message written for them, never the
+        # internal note (admin callers keep getting the internal reason).
+        patient_note = (data.get("patient_message") or "").strip() if for_patient else ""
+
         if data.get("full_day"):
+            if for_patient:
+                return True, patient_note or "Dentist unavailable this day"
             return True, data.get("reason", "Dentist unavailable this day")
 
         if time in data.get("blocked_times", []):
+            if for_patient:
+                return True, patient_note or "Dentist unavailable at this time"
             return True, data.get("reason", "Dentist unavailable at this time")
 
         return False, None
@@ -1090,36 +1187,69 @@ class DentalClinicApp(BaseFlaskApp):
     BLOCKED_SLOTS_CACHE_KEY = "blocked_slots_upcoming"
     BLOCKED_SLOTS_TTL_SECONDS = 120
 
+    def _load_blocked_slots(self):
+        """Upcoming BlockedSlots (cached). Includes the internal reason."""
+        result = self.cache.get(self.BLOCKED_SLOTS_CACHE_KEY)
+
+        if result is None:
+            # Only today onward (minus 1 day to be safe across timezones).
+            cutoff = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
+            query = self.db.collection(self.Blocked_Slots).where(
+                filter=FieldFilter("date", ">=", cutoff)
+            )
+
+            result = []
+            for doc in query.stream():
+                data = doc.to_dict()
+                result.append({
+                    "date": doc.id,
+                    "full_day": bool(data.get("full_day", False)),
+                    "blocked_times": data.get("blocked_times", []),
+                    "reason": data.get("reason", ""),
+                    "patient_message": data.get("patient_message", ""),
+                    "range_id": data.get("range_id", "")
+                })
+
+            self.cache.set(
+                self.BLOCKED_SLOTS_CACHE_KEY,
+                result,
+                ttl_seconds=self.BLOCKED_SLOTS_TTL_SECONDS
+            )
+
+        return result
+
     def get_blocked_slots(self):
         try:
-            result = self.cache.get(self.BLOCKED_SLOTS_CACHE_KEY)
+            result = self._load_blocked_slots()
 
-            if result is None:
-                # Only today onward (minus 1 day to be safe across timezones).
-                cutoff = (datetime.now(UTC) - timedelta(days=1)).strftime("%Y-%m-%d")
-                query = self.db.collection(self.Blocked_Slots).where(
-                    filter=FieldFilter("date", ">=", cutoff)
-                )
+            # The Doctors Calendar (logged-in admin) sees everything. Anyone
+            # else gets only what is safe for patients: the internal note is
+            # never sent, and "reason" carries the patient message.
+            if session.get('admin_logged_in'):
+                return jsonify(result)
 
-                result = []
-                for doc in query.stream():
-                    data = doc.to_dict()
-                    result.append({
-                        "date": doc.id,
-                        "full_day": bool(data.get("full_day", False)),
-                        "blocked_times": data.get("blocked_times", []),
-                        "reason": data.get("reason", "")
-                    })
-
-                self.cache.set(
-                    self.BLOCKED_SLOTS_CACHE_KEY,
-                    result,
-                    ttl_seconds=self.BLOCKED_SLOTS_TTL_SECONDS
-                )
-
-            return jsonify(result)
+            return jsonify([
+                {
+                    "date": item["date"],
+                    "full_day": item["full_day"],
+                    "blocked_times": item["blocked_times"],
+                    "reason": item.get("patient_message", ""),
+                    "patient_message": item.get("patient_message", "")
+                }
+                for item in result
+            ])
         except Exception as e:
             print("GET BLOCKED SLOTS ERROR:", e)
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    def get_clinic_notices(self):
+        """Public: upcoming closures / limited-availability notices for the patient bell."""
+        try:
+            today = datetime.now(PH_TZ).strftime("%Y-%m-%d")
+            upcoming = [e for e in self._load_blocked_slots() if e["date"] >= today]
+            return jsonify(group_blocked_days(upcoming))
+        except Exception as e:
+            print("GET CLINIC NOTICES ERROR:", e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
 
 
@@ -1131,9 +1261,16 @@ class DentalClinicApp(BaseFlaskApp):
         full_day = request.form.get("full_day", "false") == "true"
         blocked_times = request.form.getlist("blocked_times[]")
         reason = bleach.clean(request.form.get("reason", "").strip())
+        patient_message = bleach.clean(request.form.get("patient_message", "").strip())[:200]
 
         if not date:
             return jsonify({"success": False, "message": "Date is required"}), 400
+
+        day_obj = parse_ymd(date)
+        if not day_obj:
+            return jsonify({"success": False, "message": "Invalid date"}), 400
+        if day_obj < datetime.now(PH_TZ).date():
+            return jsonify({"success": False, "message": "Past days can't be changed here. Use \"Mark past days as closed\" instead."}), 400
 
         if not full_day and not blocked_times:
             return jsonify({
@@ -1205,6 +1342,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "full_day": full_day,
                 "blocked_times": [] if full_day else blocked_times,
                 "reason": reason,
+                "patient_message": patient_message,
                 "created_by": session.get('admin_uid', ''),
                 "updated_at": datetime.now(UTC).isoformat()
             })
@@ -1223,6 +1361,12 @@ class DentalClinicApp(BaseFlaskApp):
         if not date:
             return jsonify({"success": False, "message": "Date is required"}), 400
 
+        day_obj = parse_ymd(date)
+        if not day_obj:
+            return jsonify({"success": False, "message": "Invalid date"}), 400
+        if day_obj < datetime.now(PH_TZ).date():
+            return jsonify({"success": False, "message": "Past days can't be unblocked, so the closure history stays accurate."}), 400
+
         try:
             self.db.collection(self.Blocked_Slots).document(date).delete()
             self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
@@ -1231,6 +1375,281 @@ class DentalClinicApp(BaseFlaskApp):
             print("ADMIN UNBLOCK SLOT ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
+    def _range_conflicts(self, days):
+        """
+        Appointments on days that are about to be fully blocked, grouped by
+        day. Times that are already blocked do not count again (same rule as
+        blocking a single day). Two collection-group queries cover the whole
+        range, instead of two per day.
+        """
+        first, last = days[0], days[-1]
+        wanted = set(days)
+
+        existing = {}
+        for doc in (
+            self.db.collection(self.Blocked_Slots)
+            .where(filter=FieldFilter("date", ">=", first))
+            .where(filter=FieldFilter("date", "<=", last))
+            .stream()
+        ):
+            existing[doc.id] = doc.to_dict() or {}
+
+        per_day = {}
+        for group, status in (("Approve", "Accepted"), ("appointments", "Pending")):
+            query = (
+                self.db.collection_group(group)
+                .where(filter=FieldFilter("appointment_date", ">=", first + " 00:00"))
+                .where(filter=FieldFilter("appointment_date", "<=", last + " 23:59"))
+            )
+            for doc in query.stream():
+                data = doc.to_dict()
+                day, _, time = str(data.get("appointment_date", "")).strip().partition(" ")
+                if day not in wanted:
+                    continue
+                prior = existing.get(day)
+                if prior and (prior.get("full_day") or time in (prior.get("blocked_times") or [])):
+                    continue
+                name = f"{data.get('FirstName', '')} {data.get('LastName', '')}".strip()
+                per_day.setdefault(day, []).append({
+                    "time": time,
+                    "status": status,
+                    "name": name or "Unknown patient"
+                })
+
+        return [
+            {"date": day, "appointments": sorted(per_day[day], key=lambda x: x["time"])}
+            for day in sorted(per_day)
+        ]
+
+    def admin_block_range(self):
+        """Block several whole days at once (Doctors Calendar)."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        start = parse_ymd(request.form.get("start_date"))
+        end = parse_ymd(request.form.get("end_date"))
+        if not start or not end:
+            return jsonify({"success": False, "message": "Choose a start and end date"}), 400
+        if start < datetime.now(PH_TZ).date():
+            return jsonify({"success": False, "message": "You can't block dates in the past"}), 400
+
+        skip = [
+            int(v) for v in request.form.getlist("skip_weekdays[]")
+            if v.isdigit() and 0 <= int(v) <= 6
+        ]
+        try:
+            days = expand_range_days(start, end, skip)
+        except ValueError as e:
+            return jsonify({"success": False, "message": str(e)}), 400
+        if not days:
+            return jsonify({"success": False, "message": "Every day in that range is skipped"}), 400
+
+        reason = bleach.clean(request.form.get("reason", "").strip())[:300]
+        patient_message = bleach.clean(request.form.get("patient_message", "").strip())[:200]
+
+        if request.form.get("force", "false") != "true":
+            try:
+                conflicts = self._range_conflicts(days)
+                if conflicts:
+                    all_appts = [a for d in conflicts for a in d["appointments"]]
+                    return jsonify({
+                        "success": False,
+                        "conflict": True,
+                        "message": "Some of these days already have scheduled appointments.",
+                        "total": len(all_appts),
+                        "accepted": sum(1 for a in all_appts if a["status"] == "Accepted"),
+                        "pending": sum(1 for a in all_appts if a["status"] != "Accepted"),
+                        "days": conflicts
+                    }), 409
+            except Exception as e:
+                # Never block saving because the warning check failed.
+                print("ADMIN BLOCK RANGE CONFLICT CHECK ERROR:", e)
+
+        try:
+            range_id = uuid.uuid4().hex
+            stamp = datetime.now(UTC).isoformat()
+            batch = self.db.batch()
+            for day in days:
+                batch.set(self.db.collection(self.Blocked_Slots).document(day), {
+                    "date": day,
+                    "full_day": True,
+                    "blocked_times": [],
+                    "reason": reason,
+                    "patient_message": patient_message,
+                    "range_id": range_id,
+                    "created_by": session.get('admin_uid', ''),
+                    "updated_at": stamp
+                })
+            batch.commit()
+            self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            return jsonify({
+                "success": True,
+                "message": f"Blocked {len(days)} day{'s' if len(days) != 1 else ''}",
+                "days": len(days),
+                "range_id": range_id
+            })
+        except Exception as e:
+            print("ADMIN BLOCK RANGE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_unblock_range(self):
+        """Remove every block between two dates (Doctors Calendar)."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        start = parse_ymd(request.form.get("start_date"))
+        end = parse_ymd(request.form.get("end_date"))
+        if not start or not end:
+            return jsonify({"success": False, "message": "Choose a start and end date"}), 400
+        try:
+            expand_range_days(start, end, max_days=MAX_UNBLOCK_RANGE_DAYS)
+        except ValueError as e:
+            return jsonify({"success": False, "message": str(e)}), 400
+        if start < datetime.now(PH_TZ).date():
+            return jsonify({"success": False, "message": "Past days can't be unblocked, so the closure history stays accurate."}), 400
+
+        # Optional: only remove the days that were saved together as one
+        # range (so a separately blocked day inside it is left alone).
+        range_id = bleach.clean(request.form.get("range_id", "").strip())
+
+        try:
+            refs = [
+                doc.reference for doc in (
+                    self.db.collection(self.Blocked_Slots)
+                    .where(filter=FieldFilter("date", ">=", start.strftime("%Y-%m-%d")))
+                    .where(filter=FieldFilter("date", "<=", end.strftime("%Y-%m-%d")))
+                    .stream()
+                )
+                if not range_id or (doc.to_dict() or {}).get("range_id") == range_id
+            ]
+            if refs:
+                batch = self.db.batch()
+                for ref in refs:
+                    batch.delete(ref)
+                batch.commit()
+                self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            return jsonify({
+                "success": True,
+                "message": f"Unblocked {len(refs)} day{'s' if len(refs) != 1 else ''}" if refs
+                           else "There were no blocked days in that range",
+                "days": len(refs)
+            })
+        except Exception as e:
+            print("ADMIN UNBLOCK RANGE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_mark_past_closed(self):
+        """Record past days as closed (Doctors Calendar). History/summary only."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        start = parse_ymd(request.form.get("start_date"))
+        end = parse_ymd(request.form.get("end_date"))
+        if not start or not end:
+            return jsonify({"success": False, "message": "Choose a start and end date"}), 400
+
+        today = datetime.now(PH_TZ).date()
+        if end >= today:
+            return jsonify({"success": False, "message": "Only days before today can be marked this way. Use Block for today and later."}), 400
+        if start < today - timedelta(days=MAX_PAST_MARK_LOOKBACK_DAYS):
+            return jsonify({"success": False, "message": "That date is too far back."}), 400
+        try:
+            days = expand_range_days(start, end)
+        except ValueError as e:
+            return jsonify({"success": False, "message": str(e)}), 400
+
+        reason = bleach.clean(request.form.get("reason", "").strip())[:300]
+
+        try:
+            stamp = datetime.now(UTC).isoformat()
+            batch = self.db.batch()
+            for day in days:
+                payload = {
+                    "date": day,
+                    "full_day": True,
+                    "blocked_times": [],
+                    "past_marked": True,
+                    "created_by": session.get('admin_uid', ''),
+                    "updated_at": stamp
+                }
+                if reason:
+                    payload["reason"] = reason
+                batch.set(self.db.collection(self.Blocked_Slots).document(day), payload, merge=True)
+            batch.commit()
+            self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            return jsonify({
+                "success": True,
+                "message": f"Marked {len(days)} day{'s' if len(days) != 1 else ''} as closed",
+                "days": len(days)
+            })
+        except Exception as e:
+            print("ADMIN MARK PAST CLOSED ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_closure_summary(self):
+        """Per-month closure counts for one year + the blocked days themselves."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        today = datetime.now(PH_TZ).date()
+        try:
+            year = int(request.args.get("year", today.year))
+        except ValueError:
+            year = today.year
+        if not 2000 <= year <= today.year + 2:
+            return jsonify({"success": False, "message": "Invalid year"}), 400
+
+        try:
+            months = []
+            for m in range(1, 13):
+                first = datetime(year, m, 1).date()
+                nxt = datetime(year + (m == 12), m % 12 + 1, 1).date()
+                if first > today:
+                    elapsed = 0
+                elif nxt <= today:
+                    elapsed = (nxt - first).days
+                else:
+                    elapsed = (today - first).days + 1
+                months.append({"month": m, "elapsed": elapsed,
+                                "closed": 0, "scheduled": 0, "partial": 0})
+
+            docs = (
+                self.db.collection(self.Blocked_Slots)
+                .where(filter=FieldFilter("date", ">=", f"{year}-01-01"))
+                .where(filter=FieldFilter("date", "<=", f"{year}-12-31"))
+                .stream()
+            )
+            entries = []
+            for doc in docs:
+                d = doc.to_dict() or {}
+                parsed = parse_ymd(doc.id)
+                if not parsed:
+                    continue
+                full = bool(d.get("full_day"))
+                times = sorted(d.get("blocked_times") or [])
+                if not full and not times:
+                    continue
+                row = months[parsed.month - 1]
+                if full:
+                    row["closed" if parsed <= today else "scheduled"] += 1
+                else:
+                    row["partial"] += 1
+                entries.append({
+                    "date": doc.id,
+                    "full_day": full,
+                    "blocked_times": [] if full else times,
+                    "reason": d.get("reason", ""),
+                    "past_marked": bool(d.get("past_marked", False)),
+                    "upcoming": parsed > today
+                })
+            entries.sort(key=lambda x: x["date"])
+            return jsonify({"success": True, "year": year,
+                            "today": today.strftime("%Y-%m-%d"),
+                            "months": months, "entries": entries})
+        except Exception as e:
+            print("ADMIN CLOSURE SUMMARY ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+    
     def _appointments_on_day(self, day):
         """
         Accepted (Approve) and pending (appointments) records whose
@@ -3104,7 +3523,7 @@ class DentalClinicApp(BaseFlaskApp):
             )
             return redirect(url_for("index"))
         
-        blocked, block_reason = self.is_slot_blocked(appointment_date)
+        blocked, block_reason = self.is_slot_blocked(appointment_date, for_patient=True)
         if blocked:
             flash(
                 f"Sorry, that date/time is unavailable ({block_reason}). Please choose another slot.",
@@ -3407,7 +3826,7 @@ class DentalClinicApp(BaseFlaskApp):
             return redirect(url_for("index"))
         
         
-        blocked, block_reason = self.is_slot_blocked(appointment_date)
+        blocked, block_reason = self.is_slot_blocked(appointment_date, for_patient=True)
         if blocked:
             flash(
                 f"Sorry, that date/time is unavailable ({block_reason}). Please choose another slot.",
@@ -8637,6 +9056,11 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/get_blocked_slots")(self.get_blocked_slots)
         self.app.route("/admin/block_slot", methods=["POST"])(self.admin_block_slot)
         self.app.route("/admin/unblock_slot", methods=["POST"])(self.admin_unblock_slot)
+        self.app.route("/admin/block_range", methods=["POST"])(self.admin_block_range)
+        self.app.route("/admin/unblock_range", methods=["POST"])(self.admin_unblock_range)
+        self.app.route("/admin/mark_past_closed", methods=["POST"])(self.admin_mark_past_closed)
+        self.app.route("/admin/closure_summary")(self.admin_closure_summary)
+        self.app.route("/get_clinic_notices")(self.get_clinic_notices)
         self.app.route("/admin/day_schedule")(self.admin_day_schedule)
         self.app.route("/admin/reschedule_appointment", methods=["POST"])(self.admin_reschedule_appointment)
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)

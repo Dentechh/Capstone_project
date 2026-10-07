@@ -1,0 +1,99 @@
+/* Patient notification bell: clinic closures / limited availability. */
+.notification-btn { position: relative; }
+
+.notif-badge {
+    position: absolute;
+    top: 3px;
+    right: 2px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    background: #e53935;
+    color: #fff;
+    font: 700 10px/16px 'Kumbh Sans', sans-serif;
+    text-align: center;
+    pointer-events: none;
+    display: none;
+}
+.notif-badge.show { display: block; }
+
+.notif-panel {
+    position: fixed;
+    z-index: 3000;
+    width: min(360px, calc(100vw - 16px));
+    max-height: min(70vh, 460px);
+    overflow-y: auto;
+    background: #fff;
+    color: #1a1a1a;
+    border: 1px solid #e3e8ef;
+    border-radius: 14px;
+    box-shadow: 0 12px 32px rgba(13, 71, 161, 0.18);
+    font-family: 'Kumbh Sans', sans-serif;
+    display: none;
+}
+.notif-panel.open { display: block; }
+
+.notif-head {
+    padding: 14px 16px 10px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #0d47a1;
+    border-bottom: 1px solid #eef1f6;
+}
+
+.notif-empty {
+    padding: 28px 16px;
+    text-align: center;
+    font-size: 14px;
+    color: #667085;
+}
+
+.notif-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eef1f6;
+}
+.notif-item:last-child { border-bottom: none; }
+
+.notif-icon {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(229, 57, 53, 0.1);
+    color: #e53935;
+}
+.notif-item.partial .notif-icon {
+    background: rgba(245, 158, 11, 0.14);
+    color: #d97706;
+}
+.notif-icon .material-symbols-rounded,
+.notif-icon svg { font-size: 20px; width: 20px; height: 20px; }
+
+.notif-body { min-width: 0; }
+.notif-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.notif-new {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: #0d47a1;
+    color: #fff;
+}
+.notif-when { font-size: 13px; color: #0d47a1; font-weight: 600; margin-top: 2px; }
+.notif-msg { font-size: 13px; color: #475467; margin-top: 4px; overflow-wrap: anywhere; }
+
+body.dark-mode .notif-panel { background: #1e1e1e; color: #e6e6e6; border-color: #333; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+body.dark-mode .notif-head { color: #90caf9; border-bottom-color: #333; }
+body.dark-mode .notif-item { border-bottom-color: #2d2d2d; }
+body.dark-mode .notif-when { color: #90caf9; }
+body.dark-mode .notif-msg,
+body.dark-mode .notif-empty { color: #b0b6c0; }
+body.dark-mode .notif-new { background: #64b5f6; color: #0b2a4a; }

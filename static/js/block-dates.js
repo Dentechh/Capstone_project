@@ -1,4 +1,4 @@
-        (function () {
+(function () {
             const TIME_SLOTS = [
                 { value: "09:00", label: "9:00 AM" }, { value: "10:00", label: "10:00 AM" },
                 { value: "11:00", label: "11:00 AM" }, { value: "12:00", label: "12:00 PM" },
@@ -147,6 +147,33 @@
                 box.innerHTML = html;
             }
 
+            function shortDate(iso, withWeekday) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+                if (!m) return iso || '';
+                const opts = withWeekday
+                    ? { weekday: 'short', month: 'short', day: 'numeric' }
+                    : { month: 'short', day: 'numeric' };
+                return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-US', opts);
+            }
+
+            // Days saved together with "Block multiple days" share a range_id and
+            // are shown as one row; everything else stays one row per day.
+            function groupUpcoming(list) {
+                const groups = [];
+                const byRange = {};
+                list.forEach(i => {
+                    if (i.full_day && i.range_id) {
+                        if (byRange[i.range_id]) { byRange[i.range_id].items.push(i); return; }
+                        const g = { items: [i] };
+                        byRange[i.range_id] = g;
+                        groups.push(g);
+                        return;
+                    }
+                    groups.push({ items: [i] });
+                });
+                return groups;
+            }
+
             function renderUpcomingBlocked() {
                 const box = document.getElementById('upcomingBlocked');
                 if (!box) return;
@@ -154,26 +181,37 @@
                 const list = Object.values(blockedMap)
                     .filter(i => i.date >= today)
                     .sort((a, b) => (a.date < b.date ? -1 : 1));
-                document.getElementById('upcomingBlockedCount').textContent = list.length ? String(list.length) : '';
-                if (!list.length) {
+                const groups = groupUpcoming(list);
+                document.getElementById('upcomingBlockedCount').textContent = groups.length ? String(groups.length) : '';
+                if (!groups.length) {
                     box.innerHTML = '<div class="dc-empty">No upcoming blocked days.</div>';
                     return;
                 }
-                box.innerHTML = list.map(i => {
-                    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(i.date);
-                    const label = m ? new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-US',
-                        { weekday: 'short', month: 'short', day: 'numeric' }) : i.date;
+                box.innerHTML = groups.map(g => {
+                    const i = g.items[0];
+                    const last = g.items[g.items.length - 1];
+                    const isRange = g.items.length > 1;
+                    const label = isRange
+                        ? shortDate(i.date) + ' \u2013 ' + shortDate(last.date)
+                        : shortDate(i.date, true);
                     const chip = i.full_day
-                        ? '<span class="dc-chip blocked" style="margin-left:0">Full day</span>'
+                        ? '<span class="dc-chip blocked" style="margin-left:0">' +
+                          (isRange ? 'Full day &middot; ' + g.items.length + ' days' : 'Full day') + '</span>'
                         : '<span class="dc-chip partial" style="margin-left:0">' +
                         esc((i.blocked_times || []).map(timeLabel).join(', ')) + '</span>';
+                    const notes =
+                        (i.reason ? '<span class="dc-sub">' + esc(i.reason) + '</span>' : '') +
+                        (i.patient_message ? '<span class="dc-sub">Patients see: ' + esc(i.patient_message) + '</span>' : '');
+                    const unblockBtn = isRange
+                        ? '<button type="button" class="dc-mini-btn danger" data-act="unblock-range" data-start="' + esc(i.date) +
+                          '" data-end="' + esc(last.date) + '" data-range="' + esc(i.range_id) + '">Unblock all</button>'
+                        : '<button type="button" class="dc-mini-btn danger" data-act="unblock" data-date="' + esc(i.date) + '">Unblock</button>';
                     return '<div class="dc-row">' +
                         '<div class="dc-date">' + esc(label) + '</div>' +
-                        '<div class="dc-main">' + chip +
-                        (i.reason ? '<span class="dc-sub">' + esc(i.reason) + '</span>' : '') + '</div>' +
+                        '<div class="dc-main">' + chip + notes + '</div>' +
                         '<div class="dc-actions">' +
                         '<button type="button" class="dc-mini-btn" data-act="view" data-date="' + esc(i.date) + '">View</button>' +
-                        '<button type="button" class="dc-mini-btn danger" data-act="unblock" data-date="' + esc(i.date) + '">Unblock</button>' +
+                        unblockBtn +
                         '</div></div>';
                 }).join('');
             }
@@ -193,18 +231,226 @@
                 }
             }
 
-            /* Custom month dropdown.
-               The native <select> flatpickr renders is hidden by CSS because its
-               opened <option> list is drawn with OS chrome that CSS cannot restyle.
-               We hide it but keep using it as the source of truth for which months are
-               selectable, and drive the calendar through fp.changeMonth().
+            async function unblockRangeDays(start, end, rangeId) {
+                const question = start === end
+                    ? 'Unblock ' + formatBlockDate(start) + '?'
+                    : 'Unblock ' + formatBlockDate(start) + ' to ' + formatBlockDate(end) + '?';
+                if (!(await showConfirm(question, { title: 'Unblock days', confirmLabel: 'Unblock' }))) return;
+                const formData = new FormData();
+                formData.append('start_date', start);
+                formData.append('end_date', end);
+                if (rangeId) formData.append('range_id', rangeId);
+                try {
+                    const res = await fetch('/admin/unblock_range', { method: 'POST', body: formData });
+                    const result = await res.json();
+                    if (result.success) { await loadBlockedSlots(); showToast(result.message || 'Unblocked successfully.'); }
+                    else showToast(result.message || 'Failed to unblock.');
+                } catch (err) {
+                    console.error('Unblock range error:', err);
+                    showToast('Failed to unblock. Please try again.');
+                }
+            }
 
-               scope: the panel the calendar lives in. flatpickr inserts
-               .flatpickr-calendar as a SIBLING of the input, so the input's own id
-               matches nothing as a descendant selector - the wrapping panel is the
-               only reliable root. Both calendars (Doctors Calendar and the
-               Reschedule modal) use the same .adm-month-dd markup and CSS, so the
-               control is built once here and reused. */
+            
+                        /* ---- Closure summary: month picker + yearly chart ---- */
+            const closure = { year: null, data: null, chart: null, loaded: false };
+            const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            async function loadClosureYear(year) {
+                try {
+                    const res = await fetch('/admin/closure_summary?year=' + encodeURIComponent(year));
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message || 'failed');
+                    closure.year = year;
+                    closure.data = data;
+                    closure.loaded = true;
+                    renderClosureSummary();
+                } catch (err) {
+                    console.error('Closure summary error:', err);
+                    const list = document.getElementById('closureList');
+                    if (list) list.innerHTML = '<div class="dc-empty">Could not load the closure summary.</div>';
+                }
+            }
+
+            // Called after any block/unblock/mark so the numbers stay current.
+            function refreshClosureSummary() {
+                if (closure.loaded) loadClosureYear(closure.year);
+            }
+
+            function selectedClosureMonth() {
+                const m = /^(\d{4})-(\d{2})$/.exec(document.getElementById('closureMonth').value || '');
+                return m ? { year: +m[1], month: +m[2] } : null;
+            }
+
+            function drawClosureChart(months) {
+                const canvas = document.getElementById('closureChart');
+                if (!canvas) return;
+                if (typeof Chart === 'undefined') { canvas.parentNode.style.display = 'none'; return; }
+                const closed = months.map(m => m.closed + m.scheduled);
+                const partial = months.map(m => m.partial);
+                if (closure.chart) {
+                    closure.chart.data.datasets[0].data = closed;
+                    closure.chart.data.datasets[1].data = partial;
+                    closure.chart.update();
+                    return;
+                }
+                closure.chart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: SHORT_MONTHS,
+                        datasets: [
+                            { label: 'Closed days', data: closed, backgroundColor: '#ef4444', borderRadius: 4 },
+                            { label: 'Partial days', data: partial, backgroundColor: '#f59e0b', borderRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            }
+
+            function renderClosureSummary() {
+                const sel = selectedClosureMonth();
+                if (!sel || !closure.data || sel.year !== closure.year) return;
+                const months = closure.data.months;
+                const cur = months[sel.month - 1];
+
+                document.getElementById('statClosed').textContent = cur.closed;
+                document.getElementById('statOpen').textContent = cur.elapsed ? Math.max(0, cur.elapsed - cur.closed) : '\u2013';
+                document.getElementById('statPartial').textContent = cur.partial;
+                document.getElementById('statScheduled').textContent = cur.scheduled;
+
+                const sum = k => months.reduce((t, m) => t + m[k], 0);
+                document.getElementById('closureYearLine').textContent =
+                    closure.year + ': ' + sum('closed') + ' closed day' + (sum('closed') === 1 ? '' : 's') +
+                    ', ' + sum('partial') + ' partial day' + (sum('partial') === 1 ? '' : 's') +
+                    (sum('scheduled') ? ', ' + sum('scheduled') + ' scheduled ahead' : '') + '.';
+
+                drawClosureChart(months);
+
+                const prefix = sel.year + '-' + pad(sel.month);
+                const rows = closure.data.entries.filter(e => e.date.indexOf(prefix) === 0);
+                const list = document.getElementById('closureList');
+                if (!rows.length) {
+                    list.innerHTML = '<div class="dc-empty">No closures in ' + MONTH_NAMES[sel.month - 1] + ' ' + sel.year + '.</div>';
+                    return;
+                }
+                // Count full-day closures by reason (same text, ignoring capitals/spacing, counts together).
+                const counts = {};
+                rows.forEach(e => {
+                    if (!e.full_day) return;
+                    const label = (e.reason || '').trim() || 'No reason recorded';
+                    const key = label.toLowerCase();
+                    (counts[key] = counts[key] || { label: label, n: 0 }).n++;
+                });
+                const reasonList = Object.values(counts).sort((a, b) => b.n - a.n);
+                const breakdown = reasonList.length
+                    ? '<div class="dc-summary">By reason: ' + reasonList.map(r =>
+                        esc(r.label) + ' (' + r.n + ' day' + (r.n === 1 ? '' : 's') + ')').join(' \u00b7 ') + '</div>'
+                    : '';
+
+                list.innerHTML = breakdown + rows.map(e => {
+                    const chip = e.full_day
+                        ? '<span class="dc-chip blocked" style="margin-left:0">Closed' + (e.upcoming ? ' &middot; upcoming' : '') + '</span>'
+                        : '<span class="dc-chip partial" style="margin-left:0">' + esc(e.blocked_times.map(timeLabel).join(', ')) + '</span>';
+                    const reasonHtml = e.reason
+                        ? esc(e.reason)
+                        : '<span class="dc-muted">No reason recorded</span>';
+                    return '<div class="dc-row"><div class="dc-date">' + esc(shortDate(e.date, true)) +
+                        '</div><div class="dc-main"><strong>' + reasonHtml + '</strong><span class="dc-sub">' + chip +
+                        (e.past_marked ? ' &middot; marked afterwards' : '') + '</span></div></div>';
+                }).join('');
+            }
+
+            function initClosureSummary() {
+                const monthInput = document.getElementById('closureMonth');
+                if (!monthInput) return;
+                const now = new Date();
+                monthInput.value = now.getFullYear() + '-' + pad(now.getMonth() + 1);
+
+                monthInput.addEventListener('change', function () {
+                    const sel = selectedClosureMonth();
+                    if (!sel) return;
+                    if (sel.year !== closure.year) loadClosureYear(sel.year); else renderClosureSummary();
+                });
+
+                // Load the first time the card is really on screen (the section starts hidden).
+                const card = document.querySelector('.dc-closures');
+                const start = function () {
+                    const sel = selectedClosureMonth();
+                    if (!closure.loaded && sel) loadClosureYear(sel.year);
+                };
+                if ('IntersectionObserver' in window && card) {
+                    const io = new IntersectionObserver(function (items) {
+                        if (items.some(i => i.isIntersecting)) { io.disconnect(); start(); }
+                    });
+                    io.observe(card);
+                } else start();
+
+                /* Mark past days as closed */
+                const pFrom = document.getElementById('pastFrom');
+                const pTo = document.getElementById('pastTo');
+                const pBtn = document.getElementById('pastMarkBtn');
+                if (!pFrom || !pTo || !pBtn) return;
+                const yest = new Date();
+                yest.setDate(yest.getDate() - 1);
+                pFrom.max = toDateStr(yest);
+                pTo.max = toDateStr(yest);
+                pFrom.addEventListener('change', function () {
+                    pTo.min = pFrom.value || '';
+                    if (pTo.value && pFrom.value && pTo.value < pFrom.value) pTo.value = pFrom.value;
+                });
+
+                pBtn.addEventListener('click', async function () {
+                    if (!pFrom.value || !pTo.value) { showToast('Pick the first and last day.'); return; }
+                    if (pTo.value < pFrom.value) { showToast('The last day is before the first day.'); return; }
+                    const q = pFrom.value === pTo.value
+                        ? 'Mark ' + formatBlockDate(pFrom.value) + ' as closed?'
+                        : 'Mark ' + formatBlockDate(pFrom.value) + ' to ' + formatBlockDate(pTo.value) + ' as closed?';
+                    if (!(await showConfirm(q, {
+                        title: 'Mark past days as closed',
+                        confirmLabel: 'Mark as closed',
+                        note: 'This is kept in the closure summary and cannot be undone.'
+                    }))) return;
+
+                    const formData = new FormData();
+                    formData.append('start_date', pFrom.value);
+                    formData.append('end_date', pTo.value);
+                    formData.append('reason', document.getElementById('pastReason').value.trim());
+                    try {
+                        const res = await fetch('/admin/mark_past_closed', { method: 'POST', body: formData });
+                        const result = await res.json();
+                        if (result.success) {
+                            pFrom.value = '';
+                            pTo.value = '';
+                            document.getElementById('pastReason').value = '';
+                            await loadBlockedSlots();
+                            showToast(result.message || 'Marked as closed.');
+                        } else {
+                            showToast(result.message || 'Failed to mark as closed.');
+                        }
+                    } catch (err) {
+                        console.error('Mark past closed error:', err);
+                        showToast('Failed to mark as closed. Please try again.');
+                    }
+                });
+            }
+
+            /* Custom month dropdown.
+                The native <select> flatpickr renders is hidden by CSS because its
+                opened <option> list is drawn with OS chrome that CSS cannot restyle.
+                We hide it but keep using it as the source of truth for which months are
+                selectable, and drive the calendar through fp.changeMonth().
+
+                scope: the panel the calendar lives in. flatpickr inserts
+                .flatpickr-calendar as a SIBLING of the input, so the input's own id
+                matches nothing as a descendant selector - the wrapping panel is the
+                only reliable root. Both calendars (Doctors Calendar and the
+                Reschedule modal) use the same .adm-month-dd markup and CSS, so the
+                control is built once here and reused. */
             const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -289,6 +535,7 @@
                and all of its CSS - including dark mode - are global, so reuse needs
                nothing else. Pass the panel the calendar lives in. */
             window.admBuildMonthDropdown = buildMonthDropdown;
+            window.admReloadBlockedSlots = function () { return loadBlockedSlots(); };
 
             function pad(n) { return n < 10 ? "0" + n : "" + n; }
             function toDateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -323,6 +570,7 @@
                         else if (typeof picker.update === 'function') picker.update();
                     }
                     renderUpcomingBlocked();
+                    refreshClosureSummary();
                     if (window.markBlockedAppointments) window.markBlockedAppointments();
                     if (calendarInstance) {
                         calendarInstance.redraw();
@@ -356,6 +604,8 @@
 
                 fullDayToggle.checked = !!(existing && existing.full_day);
                 reasonInput.value = existing ? (existing.reason || '') : '';
+                const patientMsgInput = document.getElementById('blockPatientMessageInput');
+                if (patientMsgInput) patientMsgInput.value = existing ? (existing.patient_message || '') : '';
 
                 document.querySelectorAll('.block-time-cb').forEach(cb => {
                     cb.checked = !!(existing && !existing.full_day && existing.blocked_times.includes(cb.value));
@@ -391,8 +641,12 @@
                     const btn = e.target.closest('button[data-act]');
                     if (!btn) return;
                     const date = btn.getAttribute('data-date');
-                    if (btn.getAttribute('data-act') === 'view') {
+                    const act = btn.getAttribute('data-act');
+                    if (act === 'view') {
                         if (calendarInstance) calendarInstance.setDate(date, true);
+                    } else if (act === 'unblock-range') {
+                        unblockRangeDays(btn.getAttribute('data-start'), btn.getAttribute('data-end'),
+                            btn.getAttribute('data-range'));
                     } else {
                         unblockDate(date);
                     }
@@ -433,6 +687,8 @@
 
                     const fullDay = document.getElementById('blockFullDayToggle').checked;
                     const reason = document.getElementById('blockReasonInput').value.trim();
+                    const patientMsgEl = document.getElementById('blockPatientMessageInput');
+                    const patientMessage = patientMsgEl ? patientMsgEl.value.trim() : '';
                     const checkedTimes = Array.from(document.querySelectorAll('.block-time-cb:checked')).map(cb => cb.value);
 
                     if (!fullDay && checkedTimes.length === 0) {
@@ -447,6 +703,7 @@
                         formData.append('full_day', fullDay ? 'true' : 'false');
                         checkedTimes.forEach(t => formData.append('blocked_times[]', t));
                         formData.append('reason', reason);
+                        formData.append('patient_message', patientMessage);
                         if (force) formData.append('force', 'true');
                         return fetch('/admin/block_slot', { method: 'POST', body: formData })
                             .then(res => res.json());
@@ -493,6 +750,134 @@
                     }
                 });
 
+                /* ---- Block / unblock several whole days at once ---- */
+                const rangeFrom = document.getElementById('rangeFrom');
+                const rangeTo = document.getElementById('rangeTo');
+                if (rangeFrom && rangeTo) {
+                    const MAX_RANGE_DAYS = 90;
+                                        const summary = document.getElementById('rangeSummary');
+                    const todayStr = toDateStr(new Date());
+                    rangeFrom.min = todayStr;
+                    rangeTo.min = todayStr;
+
+                    function ymdToDate(v) {
+                        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
+                        return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+                    }
+
+                    // Backend weekday numbers: Monday = 0 ... Sunday = 6.
+                    function skippedWeekdays() {
+                        return Array.from(document.querySelectorAll('#blockRangeCard .dc-range-skip input:checked'))
+                            .map(cb => Number(cb.value));
+                    }
+
+                    function rangeInfo(maxDays) {
+                        const a = ymdToDate(rangeFrom.value);
+                        const b = ymdToDate(rangeTo.value);
+                        if (!a || !b) return { ok: false, text: 'Pick the first and last day.' };
+                        if (b < a) return { ok: false, text: 'The last day is before the first day.' };
+                        const span = Math.round((b - a) / 86400000) + 1;
+                        if (span > maxDays) return { ok: false, text: 'Please choose ' + maxDays + ' days or fewer at a time.' };
+                        const skip = skippedWeekdays();
+                        let n = 0;
+                        for (let k = 0; k < span; k++) {
+                            const d = new Date(a.getFullYear(), a.getMonth(), a.getDate() + k);
+                            if (!skip.includes((d.getDay() + 6) % 7)) n++;
+                        }
+                        if (!n) return { ok: false, text: 'Every day in that range is skipped.' };
+                        return {
+                            ok: true, days: n, span: span,
+                            text: n + ' day' + (n === 1 ? '' : 's') + ' will be blocked' +
+                                (n !== span ? ' (' + (span - n) + ' skipped).' : '.')
+                        };
+                    }
+
+                    function refreshRangeSummary() {
+                        const info = rangeInfo(MAX_RANGE_DAYS);
+                        summary.textContent = info.text;
+                        summary.classList.toggle('is-error', !info.ok && !!(rangeFrom.value && rangeTo.value));
+                    }
+
+                    rangeFrom.addEventListener('change', function () {
+                        rangeTo.min = rangeFrom.value || todayStr;
+                        if (rangeTo.value && rangeFrom.value && rangeTo.value < rangeFrom.value) rangeTo.value = rangeFrom.value;
+                        refreshRangeSummary();
+                    });
+                    rangeTo.addEventListener('change', refreshRangeSummary);
+                    document.querySelectorAll('#blockRangeCard .dc-range-skip input')
+                        .forEach(cb => cb.addEventListener('change', refreshRangeSummary));
+
+                    function postRange(force) {
+                        const formData = new FormData();
+                        formData.append('start_date', rangeFrom.value);
+                        formData.append('end_date', rangeTo.value);
+                        skippedWeekdays().forEach(v => formData.append('skip_weekdays[]', String(v)));
+                        formData.append('reason', document.getElementById('rangeReason').value.trim());
+                        formData.append('patient_message', document.getElementById('rangeMessage').value.trim());
+                        if (force) formData.append('force', 'true');
+                        return fetch('/admin/block_range', { method: 'POST', body: formData }).then(res => res.json());
+                    }
+
+                    function rangeConflictDetails(r) {
+                        const days = r.days || [];
+                        const MAX_ROWS = 5;
+                        const rows = days.slice(0, MAX_ROWS).map(d => [
+                            shortDate(d.date, true),
+                            countLabel(d.appointments.length) + ' ' + (d.appointments.length === 1 ? 'appointment' : 'appointments')
+                        ]);
+                        if (days.length > MAX_ROWS) rows.push(['', '+ ' + (days.length - MAX_ROWS) + ' more days']);
+                        return rows;
+                    }
+
+                    document.getElementById('rangeBlockBtn').addEventListener('click', async function () {
+                        const info = rangeInfo(MAX_RANGE_DAYS);
+                        if (!info.ok) { showToast(info.text); return; }
+                        const question = 'Block ' + formatBlockDate(rangeFrom.value) + ' to ' +
+                            formatBlockDate(rangeTo.value) + '? ' + info.text;
+                        if (!(await showConfirm(question, { title: 'Block multiple days', confirmLabel: 'Block days' }))) return;
+
+                        try {
+                            let result = await postRange(false);
+
+                            if (result && result.conflict) {
+                                const msg = countLabel(result.total) + ' ' + apptWord(result.total) +
+                                    ' fall on ' + (result.days || []).length + ' of these days.';
+                                const ok = await showConfirm(msg, {
+                                    title: 'Appointments already booked',
+                                    confirmLabel: 'Block anyway',
+                                    note: 'Blocking will not cancel or move these appointments. After saving, open each day and use Reschedule in the day schedule to move them.',
+                                    details: rangeConflictDetails(result)
+                                });
+                                if (!ok) return;
+                                result = await postRange(true);
+                            }
+
+                            if (result.success) {
+                                await loadBlockedSlots();
+                                showToast(result.message || 'Days blocked.');
+                                rangeFrom.value = '';
+                                rangeTo.value = '';
+                                document.getElementById('rangeReason').value = '';
+                                document.getElementById('rangeMessage').value = '';
+                                refreshRangeSummary();
+                            } else {
+                                showToast(result.message || 'Failed to block these days.');
+                            }
+                        } catch (err) {
+                            console.error('Block range error:', err);
+                            showToast('Failed to block these days. Please try again.');
+                        }
+                    });
+
+                    document.getElementById('rangeUnblockBtn').addEventListener('click', function () {
+                        // Unblocking ignores the skip boxes: it reopens every blocked day in the range.
+                        if (!rangeFrom.value || !rangeTo.value) { showToast('Pick the first and last day.'); return; }
+                        if (rangeTo.value < rangeFrom.value) { showToast('The last day is before the first day.'); return; }
+                        unblockRangeDays(rangeFrom.value, rangeTo.value, '');
+                    });
+                }
+
+                initClosureSummary();
                 loadBlockedSlots();
             });
         })();

@@ -10,6 +10,7 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/clinic-notices.css') }}?v=1">
 </head>
 <body>
 
@@ -85,6 +86,13 @@
                     <line x1="21" y1="12" x2="23" y2="12"></line>
                     <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+
+            <button class="notification-btn" id="notificationBtn" title="Notifications" aria-label="Notifications">
+                <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:24px;height:24px">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
             </button>
 
@@ -1087,7 +1095,7 @@ resetPasswordBtn.addEventListener("click", async () => {
         const keywords = {
             "brace": 0, "braces": 0, "align": 0, "straighten": 0,
             "crown": 3, "cap": 3, "bridge": 3,
-            "extract": 5, "removal": 5, "pull": 5, "cabot": 5,
+            "extract": 5, "removal": 5, "pull": 5, "Gabot": 5,
             "clean": 7, "prophylaxis": 7, "tartar": 7, "plaque": 7,
             "check-up": 9, "checkup": 9, "check up": 9, "visit": 9, "twice": 9,
             "filling": 10, "cavity": 10, "pasta": 10,
@@ -1464,5 +1472,6 @@ function respondPatientMatch(confirmed) {
 </script>
 {% endif %}
 
+<script src="{{ url_for('static', filename='js/clinic-notices.js') }}?v=1" defer></script>
 </body>
 </html>

@@ -275,6 +275,67 @@
             border-color: #7f1d1d;
         }
 
+
+        .dc-closures { margin-top: 24px; }
+
+        #section-doctorscalendar .dc-month-pick {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        #section-doctorscalendar .dc-month-pick .dc-input {
+            width: auto;
+            padding: 8px 10px;
+            font-size: 14px;
+        }
+
+        .dc-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dc-stat {
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+
+        .dc-stat-num {
+            display: block;
+            font-size: 24px;
+            font-weight: 800;
+            color: #0d47a1;
+        }
+
+        .dc-stat-label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .dc-chart-wrap {
+            position: relative;
+            height: 240px;
+            margin: 14px 0;
+        }
+
+        body.dark-mode .dc-stat { background: #0f172a; border-color: #334155; }
+        body.dark-mode .dc-stat-num { color: #64b5f6; }
+        body.dark-mode .dc-stat-label,
+        body.dark-mode #section-doctorscalendar .dc-month-pick { color: #94a3b8; }
+
+        @media (max-width: 600px) {
+            .dc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
         @media (max-width: 1000px) {
             .dc-extras {
                 grid-template-columns: 1fr;
