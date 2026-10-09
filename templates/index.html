@@ -826,26 +826,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             </button>
 
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
         <h2>Welcome Back</h2>
+        <p class="register-subtitle">Sign in to your account</p>
 
         <form action="/login" method="POST" id="loginForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="login-error" id="loginError"></div>
-            <input type="email" id="loginEmail" name="email" placeholder="Email" required>
-            <div class="password-wrapper">
-                <input type="password" name="Password" placeholder="Password" required>
-                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                </button>
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" name="email" placeholder="Email" required>
+                <div class="field-error" id="loginEmailError"></div>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="loginPassword" name="Password" placeholder="Password" required>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="field-error" id="loginPasswordError"></div>
             </div>
 
             <button type="submit" id="loginBtn" class="sign-up-btn">
@@ -855,27 +875,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <script>
             document.getElementById('loginForm').addEventListener('submit', function(e) {
-                // Custom validation for required fields
                 const emailInput = document.getElementById('loginEmail');
-                const passwordInput = this.querySelector('input[name="Password"]');
+                const passwordInput = document.getElementById('loginPassword');
+                const emailError = document.getElementById('loginEmailError');
+                const passwordError = document.getElementById('loginPasswordError');
+                const formError = document.getElementById('loginError');
+                
+                let hasError = false;
+                
+                // Clear previous errors
+                emailError.textContent = '';
+                emailError.style.display = 'none';
+                emailInput.classList.remove('input-error');
+                passwordError.textContent = '';
+                passwordError.style.display = 'none';
+                passwordInput.classList.remove('input-error');
+                formError.textContent = '';
+                formError.style.display = 'none';
                 
                 if (!emailInput.value.trim()) {
                     e.preventDefault();
-                    showToast('! Please fill out this field', 'warning');
+                    emailError.textContent = 'Please enter your email';
+                    emailError.style.display = 'block';
+                    emailInput.classList.add('input-error');
                     emailInput.focus();
-                    return;
+                    hasError = true;
                 }
                 if (!passwordInput.value) {
                     e.preventDefault();
-                    showToast('! Please fill out this field', 'warning');
-                    passwordInput.focus();
-                    return;
+                    passwordError.textContent = 'Please enter your password';
+                    passwordError.style.display = 'block';
+                    passwordInput.classList.add('input-error');
+                    if (!hasError) passwordInput.focus();
+                    hasError = true;
                 }
                 
-                const errorDiv = document.getElementById('loginError');
-                errorDiv.style.display = 'none';
-                errorDiv.textContent = '';
-
+                if (hasError) return;
+                
                 const formData = new FormData(this);
                 fetch('/login', {
                     method: 'POST',
@@ -893,15 +929,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             window.location.href = data.redirect || '/';
                         }
                     } else {
-                        errorDiv.textContent = data.message || 'Login failed. Please try again.';
-                        errorDiv.style.display = 'block';
-                        showToast(data.message || 'Login failed. Please try again.', 'error');
+                        formError.textContent = data.message || 'Login failed. Please try again.';
+                        formError.style.display = 'block';
                     }
                 })
                 .catch(() => {
-                    errorDiv.textContent = 'Something went wrong. Please try again.';
-                    errorDiv.style.display = 'block';
-                    showToast('Something went wrong. Please try again.', 'error');
+                    formError.textContent = 'Something went wrong. Please try again.';
+                    formError.style.display = 'block';
                 });
             });
         </script>
@@ -938,84 +972,139 @@ document.addEventListener('DOMContentLoaded', function() {
                 </svg>
             </button>
 
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
         <h2>Forgot Password</h2>
+        <p class="register-subtitle">Enter your email to reset your password</p>
 
-        <p>Enter your email address to receive a password reset link.</p>
+        <form id="forgotPasswordForm" novalidate>
+            <div class="form-group">
+                <label for="resetEmail">Email</label>
+                <input type="email" id="resetEmail" name="email" placeholder="Enter your email" required>
+                <div class="field-error" id="resetEmailError"></div>
+            </div>
 
-        <input
-            type="email"
-            id="resetEmail"
-            placeholder="Enter your email"
-            required
-        >
+            <div class="form-error" id="forgotPasswordError"></div>
 
-        <button
-            type="button"
-            id="sendResetBtn"
-            class="sign-up-btn">
-            Send Reset Link
-        </button>
+            <button type="button" id="sendResetBtn" class="sign-up-btn">
+                Send Reset Link
+            </button>
+        </form>
     </div>
 </div>
 
 <div id="registerModal" class="modal">
     <div class="modal-content auth-card">
-            <button class="close" onclick="closeAuthModal('registerModal')" aria-label="Close">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+        <button class="close" onclick="closeAuthModal('registerModal')" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
         <h2>Create Account</h2>
+
         <form id="signupForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <div style="display:flex; gap:10px;">
-        <input type="text" name="FirstName" placeholder="First Name" required>
-        <input type="text" name="LastName" placeholder="Last Name" required>
-    </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="regFirstName">First Name</label>
+                    <input type="text" id="regFirstName" name="FirstName" placeholder="First Name" required>
+                    <div class="field-error" id="regFirstNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="regLastName">Last Name</label>
+                    <input type="text" id="regLastName" name="LastName" placeholder="Last Name" required>
+                    <div class="field-error" id="regLastNameError"></div>
+                </div>
+            </div>
 
-    <input type="email" id="email" name="UserName" placeholder="Email" required>
+            <div class="form-group">
+                <label for="regEmail">Email</label>
+                <input type="email" id="regEmail" name="UserName" placeholder="Email" required>
+                <div class="field-error" id="regEmailError"></div>
+            </div>
 
-    <div class="password-wrapper">
-        <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
-        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-            </svg>
-        </button>
-    </div>
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="regPassword" name="Password" placeholder="Create a password" required minlength="8" maxlength="16">
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="password-requirements" id="passwordRequirements">
+                    <span class="req-item" data-req="length">8-16 characters</span>
+                    <span class="req-item" data-req="uppercase">Uppercase letter</span>
+                    <span class="req-item" data-req="lowercase">Lowercase letter</span>
+                    <span class="req-item" data-req="number">Number</span>
+                    <span class="req-item" data-req="special">Special character</span>
+                </div>
+                <div class="field-error" id="regPasswordError"></div>
+            </div>
 
-    <div class="password-wrapper">
-        <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
-        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-            </svg>
-        </button>
-    </div>
+            <div class="form-group">
+                <label for="regConfirmPassword">Confirm Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="regConfirmPassword" name="ConfirmPassword" placeholder="Confirm your password" required minlength="8" maxlength="16">
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="password-match-message" id="passwordMatchMessage"></div>
+                <div class="field-error" id="regConfirmPasswordError"></div>
+            </div>
 
-    <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
+            <div class="form-group">
+                <label for="regMobileNumber">Contact Number</label>
+                <input type="tel" id="regMobileNumber" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
+                <div class="field-error" id="regMobileNumberError"></div>
+            </div>
 
-    <button type="submit" id="signupBtn" class="sign-up-btn">
-        Sign Up
-    </button>
+            <button type="submit" id="signupBtn" class="sign-up-btn">
+                Create Account
+            </button>
 
-</form>
+        </form>
 
 
 <script type="module">
@@ -1046,10 +1135,23 @@ const sendResetBtn = document.getElementById("sendResetBtn");
 
 sendResetBtn.addEventListener("click", async () => {
 
-    const email = document.getElementById("resetEmail").value.trim();
+    const emailInput = document.getElementById("resetEmail");
+    const emailError = document.getElementById("resetEmailError");
+    const formError = document.getElementById("forgotPasswordError");
+    const email = emailInput.value.trim();
+
+    // Clear previous errors
+    emailError.textContent = '';
+    emailError.style.display = 'none';
+    emailInput.classList.remove('input-error');
+    formError.textContent = '';
+    formError.style.display = 'none';
 
     if (email === "") {
-        showToast("Please enter your email.", "warning");
+        emailError.textContent = 'Please enter your email';
+        emailError.style.display = 'block';
+        emailInput.classList.add('input-error');
+        emailInput.focus();
         return;
     }
 
@@ -1066,16 +1168,20 @@ sendResetBtn.addEventListener("click", async () => {
     } catch (error) {
 
         if (error.code === "auth/user-not-found") {
-            showToast("No account found with this email.", "error");
+            formError.textContent = "No account found with this email.";
+            formError.style.display = 'block';
         }
         else if (error.code === "auth/invalid-email") {
-            showToast("Invalid email address.", "error");
+            formError.textContent = "Invalid email address.";
+            formError.style.display = 'block';
         }
         else if (error.code === "auth/too-many-requests") {
-            showToast("Too many requests. Please try again later.", "warning");
+            formError.textContent = "Too many requests. Please try again later.";
+            formError.style.display = 'block';
         }
         else {
-            showToast(error.message, "error");
+            formError.textContent = error.message;
+            formError.style.display = 'block';
         }
 
     }
@@ -1096,45 +1202,104 @@ signupForm.addEventListener("submit", async (e) => {
 
     let firstName = document.querySelector('#signupForm input[name="FirstName"]').value.trim();
     let lastName = document.querySelector('#signupForm input[name="LastName"]').value.trim();
-    let email = document.getElementById("email").value.trim();
-    let password = document.getElementById("password").value;
-    let confirmPassword = document.getElementById("confirmPassword").value;
+    let email = document.getElementById("regEmail").value.trim();
+    let password = document.getElementById("regPassword").value;
+    let confirmPassword = document.getElementById("regConfirmPassword").value;
     let mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value.trim();
 
-    // Check required fields
+    // Clear all previous errors
+    const errorElements = document.querySelectorAll('#signupForm .field-error');
+    const inputElements = document.querySelectorAll('#signupForm input');
+    errorElements.forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
+    });
+    inputElements.forEach(el => el.classList.remove('input-error'));
+
+    let hasError = false;
+    let firstErrorInput = null;
+
+    // Check required fields with inline errors
     if (!firstName) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="FirstName"]').focus();
-        return;
+        const errorEl = document.getElementById('regFirstNameError');
+        const inputEl = document.getElementById('regFirstName');
+        errorEl.textContent = 'Please enter your first name';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        firstErrorInput = inputEl;
+        hasError = true;
     }
     if (!lastName) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="LastName"]').focus();
-        return;
+        const errorEl = document.getElementById('regLastNameError');
+        const inputEl = document.getElementById('regLastName');
+        errorEl.textContent = 'Please enter your last name';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
     }
     if (!email) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("email").focus();
-        return;
+        const errorEl = document.getElementById('regEmailError');
+        const inputEl = document.getElementById('regEmail');
+        errorEl.textContent = 'Please enter your email';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
     }
     if (!password) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("password").focus();
-        return;
+        const errorEl = document.getElementById('regPasswordError');
+        const inputEl = document.getElementById('regPassword');
+        errorEl.textContent = 'Please enter a password';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
     }
     if (!confirmPassword) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("confirmPassword").focus();
-        return;
+        const errorEl = document.getElementById('regConfirmPasswordError');
+        const inputEl = document.getElementById('regConfirmPassword');
+        errorEl.textContent = 'Please confirm your password';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
     }
     if (!mobileNumber) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="MobileNumber"]').focus();
-        return;
+        const errorEl = document.getElementById('regMobileNumberError');
+        const inputEl = document.getElementById('regMobileNumber');
+        errorEl.textContent = 'Please enter your contact number';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
     }
 
-    if (password !== confirmPassword) {
-        showToast("Passwords do not match.", "error");
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+    if (password && !passwordRegex.test(password)) {
+        const errorEl = document.getElementById('regPasswordError');
+        const inputEl = document.getElementById('regPassword');
+        errorEl.textContent = 'Password must be 8-16 chars with uppercase, lowercase, number, and special character';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+
+    // Confirm password match
+    if (password && confirmPassword && password !== confirmPassword) {
+        const errorEl = document.getElementById('regConfirmPasswordError');
+        const inputEl = document.getElementById('regConfirmPassword');
+        errorEl.textContent = 'Passwords do not match';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+
+    if (hasError) {
+        if (firstErrorInput) firstErrorInput.focus();
         return;
     }
 
@@ -1313,6 +1478,76 @@ resetPasswordBtn.addEventListener("click", async () => {
             }
         });
     });
+
+    // Password requirements validation
+    const regPassword = document.getElementById('regPassword');
+    const regConfirmPassword = document.getElementById('regConfirmPassword');
+    const passwordRequirements = document.getElementById('passwordRequirements');
+    const passwordMatchMessage = document.getElementById('passwordMatchMessage');
+
+    if (regPassword && passwordRequirements) {
+        const requirements = {
+            length: /.{8,16}/,
+            uppercase: /[A-Z]/,
+            lowercase: /[a-z]/,
+            number: /\d/,
+            special: /[@$!%*?&]/
+        };
+
+        function validatePassword(password) {
+            const results = {};
+            for (const [key, regex] of Object.entries(requirements)) {
+                results[key] = regex.test(password);
+            }
+            return results;
+        }
+
+        function updateRequirementsUI(results) {
+            const reqItems = passwordRequirements.querySelectorAll('.req-item');
+            reqItems.forEach(item => {
+                const req = item.dataset.req;
+                if (results[req]) {
+                    item.classList.add('valid');
+                } else {
+                    item.classList.remove('valid');
+                }
+            });
+        }
+
+        regPassword.addEventListener('input', () => {
+            const password = regPassword.value;
+            const results = validatePassword(password);
+            updateRequirementsUI(results);
+
+            // Also check confirm password match
+            if (regConfirmPassword && regConfirmPassword.value) {
+                checkPasswordMatch();
+            }
+        });
+
+        function checkPasswordMatch() {
+            if (regConfirmPassword.value === '') {
+                passwordMatchMessage.textContent = '';
+                passwordMatchMessage.className = 'password-match-message';
+            } else if (regPassword.value === regConfirmPassword.value) {
+                passwordMatchMessage.textContent = '✓ Passwords match';
+                passwordMatchMessage.className = 'password-match-message match';
+            } else {
+                passwordMatchMessage.textContent = '✗ Passwords do not match';
+                passwordMatchMessage.className = 'password-match-message mismatch';
+            }
+        }
+
+        if (regConfirmPassword) {
+            regConfirmPassword.addEventListener('input', checkPasswordMatch);
+        }
+
+        // Initial validation if there's a value
+        if (regPassword.value) {
+            const results = validatePassword(regPassword.value);
+            updateRequirementsUI(results);
+        }
+    }
 
 // Global click listener to close modals/dropdowns if clicking outside
         // 1. Dropdown Toggle Logic

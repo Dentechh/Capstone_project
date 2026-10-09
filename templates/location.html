@@ -41,23 +41,165 @@
         <h2>Find Our Clinic</h2>
         <p>Visit us at our Iloilo City branch for professional dental care.</p>
     </div>
-    <div class="map-wrapper">
-    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1386.1258752551635!2d122.547809540144!3d10.691528390163079!2m3!1f0!2f0!3f0!3m2!1i1920!2i1080!4f13.1!3m3!1m2!1s0x33aee5004495b601%3A0xc688e2331fc39ebb!2sCapizonda%20Dental%20Clinic!5e0!3m2!1sen!2sph!4v1774356375938!5m2!1sen!2sph" 
-        style="width:100%; height:100%; border:0; border-radius: 50px;" 
-        allowfullscreen="" 
-        loading="lazy" 
-        referrerpolicy="no-referrer-when-downgrade">
-    </iframe>
+
+    <!-- Map Section -->
+    <section class="content-panel map-panel">
+        <div class="panel-header">
+            <h3>
+                <span class="material-symbols-rounded panel-icon">map</span>
+                Our Location
+            </h3>
+        </div>
+        <div class="panel-content">
+            <div class="map-wrapper">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1386.1258752551635!2d122.547809540144!3d10.691528390163079!2m3!1f0!2f0!3f0!3m2!1i1920!2i1080!4f13.1!3m3!1m2!1s0x33aee5004495b601%3A0xc688e2331fc39ebb!2sCapizonda%20Dental%20Clinic!5e0!3m2!1sen!2sph!4v1774356375938!5m2!1sen!2sph"
+                    allowfullscreen=""
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    aria-label="Capizonda Dental Clinic location on Google Maps">
+                </iframe>
+                <div class="map-actions">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=Capizonda+Dental+Clinic" target="_blank" rel="noopener" class="btn-directions">
+                        <span class="material-symbols-rounded">directions</span>
+                        Get Directions
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Info Grid -->
+    <div class="info-grid">
+        <!-- Clinic Info -->
+        <section class="content-panel">
+            <div class="panel-header">
+                <h3>
+                    <span class="material-symbols-rounded panel-icon">location_on</span>
+                    Clinic Information
+                </h3>
+            </div>
+            <div class="panel-content">
+                <div class="info-card">
+                    <h4>Our Address</h4>
+                    <p>241-B Lopez Jaena St, Molo, Iloilo City, 5000 Iloilo</p>
+
+                    <h4>Contact Details</h4>
+                    <ul class="info-list">
+                        <li>
+                            <span class="material-symbols-rounded">call</span>
+                            <span>0962 687 6076</span>
+                        </li>
+                        <li>
+                            <span class="material-symbols-rounded">mail</span>
+                            <span>capizondadental@gmail.com</span>
+                        </li>
+                    </ul>
+
+                    <h4>Operating Hours</h4>
+                    <ul class="info-list hours-list">
+                        <li>
+                            <span>Monday - Saturday</span>
+                            <span class="hours">8:00 AM - 5:00 PM</span>
+                        </li>
+                        <li>
+                            <span>Sunday</span>
+                            <span class="hours">Closed</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Getting Here -->
+        <section class="content-panel">
+            <div class="panel-header">
+                <h3>
+                    <span class="material-symbols-rounded panel-icon">commute</span>
+                    Getting Here
+                </h3>
+            </div>
+            <div class="panel-content">
+                <div class="info-card">
+                    <h4>Parking Information</h4>
+                    <p>Street parking is available near the clinic vicinity. Please allow extra time during peak hours.</p>
+
+                    <h4>Public Transportation</h4>
+                    <ul class="info-list">
+                        <li>
+                            <span class="material-symbols-rounded">directions_bus</span>
+                            <span>Jeepneys along Lopez Jaena St. and nearby routes in Molo, Iloilo City.</span>
+                        </li>
+                        <li>
+                            <span class="material-symbols-rounded">landmark</span>
+                            <span>Near Molo Plaza and Molo Church — easy to spot from main roads.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Nearby + Gallery -->
+        <section class="content-panel">
+            <div class="panel-header">
+                <h3>
+                    <span class="material-symbols-rounded panel-icon">explore</span>
+                    Nearby & Clinic Photos
+                </h3>
+            </div>
+            <div class="panel-content">
+                <div class="info-card">
+                    <h4>Nearby Landmarks</h4>
+                    <ul class="info-list landmarks-list">
+                        <li>
+                            <span class="material-symbols-rounded">account_balance</span>
+                            <span>Molo Plaza</span>
+                        </li>
+                        <li>
+                            <span class="material-symbols-rounded">church</span>
+                            <span>Molo Church (St. Anne Parish)</span>
+                        </li>
+                        <li>
+                            <span class="material-symbols-rounded">local_hospital</span>
+                            <span>Nearby commercial establishments along Molo district</span>
+                        </li>
+                    </ul>
+
+                    <h4>Clinic Photos</h4>
+                    <div class="gallery-grid">
+                        <div class="gallery-item">
+                            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Capizonda Dental Clinic Logo">
+                        </div>
+                        <div class="gallery-item">
+                            <img src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="Capizonda Dental Clinic - Light Mode Logo">
+                        </div>
+                        <div class="gallery-item">
+                            <img src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="Capizonda Dental Clinic - Dark Mode Logo">
+                        </div>
+                    </div>
+                    <small class="gallery-note">Clinic photos coming soon. Stay tuned for updates.</small>
+                </div>
+            </div>
+        </section>
     </div>
 
-    <div class="info-cards">
-        <div class="info-card">
-            <h4>📍 Our Address</h4>
-            <p>241-B Lopez Jaena St, Molo, Iloilo City, 5000 Iloilo</p>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=Capizonda+Dental+Clinic" target="_blank" class="btn-directions">Get Directions</a>
+    <!-- Booking CTA -->
+    <section class="content-panel cta-panel">
+        <div class="panel-content">
+            <div class="cta-card">
+                <div class="cta-content">
+                    <h3>Ready to Book Your Appointment?</h3>
+                    <p>Schedule your dental visit with our trusted team at Capizonda Dental Clinic.</p>
+                </div>
+                <div class="cta-actions">
+                    <a href="javascript:void(0)" onclick="openAuthModal('loginModal')" class="btn-primary">
+                        <span class="material-symbols-rounded">event_available</span>
+                        Book an Appointment
+                    </a>
+                </div>
+            </div>
         </div>
-    
-    </div>
+    </section>
 </main>
 
 <footer class="main-footer">
