@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | Capizonda Dental Clinic</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         /* ============================================================
            NOTE: This block only restyles the legal text container.
@@ -16,10 +18,11 @@
            still come from index-s.css / the shared header markup.
            ============================================================ */
 
+        /* ===== LEGAL CONTAINER STYLES ===== */
         .legal-container {
             max-width: 860px;
             margin: 40px auto;
-            padding: 40px 44px 60px;
+            padding: 44px 48px 64px;
             font-family: 'Kumbh Sans', sans-serif;
             color: #2b2b2b;
             line-height: 1.75;
@@ -27,8 +30,9 @@
             /* Readable card so text isn't sitting directly on the
                page background */
             background: rgba(255, 255, 255, 0.97);
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+            border-radius: 16px;
+            border: 1px solid rgba(13, 71, 161, 0.10);
+            box-shadow: 0 12px 40px rgba(13, 71, 161, 0.12);
             position: relative;
             overflow: hidden;
         }
@@ -39,7 +43,7 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 4px;
+            height: 5px;
             background: linear-gradient(90deg, #0d47a1, #1565c0, #0d47a1);
         }
 
@@ -62,25 +66,32 @@
 
         .legal-container h1 {
             color: #0d47a1;
-            font-size: 2.1rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
         }
 
         .legal-updated {
-            color: #607d8b;
-            font-size: 0.88rem;
-            font-weight: 500;
-            margin-bottom: 28px;
+            display: inline-block;
+            color: #546e7a;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            padding: 5px 14px;
+            background: rgba(13, 71, 161, 0.06);
+            border: 1px solid rgba(13, 71, 161, 0.10);
+            border-radius: 999px;
         }
 
+        /* ===== SECTION STYLES ===== */
         .legal-container h2 {
             color: #0d47a1;
             font-size: 1.35rem;
-            font-weight: 600;
-            margin-top: 34px;
+            font-weight: 700;
+            margin-top: 38px;
             margin-bottom: 14px;
-            padding-bottom: 8px;
+            padding-bottom: 10px;
             border-bottom: 2px solid #eef3fb;
             position: relative;
         }
@@ -110,6 +121,7 @@
             font-size: 1.02rem;
             color: #333;
             margin-bottom: 10px;
+            padding-left: 4px;
         }
 
         .legal-container li::marker {
@@ -117,54 +129,162 @@
             font-weight: bold;
         }
 
+        /* Highlight important text */
         .legal-container strong {
             color: #0d47a1;
             font-weight: 600;
         }
 
-        /* Dark mode: keep the card light and readable rather than
-           trying to force dark text onto a dark page background */
-        body.dark-mode .legal-container {
-            background: rgba(255, 255, 255, 0.96);
-            color: #2b2b2b;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        /* Links inside the content */
+        .legal-container a {
+            color: #1565c0;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(21, 101, 192, 0.30);
+            transition: color 0.2s ease, border-color 0.2s ease;
         }
 
-        body.dark-mode .legal-container p,
-        body.dark-mode .legal-container li {
-            color: #333;
+        .legal-container a:hover {
+            color: #0d47a1;
+            border-bottom-color: #0d47a1;
+        }
+
+        /* Contact details card */
+        .legal-container .contact-card {
+            background: rgba(13, 71, 161, 0.05);
+            border: 1px solid rgba(13, 71, 161, 0.12);
+            border-left: 4px solid #0d47a1;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin: 8px 0 4px;
+        }
+
+        /* ===== DARK MODE ===== */
+        body.dark-mode .legal-container {
+            background: rgba(30, 41, 59, 0.97);
+            color: #e2e8f0;
+            border-color: rgba(100, 181, 246, 0.16);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        body.dark-mode .legal-container::before {
+            background: linear-gradient(90deg, #64b5f6, #1565c0, #64b5f6);
+        }
+
+        body.dark-mode .btn-back {
+            color: #90caf9;
+        }
+
+        body.dark-mode .btn-back:hover {
+            color: #64b5f6;
         }
 
         body.dark-mode .legal-container h1,
         body.dark-mode .legal-container h2 {
-            color: #0d47a1;
+            color: #90caf9;
+        }
+
+        body.dark-mode .legal-container h2 {
+            border-bottom-color: rgba(100, 181, 246, 0.18);
+        }
+
+        body.dark-mode .legal-container h2::after {
+            background: #64b5f6;
+        }
+
+        body.dark-mode .legal-container p,
+        body.dark-mode .legal-container li {
+            color: #d1d9e6;
+        }
+
+        body.dark-mode .legal-container li::marker {
+            color: #64b5f6;
+        }
+
+        body.dark-mode .legal-container strong {
+            color: #90caf9;
         }
 
         body.dark-mode .legal-updated {
-            color: #607d8b;
+            color: #94a3b8;
+            background: rgba(100, 181, 246, 0.08);
+            border-color: rgba(100, 181, 246, 0.16);
         }
 
+        body.dark-mode .legal-container a {
+            color: #64b5f6;
+            border-bottom-color: rgba(100, 181, 246, 0.35);
+        }
+
+        body.dark-mode .legal-container a:hover {
+            color: #90caf9;
+            border-bottom-color: #90caf9;
+        }
+
+        body.dark-mode .legal-container .contact-card {
+            background: rgba(100, 181, 246, 0.07);
+            border-color: rgba(100, 181, 246, 0.18);
+            border-left-color: #64b5f6;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 768px) {
             .legal-container {
-                padding: 28px 22px 44px;
+                padding: 30px 24px 48px;
                 margin: 24px 14px;
+                border-radius: 14px;
             }
-            .legal-container h1 { font-size: 1.7rem; }
-            .legal-container h2 { font-size: 1.2rem; }
+
+            .legal-container h1 {
+                font-size: 1.8rem;
+            }
+
+            .legal-container h2 {
+                font-size: 1.25rem;
+            }
         }
 
         @media (max-width: 480px) {
-            .legal-container h1 { font-size: 1.5rem; }
-            .legal-container h2 { font-size: 1.1rem; }
+            .legal-container {
+                padding: 24px 18px 40px;
+            }
+
+            .legal-container h1 {
+                font-size: 1.6rem;
+            }
+
+            .legal-container h2 {
+                font-size: 1.15rem;
+            }
         }
     </style>
 </head>
 <body>
 
+<div id="g_id_onload"
+    data-client_id="{{ google_client_id }}"
+    data-callback="handleCredentialResponse">
+</div>
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+    <div id="patient-flashes-data" 
+         data-flashes="{{ messages | tojson }}"
+         style="display: none;"></div>
+    {% endif %}
+{% endwith %}
+
+<div class="toast-container" id="toast-container"></div>
+
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=2"></script>
+
 {% set active_page = 'privacy' %}
 {% include '_patient_header.html' %}
 
 <main class="legal-container">
+    <a href="/" class="btn-back">
+        <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span> Back to Home
+    </a>
+
     <h1>Privacy Policy</h1>
     <p class="legal-updated">Last updated: {{ last_updated }}</p>
 
@@ -227,13 +347,75 @@
     <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last updated" date.</p>
 
     <h2>9. Contact Us</h2>
-    <p>
+    <p class="contact-card">
         Capizonda Dental Clinic<br>
         231 Lopez Jaena St, Molo, Iloilo City, 5000<br>
         Email: capizondadental@gmail.com<br>
         Phone: 0962 687 6076
     </p>
 </main>
+
+<footer class="main-footer">
+    <div class="footer-grid">
+        <div class="footer-brand">
+            <a href="/" class="logo-container footer-logo" aria-label="Capizonda Dental Clinic - Home">
+                <span class="sidebar-logo" aria-hidden="true">
+                    <img class="sidebar-logo__img sidebar-logo__img--light"
+                        src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                    <img class="sidebar-logo__img sidebar-logo__img--dark"
+                        src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+                </span>
+                <div class="logo-text">
+                    <span class="brand-name">CAPIZONDA</span>
+                    <span class="brand-sub">DENTAL CLINIC</span>
+                </div>
+            </a>
+            <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
+        </div>
+
+        <div class="footer-contact">
+            <h4>CONTACT US</h4>
+            <ul>
+                <li>
+                    <span class="material-symbols-rounded footer-icon">location_on</span>
+                    231 Lopez Jaena St, Molo, Iloilo City
+                </li>
+                <li>
+                    <span class="material-symbols-rounded footer-icon">phone</span>
+                    0962 687 6076
+                </li>
+                <li>
+                    <span class="material-symbols-rounded footer-icon">email</span>
+                    capizondadental@gmail.com
+                </li>
+            </ul>
+        </div>
+
+        <div class="footer-socials">
+            <h4>FOLLOW US</h4>
+            <div class="social-links">
+                <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank" rel="noopener">
+                    <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Facebook Page
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="footer-copy">
+            &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
+        </div>
+        <div class="footer-legal">
+            <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+            <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
+        </div>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/patient-shell.js') }}"></script>
+
+{% include '_auth_modals.html' %}
 
 </body>
 </html>

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Capizonda Dental Clinic</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
@@ -24,7 +24,7 @@
 
 <div class="toast-container" id="toast-container"></div>
 
-<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
+<script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=2"></script>
 
 
     <div id="g_id_onload"
@@ -61,7 +61,7 @@
                     <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
                     <a href="/services/root-canal">Root Canal Treatment</a>
                     <a href="/services/xray">Periapical Xray</a>
-                    <a href="/services/xray">Orthodontic Braces</a>
+                    <a href="/services/orthodontic-braces">Orthodontic Braces</a>
                 </div>
             </li>
             <li><a href="/location">LOCATION</a></li>
@@ -520,6 +520,11 @@
                 </svg>
             </button>
 
+        <div class="auth-warning">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>PLEASE USE REAL ACCOUNT/NAME IN USING GMAIL</span>
+        </div>
+
         <h2>Welcome Back</h2>
 
         <form action="/login" method="POST" id="loginForm" novalidate>
@@ -549,6 +554,7 @@
 
         <script>
             document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
                 // Custom validation for required fields
                 const emailInput = document.getElementById('loginEmail');
                 const passwordInput = this.querySelector('input[name="Password"]');
@@ -581,7 +587,11 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = data.redirect || '/';
+                        if (data.name) {
+                            showToastAfterReload('Welcome back, ' + data.name + '!', 'success', data.redirect || '/');
+                        } else {
+                            window.location.href = data.redirect || '/';
+                        }
                     } else {
                         errorDiv.textContent = data.message || 'Login failed. Please try again.';
                         errorDiv.style.display = 'block';
@@ -654,6 +664,10 @@
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
+        <div class="auth-warning">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>PLEASE PUT REAL CREDENTIALS</span>
+        </div>
         <h2>Create Account</h2>
         <form id="signupForm" novalidate>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -707,6 +721,8 @@
 
 
 
+<script type="application/json" id="firebase-config-json">{{ firebase_config | tojson }}</script>
+
 <script type="module">
 
 import { initializeApp } from
@@ -721,10 +737,12 @@ sendPasswordResetEmail
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 
-const firebaseConfig = {{ firebase_config | tojson }};
+const firebaseConfig = JSON.parse(document.getElementById('firebase-config-json').textContent);
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const firebaseReady = !!(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
+
+const app = firebaseReady ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
 
 
 // ===============================
@@ -739,6 +757,11 @@ sendResetBtn.addEventListener("click", async () => {
 
     if (email === "") {
         showToast("Please enter your email.", "warning");
+        return;
+    }
+
+    if (!auth) {
+        showToast("Email service is not configured. Please contact the clinic directly.", "error");
         return;
     }
 
@@ -824,6 +847,11 @@ signupForm.addEventListener("submit", async (e) => {
 
     if (password !== confirmPassword) {
         showToast("Passwords do not match.", "error");
+        return;
+    }
+
+    if (!auth) {
+        showToast("Account creation is not configured. Please contact the clinic directly.", "error");
         return;
     }
 

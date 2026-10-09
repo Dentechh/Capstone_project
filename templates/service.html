@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ service.title }} | Capizonda Dental Clinic</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/service.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
 
     <div class="toast-container" id="toast-container"></div>
 
-    <script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=1"></script>
+    <script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=2"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -106,10 +106,18 @@ document.addEventListener('DOMContentLoaded', function() {
     <footer class="main-footer">
         <div class="footer-grid">
             <div class="footer-brand">
-                <div class="logo-text">
-                    <span class="brand-name">CAPIZONDA DENTAL</span>
-                    <span class="brand-sub">Trusted Care Since 2024</span>
-                </div>
+                <a href="/" class="logo-container footer-logo" aria-label="Capizonda Dental Clinic - Home">
+                    <span class="sidebar-logo" aria-hidden="true">
+                        <img class="sidebar-logo__img sidebar-logo__img--light"
+                            src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                        <img class="sidebar-logo__img sidebar-logo__img--dark"
+                            src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+                    </span>
+                    <div class="logo-text">
+                        <span class="brand-name">CAPIZONDA</span>
+                        <span class="brand-sub">DENTAL CLINIC</span>
+                    </div>
+                </a>
                 <p class="footer-tagline">Providing quality dental care in the heart of Molo, Iloilo City.</p>
             </div>
 
@@ -117,15 +125,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h4>CONTACT US</h4>
                 <ul>
                     <li>
-                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                        <span class="material-symbols-rounded footer-icon">location_on</span>
                         231 Lopez Jaena St, Molo, Iloilo City
                     </li>
                     <li>
-                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.94 19.94 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.94 19.94 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        <span class="material-symbols-rounded footer-icon">phone</span>
                         0962 687 6076
                     </li>
                     <li>
-                        <svg class="footer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <span class="material-symbols-rounded footer-icon">email</span>
                         capizondadental@gmail.com
                     </li>
                 </ul>
@@ -134,8 +142,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="footer-socials">
                 <h4>FOLLOW US</h4>
                 <div class="social-links">
-                    <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank">
-                        <img src="https://img.icons8.com/ios-filled/50/blue/facebook--v1.png" alt="Facebook" style="width: 24px;">
+                    <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank" rel="noopener">
+                        <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                         Facebook Page
                     </a>
                 </div>
@@ -147,8 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
             </div>
             <div class="footer-legal">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
+                <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+                <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
             </div>
         </div>
     </footer>
@@ -267,58 +275,106 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 
     <!-- Login/Register Modals -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content auth-card">
+<div id="loginModal" class="modal">
+    <div class="modal-content auth-card">
             <button class="close" onclick="closeAuthModal('loginModal')" aria-label="Close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
-            <h2>Welcome Back</h2>
-            <form action="/login" method="POST" id="loginForm" novalidate>
+
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
+        <div class="auth-warning">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>PLEASE USE REAL ACCOUNT/NAME IN USING GMAIL</span>
+        </div>
+
+        <h2>Welcome Back</h2>
+        <p class="register-subtitle">Sign in to your account</p>
+
+        <form action="/login" method="POST" id="loginForm" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="login-error" id="loginError"></div>
-            <input type="email" name="email" placeholder="Email" required>
-            <div class="password-wrapper">
-                <input type="password" name="Password" placeholder="Password" required>
-                <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                </button>
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" name="email" placeholder="Email" required>
+                <div class="field-error" id="loginEmailError"></div>
             </div>
-            <button type="submit" id="loginBtn"  class="sign-up-btn">Login</button>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="loginPassword" name="Password" placeholder="Password" required>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="field-error" id="loginPasswordError"></div>
+            </div>
+
+            <button type="submit" id="loginBtn" class="sign-up-btn">
+                Login
+            </button>
         </form>
 
         <script>
             document.getElementById('loginForm').addEventListener('submit', function(e) {
-                // Custom validation for required fields
-                const emailInput = this.querySelector('input[name="email"]');
-                const passwordInput = this.querySelector('input[name="Password"]');
-                
+                e.preventDefault();
+                const emailInput = document.getElementById('loginEmail');
+                const passwordInput = document.getElementById('loginPassword');
+                const emailError = document.getElementById('loginEmailError');
+                const passwordError = document.getElementById('loginPasswordError');
+                const formError = document.getElementById('loginError');
+
+                let hasError = false;
+
+                // Clear previous errors
+                emailError.textContent = '';
+                emailError.style.display = 'none';
+                emailInput.classList.remove('input-error');
+                passwordError.textContent = '';
+                passwordError.style.display = 'none';
+                passwordInput.classList.remove('input-error');
+                formError.textContent = '';
+                formError.style.display = 'none';
+
                 if (!emailInput.value.trim()) {
                     e.preventDefault();
-                    showToast('! Please fill out this field', 'warning');
+                    emailError.textContent = 'Please enter your email';
+                    emailError.style.display = 'block';
+                    emailInput.classList.add('input-error');
                     emailInput.focus();
-                    return;
+                    hasError = true;
                 }
                 if (!passwordInput.value) {
                     e.preventDefault();
-                    showToast('! Please fill out this field', 'warning');
-                    passwordInput.focus();
-                    return;
+                    passwordError.textContent = 'Please enter your password';
+                    passwordError.style.display = 'block';
+                    passwordInput.classList.add('input-error');
+                    if (!hasError) passwordInput.focus();
+                    hasError = true;
                 }
-                
-                const errorDiv = document.getElementById('loginError');
-                errorDiv.style.display = 'none';
-                errorDiv.textContent = '';
+
+                if (hasError) return;
 
                 const formData = new FormData(this);
                 fetch('/login', {
@@ -331,15 +387,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = data.redirect || '/';
+                        if (data.name) {
+                            showToastAfterReload('Welcome back, ' + data.name + '!', 'success', data.redirect || '/');
+                        } else {
+                            window.location.href = data.redirect || '/';
+                        }
                     } else {
-                        errorDiv.textContent = data.message || 'Login failed. Please try again.';
-                        errorDiv.style.display = 'block';
+                        formError.textContent = data.message || 'Login failed. Please try again.';
+                        formError.style.display = 'block';
                     }
                 })
                 .catch(() => {
-                    errorDiv.textContent = 'Something went wrong. Please try again.';
-                    errorDiv.style.display = 'block';
+                    formError.textContent = 'Something went wrong. Please try again.';
+                    formError.style.display = 'block';
                 });
             });
         </script>
@@ -349,17 +409,22 @@ document.addEventListener('DOMContentLoaded', function() {
         </p>
 
         <div class="divider">OR</div>
-        
+
         <div style="display: flex; justify-content: center; margin-bottom: 20px;">
             <div class="g_id_signin" data-type="standard"></div>
         </div>
 
         <p class="footer-text">
-            Don't have an account yet? 
-            <a href="javascript:void(0)" onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">Create an Account</a>
+            Don't have an account yet?
+            <a href="javascript:void(0)"
+               onclick="closeAuthModal('loginModal'); openAuthModal('registerModal');">
+                Create an Account
+            </a>
         </p>
     </div>
 </div>
+
+
 
 <!-- Forgot Password Modal -->
 <div id="forgotPasswordModal" class="modal">
@@ -370,183 +435,418 @@ document.addEventListener('DOMContentLoaded', function() {
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
             </button>
+
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
         <h2>Forgot Password</h2>
-        <p>Enter your email address to receive a password reset link.</p>
-        <input type="email" id="resetEmail" placeholder="Enter your email" required>
-        <button type="button" id="sendResetBtn" class="sign-up-btn">Send Reset Link</button>
+        <p class="register-subtitle">Enter your email to reset your password</p>
+
+        <form id="forgotPasswordForm" novalidate>
+            <div class="form-group">
+                <label for="resetEmail">Email</label>
+                <input type="email" id="resetEmail" name="email" placeholder="Enter your email" required>
+                <div class="field-error" id="resetEmailError"></div>
+            </div>
+
+            <div class="form-error" id="forgotPasswordError"></div>
+
+            <button type="button" id="sendResetBtn" class="sign-up-btn">
+                Send Reset Link
+            </button>
+        </form>
     </div>
 </div>
 
 <div id="registerModal" class="modal">
     <div class="modal-content auth-card">
-            <button class="close" onclick="closeAuthModal('registerModal')" aria-label="Close">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
+        <button class="close" onclick="closeAuthModal('registerModal')" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="login-header">
+            <span class="sidebar-logo" aria-hidden="true">
+                <img class="sidebar-logo__img sidebar-logo__img--light"
+                    src="{{ url_for('static', filename='img/logo_lightMode.png') }}" alt="">
+                <img class="sidebar-logo__img sidebar-logo__img--dark"
+                    src="{{ url_for('static', filename='img/logo_darkMode.png') }}" alt="">
+            </span>
+            <h1 class="brand-name">CAPIZONDA</h1>
+            <p class="brand-sub">DENTAL CLINIC</p>
+        </div>
+
+        <div class="auth-warning">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <span>PLEASE PUT REAL CREDENTIALS</span>
+        </div>
+
         <h2>Create Account</h2>
-                <form id="signupForm" action="/sign-up" method="POST" novalidate>
 
-    <div style="display:flex; gap:10px;">
-        <input type="text" name="FirstName" placeholder="First Name" required>
-        <input type="text" name="LastName" placeholder="Last Name" required>
-    </div>
+        <form id="signupForm" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <input type="email" id="email" name="UserName" placeholder="Email" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="regFirstName">First Name</label>
+                    <input type="text" id="regFirstName" name="FirstName" placeholder="First Name" required>
+                    <div class="field-error" id="regFirstNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="regLastName">Last Name</label>
+                    <input type="text" id="regLastName" name="LastName" placeholder="Last Name" required>
+                    <div class="field-error" id="regLastNameError"></div>
+                </div>
+            </div>
 
-    <div class="password-wrapper">
-        <input type="password" id="password" name="Password" placeholder="Password" minlength="8" required>
-        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-            </svg>
-        </button>
-    </div>
+            <div class="form-group">
+                <label for="regEmail">Email</label>
+                <input type="email" id="regEmail" name="UserName" placeholder="Email" required>
+                <div class="field-error" id="regEmailError"></div>
+            </div>
 
-    <div class="password-wrapper">
-        <input type="password" id="confirmPassword" name="ConfirmPassword" placeholder="Confirm Password" minlength="8" required>
-        <button type="button" class="toggle-password" aria-label="Toggle password visibility">
-            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
-                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-            </svg>
-        </button>
-    </div>
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="regPassword" name="Password" placeholder="Create a password" required minlength="8" maxlength="16">
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="password-requirements" id="passwordRequirements">
+                    <span class="req-item" data-req="length">8-16 characters</span>
+                    <span class="req-item" data-req="uppercase">Uppercase letter</span>
+                    <span class="req-item" data-req="lowercase">Lowercase letter</span>
+                    <span class="req-item" data-req="number">Number</span>
+                    <span class="req-item" data-req="special">Special character</span>
+                </div>
+                <div class="field-error" id="regPasswordError"></div>
+            </div>
 
-    <input type="tel" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
+            <div class="form-group">
+                <label for="regConfirmPassword">Confirm Password</label>
+                <div class="password-wrapper">
+                    <input type="password" id="regConfirmPassword" name="ConfirmPassword" placeholder="Confirm your password" required minlength="8" maxlength="16">
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path>
+                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path>
+                            <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="password-match-message" id="passwordMatchMessage"></div>
+                <div class="field-error" id="regConfirmPasswordError"></div>
+            </div>
 
-    <button type="submit" id="signupBtn" class="sign-up-btn">
-        Sign Up
-    </button>
+            <div class="form-group">
+                <label for="regMobileNumber">Contact Number</label>
+                <input type="tel" id="regMobileNumber" name="MobileNumber" placeholder="Contact Number" required pattern="09[0-9]{9}" maxlength="11">
+                <div class="field-error" id="regMobileNumberError"></div>
+            </div>
 
-</form>
+            <button type="submit" id="signupBtn" class="sign-up-btn">
+                Create Account
+            </button>
 
-<div class="divider">OR</div>
-
-<p class="footer-text">
-    Already have an account? 
-    <a href="javascript:void(0)" onclick="closeAuthModal('registerModal'); openAuthModal('loginModal');">Log In</a>
-</p>
+        </form>
 
 
+<script type="application/json" id="firebase-config-json">{{ firebase_config | tojson }}</script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+getAuth,
+createUserWithEmailAndPassword,
+sendEmailVerification,
+sendPasswordResetEmail
+} from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-const firebaseConfig = {{ firebase_config | tojson }};
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const firebaseConfig = JSON.parse(document.getElementById('firebase-config-json').textContent);
 
-document.getElementById("signupBtn").addEventListener("click", (e) => {
-    e.preventDefault();
+const firebaseReady = !!(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 
-    const firstName = document.querySelector('#signupForm input[name="FirstName"]').value.trim();
-    const lastName = document.querySelector('#signupForm input[name="LastName"]').value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-    const mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value.trim();
+const app = firebaseReady ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
 
-    // Check required fields
-    if (!firstName) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="FirstName"]').focus();
-        return;
-    }
-    if (!lastName) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="LastName"]').focus();
-        return;
-    }
-    if (!email) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("email").focus();
-        return;
-    }
-    if (!password) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("password").focus();
-        return;
-    }
-    if (!confirmPassword) {
-        showToast('! Please fill out this field', 'warning');
-        document.getElementById("confirmPassword").focus();
-        return;
-    }
-    if (!mobileNumber) {
-        showToast('! Please fill out this field', 'warning');
-        document.querySelector('#signupForm input[name="MobileNumber"]').focus();
+
+// ===============================
+// FORGOT PASSWORD
+// ===============================
+
+const sendResetBtn = document.getElementById("sendResetBtn");
+
+sendResetBtn.addEventListener("click", async () => {
+
+    const emailInput = document.getElementById("resetEmail");
+    const emailError = document.getElementById("resetEmailError");
+    const formError = document.getElementById("forgotPasswordError");
+    const email = emailInput.value.trim();
+
+    // Clear previous errors
+    emailError.textContent = '';
+    emailError.style.display = 'none';
+    emailInput.classList.remove('input-error');
+    formError.textContent = '';
+    formError.style.display = 'none';
+
+    if (email === "") {
+        emailError.textContent = 'Please enter your email';
+        emailError.style.display = 'block';
+        emailInput.classList.add('input-error');
+        emailInput.focus();
         return;
     }
 
-    if (password !== confirmPassword) {
-        showToast("Passwords do not match.", "error");
+    if (!auth) {
+        formError.textContent = "Email service is not configured. Please contact the clinic directly.";
+        formError.style.display = 'block';
         return;
     }
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+    try {
 
-          showToast("Account created!", "success");
-          console.log(userCredential.user);
+        await sendPasswordResetEmail(auth, email);
 
-      })
-      .catch((error) => {
+        showToast("Password reset email has been sent. Please check your spam folder.", "success");
 
-          console.log(error.code);
-          console.log(error.message);
+        document.getElementById("resetEmail").value = "";
 
-          showToast(error.message, "error");
-      });
+        closeAuthModal("forgotPasswordModal");
+
+    } catch (error) {
+
+        if (error.code === "auth/user-not-found") {
+            formError.textContent = "No account found with this email.";
+            formError.style.display = 'block';
+        }
+        else if (error.code === "auth/invalid-email") {
+            formError.textContent = "Invalid email address.";
+            formError.style.display = 'block';
+        }
+        else if (error.code === "auth/too-many-requests") {
+            formError.textContent = "Too many requests. Please try again later.";
+            formError.style.display = 'block';
+        }
+        else {
+            formError.textContent = error.message;
+            formError.style.display = 'block';
+        }
+
+    }
 
 });
 
-const sendResetBtn = document.getElementById("sendResetBtn");
-if (sendResetBtn) {
-    sendResetBtn.addEventListener("click", async () => {
-        const email = document.getElementById("resetEmail").value.trim();
-        if (email === "") {
-            showToast("Please enter your email.", "warning");
-            return;
-        }
-        try {
-            await sendPasswordResetEmail(auth, email);
-            showToast("Password reset email has been sent. Please check your spam folder.", "success");
-            document.getElementById("resetEmail").value = "";
-            closeAuthModal("forgotPasswordModal");
-        } catch (error) {
-            if (error.code === "auth/user-not-found") {
-                showToast("No account found with this email.", "error");
-            } else {
-                showToast(error.message, "error");
-            }
-        }
+
+
+// ======================
+// SIGN UP
+// ======================
+
+const signupForm = document.getElementById("signupForm");
+
+signupForm.addEventListener("submit", async (e) => {
+
+    e.preventDefault();
+
+    let firstName = document.querySelector('#signupForm input[name="FirstName"]').value.trim();
+    let lastName = document.querySelector('#signupForm input[name="LastName"]').value.trim();
+    let email = document.getElementById("regEmail").value.trim();
+    let password = document.getElementById("regPassword").value;
+    let confirmPassword = document.getElementById("regConfirmPassword").value;
+    let mobileNumber = document.querySelector('#signupForm input[name="MobileNumber"]').value.trim();
+
+    // Clear all previous errors
+    const errorElements = document.querySelectorAll('#signupForm .field-error');
+    const inputElements = document.querySelectorAll('#signupForm input');
+    errorElements.forEach(el => {
+        el.textContent = '';
+        el.style.display = 'none';
     });
-}
+    inputElements.forEach(el => el.classList.remove('input-error'));
+
+    let hasError = false;
+    let firstErrorInput = null;
+
+    // Check required fields with inline errors
+    if (!firstName) {
+        const errorEl = document.getElementById('regFirstNameError');
+        const inputEl = document.getElementById('regFirstName');
+        errorEl.textContent = 'Please enter your first name';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        firstErrorInput = inputEl;
+        hasError = true;
+    }
+    if (!lastName) {
+        const errorEl = document.getElementById('regLastNameError');
+        const inputEl = document.getElementById('regLastName');
+        errorEl.textContent = 'Please enter your last name';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+    if (!email) {
+        const errorEl = document.getElementById('regEmailError');
+        const inputEl = document.getElementById('regEmail');
+        errorEl.textContent = 'Please enter your email';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+    if (!password) {
+        const errorEl = document.getElementById('regPasswordError');
+        const inputEl = document.getElementById('regPassword');
+        errorEl.textContent = 'Please enter a password';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+    if (!confirmPassword) {
+        const errorEl = document.getElementById('regConfirmPasswordError');
+        const inputEl = document.getElementById('regConfirmPassword');
+        errorEl.textContent = 'Please confirm your password';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+    if (!mobileNumber) {
+        const errorEl = document.getElementById('regMobileNumberError');
+        const inputEl = document.getElementById('regMobileNumber');
+        errorEl.textContent = 'Please enter your contact number';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+
+    // Password validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+    if (password && !passwordRegex.test(password)) {
+        const errorEl = document.getElementById('regPasswordError');
+        const inputEl = document.getElementById('regPassword');
+        errorEl.textContent = 'Password must be 8-16 chars with uppercase, lowercase, number, and special character';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+
+    // Confirm password match
+    if (password && confirmPassword && password !== confirmPassword) {
+        const errorEl = document.getElementById('regConfirmPasswordError');
+        const inputEl = document.getElementById('regConfirmPassword');
+        errorEl.textContent = 'Passwords do not match';
+        errorEl.style.display = 'block';
+        inputEl.classList.add('input-error');
+        if (!firstErrorInput) firstErrorInput = inputEl;
+        hasError = true;
+    }
+
+    if (hasError) {
+        if (firstErrorInput) firstErrorInput.focus();
+        return;
+    }
+
+    if (!auth) {
+        showToast("Account creation is not configured. Please contact the clinic directly.", "error");
+        return;
+    }
+
+    try {
+
+        const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+        );
+
+        await sendEmailVerification(userCredential.user);
+
+        await auth.signOut();
+
+        const response = await fetch('/sign-up', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: new URLSearchParams({
+                FirstName: firstName,
+                LastName: lastName,
+                UserName: email,
+                MobileNumber: mobileNumber,
+                Password: password
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+
+        showToastAfterReload("Account created! Verification email sent - please check your inbox (and spam folder).", "success", "/");
+
+    } catch (error) {
+
+        showToast(error.message, "error");
+
+    }
+
+});
+
 </script>
 
-        <script>
+        <!-- Sign-up is handled by the standard form POST to /sign-up -->
+
+        <div class="divider">OR</div>
+
+        <!--
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div class="g_id_signin" data-type="standard" data-text="signup_with"></div>
+        </div>
+        -->
+
+        <p class="footer-text">
+            Already have an account?
+            <a href="javascript:void(0)" onclick="closeAuthModal('registerModal'); openAuthModal('loginModal');">Log In</a>
+        </p>
+    </div>
+</div>
+
+<script>
 
 function handleCredentialResponse(response) {
 

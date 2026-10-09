@@ -31,6 +31,7 @@
                     <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
                     <a href="/services/root-canal">Root Canal Treatment</a>
                     <a href="/services/xray">Periapical Xray</a>
+                    <a href="/services/orthodontic-braces">Orthodontic Braces</a>
                 </div>
             </li>
             <li><a href="/location" {% if active_page == 'location' %}class="active"{% endif %}><span class="material-symbols-rounded nav-item__icon" aria-hidden="true">location_on</span>LOCATION</a></li>
@@ -91,10 +92,17 @@
 
                 <div class="profile-img-container" id="profileDropdownTrigger">
                     <img src="{% if user is defined and user.get('profile_pic') %}{{ user.get('profile_pic') }}{% elif profile_pic %}{{ profile_pic }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img" id="navProfilePic">
-                
+                    
                     <div class="dropdown-menu" id="profileDropdown">
-                        <a href="/patient-profile">PROFILE</a>
-                        <a href="/logout">LOGOUT</a>
+                        <div class="dropdown-menu__head">
+                            <span class="material-symbols-rounded dropdown-menu__head-icon" aria-hidden="true">account_circle</span>
+                            <span class="dropdown-menu__head-text">
+                                <span class="dropdown-menu__head-name">{{ name if name else 'Patient' }}</span>
+                                <span class="dropdown-menu__head-sub">Patient Account</span>
+                            </span>
+                        </div>
+                        <a href="/patient-profile"><span class="material-symbols-rounded dropdown-menu__icon" aria-hidden="true">person</span>Profile</a>
+                        <a href="/logout"><span class="material-symbols-rounded dropdown-menu__icon" aria-hidden="true">logout</span>Logout</a>
                     </div>
                 </div>
             </div>

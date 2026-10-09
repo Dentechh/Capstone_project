@@ -368,41 +368,96 @@ body.dark-mode .profile-img:hover {
 }
 
 .dropdown-menu {
+    display: flex;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
     position: absolute;
     top: 50px;
     right: 0;
-    background: rgb(255, 255, 255);
-    min-width: 160px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    display: none;
+    background: var(--white);
+    min-width: 210px;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(13, 71, 161, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
     flex-direction: column;
     overflow: hidden;
-    z-index: 2000;
+    z-index: 3000;
     transform-origin: top right;
-    opacity: 0;
     transform: translateY(-8px) scale(0.96);
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    border-top: 3px solid var(--navy);
+    padding: 6px 0;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease;
 }
 
 .dropdown-menu.show {
-    display: flex;
+    visibility: visible;
     opacity: 1;
+    pointer-events: auto;
     transform: translateY(0) scale(1);
 }
 
-.dropdown-menu a {
-    padding: 10px 16px;
-    text-decoration: none;
-    color: var(--navy);
-    font-weight: 600;
-    font-size: 14px;
-    transition: background 0.2s;
-    border-bottom: 1px solid #eee;
+.dropdown-menu__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 22px;
+    border-bottom: 1px solid rgba(13, 71, 161, 0.12);
+    background: rgba(13, 71, 161, 0.04);
 }
 
-.dropdown-menu a:last-child { border-bottom: none; color: #ff4d4d; }
-.dropdown-menu a:hover { background: #f8f9fa; }
+.dropdown-menu__head-icon {
+    font-size: 28px;
+    color: var(--navy);
+}
+
+.dropdown-menu__head-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dropdown-menu__head-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dropdown-menu__head-sub {
+    font-size: 12px;
+    color: rgba(13, 71, 161, 0.6);
+}
+
+.dropdown-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 22px;
+    text-decoration: none;
+    color: var(--navy);
+    font-weight: 500;
+    font-size: 15px;
+    background-color: transparent;
+    border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+    transition: all 0.2s ease;
+}
+
+.dropdown-menu a:last-child {
+    border-bottom: none;
+    color: #ff4d4d;
+}
+
+.dropdown-menu a:hover {
+    background: linear-gradient(90deg, rgba(13, 71, 161, 0.10) 0%, rgba(13, 71, 161, 0.03) 100%);
+    padding-left: 28px;
+}
+
+.dropdown-menu__icon {
+    font-size: 20px;
+    color: inherit;
+}
 
 body.dark-mode .dropdown-menu {
     background: #1e1e1e;
@@ -419,6 +474,20 @@ body.dark-mode .dropdown-menu a:last-child {
 
 body.dark-mode .dropdown-menu a:hover {
     background: #2d2d2d;
+}
+
+body.dark-mode .dropdown-menu__head {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom-color: #333;
+}
+
+body.dark-mode .dropdown-menu__head-icon,
+body.dark-mode .dropdown-menu__head-name {
+    color: #e0e0e0;
+}
+
+body.dark-mode .dropdown-menu__head-sub {
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Hamburger Menu */
@@ -655,41 +724,96 @@ body.dark-mode .hamburger span {
         }
 
         .dropdown-menu {
+            display: flex;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
             position: absolute;
             top: 50px;
             right: 0;
-            background: rgb(255, 255, 255);
-            min-width: 160px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            display: none;
+            background: var(--white);
+            min-width: 210px;
+            border-radius: 14px;
+            box-shadow: 0 16px 40px rgba(13, 71, 161, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
             flex-direction: column;
             overflow: hidden;
-            z-index: 2000;
+            z-index: 3000;
             transform-origin: top right;
-            opacity: 0;
             transform: translateY(-8px) scale(0.96);
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            border-top: 3px solid var(--navy);
+            padding: 6px 0;
+            transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease;
         }
 
         .dropdown-menu.show {
-            display: flex;
+            visibility: visible;
             opacity: 1;
+            pointer-events: auto;
             transform: translateY(0) scale(1);
         }
 
-        .dropdown-menu a {
-            padding: 10px 16px;
-            text-decoration: none;
-            color: var(--navy);
-            font-weight: 600;
-            font-size: 14px;
-            transition: background 0.2s;
-            border-bottom: 1px solid #eee;
+        .dropdown-menu__head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 22px;
+            border-bottom: 1px solid rgba(13, 71, 161, 0.12);
+            background: rgba(13, 71, 161, 0.04);
         }
 
-        .dropdown-menu a:last-child { border-bottom: none; color: #ff4d4d; }
-        .dropdown-menu a:hover { background: #f8f9fa; }
+        .dropdown-menu__head-icon {
+            font-size: 28px;
+            color: var(--navy);
+        }
+
+        .dropdown-menu__head-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .dropdown-menu__head-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--navy);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .dropdown-menu__head-sub {
+            font-size: 12px;
+            color: rgba(13, 71, 161, 0.6);
+        }
+
+        .dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 22px;
+            text-decoration: none;
+            color: var(--navy);
+            font-weight: 500;
+            font-size: 15px;
+            background-color: transparent;
+            border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-menu a:last-child {
+            border-bottom: none;
+            color: #ff4d4d;
+        }
+
+        .dropdown-menu a:hover {
+            background: linear-gradient(90deg, rgba(13, 71, 161, 0.10) 0%, rgba(13, 71, 161, 0.03) 100%);
+            padding-left: 28px;
+        }
+
+        .dropdown-menu__icon {
+            font-size: 20px;
+            color: inherit;
+        }
 
         body.dark-mode .dropdown-menu {
             background: #1e1e1e;
@@ -773,14 +897,51 @@ body.dark-mode .hamburger span {
              font-size: inherit;
          }
 
-         body.dark-mode .profile-nav {
-             border-left: 1px solid rgba(255,255,255,0.1);
+          body.dark-mode .profile-nav {
+              border-left: 1px solid rgba(255,255,255,0.1);
 
-         }
+          }
 
-         body.dark-mode .auth-buttons {
-             gap: 12px;
-         }
+          /* Desktop Auth Buttons (Login / Register) */
+          .auth-buttons {
+              display: flex;
+              gap: 15px;
+              align-items: center;
+          }
+
+          .btn-login,
+          .btn-register {
+              text-decoration: none;
+              padding: 10px 25px;
+              border-radius: 12px;
+              font-weight: 600;
+              transition: 0.3s;
+              font-size: 16px;
+          }
+
+          .btn-login {
+              color: black;
+              border: 1px solid rgba(0, 0, 0, 0.4);
+          }
+
+          .btn-login:hover {
+              background: rgba(255, 255, 255, 0.1);
+          }
+
+          .btn-register {
+              background: var(--grad-gold);
+              color: white;
+              box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+          }
+
+          .btn-register:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba(0, 204, 255, 0.4);
+          }
+
+          body.dark-mode .auth-buttons {
+              gap: 12px;
+          }
 
 body.dark-mode .btn-login {
             color: #e0e0e0;
@@ -864,10 +1025,10 @@ body.dark-mode .btn-login {
               color: #64b5f6;
           }
 
-         body.dark-mode .dropdown-menu {
-             background: #1e1e1e;
-             transition: background 0.3s ease;
-         }
+          body.dark-mode .dropdown-menu {
+              background: #1e1e1e;
+              transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease, background 0.3s ease;
+          }
 
          body.dark-mode .dropdown-menu a {
              color: #e0e0e0;
@@ -884,11 +1045,11 @@ body.dark-mode .btn-login {
              color: #ef5350;
          }
 
-         body.dark-mode .dropdown-content {
-             background-color: var(--black);
-             border-top-color: #64b5f6;
-             transition: background 0.3s ease;
-         }
+          body.dark-mode .dropdown-content {
+              background-color: var(--black);
+              border-top-color: #64b5f6;
+              transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease, background 0.3s ease;
+          }
 
          body.dark-mode .dropdown-content a {
              color: #e0e0e0 !important;
@@ -897,10 +1058,10 @@ body.dark-mode .btn-login {
              transition: all 0.3s ease;
          }
 
-         body.dark-mode .dropdown-content a:hover {
-             background: #2d2d2d;
-             color: #64b5f6 !important;
-         }
+          body.dark-mode .dropdown-content a:hover {
+              background: rgba(100, 181, 246, 0.12);
+              color: #64b5f6 !important;
+          }
 
           body.dark-mode .chatbot-launcher {
               background: var(--gold);
@@ -1077,12 +1238,8 @@ body.dark-mode .btn-login {
          .footer-socials h4,
          .footer-contact li,
          .social-links a,
-         .footer-legal a,
-         .dropdown-menu,
-         .dropdown-menu a,
-         .dropdown-content,
-         .dropdown-content a,
-          .chatbot-window,
+          .footer-legal a,
+           .chatbot-window,
           .chatbot-messages,
           .message.bot,
           .message.user,
@@ -2062,6 +2219,44 @@ body.dark-mode .auth-card .close:hover {
     background: #64b5f6;
     border-color: #64b5f6;
     color: #000;
+}
+
+/* Real-credentials warning banner for auth modals */
+.auth-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(224, 168, 0, 0.5);
+    border-left: 4px solid #e0a800;
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin: 0 0 20px;
+    color: #7a5c00;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.45;
+    letter-spacing: 0.3px;
+    text-align: left;
+}
+
+.auth-warning svg {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    color: #e0a800;
+}
+
+body.dark-mode .auth-warning {
+    background: rgba(255, 193, 7, 0.14);
+    border-color: rgba(255, 193, 7, 0.4);
+    border-left-color: #ffc107;
+    color: #ffd54f;
+}
+
+body.dark-mode .auth-warning svg {
+    color: #ffc107;
 }
 
 body.dark-mode .appointment-modal-content .consent-sidebar {
@@ -4514,46 +4709,53 @@ body.dark-mode .auth-card .footer-text a {
 }
 
 .dropdown-content {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     left: 50%;
-    transform: translateX(-50%) translateY(-10px) scale(0.96);
+    transform: translateX(-50%) translateY(-8px) scale(0.97);
     background-color: var(--white);
-    min-width: 240px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    border-radius: 12px;
+    min-width: 250px;
+    box-shadow: 0 16px 40px rgba(13, 71, 161, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
     z-index: 3000;
     overflow: hidden;
-    border-top: 4px solid var(--navy);
-    opacity: 0;
+    border-top: 3px solid var(--navy);
     transform-origin: top center;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease;
+    padding: 6px 0;
 }
 
 /* This class will be toggled by JavaScript */
 .dropdown-content.show {
-    display: block;
+    visibility: visible;
     opacity: 1;
+    pointer-events: auto;
     transform: translateX(-50%) translateY(0) scale(1);
 }
 
 .dropdown-content a {
     color: var(--navy) !important;
-    background-color: var(--white);
-    padding: 12px 20px;
+    background-color: transparent;
+    padding: 13px 22px;
     text-decoration: none;
     display: block;
     font-size: 15px !important;
     font-weight: 500;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(13, 71, 161, 0.08);
     transition: all 0.2s ease;
 }
 
+.dropdown-content a:last-child {
+    border-bottom: none;
+}
+
 .dropdown-content a:hover {
-    background-color: #d6d6d6;
-    color: var(--gold) !important;
-    padding-left: 25px;
+    background: linear-gradient(90deg, rgba(13, 71, 161, 0.10) 0%, rgba(13, 71, 161, 0.03) 100%);
+    color: var(--navy) !important;
+    padding-left: 28px;
 }
 
 /* Visual feedback for the active button */
@@ -5154,16 +5356,21 @@ body.dark-mode .auth-card .footer-text a {
         position: static;
         transform: none;
         width: 100%;
-        margin-top: 8px;
+        margin-top: 0;
         box-shadow: none;
         border-top: 2px solid var(--navy);
         border-radius: 10px;
-        padding: 4px;
+        padding: 0 4px;
         z-index: 10000;
+        max-height: 0;
+        transition: opacity 0.22s ease, max-height 0.28s ease, padding 0.22s ease, margin 0.22s ease, visibility 0.22s ease;
     }
 
     .dropdown-content.show {
         transform: none;
+        max-height: 640px;
+        margin-top: 8px;
+        padding: 4px;
     }
     
     .dropdown-content a {
@@ -5203,7 +5410,7 @@ body.dark-mode .auth-card .footer-text a {
     
     .dropdown-menu {
         top: 45px;
-        min-width: 140px;
+        min-width: 190px;
     }
     
     .theme-toggle {
@@ -5245,7 +5452,7 @@ body.dark-mode .auth-card .footer-text a {
     
     .dropdown-menu {
         top: 50px;
-        min-width: 150px;
+        min-width: 190px;
     }
     
     /* Theme toggle */
@@ -6081,6 +6288,40 @@ body.dark-mode .auth-card .footer-text a {
     font-size: 0.92rem;
     color: var(--text-secondary);
     line-height: 1.5;
+}
+
+/* Our Services grid: with 13 services the last row has one
+   slot left, so the CTA card spans the remaining three columns
+   to complete it. On the 2-column tablet layout the grid holds
+   the 14 cards in seven full rows, so the span is released. */
+.home-grid--services .home-card--cta {
+    grid-column: span 3;
+    background: linear-gradient(135deg, #0d47a1 0%, #0a3b7d 100%);
+    border-color: transparent;
+}
+
+.home-grid--services .home-card--cta .home-card-icon {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.home-grid--services .home-card--cta h3 {
+    color: #ffffff;
+}
+
+.home-grid--services .home-card--cta p {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.home-grid--services .home-card--cta:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 10px 24px rgba(13, 71, 161, 0.35);
+}
+
+@media (max-width: 900px) {
+    .home-grid--services .home-card--cta {
+        grid-column: span 1;
+    }
 }
 
 /* ---- Why Choose Us: horizontal cards ---- */

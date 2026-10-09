@@ -216,11 +216,17 @@
                 flashesShown = true;
                 for (var i = 0; i < flashes.length; i++) {
                     var f = flashes[i];
+                    if (!f) continue;
+                    // Flashes arrive either as {category, message} objects
+                    // or as ["category", "message"] arrays - Jinja's tojson
+                    // serializes (category, message) tuples as arrays.
+                    var category = f.category !== undefined ? f.category : f[0];
+                    var message = f.message !== undefined ? f.message : f[1];
                     var type = 'info';
-                    if (f.category === 'success') type = 'success';
-                    else if (f.category === 'error') type = 'error';
-                    else if (f.category === 'warning') type = 'warning';
-                    window.showToast(f.message, type, 5000);
+                    if (category === 'success') type = 'success';
+                    else if (category === 'error') type = 'error';
+                    else if (category === 'warning') type = 'warning';
+                    window.showToast(message, type, 5000);
                 }
             }
 
