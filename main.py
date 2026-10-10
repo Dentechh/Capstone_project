@@ -4148,6 +4148,26 @@ class DentalClinicApp(BaseFlaskApp):
                 "w_pill": w_pill
             })
 
+            # The patient may be booking straight from the
+            # dentist's "next visit" suggestion. A successful
+            # booking replaces that suggestion, so consume it --
+            # otherwise it would sit in the schedule with
+            # Accept/Decline buttons forever. Only the literal
+            # document id is honored, so a client can never
+            # delete an arbitrary appointment this way.
+            consume_suggestion = bleach.clean(
+                request.form.get("consume_suggestion", "")
+            ).strip()
+            if consume_suggestion == "next_visit":
+                try:
+                    self.db.collection(
+                        self.Customer_Account
+                    ).document(uid).collection(
+                        "Approve"
+                    ).document("next_visit").delete()
+                except Exception as e:
+                    print("CONSUME NEXT VISIT SUGGESTION ERROR:", e)
+
             # Phase 2: save contact number / sex / civil status onto the
             # account the first time they are known (fill-if-blank).
             self._fill_account_identity_if_blank(
@@ -6630,6 +6650,12 @@ class DentalClinicApp(BaseFlaskApp):
                 for done in done_docs:
                     done_data = done.to_dict()
                     chart_image = done_data.get("chart_image", "")
+                    # Firestore returns SERVER_TIMESTAMP fields as
+                    # Timestamp objects. The patient profile's
+                    # notification dots compare them as ISO strings.
+                    updated_at = done_data.get("updated_at", "")
+                    if hasattr(updated_at, "isoformat"):
+                        updated_at = updated_at.isoformat()
                     for p in done_data.get("procedures", []):
                         visit_history.append({
                             "dentist": p.get("dentist", ""),
@@ -6642,7 +6668,8 @@ class DentalClinicApp(BaseFlaskApp):
                             "status": p.get("status", ""),
                             "next_appointment": p.get("next_appointment", ""),
                             "medicine": p.get("medicine", ""),
-                            "chart_image": chart_image
+                            "chart_image": chart_image,
+                            "updated_at": str(updated_at or "")
                         })
 
             data["Done_procedure"] = visit_history
@@ -6770,6 +6797,12 @@ class DentalClinicApp(BaseFlaskApp):
         for done in done_docs:
             done_data = done.to_dict()
             chart_image = done_data.get("chart_image", "")
+            # Firestore returns SERVER_TIMESTAMP fields as
+            # Timestamp objects. The patient profile's
+            # notification dots compare them as ISO strings.
+            updated_at = done_data.get("updated_at", "")
+            if hasattr(updated_at, "isoformat"):
+                updated_at = updated_at.isoformat()
             for p in done_data.get("procedures", []):
                 visit_history.append({
                     "dentist": p.get("dentist", ""),
@@ -6782,7 +6815,8 @@ class DentalClinicApp(BaseFlaskApp):
                     "status": p.get("status", ""),
                     "next_appointment": p.get("next_appointment", ""),
                     "medicine": p.get("medicine", ""),
-                    "chart_image": chart_image
+                    "chart_image": chart_image,
+                    "updated_at": str(updated_at or "")
                 })
 
         data["Done_procedure"] = visit_history
@@ -8124,7 +8158,43 @@ class DentalClinicApp(BaseFlaskApp):
         except Exception as e:
             print(e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
-    
+
+    def patient_decline_appointment(self):
+        """
+        Patient declines / cancels an appointment from
+        their own schedule. The uid always comes from the
+        session and the document is only ever removed from
+        that account's own Approve subcollection, so a
+        patient cannot touch another account's appointments.
+        """
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+
+        appointment_id = bleach.clean(request.form.get("appointment_id", "").strip())
+        if not appointment_id:
+            return jsonify({"success": False, "message": "No appointment specified"}), 400
+
+        try:
+            doc_ref = (
+                self.db.collection(self.Customer_Account)
+                .document(uid)
+                .collection("Approve")
+                .document(appointment_id)
+            )
+
+            doc = doc_ref.get()
+            if not doc.exists:
+                return jsonify({"success": False, "message": "Appointment not found"}), 404
+
+            doc_ref.delete()
+
+            return jsonify({"success": True, "message": "Appointment declined"})
+
+        except Exception as e:
+            print("PATIENT DECLINE APPOINTMENT ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
     def _find_unlinked_patient_by_name_parts(self, first_name, middle_name, last_name, birthday=""):
         """
         Strict, login-card-only lookup. Deliberately NOT used by find_patient()
@@ -9359,6 +9429,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/save_dental_record", methods=["POST"])(self.save_dental_record)
         self.app.route("/get_treatment_info/<patient_id>")(self.get_treatment_info)
         self.app.route("/get_approve/<uid>")(self.get_approve)
+        self.app.route("/patient/decline_appointment", methods=["POST"])(self.patient_decline_appointment)
         self.app.route("/admin/create_appointment", methods=["POST"])(self.admin_create_appointment)
         self.app.route("/get_blocked_slots")(self.get_blocked_slots)
         self.app.route("/admin/block_slot", methods=["POST"])(self.admin_block_slot)

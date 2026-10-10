@@ -8,10 +8,11 @@
         <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet"
             href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment-modal.css') }}?v=1">
     </head>
     <body>
 
@@ -26,6 +27,8 @@
 {% endwith %}
 
 <script src="{{ url_for('static', filename='js/patient-toast.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/appointments-helpers.js') }}"></script>
 
 {% set active_page = 'profile' %}
 {% include '_patient_header.html' %}
@@ -206,7 +209,7 @@
     <a href="#" class="nav-card" id="scheduleBtn">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
         <span>Schedule</span>
-        
+        <span class="nav-card__badge" id="scheduleBadge" hidden aria-label="New schedule activity"></span>
     </a>
 
     <!-- Schedule Modal -->
@@ -231,8 +234,8 @@
                         <thead>
                             <tr>
                                 <th>Date and Time</th>
-                                <th>Services</th>
                                 <th>Dentist</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="scheduleTableBody"> </tbody>
@@ -242,6 +245,1095 @@
         </div>
     </div>
 
+    <!-- Accept Appointment Confirm Modal -->
+    <div id="apptConfirmModal" class="modal">
+        <div class="modal-content" style="max-width:440px;">
+            <div class="modal-header">
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">event_available</span>
+                    <h2>Accept Appointment</h2>
+                </div>
+                <button class="close" onclick="closeApptConfirmModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0 0 6px;">Do you want to input the previous details?</p>
+                <p style="margin:0 0 18px;font-size:13px;color:#64748b;">
+                    The date and time will stay the same as the admin's selected date and time, and cannot be changed.
+                </p>
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" onclick="confirmAcceptAppointment(true)">Yes</button>
+                    <button type="button" class="btn-secondary" onclick="confirmAcceptAppointment(false)">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Appointment Reason Modal -->
+    <div id="apptDeclineModal" class="modal">
+        <div class="modal-content" style="max-width:460px;">
+            <div class="modal-header">
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">event_busy</span>
+                    <h2>Decline Appointment</h2>
+                </div>
+                <button class="close" onclick="closeApptDeclineModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p style="margin:0 0 10px;">Why are you declining this appointment?</p>
+                <div class="appt-reason-field">
+                    <button type="button" class="appt-reason-trigger appt-reason-trigger--placeholder"
+                        id="apptReasonTrigger" aria-haspopup="listbox" aria-expanded="false"
+                        aria-controls="apptReasonMenu">
+                        <span class="appt-reason-trigger__text" id="apptReasonText">Select a reason</span>
+                        <span class="material-symbols-rounded appt-reason-trigger__chevron" aria-hidden="true">expand_more</span>
+                    </button>
+                    <!-- Carries the chosen reason; submitDeclineReason() reads it. -->
+                    <input type="hidden" id="apptDeclineReason" value="">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" onclick="submitDeclineReason()">Submit</button>
+                    <button type="button" class="btn-secondary" onclick="closeApptDeclineModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Form Modal (patient-side booking form,
+         same markup and behavior as the home page's form so
+         an accepted appointment can be confirmed right here
+         without leaving the profile) -->
+    <div id="newApptModal" class="modal" style="display:none;">
+        <div class="adm-modal-box">
+            <div class="adm-modal-header">
+                <h2>Book Appointment</h2>
+                <button type="button" class="modal-x" aria-label="Close"
+                    onclick="closeNewApptModal()"><svg viewBox="0 0 24 24"
+                        width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg></button>
+            </div>
+
+            <!-- Step indicator -->
+            <ol class="adm-steps" id="admSteps">
+                <li class="adm-step is-active" data-adm-step-tab="1">
+                    <span class="adm-step__num" aria-hidden="true">1</span>
+                    <span class="adm-step__text">
+                        <span class="adm-step__title">Appointment Details</span>
+                        <span class="adm-step__hint">Patient, schedule &amp; medical history</span>
+                    </span>
+                </li>
+                <li class="adm-step" data-adm-step-tab="2">
+                    <span class="adm-step__num" aria-hidden="true">2</span>
+                    <span class="adm-step__text">
+                        <span class="adm-step__title">Consent &amp; Signature</span>
+                        <span class="adm-step__hint">Read the consent, then sign</span>
+                    </span>
+                </li>
+            </ol>
+
+            <div class="adm-modal-body">
+                <!-- One form spans both steps so the consent checkbox and the signature
+            are submitted together with the appointment fields. -->
+                <form id="appointmentForm" class="adm-wizard" action="/booked_customer" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- ============ STEP 1 : APPOINTMENT DETAILS ============ -->
+                    <section class="adm-page is-active" data-adm-step="1" aria-label="Appointment details">
+                        <div class="adm-form-side">
+                            <h2>Appointment Details</h2>
+
+                            <div class="form-group">
+                                <label for="admFirstName">First Name</label>
+                                <input type="text" id="admFirstName" name="First_Name" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admMiddleName">Middle Name</label>
+                                <input type="text" id="admMiddleName" name="Middle_Name" class="form-control">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admLastName">Last Name</label>
+                                <input type="text" id="admLastName" name="Last_Name" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="admBirthday">Birthday</label>
+                                <input type="date" id="admBirthday" name="Birthday"
+                                    class="form-control adm-date-native">
+                            </div>
+
+                            <!-- Contact & Personal Info -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admContactNumber">Contact Number</label>
+                                    <input type="tel" id="admContactNumber" name="Contact_number" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admAge">Age</label>
+                                    <input type="number" id="admAge" name="Age" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admSexSelect">Sex</label>
+                                    <select id="admSexSelect" name="Sex" class="form-control">
+                                        <option value="" disabled selected>Sex</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admHouseNo">House No.</label>
+                                    <input type="text" id="admHouseNo" name="House_No" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admStreet">Street</label>
+                                    <input type="text" id="admStreet" name="Street" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admBrgy">Barangay</label>
+                                    <input type="text" id="admBrgy" name="Brgy" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admMunicipality">Municipality/City</label>
+                                    <input type="text" id="admMunicipality" name="Municipality" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admCity">Province</label>
+                                    <input type="text" id="admCity" name="City" class="form-control">
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admNationality">Nationality</label>
+                                    <input type="text" id="admNationality" name="Nationality" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admReligion">Religion</label>
+                                    <select id="admReligion" name="Religion" class="form-control">
+                                        <option value="" disabled selected>Religion</option>
+                                        <option value="Roman Catholic">Roman Catholic</option>
+                                        <option value="Christian">Christian</option>
+                                        <option value="Islam">Islam</option>
+                                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
+                                        <option value="Baptist">Baptist</option>
+                                        <option value="Methodist">Methodist</option>
+                                        <option value="Born Again Christian">Born Again Christian</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="adm-row2">
+                                <div class="form-group">
+                                    <label for="admOccupation">Occupation</label>
+                                    <select id="admOccupation" name="Occupation" class="form-control">
+                                        <option value="" disabled selected>Occupation</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Employee">Employee</option>
+                                        <option value="Self-Employed">Self-Employed</option>
+                                        <option value="Teacher">Teacher</option>
+                                        <option value="Nurse">Nurse</option>
+                                        <option value="Doctor">Doctor</option>
+                                        <option value="Business Owner">Business Owner</option>
+                                        <option value="Housewife">Housewife</option>
+                                        <option value="Retired">Retired</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admCivilStatus">Civil Status</label>
+                                    <select id="admCivilStatus" name="Civil_Status" class="form-control">
+                                        <option value="" disabled selected>Civil Status</option>
+                                        <option value="Single">Single</option>
+                                        <option value="Married">Married</option>
+                                        <option value="Widowed">Widowed</option>
+                                        <option value="Separated">Separated</option>
+                                        <option value="Divorced">Divorced</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Service -->
+                            <div class="form-group">
+                                <label for="admService">Service</label>
+                                <select id="admService" name="Service" class="form-control" required>
+                                    <option value="" disabled selected>Choose a service</option>
+                                    <option value="Dental Consultation">Dental Consultation</option>
+                                    <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
+                                    <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
+                                    <option value="Tooth Extraction (Cabot)">Tooth Extraction (Cabot)</option>
+                                    <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
+                                    <option value="Crowns and Bridges">Crowns and Bridges</option>
+                                    <option value="Teeth Whitening">Teeth Whitening</option>
+                                    <option value="Fluoride Treatment">Fluoride Treatment</option>
+                                    <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
+                                    <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
+                                    <option value="Root Canal Treatment">Root Canal Treatment</option>
+                                    <option value="Periapical Xray">Periapical Xray</option>
+                                    <option value="Orthodontic Braces">Orthodontic Braces</option>
+                                </select>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div class="adm-row3">
+                                <div class="form-group">
+                                    <label for="admUrgencyLevel">Urgency Level</label>
+                                    <select id="admUrgencyLevel" name="Urgency_Level" class="form-control">
+                                        <option value="Normal" selected>Normal</option>
+                                        <option value="Emergency">Emergency</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="admApptDate">Date of Appointment</label>
+                                    <input type="date" id="admApptDate" class="form-control adm-date-native">
+                                </div>
+                                <div class="form-group">
+                                    <label for="admApptTime">Time of Appointment</label>
+                                    <select id="admApptTime" class="form-control" required>
+                                        <option value="" disabled selected>Select time</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="10:00">10:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="13:00">1:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="16:00">4:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <input type="hidden" name="appointment_date" id="admApptDateHidden">
+
+                            <div class="form-group">
+                                <label for="admDentistName">Dentist Name <span class="adm-req"
+                                        aria-hidden="true">*</span></label>
+                                <div class="dentist-field">
+                                    <input type="text" id="admDentistName" name="dentist_name" class="dentist-input"
+                                        placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
+                                        spellcheck="false" role="combobox" aria-autocomplete="list"
+                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
+                                        aria-label="Dentist name">
+                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
+                                        title="Show dentists">
+                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Medical History -->
+                            <div class="form-group">
+                                <label>Medical History</label>
+
+                                <div class="adm-q-row">
+                                    <span>1. Are you in good health?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q1" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="q1" value="No"> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="adm-q-row">
+                                    <span>2. Under medical treatment now?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q2" value="Yes"
+                                                onclick="admToggleSpec('q2', false)"> Yes</label>
+                                        <label><input type="radio" name="q2" value="No"
+                                                onclick="admToggleSpec('q2', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q2_spec" id="adm_q2_spec" placeholder="If so, what condition?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>3. Serious illness / surgical operation?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q3" value="Yes"
+                                                onclick="admToggleSpec('q3', false)"> Yes</label>
+                                        <label><input type="radio" name="q3" value="No"
+                                                onclick="admToggleSpec('q3', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q3_spec" id="adm_q3_spec" placeholder="What illness/operation?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>4. Ever been hospitalized?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q4" value="Yes"
+                                                onclick="admToggleSpec('q4', false)"> Yes</label>
+                                        <label><input type="radio" name="q4" value="No"
+                                                onclick="admToggleSpec('q4', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q4_spec" id="adm_q4_spec" placeholder="When and why?"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>5. Taking any medication?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q5" value="Yes"
+                                                onclick="admToggleSpec('q5', false)"> Yes</label>
+                                        <label><input type="radio" name="q5" value="No"
+                                                onclick="admToggleSpec('q5', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q5_spec" id="adm_q5_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>6. Use tobacco products?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q6" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="q6" value="No"> No</label>
+                                    </div>
+                                </div>
+
+                                <div class="adm-q-row">
+                                    <span>7. Any allergy?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q7" value="Yes"
+                                                onclick="admToggleSpec('q7', false)"> Yes</label>
+                                        <label><input type="radio" name="q7" value="No"
+                                                onclick="admToggleSpec('q7', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q7_spec" id="adm_q7_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+
+                                <div class="adm-q-row">
+                                    <span>9. Any medical condition/s?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="q9" value="Yes"
+                                                onclick="admToggleSpec('q9', false)"> Yes</label>
+                                        <label><input type="radio" name="q9" value="No"
+                                                onclick="admToggleSpec('q9', true)"> No</label>
+                                    </div>
+                                </div>
+                                <input type="text" name="q9_spec" id="adm_q9_spec" placeholder="Please specify"
+                                    class="form-control" disabled>
+                            </div>
+
+                            <!-- Women's Health -->
+                            <div id="admWomenSection" class="adm-women-box">
+                                <p style="margin:0 0 8px;font-weight:600;">For Women Only</p>
+                                <div class="adm-q-row">
+                                    <span>Pregnant?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_preg" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_preg" value="No"> No</label>
+                                    </div>
+                                </div>
+                                <div class="adm-q-row">
+                                    <span>Nursing?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_nurse" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_nurse" value="No"> No</label>
+                                    </div>
+                                </div>
+                                <div class="adm-q-row">
+                                    <span>Birth control pills?</span>
+                                    <div class="adm-yn">
+                                        <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
+                                        <label><input type="radio" name="w_pill" value="No"> No</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div><!-- /.adm-form-side -->
+                    </section><!-- /step 1 -->
+
+                    <!-- ============ STEP 2 : INFORMED CONSENT + SIGNATURE ============ -->
+                    <section class="adm-page" data-adm-step="2" aria-label="Informed consent and signature" hidden>
+                        <div class="adm-consent-side">
+                            <h3>Informed Consent</h3>
+                            <p><strong>TREATMENT TO BE DONE:</strong> I understand and consent to have any treatment
+                                done by the dentist after the procedure, risk, benefits &amp; cost have been fully
+                                explained. These include, but are not limited to, X-rays, cleaning, periodontal
+                                treatments, fillings, crowns, bridges, all types of extraction, root canals, and/or
+                                dentures, local anesthetics &amp; surgical cases.</p>
+                            <p><strong>DRUGS &amp; MEDICATIONS:</strong> I understand that antibiotics, analgesics,
+                                &amp; other medications can cause allergic reactions like redness &amp; swelling of
+                                tissue, pain, itching, vomiting, and/or anaphylactic shock.</p>
+                            <p><strong>CHANGES IN TREATMENT PLAN:</strong> I understand that during treatment, it may be
+                                necessary to change/add procedures because of conditions found while working on the
+                                teeth that were not discovered during examination.</p>
+                            <p><strong>RADIOGRAPH:</strong> I understand that an x-ray or radiograph may be necessary as
+                                part of diagnostic aid, but that will not give a 100% assurance for the accuracy of the
+                                treatment.</p>
+                            <p><strong>REMOVAL OF TEETH:</strong> I understand alternatives to tooth removal exist and I
+                                authorize the dentist to proceed after these have been explained to me.</p>
+                            <p><strong>CROWNS (CAPS) &amp; BRIDGES:</strong> Preparing a tooth may irritate the nerve
+                                tissue, leaving it sensitive to heat, cold &amp; pressure.</p>
+                            <p><strong>ENDODONTICS (ROOT CANAL):</strong> There is no guarantee that a root canal
+                                treatment will save a tooth.</p>
+                            <p><strong>PERIODONTAL DISEASE:</strong> This is a serious condition causing gum &amp; bone
+                                inflammation and/or loss.</p>
+                            <p><strong>FILLINGS:</strong> Care must be exercised in chewing on a new filling, especially
+                                during the first 24 hours.</p>
+                            <p><strong>DENTURES:</strong> Wearing dentures can be difficult at first — sore spots,
+                                altered speech &amp; difficulty eating are common.</p>
+                            <hr>
+                            <p style="font-style:italic;">I understand that dentistry is not an exact science and that
+                                no dentist can properly guarantee accurate results all the time.</p>
+
+                            <!-- Consent acknowledgement -->
+                            <div class="form-group adm-consent-ack">
+                                <label class="adm-consent-label">
+                                    <input type="checkbox" id="admConsentCheck" required>
+                                    <span class="adm-consent-check-text">
+                                        I confirm that the patient information is correct, and that the
+                                        risks, benefits and costs of the proposed treatment have been explained to me.
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Signature: last block on the page -->
+                            <div class="adm-sign-block">
+                                <div class="adm-sign-block__head">
+                                    <p class="adm-sign-block__label">Patient Signature</p>
+                                    <p class="adm-sign-block__meta">
+                                        Signed on <span id="admSignDate">—</span>
+                                        <span class="adm-sign-block__sep">&middot;</span>
+                                        <span id="admSignPatientName">this patient</span>
+                                    </p>
+                                </div>
+
+                                <canvas id="admSignaturePad" class="adm-sig-canvas" width="300" height="80"></canvas>
+
+                                <div class="adm-sign-block__actions">
+                                    <button type="button" class="adm-sig-clear"
+                                        onclick="admClearSignature()">Clear</button>
+                                    <span class="adm-sign-block__hint">Sign inside the box with a mouse, stylus or
+                                        finger.</span>
+                                </div>
+
+                                <div class="adm-sign-block__line">
+                                    <span class="adm-sign-block__rule" aria-hidden="true"></span>
+                                    <span class="adm-sign-block__caption">Signature of Patient / Authorized
+                                        Representative</span>
+                                </div>
+                            </div>
+                        </div><!-- /.adm-consent-side -->
+                    </section><!-- /step 2 -->
+
+                    <!-- Wizard navigation -->
+                    <footer class="adm-wizard-nav">
+                        <button type="button" id="admStepBack" class="adm-nav-btn" hidden>
+                            <span class="material-symbols-rounded" aria-hidden="true">arrow_back</span>
+                            Back
+                        </button>
+                        <span class="adm-wizard-nav__status" id="admStepStatus">Step 1 of 2</span>
+                        <span class="adm-wizard-nav__spacer"></span>
+                        <button type="button" id="admStepNext" class="adm-nav-btn adm-nav-btn--primary">
+                            Next
+                            <span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span>
+                        </button>
+                        <button type="submit" id="admSubmitBtn" class="btn btn-primary adm-nav-btn adm-nav-btn--primary"
+                            hidden>
+                            <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                            Confirm Appointment
+                        </button>
+                    </footer>
+
+                    <!-- Signature image, posted with the form like the patient side always did -->
+                    <input type="hidden" name="signature" id="signatureData">
+
+                    <!-- Set when the form was opened from the dentist's
+                         "next visit" suggestion, so a successful booking
+                         consumes that suggestion (see bookedCustomer). -->
+                    <input type="hidden" name="consume_suggestion" id="admConsumeSuggestion" value="">
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    /* ---- Appointment booking form (patient profile) ----
+       The same two-step wizard the home page uses, so an
+       appointment the dentist suggested can be confirmed
+       right here without leaving the profile. The form
+       posts to /booked_customer like the home page's
+       copy does. */
+
+    /* Firestore stores "YYYY-MM-DD HH:MM" for appointment_date
+       and date-only "YYYY-MM-DD" for birthdays. flatpickr keeps
+       the original inputs (and their values) in place and inserts
+       a visible alt input in front of them, so the submit gate
+       and the posted FormData keep reading the same elements. */
+    var pdBlockedSlotsMap = {};
+    var pdScheduleDatePicker = null;
+
+    function pdApplyBlockedTimeOptions(dateStr) {
+        var timeSelect = document.getElementById("admApptTime");
+        if (!timeSelect) return;
+        var info = pdBlockedSlotsMap[dateStr];
+        var blockedTimes = (info && !info.full_day) ? (info.blocked_times || []) : [];
+        Array.from(timeSelect.options).forEach(function (opt) {
+            if (!opt.value) return;
+            opt.disabled = blockedTimes.indexOf(opt.value) !== -1;
+        });
+        if (timeSelect.value && blockedTimes.indexOf(timeSelect.value) !== -1) {
+            timeSelect.value = "";
+        }
+    }
+
+    function pdLoadDoctorBlockedSlots() {
+        fetch("/get_blocked_slots")
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                pdBlockedSlotsMap = {};
+                (data || []).forEach(function (item) {
+                    pdBlockedSlotsMap[item.date] = item;
+                });
+                // Shared with the appointment date picker's
+                // disable predicate.
+                window.__blockedSlotsMap = pdBlockedSlotsMap;
+                if (pdScheduleDatePicker && typeof pdScheduleDatePicker.redraw === "function") {
+                    pdScheduleDatePicker.redraw();
+                }
+            })
+            .catch(function (err) {
+                console.error("Failed to load doctor blocked slots:", err);
+            });
+    }
+
+    function admCombineDateTime() {
+        var dateInput = document.getElementById("admApptDate");
+        var timeInput = document.getElementById("admApptTime");
+        var hiddenInput = document.getElementById("admApptDateHidden");
+        if (dateInput && timeInput && hiddenInput && dateInput.value && timeInput.value) {
+            hiddenInput.value = dateInput.value + " " + timeInput.value;
+        }
+    }
+
+    function admToggleSpec(q, disable) {
+        var el = document.getElementById("adm_" + q + "_spec");
+        if (el) el.disabled = disable;
+    }
+
+    function admClearSignature() {
+        var canvas = document.getElementById("admSignaturePad");
+        var sigData = document.getElementById("signatureData");
+        if (canvas) {
+            var ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        if (sigData) sigData.value = "";
+    }
+
+    if (typeof flatpickr === "function") {
+        var pdBaseOptions = {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "F j, Y",
+            altInputClass: "adm-date-alt",
+            className: "adm-datepicker",
+            allowInput: false,
+            monthSelectorType: "static"
+        };
+
+        var pdBirthdayInput = document.getElementById("admBirthday");
+        if (pdBirthdayInput) {
+            flatpickr(pdBirthdayInput, Object.assign({}, pdBaseOptions, {
+                maxDate: "today"
+            }));
+        }
+
+        // A fully blocked day cannot host an appointment at all,
+        // so grey it out in the calendar. Days with only some
+        // times blocked stay selectable - those time options are
+        // disabled instead.
+        var pdApptDateInput = document.getElementById("admApptDate");
+        if (pdApptDateInput) {
+            pdScheduleDatePicker = flatpickr(pdApptDateInput, Object.assign({}, pdBaseOptions, {
+                minDate: "today",
+                disable: [function (dObj) {
+                    if (!(dObj instanceof Date)) return false;
+                    var map = window.__blockedSlotsMap || {};
+                    var info = map[dObj.toLocaleDateString("en-CA")];
+                    return !!(info && info.full_day);
+                }],
+                onChange: function () {
+                    admCombineDateTime();
+                }
+            }));
+        }
+
+        // The visible control is now flatpickr's alt input; keep the
+        // real inputs out of sight but still holding their values.
+        var pdWizardModal = document.getElementById("newApptModal");
+        if (pdWizardModal) {
+            pdWizardModal.querySelectorAll(".adm-date-native").forEach(function (input) {
+                input.style.display = "none";
+                input.removeAttribute("required");
+            });
+        }
+    }
+
+    pdLoadDoctorBlockedSlots();
+
+    var pdApptDateEl = document.getElementById("admApptDate");
+    if (pdApptDateEl) {
+        pdApptDateEl.addEventListener("change", function () {
+            pdApplyBlockedTimeOptions(this.value);
+            admCombineDateTime();
+        });
+    }
+
+    var pdApptTimeEl = document.getElementById("admApptTime");
+    if (pdApptTimeEl) {
+        pdApptTimeEl.addEventListener("change", admCombineDateTime);
+    }
+
+    // Signature Pad
+    var pdCanvas = document.getElementById("admSignaturePad");
+    if (pdCanvas) {
+        var pdCtx = pdCanvas.getContext("2d");
+        var pdIsDrawing = false;
+
+        pdCtx.strokeStyle = "#000";
+        pdCtx.lineWidth = 2;
+        pdCtx.lineCap = "round";
+
+        function pdGetPos(e) {
+            var rect = pdCanvas.getBoundingClientRect();
+            var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function pdStartDraw(e) {
+            e.preventDefault();
+            pdIsDrawing = true;
+            var pos = pdGetPos(e);
+            pdCtx.beginPath();
+            pdCtx.moveTo(pos.x, pos.y);
+        }
+
+        function pdDraw(e) {
+            e.preventDefault();
+            if (!pdIsDrawing) return;
+            var pos = pdGetPos(e);
+            pdCtx.lineTo(pos.x, pos.y);
+            pdCtx.stroke();
+        }
+
+        function pdStopDraw(e) {
+            e.preventDefault();
+            pdIsDrawing = false;
+            var sigData = document.getElementById("signatureData");
+            if (sigData) sigData.value = pdCanvas.toDataURL();
+        }
+
+        pdCanvas.addEventListener("mousedown", pdStartDraw);
+        pdCanvas.addEventListener("touchstart", pdStartDraw);
+        pdCanvas.addEventListener("mousemove", pdDraw);
+        pdCanvas.addEventListener("touchmove", pdDraw);
+        pdCanvas.addEventListener("mouseup", pdStopDraw);
+        pdCanvas.addEventListener("touchend", pdStopDraw);
+    }
+
+    // Two-step wizard for the appointment modal. Step 1 holds the
+    // appointment fields, step 2 the informed consent and the
+    // signature. Both live inside #appointmentForm, so a native
+    // submit still posts every field to /booked_customer.
+    (function () {
+        var wizardModal = document.getElementById("newApptModal");
+        var form = document.getElementById("appointmentForm");
+        var pages = wizardModal ? Array.from(wizardModal.querySelectorAll(".adm-page")) : [];
+        var tabs = wizardModal ? Array.from(wizardModal.querySelectorAll(".adm-step")) : [];
+        var backBtn = document.getElementById("admStepBack");
+        var nextBtn = document.getElementById("admStepNext");
+        var submitBtn = document.getElementById("admSubmitBtn");
+        var statusText = document.getElementById("admStepStatus");
+        var signDate = document.getElementById("admSignDate");
+        var signName = document.getElementById("admSignPatientName");
+        var TOTAL = pages.length || 1;
+
+        if (!wizardModal || !form || !pages.length || !backBtn || !nextBtn) return;
+
+        function currentStep() {
+            var active = pages.find(function (p) { return p.classList.contains("is-active"); });
+            return active ? Number(active.getAttribute("data-adm-step")) || 1 : 1;
+        }
+
+        function showStep(step) {
+            // Clamp: an out-of-range value would leave every page
+            // hidden and strand the patient in a blank modal.
+            step = Math.min(TOTAL, Math.max(1, step || 1));
+
+            pages.forEach(function (page) {
+                var on = Number(page.getAttribute("data-adm-step")) === step;
+                page.classList.toggle("is-active", on);
+                page.hidden = !on;
+            });
+
+            tabs.forEach(function (tab) {
+                var n = Number(tab.getAttribute("data-adm-step-tab"));
+                tab.classList.toggle("is-active", n === step);
+                tab.classList.toggle("is-done", n < step);
+            });
+
+            var last = step >= TOTAL;
+            backBtn.hidden = step <= 1;
+            nextBtn.hidden = last;
+            submitBtn.hidden = !last;
+            if (statusText) statusText.textContent = "Step " + step + " of " + TOTAL;
+
+            // The Dentist Name dropdown's anchor lives on step 1,
+            // so leaving it open would float the popup over step 2.
+            if (typeof closeDentistMenu === "function") closeDentistMenu();
+
+            // Keep the signature metadata in step with what was booked.
+            if (!last) return;
+
+            if (signDate) {
+                signDate.textContent = new Date().toLocaleDateString("en-US", {
+                    year: "numeric", month: "long", day: "numeric"
+                });
+            }
+            if (signName) {
+                var first = document.getElementById("admFirstName");
+                var lastName = document.getElementById("admLastName");
+                var name = [first && first.value, lastName && lastName.value]
+                    .filter(Boolean).join(" ").trim();
+                signName.textContent = name || "this patient";
+            }
+        }
+
+        // Step 1 only. #admConsentCheck lives on step 2, so it is
+        // briefly taken out of native validation - otherwise the
+        // browser would try to focus a checkbox the patient cannot
+        // see yet.
+        function validateStepOne() {
+            var dateInput = document.getElementById("admApptDate");
+            var timeInput = document.getElementById("admApptTime");
+            var dentistInput = document.getElementById("admDentistName");
+
+            if (dateInput && !dateInput.value) {
+                showToast("Please select the appointment date.");
+                dateInput.focus();
+                return false;
+            }
+            if (timeInput && !timeInput.value) {
+                showToast("Please select the appointment time.");
+                timeInput.focus();
+                return false;
+            }
+            if (typeof requireDentistInput === "function" && !requireDentistInput(dentistInput)) {
+                showToast("Please select or type the consulting dentist.");
+                return false;
+            }
+
+            var consent = document.getElementById("admConsentCheck");
+            var wasRequired = consent ? consent.required : false;
+            if (consent) consent.required = false;
+            var ok = form.reportValidity();
+            if (consent) consent.required = wasRequired;
+
+            if (!ok) {
+                showToast("Please complete the required fields before continuing.");
+                return false;
+            }
+            return true;
+        }
+
+        function advance() {
+            if (validateStepOne()) showStep(currentStep() + 1);
+        }
+
+        nextBtn.addEventListener("click", advance);
+        backBtn.addEventListener("click", function () {
+            showStep(Math.max(1, currentStep() - 1));
+        });
+
+        // Enter inside a step-1 field would otherwise submit the
+        // form while the consent and signature are still hidden.
+        // Advance instead.
+        pages[0].addEventListener("keydown", function (e) {
+            if (e.key !== "Enter" || e.shiftKey) return;
+            var tag = (e.target.tagName || "").toLowerCase();
+            if (tag === "textarea" || tag === "button") return;
+            e.preventDefault();
+            advance();
+        });
+
+        // Reopening the modal always starts from step 1.
+        window.admResetWizard = function () { showStep(1); };
+        showStep(1);
+    })();
+
+    // Final submit gate. The Confirm button sits on step 2 beside
+    // the signature, and the fields it checks (flatpickr alt inputs,
+    // the signature canvas) are not natively validatable, so they
+    // are checked by hand here. Anything that fails is blocked;
+    // otherwise the browser posts the form to /booked_customer.
+    (function () {
+        var form = document.getElementById("appointmentForm");
+        if (!form) return;
+
+        form.addEventListener("submit", function (e) {
+            var dentistInput = document.getElementById("admDentistName");
+            if (typeof requireDentistInput === "function" && !requireDentistInput(dentistInput)) {
+                e.preventDefault();
+                if (typeof window.admResetWizard === "function") window.admResetWizard();
+                showToast("Please select or type the consulting dentist.");
+                return;
+            }
+
+            var canvas = document.getElementById("admSignaturePad");
+            if (canvas) {
+                var blank = document.createElement("canvas");
+                blank.width = canvas.width;
+                blank.height = canvas.height;
+                if (canvas.toDataURL() === blank.toDataURL()) {
+                    e.preventDefault();
+                    showToast("Please provide your signature.");
+                    return;
+                }
+            }
+
+            // The birthday input is rendered by flatpickr's alt input,
+            // so the browser can't validate the hidden original.
+            var birthdayValue = document.getElementById("admBirthday");
+            if (birthdayValue && !birthdayValue.value) {
+                e.preventDefault();
+                showToast("Please select your birthday.");
+                return;
+            }
+
+            admCombineDateTime();
+            var apptDateHidden = document.getElementById("admApptDateHidden");
+            if (!apptDateHidden || !apptDateHidden.value) {
+                e.preventDefault();
+                showToast("Please select an appointment date and time.");
+                return;
+            }
+        });
+    })();
+
+    /* ---- Modal open/close ---- */
+    function openNewApptModal() {
+        var modal = document.getElementById("newApptModal");
+        if (!modal) return;
+        modal.style.display = "flex";
+        modal.classList.add("show");
+    }
+
+    function closeNewApptModal() {
+        var modal = document.getElementById("newApptModal");
+        if (!modal) return;
+        modal.classList.remove("show");
+        modal.style.display = "none";
+    }
+
+    /* Carries the patient's last booking details into the form.
+       Service, urgency level, the appointment date & time and the
+       medical history answers are intentionally NOT filled -- those
+       must be chosen fresh for every visit. */
+    function prefillAppointmentForm(info) {
+        if (!info) return;
+
+        function setInput(id, value) {
+            var el = document.getElementById(id);
+            if (el && value) el.value = value;
+        }
+
+        function setSelect(id, value) {
+            var el = document.getElementById(id);
+            if (!el || !value) return;
+            var hasOption = Array.from(el.options).some(function (opt) {
+                return opt.value === value;
+            });
+            if (hasOption) {
+                el.value = value;
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+        }
+
+        // Identity & contact details
+        setInput("admFirstName", info.FirstName);
+        setInput("admMiddleName", info.MiddleName);
+        setInput("admLastName", info.LastName);
+        setInput("admContactNumber", info.ContactNumber);
+        setInput("admAge", info.Age);
+        setInput("admHouseNo", info.HouseNo);
+        setInput("admStreet", info.Street);
+        setInput("admBrgy", info.Brgy);
+        setInput("admMunicipality", info.Municipality);
+        setInput("admCity", info.City);
+        setInput("admNationality", info.Nationality);
+        setInput("admDentistName", info.DentistName);
+
+        // Birthday rides on flatpickr's hidden input; setDate()
+        // keeps the visible calendar input in sync.
+        var birthday = document.getElementById("admBirthday");
+        if (birthday && info.Birthday) {
+            if (birthday._flatpickr && typeof birthday._flatpickr.setDate === "function") {
+                birthday._flatpickr.setDate(info.Birthday);
+            } else {
+                birthday.value = info.Birthday;
+            }
+        }
+
+        setSelect("admSexSelect", info.Sex);
+        setSelect("admReligion", info.Religion);
+        setSelect("admOccupation", info.Occupation);
+        setSelect("admCivilStatus", info.CivilStatus);
+    }
+
+    /* ---- Open the booking form for a suggestion ----
+       Accept: the dentist's date and time are locked in.
+       Reschedule: the same details, but the patient picks a
+       new date and time. Either way the form can start filled
+       with the patient's last booking when they ask for it. */
+    function openAppointmentFormFor(payload) {
+        var item = payload.item || {};
+        var mode = payload.mode || "accept";
+
+        // Always start from a clean, unlocked form.
+        if (typeof window.admResetWizard === "function") window.admResetWizard();
+        pdResetAppointmentFormLocks();
+
+        var consumeInput = document.getElementById("admConsumeSuggestion");
+        if (consumeInput) consumeInput.value = item.id || "";
+
+        if (payload.fillPrevious) {
+            fetch("/previous_booking_info")
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.has_previous && data.info) {
+                        prefillAppointmentForm(data.info);
+                    }
+                    pdApplySuggestionDetails(item, mode);
+                })
+                .catch(function () {
+                    pdApplySuggestionDetails(item, mode);
+                });
+        } else {
+            pdApplySuggestionDetails(item, mode);
+        }
+
+        openNewApptModal();
+    }
+
+    function pdApplySuggestionDetails(item, mode) {
+        // Service and urgency level ride along with the suggestion.
+        var service = document.getElementById("admService");
+        if (service && item.Service) {
+            var hasService = Array.from(service.options).some(function (opt) {
+                return opt.value === item.Service;
+            });
+            if (hasService) service.value = item.Service;
+        }
+        var urgency = document.getElementById("admUrgencyLevel");
+        if (urgency && item.UrgencyLevel) {
+            var hasUrgency = Array.from(urgency.options).some(function (opt) {
+                return opt.value === item.UrgencyLevel;
+            });
+            if (hasUrgency) urgency.value = item.UrgencyLevel;
+        }
+
+        // The dentist the suggestion is for.
+        var dentist = document.getElementById("admDentistName");
+        if (dentist && item.DentistName) dentist.value = item.DentistName;
+
+        // The dentist's selected date and time.
+        var apptDate = String(item.appointment_date || item.Date || "");
+        var datePart = apptDate.split(" ")[0] || "";
+        var timePart = (apptDate.split(" ")[1] || "").slice(0, 5);
+
+        if (datePart) {
+            if (pdScheduleDatePicker && typeof pdScheduleDatePicker.setDate === "function") {
+                pdScheduleDatePicker.setDate(datePart);
+            } else {
+                var dateInput = document.getElementById("admApptDate");
+                if (dateInput) dateInput.value = datePart;
+            }
+            pdApplyBlockedTimeOptions(datePart);
+        }
+
+        if (timePart) {
+            var timeSelect = document.getElementById("admApptTime");
+            if (timeSelect) {
+                var hasOption = Array.from(timeSelect.options).some(function (opt) {
+                    return opt.value === timePart;
+                });
+                if (!hasOption) {
+                    // Suggested times can fall between the hourly
+                    // slots, so add the exact time.
+                    var parts = timePart.split(":");
+                    var h = parseInt(parts[0] || "0", 10);
+                    var m = parseInt(parts[1] || "0", 10);
+                    var ampm = h >= 12 ? "PM" : "AM";
+                    var h12 = h % 12;
+                    if (h12 === 0) h12 = 12;
+                    var opt = document.createElement("option");
+                    opt.value = timePart;
+                    opt.textContent = h12 + ":" + (m < 10 ? "0" + m : m) + " " + ampm;
+                    timeSelect.appendChild(opt);
+                }
+                timeSelect.value = timePart;
+            }
+        }
+
+        admCombineDateTime();
+
+        // An accepted appointment keeps the dentist's date and
+        // time: the controls are disabled so they cannot be
+        // changed. The combined value still posts because it
+        // lives in the hidden appointment_date input.
+        if (mode === "accept") {
+            var lockDateInput = document.getElementById("admApptDate");
+            var lockTimeSelect = document.getElementById("admApptTime");
+            var altInput = lockDateInput && lockDateInput._flatpickr
+                ? lockDateInput._flatpickr.altInput : null;
+            if (altInput) altInput.disabled = true;
+            if (lockTimeSelect) lockTimeSelect.disabled = true;
+        }
+    }
+
+    function pdResetAppointmentFormLocks() {
+        var dateInput = document.getElementById("admApptDate");
+        var timeSelect = document.getElementById("admApptTime");
+        var altInput = dateInput && dateInput._flatpickr
+            ? dateInput._flatpickr.altInput : null;
+        if (altInput) altInput.disabled = false;
+        if (timeSelect) timeSelect.disabled = false;
+
+        // Clear the posted values so a stale date/time from a
+        // previous opening is never submitted by accident.
+        var hidden = document.getElementById("admApptDateHidden");
+        if (hidden) hidden.value = "";
+        var consume = document.getElementById("admConsumeSuggestion");
+        if (consume) consume.value = "";
+    }
+    </script>
 
   <script>
         const scheduleBtn = document.getElementById("scheduleBtn");
@@ -251,6 +1343,9 @@
         function openScheduleModal() {
             scheduleModal.style.display = "flex";
             scheduleModal.classList.add("show");
+
+            // Viewing the schedule clears its notification dot.
+            markSectionSeen('schedule');
 
             const uid = "{{ user.get('uid', '') }}";
             console.log("UID:", uid);
@@ -344,15 +1439,44 @@
 
                     tbody.innerHTML = "";
 
-                    data.forEach(item => {
+                    // Keep the raw rows so the Accept/Decline
+                    // buttons can read the appointment they
+                    // belong to (see getScheduleItem below).
+                    window.__scheduleItems = data;
+
+                    data.forEach((item, index) => {
 
                         console.log(item);
 
+                        // Only the dentist's "next visit" suggestion
+                        // (written from a treatment record) is still
+                        // waiting on the patient. The patient's own
+                        // bookings are already accepted once the admin
+                        // confirms them, and the dentist's own creations
+                        // are confirmed on the spot, so neither needs
+                        // an action button.
+                        var actionable = item.status === 'suggested';
+
                         tbody.innerHTML += `
-                            <tr>
+                            <tr data-idx="${index}">
                                 <td>${formatScheduleDateTime(item.appointment_date || item.Date) || "-"}</td>
-                                <td>${item.Service || item.service || "-"}</td>
                                 <td>${item.DentistName || "-"}</td>
+                                <td>
+                                    ${actionable ? `
+                                    <div class="appt-actions">
+                                        <button type="button" class="btn-action appt-accept-btn"
+                                            title="Accept this appointment" aria-label="Accept this appointment"
+                                            onclick="acceptScheduleAppt(this.closest('tr'))">
+                                            <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                        </button>
+                                        <button type="button" class="btn-action appt-decline-btn"
+                                            title="Decline this appointment" aria-label="Decline this appointment"
+                                            onclick="declineScheduleAppt(this.closest('tr'))">
+                                            <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+                                        </button>
+                                    </div>` : `
+                                    <span class="appt-confirmed">Confirmed</span>`}
+                                </td>
                             </tr>
                         `;
                     });
@@ -377,6 +1501,7 @@
     <a href="javascript:void(0);" class="nav-card" data-uid="{{ user.get('uid', '') }}" onclick="openVisitHistory(this.dataset.uid)">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
         <span>Dental Records</span>
+        <span class="nav-card__badge" id="recordsBadge" hidden aria-label="New dental records"></span>
     </a>
 
     <div id="visitHistoryModal" class="modal">
@@ -444,6 +1569,9 @@ function openVisitHistory(uid) {
     const visitModal = document.getElementById("visitHistoryModal");
     visitModal.style.display = "flex";
     visitModal.classList.add("show");
+
+    // Viewing the records clears their notification dot.
+    markSectionSeen('records');
 
     const tbody = document.getElementById("visitHistoryBody");
 
@@ -583,6 +1711,7 @@ function closeChartView() {
     <a href="#" class="nav-card" onclick="openPaymentModal(); return false;">
         <img src="https://img.icons8.com/ios-filled/50/ffffff/cash.png" alt="Payments">
         <span>Payments</span>
+        <span class="nav-card__badge" id="paymentsBadge" hidden aria-label="New payment activity"></span>
     </a>
 
     <!-- Payment Modal -->
@@ -635,6 +1764,9 @@ function closeChartView() {
         const paymentModal = document.getElementById("paymentModal");
         paymentModal.style.display = "flex";
         paymentModal.classList.add("show");
+
+        // Viewing the payments clears their notification dot.
+        markSectionSeen('payments');
 
         const body = document.getElementById("paymentTableBody");
 
@@ -1323,6 +2455,478 @@ async function payGCash(amount, procedure) {
         const win = window.open();
         win.document.write('<img src="data:image/png;base64,' + base64Image + '" style="max-width:100%;"/>');
     }
+    </script>
+
+    <script>
+    /* ---- Schedule modal action buttons -----------------------
+       Accept: ask whether to carry the previous details over,
+       then open the booking form right here with the admin's
+       date and time locked in. Decline: ask for a reason; the
+       reschedule reason reopens the booking form with the
+       previous details and a selectable date and time, every
+       other reason removes the appointment. */
+
+    var pdConfirmItem = null;
+    var pdDeclineItem = null;
+
+    function getScheduleItem(row) {
+        var idx = row ? row.getAttribute('data-idx') : null;
+        var items = window.__scheduleItems || [];
+        return idx !== null && items[idx] ? items[idx] : null;
+    }
+
+    function acceptScheduleAppt(row) {
+        var item = getScheduleItem(row);
+        if (!item) {
+            showToast("Appointment details not found.", "error");
+            return;
+        }
+        pdConfirmItem = item;
+        var modal = document.getElementById('apptConfirmModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function closeApptConfirmModal() {
+        var modal = document.getElementById('apptConfirmModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+        pdConfirmItem = null;
+    }
+
+    function confirmAcceptAppointment(fillPrevious) {
+        var item = pdConfirmItem;
+        closeApptConfirmModal();
+        if (!item) return;
+        openAppointmentFormFor({
+            mode: 'accept',
+            fillPrevious: !!fillPrevious,
+            item: item
+        });
+    }
+
+    function declineScheduleAppt(row) {
+        var item = getScheduleItem(row);
+        if (!item) {
+            showToast("Appointment details not found.", "error");
+            return;
+        }
+        pdDeclineItem = item;
+        var modal = document.getElementById('apptDeclineModal');
+        if (!modal) return;
+        resetApptReason();
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function closeApptDeclineModal() {
+        var modal = document.getElementById('apptDeclineModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+        closeApptReasonMenu();
+        pdDeclineItem = null;
+    }
+
+    /* ---- Decline reason dropdown -------------------------
+       A native <select> cannot be styled past a handful
+       of properties, so the trigger is a button and the
+       options are a real listbox portalled to <body> (the
+       modal content scrolls, which would clip an in-modal
+       popup). The chosen reason rides on the hidden
+       #apptDeclineReason input, so submitDeclineReason()
+       reads it exactly as before. */
+    var APPT_REASON_OPTIONS = [
+        { value: 'no_need', label: "I don't need another appointment" },
+        {
+            value: 'reschedule',
+            label: "I'm not available at the selected date and time of the appointment, I want to reschedule it",
+            tag: 'pick a new date & time'
+        },
+        { value: 'emergency', label: 'I have an emergency and cannot make it' },
+        { value: 'treated_elsewhere', label: 'I already received treatment elsewhere' },
+        { value: 'other', label: 'Other' }
+    ];
+
+    var apptReasonMenu = null;
+    var apptReasonOpen = false;
+    var apptReasonActive = -1;
+
+    function getApptReasonMenu() {
+        if (apptReasonMenu && apptReasonMenu.isConnected) return apptReasonMenu;
+
+        var menu = document.createElement('ul');
+        menu.className = 'appt-reason-menu';
+        menu.id = 'apptReasonMenu';
+        menu.setAttribute('role', 'listbox');
+        menu.hidden = true;
+
+        APPT_REASON_OPTIONS.forEach(function (opt) {
+            var li = document.createElement('li');
+            li.className = 'appt-reason-option'
+                + (opt.value === 'reschedule' ? ' appt-reason-option--reschedule' : '');
+            li.setAttribute('role', 'option');
+            li.setAttribute('data-value', opt.value);
+            li.setAttribute('aria-selected', 'false');
+
+            var label = document.createElement('span');
+            label.className = 'appt-reason-option__label';
+            label.textContent = opt.label;
+            li.appendChild(label);
+
+            if (opt.tag) {
+                var tag = document.createElement('span');
+                tag.className = 'appt-reason-option__tag';
+                tag.textContent = opt.tag;
+                li.appendChild(tag);
+            }
+
+            menu.appendChild(li);
+        });
+
+        document.body.appendChild(menu);
+        apptReasonMenu = menu;
+        return menu;
+    }
+
+    function setApptReason(value, label) {
+        var input = document.getElementById('apptDeclineReason');
+        if (input) input.value = value || '';
+
+        var text = document.getElementById('apptReasonText');
+        if (text) text.textContent = label || 'Select a reason';
+
+        var trigger = document.getElementById('apptReasonTrigger');
+        if (trigger) {
+            trigger.classList.toggle('appt-reason-trigger--placeholder', !value);
+        }
+    }
+
+    function positionApptReasonMenu() {
+        var menu = getApptReasonMenu();
+        var trigger = document.getElementById('apptReasonTrigger');
+        if (!trigger) return;
+
+        var rect = trigger.getBoundingClientRect();
+        var menuHeight = menu.offsetHeight || 280;
+        var spaceBelow = window.innerHeight - rect.bottom;
+        var spaceAbove = rect.top;
+
+        menu.style.left = rect.left + 'px';
+        menu.style.width = rect.width + 'px';
+
+        if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+            menu.style.top = 'auto';
+            menu.style.bottom = (window.innerHeight - rect.top + 6) + 'px';
+            menu.classList.add('is-above');
+        } else {
+            menu.style.bottom = 'auto';
+            menu.style.top = (rect.bottom + 6) + 'px';
+            menu.classList.remove('is-above');
+        }
+    }
+
+    function openApptReasonMenu() {
+        var trigger = document.getElementById('apptReasonTrigger');
+        if (!trigger) return;
+
+        var menu = getApptReasonMenu();
+        apptReasonOpen = true;
+        menu.hidden = false;
+        trigger.setAttribute('aria-expanded', 'true');
+        trigger.classList.add('is-open');
+
+        // Start from the option that is already chosen.
+        var current = document.getElementById('apptDeclineReason');
+        var currentValue = current ? current.value : '';
+        apptReasonActive = APPT_REASON_OPTIONS.findIndex(function (opt) {
+            return opt.value === currentValue;
+        });
+
+        positionApptReasonMenu();
+    }
+
+    function closeApptReasonMenu() {
+        var menu = getApptReasonMenu();
+        var trigger = document.getElementById('apptReasonTrigger');
+
+        apptReasonOpen = false;
+        apptReasonActive = -1;
+        menu.hidden = true;
+
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.classList.remove('is-open');
+        }
+
+        menu.querySelectorAll('.appt-reason-option').forEach(function (el) {
+            el.classList.remove('is-active');
+        });
+    }
+
+    function selectApptReason(value) {
+        var opt = APPT_REASON_OPTIONS.find(function (o) {
+            return o.value === value;
+        });
+        if (!opt) return;
+
+        setApptReason(opt.value, opt.label);
+
+        getApptReasonMenu().querySelectorAll('.appt-reason-option').forEach(function (el) {
+            var on = el.getAttribute('data-value') === opt.value;
+            el.classList.toggle('is-selected', on);
+            el.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+
+        closeApptReasonMenu();
+
+        var trigger = document.getElementById('apptReasonTrigger');
+        if (trigger) trigger.focus();
+    }
+
+    function resetApptReason() {
+        setApptReason('', 'Select a reason');
+        closeApptReasonMenu();
+
+        getApptReasonMenu().querySelectorAll('.appt-reason-option').forEach(function (el) {
+            el.classList.remove('is-selected');
+            el.setAttribute('aria-selected', 'false');
+        });
+    }
+
+    function toggleApptReasonMenu() {
+        if (apptReasonOpen) closeApptReasonMenu();
+        else openApptReasonMenu();
+    }
+
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (!target || !target.closest) return;
+
+        if (target.closest('.appt-reason-option')) {
+            var option = target.closest('.appt-reason-option');
+            selectApptReason(option.getAttribute('data-value'));
+            return;
+        }
+
+        if (target.closest('#apptReasonTrigger')) {
+            toggleApptReasonMenu();
+            return;
+        }
+
+        if (apptReasonOpen && !target.closest('.appt-reason-menu')) {
+            closeApptReasonMenu();
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        if (!apptReasonOpen) return;
+
+        var menu = getApptReasonMenu();
+        var options = Array.from(menu.querySelectorAll('.appt-reason-option'));
+        if (!options.length) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeApptReasonMenu();
+            var trigger = document.getElementById('apptReasonTrigger');
+            if (trigger) trigger.focus();
+            return;
+        }
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (apptReasonActive === -1) {
+                apptReasonActive = event.key === 'ArrowDown' ? 0 : options.length - 1;
+            } else {
+                var delta = event.key === 'ArrowDown' ? 1 : -1;
+                apptReasonActive = (apptReasonActive + delta + options.length) % options.length;
+            }
+            options.forEach(function (el, index) {
+                el.classList.toggle('is-active', index === apptReasonActive);
+            });
+            options[apptReasonActive].scrollIntoView({ block: 'nearest' });
+            return;
+        }
+
+        if ((event.key === 'Enter' || event.key === ' ') && apptReasonActive !== -1) {
+            event.preventDefault();
+            selectApptReason(options[apptReasonActive].getAttribute('data-value'));
+        }
+    });
+
+    // A fixed-position popup cannot follow its anchor once
+    // the page moves.
+    window.addEventListener('resize', closeApptReasonMenu);
+    window.addEventListener('scroll', function () {
+        if (apptReasonOpen) closeApptReasonMenu();
+    }, true);
+
+    function submitDeclineReason() {
+        var item = pdDeclineItem;
+        var reasonSelect = document.getElementById('apptDeclineReason');
+        var reason = reasonSelect ? reasonSelect.value : '';
+        if (!reason) {
+            showToast("Please select a reason.", "warning");
+            return;
+        }
+        closeApptDeclineModal();
+
+        // Rescheduling keeps the previous details and lets
+        // the patient pick a new date and time in the form.
+        if (reason === 'reschedule') {
+            openAppointmentFormFor({
+                mode: 'reschedule',
+                fillPrevious: true,
+                item: item
+            });
+            return;
+        }
+
+        // Any other reason declines the appointment outright.
+        declineAppointmentOnServer(item);
+    }
+
+    function declineAppointmentOnServer(item) {
+        var appointmentId = item.id || '';
+        if (!appointmentId) {
+            showToast("Appointment ID not found.", "error");
+            return;
+        }
+
+        var form = new URLSearchParams();
+        form.append('appointment_id', appointmentId);
+
+        fetch('/patient/decline_appointment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: form.toString()
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data && data.success) {
+                showToast("Appointment declined.", "success");
+                // Refresh the schedule and clear its dot,
+                // since the patient just acted on it.
+                var uid = "{{ user.get('uid', '') }}";
+                if (uid) {
+                    loadApprove(uid);
+                    markSectionSeen('schedule');
+                }
+            } else {
+                showToast((data && data.message) || "Unable to decline the appointment.", "error");
+            }
+        })
+        .catch(function () {
+            showToast("Unable to decline the appointment.", "error");
+        });
+    }
+
+    /* ---- Card notification dots ----------------------------
+       A red circle appears on the Schedule, Dental Records
+       and Payments cards only when that section holds data
+       the patient has not viewed yet, like notifications.
+       The last-viewed time per section is kept in
+       localStorage; opening a modal marks it as seen. */
+
+    var PD_SEEN_KEY = 'pdNotifSeen';
+
+    function pdGetSeen() {
+        try {
+            return JSON.parse(localStorage.getItem(PD_SEEN_KEY) || '{}') || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function pdSaveSeen(seen) {
+        try {
+            localStorage.setItem(PD_SEEN_KEY, JSON.stringify(seen));
+        } catch (e) { /* storage unavailable */ }
+    }
+
+    function pdSetBadge(id, show) {
+        var el = document.getElementById(id);
+        if (el) el.hidden = !show;
+    }
+
+    function markSectionSeen(section) {
+        var uid = "{{ user.get('uid', '') }}";
+        if (!uid) return;
+
+        var seen = pdGetSeen();
+        var mine = seen[uid] || {};
+        mine[section] = new Date().toISOString();
+        seen[uid] = mine;
+        pdSaveSeen(seen);
+
+        pdSetBadge(
+            section === 'schedule' ? 'scheduleBadge'
+            : section === 'records' ? 'recordsBadge'
+            : 'paymentsBadge',
+            false
+        );
+    }
+
+    // Newest timestamp (ms) across the given fields of the
+    // items; 0 when none of them carry a parseable date.
+    function pdNewestTs(items, fields) {
+        var newest = 0;
+        (items || []).forEach(function (it) {
+            fields.forEach(function (f) {
+                var t = Date.parse(it[f] || '');
+                if (!isNaN(t) && t > newest) newest = t;
+            });
+        });
+        return newest;
+    }
+
+    function pdIsNew(items, fields, section) {
+        var uid = "{{ user.get('uid', '') }}";
+        var mine = uid ? (pdGetSeen()[uid] || {}) : {};
+        var lastSeen = Date.parse(mine[section] || '');
+        if (isNaN(lastSeen)) lastSeen = 0;
+        return pdNewestTs(items, fields) > lastSeen;
+    }
+
+    (function () {
+        var uid = "{{ user.get('uid', '') }}";
+        if (!uid) return;
+
+        // Schedule: entries the admin accepted or suggested.
+        fetch("/get_approve/" + uid)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (!Array.isArray(data)) return;
+                pdSetBadge("scheduleBadge",
+                    pdIsNew(data, ["accepted_at", "created_at"], "schedule"));
+            })
+            .catch(function () { /* leave the dot hidden on failure */ });
+
+        // Dental Records and Payments both render the patient's
+        // Done_procedure history, so one read drives both dots.
+        // Each card tracks its own last-viewed time.
+        fetch("/get_patient/" + uid)
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                var records = (data && Array.isArray(data.Done_procedure))
+                    ? data.Done_procedure : [];
+                pdSetBadge("recordsBadge",
+                    records.length > 0 &&
+                    pdIsNew(records, ["updated_at", "date"], "records"));
+                pdSetBadge("paymentsBadge",
+                    records.length > 0 &&
+                    pdIsNew(records, ["updated_at", "date"], "payments"));
+            })
+            .catch(function () { /* leave the dots hidden on failure */ });
+    })();
     </script>
 
 </body>

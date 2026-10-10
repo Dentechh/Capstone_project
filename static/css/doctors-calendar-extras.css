@@ -6,6 +6,104 @@
             margin-top: 28px;
         }
 
+        /* Block panel heading and field labels. These were inline
+           styles before, which beat every body.dark-mode rule and
+           left light-only colours on the dark backdrop. */
+        #section-doctorscalendar .dc-panel-title {
+            margin: 0 0 20px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #0d47a1;
+        }
+
+        #section-doctorscalendar .dc-field-label {
+            display: block;
+            margin: 0 0 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        #section-doctorscalendar .dc-field-label--spaced {
+            margin: 16px 0 8px;
+        }
+
+        #section-doctorscalendar .dc-toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #1e293b;
+            cursor: pointer;
+        }
+
+        body.dark-mode #section-doctorscalendar .dc-panel-title {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #section-doctorscalendar .dc-field-label,
+        body.dark-mode #section-doctorscalendar .dc-toggle-label {
+            color: #e2e8f0;
+        }
+
+        /* From / To date fields (Block multiple days, Mark past
+           days closed). The visible field is flatpickr's alt
+           input; the popup calendar reuses the shared
+           .adm-datepicker theme (admin.css), including its dark
+           mode. The field design matches the Reason input. */
+        #section-doctorscalendar .dc-date-alt,
+        #section-doctorscalendar .dc-date-alt.flatpickr-input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 42px 12px 16px;
+            min-height: 46px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #1a1a1a;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            outline: none;
+        }
+
+        #section-doctorscalendar .dc-date-alt::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        #section-doctorscalendar .dc-date-alt:focus {
+            border-color: #0d47a1;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.12);
+        }
+
+        #section-doctorscalendar .dc-range-dates .dc-date-alt {
+            margin-top: 6px;
+        }
+
+        #section-doctorscalendar .flatpickr {
+            display: block;
+            width: 100%;
+        }
+
+        body.dark-mode #section-doctorscalendar .dc-date-alt,
+        body.dark-mode #section-doctorscalendar .dc-date-alt.flatpickr-input {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: #475569;
+            color: #e2e8f0;
+        }
+
+        body.dark-mode #section-doctorscalendar .dc-date-alt:focus {
+            border-color: #64b5f6;
+            background: rgba(15, 23, 42, 0.95);
+            box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.25);
+        }
+
         .dc-card {
             background: #ffffff;
             border: 1px solid #e2e8f0;
@@ -220,7 +318,6 @@
             background: rgba(30, 41, 59, 0.75);
             border-color: #334155;
         }
-
         body.dark-mode .dc-card-head h4,
         body.dark-mode .dc-date {
             color: #64b5f6;
@@ -287,10 +384,104 @@
             color: #334155;
         }
 
-        #section-doctorscalendar .dc-month-pick .dc-input {
+        /* Closure Month / Year stepper. Same chip design as the
+           Financial Reports' Month / Year picker (#financialNav
+           .fin-nav-select): tinted navy field with a chevron tile,
+           driven by the shared .adm-select listbox. Id-scoped so
+           appointment-modal.css's global "body.dark-mode
+           .adm-select>select" cannot repaint it. */
+        #closureMonthPicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #closureMonthPicker .adm-select {
             width: auto;
-            padding: 8px 10px;
-            font-size: 14px;
+            margin: 0;
+        }
+
+        #closureMonthPicker .dc-month-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            min-width: 132px;
+            height: 38px;
+            padding: 0 42px 0 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background-color: #f1f8ff;
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#f1f8ff, #f1f8ff);
+            background-repeat: no-repeat, no-repeat;
+            background-position: right 8px center, 0 0;
+            background-size: 24px 24px, 100% 100%;
+            color: #0d47a1;
+            box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+            font-family: inherit;
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease,
+                background-color 0.25s ease;
+        }
+
+        #closureMonthPicker .dc-month-select:hover {
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#e8f2ff, #e8f2ff);
+        }
+
+        #closureMonthPicker .dc-month-select:focus-visible {
+            outline: none;
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#e8f2ff, #e8f2ff);
+        }
+
+        #closureMonthPicker .adm-select.is-open>.dc-month-select {
+            border-color: #0d47a1;
+            background-color: #e8f2ff;
+            box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#e8f2ff, #e8f2ff);
+        }
+
+        body.dark-mode #closureMonthPicker .dc-month-select {
+            border-color: #555;
+            background-color: #1e1e1e;
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#1e1e1e, #1e1e1e);
+            color: #e0e0e0;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+            color-scheme: dark;
+        }
+
+        body.dark-mode #closureMonthPicker .dc-month-select:hover,
+        body.dark-mode #closureMonthPicker .dc-month-select:focus-visible {
+            border-color: #64b5f6;
+            background-color: #262626;
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#262626, #262626);
+        }
+
+        body.dark-mode #closureMonthPicker .adm-select.is-open>.dc-month-select {
+            border-color: #64b5f6;
+            background-color: #262626;
+            box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+            background-image:
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+                linear-gradient(#262626, #262626);
         }
 
         .dc-stats {
@@ -334,6 +525,10 @@
 
         @media (max-width: 600px) {
             .dc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+            #closureMonthPicker {
+                flex-wrap: wrap;
+            }
         }
 
         @media (max-width: 1000px) {

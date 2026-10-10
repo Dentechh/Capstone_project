@@ -1858,7 +1858,10 @@
                     // cannot be styled, so it uses the same listbox as the modals.
                     // The panel is body-level and flips, so the page scroll container
                     // can never clip it.
-                    { el: document.getElementById('financialNav'), scroller: '.content-section', allowFlip: true }
+                    { el: document.getElementById('financialNav'), scroller: '.content-section', allowFlip: true },
+                    // Doctors Calendar closure summary Month / Year stepper:
+                    // same control, same treatment.
+                    { el: document.getElementById('closureMonthPicker'), scroller: '.content-section', allowFlip: true }
                 ].filter(function (r) { return r.el; });
 
                 if (!roots.length) return;

@@ -218,7 +218,7 @@ function showSection(sectionId) {
             <td>${p.date || ""}</td>
             <td>${p.procedure || ""}</td>
             <td class="pd-visits__fee">₱${p.paid || 0}</td>
-            <td>${p.next_appointment || ""}</td>
+            <td>${formatApptDateTime(p.next_appointment) || ""}</td>
         </tr>
     `;
 
@@ -841,27 +841,39 @@ function showSection(sectionId) {
         }
 
         /**
-         * flatpickr keeps the original input (and its Y-m-d value) in place and
+         * flatpickr keeps the original input (and its value) in place and
          * inserts a visible alt input in front of it, so saveTreatmentNotes(),
          * the FormData submit and the validation all keep reading the same
          * element they always did. The calendar is appended to <body> because
          * .td-records__scroll clips anything overflowing the table.
+         *
+         * The Next Appointment column is the one field that carries a time
+         * as well as a date: it feeds the patient's "next visit" suggestion,
+         * which stores "YYYY-MM-DD HH:MM" -- the same shape appointment_date
+         * uses everywhere else. The visit Date column stays date-only.
          */
         function initTreatmentDatePickers(scope) {
             if (typeof flatpickr !== 'function') return;
             var root = scope || document;
             root.querySelectorAll('input.adm-date-native').forEach(function (input) {
                 if (input._flatpickr) return;
-                flatpickr(input, {
-                    dateFormat: 'Y-m-d',
+                var withTime = input.classList.contains('td-next-appt');
+                var opts = {
+                    enableTime: withTime,
+                    dateFormat: withTime ? 'Y-m-d H:i' : 'Y-m-d',
                     altInput: true,
-                    altFormat: 'M j, Y',
-                    altInputClass: 'adm-date-alt',
+                    altFormat: withTime ? 'M j, Y - h:i K' : 'M j, Y',
+                    altInputClass: withTime ? 'adm-date-alt adm-next-appt-alt' : 'adm-date-alt',
                     className: 'adm-datepicker',
                     allowInput: false,
                     monthSelectorType: 'static',
+                    minuteIncrement: withTime ? 30 : 1,
                     appendTo: document.body
-                });
+                };
+                // A next appointment cannot be in the past, so every
+                // day before today is greyed out in the calendar.
+                if (withTime) opts.minDate = 'today';
+                flatpickr(input, opts);
                 // The visible control is flatpickr's alt input, so the real
                 // input must not keep `required` or validation would block on
                 // a field the user cannot even see.
@@ -926,7 +938,7 @@ function showSection(sectionId) {
 
                 '<td><input type="text" class="td-balance" value="' + escHtml(data.balance || '') + '" placeholder="Balance" readonly></td>' +
 
-                '<td><input type="date" class="td-next-appt adm-date-native" value="' + escHtml(data.nextAppt || '') + '"></td>' +
+                '<td><input type="text" class="td-next-appt adm-date-native" value="' + escHtml(data.nextAppt || '') + '" placeholder="Select date &amp; time" autocomplete="off"></td>' +
 
                 '<td>' +
                 '<select class="td-medicine">' +
@@ -1283,6 +1295,11 @@ function showSection(sectionId) {
                     procPeriod = procBtn.dataset.period;
                 }
                 loadProcedureCharts(procPeriod);
+            }
+            // Rebuild the Doctors Calendar closure chart with
+            // theme-appropriate colors (hook exposed by block-dates.js)
+            if (typeof window.admRebuildClosureChart === 'function') {
+                window.admRebuildClosureChart();
             }
             // Rebuild dashboard charts with theme-appropriate colors
             if (typeof dashboardDonutInstance !== 'undefined' && dashboardDonutInstance) {

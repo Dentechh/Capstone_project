@@ -278,8 +278,11 @@
             }
 
             function selectedClosureMonth() {
-                const m = /^(\d{4})-(\d{2})$/.exec(document.getElementById('closureMonth').value || '');
-                return m ? { year: +m[1], month: +m[2] } : null;
+                const mSel = document.getElementById('closureMonthSel');
+                const ySel = document.getElementById('closureYearSel');
+                const m = Number(mSel && mSel.value);
+                const y = Number(ySel && ySel.value);
+                return (m >= 1 && m <= 12 && y) ? { year: y, month: m } : null;
             }
 
             function drawClosureChart(months) {
@@ -294,20 +297,113 @@
                     closure.chart.update();
                     return;
                 }
+
+                /* Same house style as the Income Trend chart: Kumbh
+                   Sans throughout, theme-aware axis / grid / tooltip
+                   colours, gradient bars with rounded corners, and a
+                   point-style legend instead of the Chart.js default. */
+                const isDark = document.body.classList.contains('dark-mode');
+                const axisColor = isDark ? '#cbd5e1' : '#475569';
+                const gridColor = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(15,23,42,0.07)';
+
+                function barGradient(top, bottom) {
+                    return function (c) {
+                        const chart = c.chart;
+                        const area = chart.chartArea;
+                        if (!area) return top;
+                        const g = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                        g.addColorStop(0, top);
+                        g.addColorStop(1, bottom);
+                        return g;
+                    };
+                }
+
                 closure.chart = new Chart(canvas, {
                     type: 'bar',
                     data: {
                         labels: SHORT_MONTHS,
                         datasets: [
-                            { label: 'Closed days', data: closed, backgroundColor: '#ef4444', borderRadius: 4 },
-                            { label: 'Partial days', data: partial, backgroundColor: '#f59e0b', borderRadius: 4 }
+                            {
+                                label: 'Closed days',
+                                data: closed,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                maxBarThickness: 34,
+                                backgroundColor: barGradient(
+                                    isDark ? 'rgba(248,113,113,0.95)' : 'rgba(239,68,68,0.95)',
+                                    isDark ? 'rgba(220,38,38,0.55)' : 'rgba(239,68,68,0.45)'),
+                                hoverBackgroundColor: isDark ? '#fca5a5' : '#ef4444'
+                            },
+                            {
+                                label: 'Partial days',
+                                data: partial,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                maxBarThickness: 34,
+                                backgroundColor: barGradient(
+                                    isDark ? 'rgba(251,191,36,0.95)' : 'rgba(245,158,11,0.95)',
+                                    isDark ? 'rgba(217,119,6,0.55)' : 'rgba(245,158,11,0.45)'),
+                                hoverBackgroundColor: isDark ? '#fcd34d' : '#f59e0b'
+                            }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-                        plugins: { legend: { position: 'bottom' } }
+                        interaction: { mode: 'index', intersect: false },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: axisColor,
+                                    font: { family: 'Kumbh Sans', size: 12 },
+                                    precision: 0,
+                                    maxTicksLimit: 6
+                                },
+                                grid: {
+                                    color: gridColor,
+                                    drawTicks: false,
+                                    borderDash: [4, 4],
+                                    lineWidth: 0
+                                },
+                                border: { display: false }
+                            },
+                            x: {
+                                ticks: {
+                                    color: axisColor,
+                                    font: { family: 'Kumbh Sans', size: 12, weight: '600' }
+                                },
+                                grid: { display: false },
+                                border: { color: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.12)' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: axisColor,
+                                    font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    boxWidth: 8,
+                                    boxHeight: 8,
+                                    padding: 18
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: isDark ? '#0b1220' : '#1e293b',
+                                titleColor: '#ffffff',
+                                bodyColor: '#e2e8f0',
+                                borderColor: 'rgba(255,255,255,0.14)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 10,
+                                boxPadding: 6,
+                                titleFont: { family: 'Kumbh Sans', size: 13, weight: '700' },
+                                bodyFont: { family: 'Kumbh Sans', size: 12 }
+                            }
+                        },
+                        animation: { duration: 1200, easing: 'easeOutQuart' }
                     }
                 });
             }
@@ -366,16 +462,41 @@
             }
 
             function initClosureSummary() {
-                const monthInput = document.getElementById('closureMonth');
-                if (!monthInput) return;
+                const monthSel = document.getElementById('closureMonthSel');
+                const yearSel = document.getElementById('closureYearSel');
+                if (!monthSel || !yearSel) return;
                 const now = new Date();
-                monthInput.value = now.getFullYear() + '-' + pad(now.getMonth() + 1);
+                const thisYear = now.getFullYear();
+                const thisMonth = now.getMonth() + 1;
 
-                monthInput.addEventListener('change', function () {
+                // Month dropdown: January..December, current month first.
+                monthSel.innerHTML = '';
+                MONTH_NAMES.forEach(function (name, idx) {
+                    const opt = document.createElement('option');
+                    opt.value = String(idx + 1);
+                    opt.textContent = name;
+                    if (idx + 1 === thisMonth) opt.selected = true;
+                    monthSel.appendChild(opt);
+                });
+
+                // Year dropdown: the backend accepts 2000..current+2.
+                yearSel.innerHTML = '';
+                for (let y = thisYear + 2; y >= 2000; y--) {
+                    const opt = document.createElement('option');
+                    opt.value = String(y);
+                    opt.textContent = String(y);
+                    if (y === thisYear) opt.selected = true;
+                    yearSel.appendChild(opt);
+                }
+
+                function onPick() {
                     const sel = selectedClosureMonth();
                     if (!sel) return;
                     if (sel.year !== closure.year) loadClosureYear(sel.year); else renderClosureSummary();
-                });
+                }
+
+                monthSel.addEventListener('change', onPick);
+                yearSel.addEventListener('change', onPick);
 
                 // Load the first time the card is really on screen (the section starts hidden).
                 const card = document.querySelector('.dc-closures');
@@ -397,11 +518,29 @@
                 if (!pFrom || !pTo || !pBtn) return;
                 const yest = new Date();
                 yest.setDate(yest.getDate() - 1);
-                pFrom.max = toDateStr(yest);
-                pTo.max = toDateStr(yest);
+                const yestStr = toDateStr(yest);
+
+                /* Same flatpickr treatment as the Block multiple
+                   days From / To fields. Only days before today
+                   are selectable (maxDate = yesterday). */
+                const pastDateOpts = {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'F j, Y',
+                    altInputClass: 'dc-date-alt',
+                    className: 'adm-datepicker',
+                    allowInput: false,
+                    monthSelectorType: 'static',
+                    maxDate: yestStr
+                };
+                const pastFromPicker = flatpickr(pFrom, Object.assign({}, pastDateOpts));
+                const pastToPicker = flatpickr(pTo, Object.assign({}, pastDateOpts));
+
                 pFrom.addEventListener('change', function () {
-                    pTo.min = pFrom.value || '';
-                    if (pTo.value && pFrom.value && pTo.value < pFrom.value) pTo.value = pFrom.value;
+                    pastToPicker.set('minDate', pFrom.value || null);
+                    if (pTo.value && pFrom.value && pTo.value < pFrom.value) {
+                        pastToPicker.setDate(pFrom.value);
+                    }
                 });
 
                 pBtn.addEventListener('click', async function () {
@@ -424,8 +563,10 @@
                         const res = await fetch('/admin/mark_past_closed', { method: 'POST', body: formData });
                         const result = await res.json();
                         if (result.success) {
-                            pFrom.value = '';
-                            pTo.value = '';
+                            /* clear() resets both the hidden
+                               input and the visible alt input. */
+                            pastFromPicker.clear();
+                            pastToPicker.clear();
                             document.getElementById('pastReason').value = '';
                             await loadBlockedSlots();
                             showToast(result.message || 'Marked as closed.');
@@ -536,6 +677,18 @@
                nothing else. Pass the panel the calendar lives in. */
             window.admBuildMonthDropdown = buildMonthDropdown;
             window.admReloadBlockedSlots = function () { return loadBlockedSlots(); };
+
+            /* The closure chart is canvas-drawn, so a light/dark flip
+               must rebuild it to pick up the new palette. app-core.js
+               calls this from the theme toggle, the same way it
+               reloads the income chart. */
+            window.admRebuildClosureChart = function () {
+                if (closure.chart) {
+                    closure.chart.destroy();
+                    closure.chart = null;
+                }
+                if (closure.loaded) renderClosureSummary();
+            };
 
             function pad(n) { return n < 10 ? "0" + n : "" + n; }
             function toDateStr(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
@@ -755,10 +908,28 @@
                 const rangeTo = document.getElementById('rangeTo');
                 if (rangeFrom && rangeTo) {
                     const MAX_RANGE_DAYS = 90;
-                                        const summary = document.getElementById('rangeSummary');
+                    const summary = document.getElementById('rangeSummary');
                     const todayStr = toDateStr(new Date());
-                    rangeFrom.min = todayStr;
-                    rangeTo.min = todayStr;
+
+                    /* From / To use the same flatpickr calendar as every
+                       other date field in the admin: className
+                       'adm-datepicker' themes the popup (admin.css), and
+                       the visible alt input gets the house field design
+                       (.dc-date-alt). The original input keeps the
+                       Y-m-d value the range logic reads and posts. */
+                    const dcDateOpts = {
+                        dateFormat: 'Y-m-d',
+                        altInput: true,
+                        altFormat: 'F j, Y',
+                        altInputClass: 'dc-date-alt',
+                        className: 'adm-datepicker',
+                        allowInput: false,
+                        monthSelectorType: 'static'
+                    };
+                    const rangeFromPicker = flatpickr(rangeFrom,
+                        Object.assign({ minDate: todayStr }, dcDateOpts));
+                    const rangeToPicker = flatpickr(rangeTo,
+                        Object.assign({ minDate: todayStr }, dcDateOpts));
 
                     function ymdToDate(v) {
                         const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || '');
@@ -799,8 +970,10 @@
                     }
 
                     rangeFrom.addEventListener('change', function () {
-                        rangeTo.min = rangeFrom.value || todayStr;
-                        if (rangeTo.value && rangeFrom.value && rangeTo.value < rangeFrom.value) rangeTo.value = rangeFrom.value;
+                        rangeToPicker.set('minDate', rangeFrom.value || todayStr);
+                        if (rangeTo.value && rangeFrom.value && rangeTo.value < rangeFrom.value) {
+                            rangeToPicker.setDate(rangeFrom.value);
+                        }
                         refreshRangeSummary();
                     });
                     rangeTo.addEventListener('change', refreshRangeSummary);
@@ -855,8 +1028,11 @@
                             if (result.success) {
                                 await loadBlockedSlots();
                                 showToast(result.message || 'Days blocked.');
-                                rangeFrom.value = '';
-                                rangeTo.value = '';
+                                /* clear() resets both the hidden
+                                   input and the visible alt input. */
+                                rangeFromPicker.clear();
+                                rangeToPicker.clear();
+                                rangeToPicker.set('minDate', todayStr);
                                 document.getElementById('rangeReason').value = '';
                                 document.getElementById('rangeMessage').value = '';
                                 refreshRangeSummary();

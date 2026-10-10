@@ -1963,6 +1963,24 @@
         }
 
         /* =========================================
+           FLATPICKR CALENDAR POPUP
+           The calendar is appended to <body> (flatpickr's
+           default), so it has to clear the modal
+           (z-index 10000) to be visible and clickable
+           when the date field sits inside #newApptModal.
+           index-s.css themes it at z-index 80, which is
+           fine for the admin dashboard's records table
+           but lands behind the modal here - the patient
+           would see the calendar glitching through the
+           overlay and be unable to pick a date. Kept
+           below the toast container (99999) so validation
+           messages still show above an open calendar.
+           ========================================= */
+        .adm-datepicker.flatpickr-calendar {
+            z-index: 50000;
+        }
+
+        /* =========================================
            DENTIST NAME COMBOBOX
            Ported from admin.css so the Consulting Dentist
            field in the appointment wizard gets its styled

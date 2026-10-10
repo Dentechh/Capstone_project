@@ -4,12 +4,12 @@
                     <div class="doctor-cal-panel">
                         <div id="doctorCalendarPicker"></div>
                         <div class="calendar-legend">
-                            <span style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px;">
+                            <span>
                                 <span
                                     style="display:inline-block;width:12px;height:12px;background:#ef4444;border-radius:50%;box-shadow:0 0 0 3px rgba(239,68,68,0.15);"></span>
                                 Full day blocked
                             </span>
-                            <span style="display:inline-flex;align-items:center;gap:6px;">
+                            <span>
                                 <span
                                     style="display:inline-block;width:12px;height:12px;background:#f59e0b;border-radius:50%;box-shadow:0 0 0 3px rgba(245,158,11,0.15);"></span>
                                 Partially blocked
@@ -17,74 +17,70 @@
                         </div>
                     </div>
                     <div style="flex:1; min-width:280px;">
-                        <h3 id="blockPanelDate"
-                            style="margin-top:0; font-size:22px; color:#0d47a1; font-weight:700; margin-bottom:20px;">
-                            Select a date</h3>
+                        <h3 id="blockPanelDate" class="dc-panel-title">Select a date</h3>
 
-                        <label id="blockFullDayToggleLabel"
-                            style="display:flex; align-items:center; gap:10px; margin-bottom:16px; font-weight:600; cursor:pointer; color:#1e293b; font-size:15px;">
+                        <label id="blockFullDayToggleLabel" class="dc-toggle-label">
                             <input type="checkbox" id="blockFullDayToggle" class="calendar-checkbox">
                             Block entire day
                         </label>
 
-                        <div id="blockTimesGrid"
-                            style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px;">
+                        <div id="blockTimesGrid">
                         </div>
 
-                        <label
-                            style="display:block; font-weight:600; margin-bottom:8px; color:#1e293b; font-size:14px;">Reason
+                        <label class="dc-field-label">Reason
                             (Optional, Internal Note)</label>
                         <input type="text" id="blockReasonInput" placeholder="e.g. Out of town - Cebu conference">
 
-                        <label
-                            style="display:block; font-weight:600; margin:16px 0 8px; color:#1e293b; font-size:14px;">Message
+                        <label class="dc-field-label dc-field-label--spaced">Message
                             to patients (Optional, shown in their notifications)</label>
                         <input type="text" id="blockPatientMessageInput" class="dc-input" maxlength="200"
                             placeholder="e.g. The clinic will be closed. We will be back soon!">
 
-                        <div id="calendarBtnGroup" style="display:flex; gap:12px; margin-top:20px;">
+                        <div id="calendarBtnGroup">
                             <button type="button" id="saveBlockBtn"><span class="material-symbols-rounded"
                                     style="font-size:18px;">save</span> Save Block</button>
                             <button type="button" id="unblockBtn"><span class="material-symbols-rounded"
                                     style="font-size:18px;">block</span> Unblock This Day</button>
                         </div>
-
-                        <details id="blockRangeCard" class="dc-range">
-                            <summary><span class="material-symbols-rounded" aria-hidden="true">date_range</span>
-                                Block multiple days</summary>
-                            <div class="dc-range-body">
-                                <div class="dc-range-dates">
-                                    <label>From <input type="date" id="rangeFrom" class="dc-input"></label>
-                                    <label>To <input type="date" id="rangeTo" class="dc-input"></label>
-                                </div>
-                                <div class="dc-range-skip">
-                                    <label><input type="checkbox" class="calendar-checkbox" id="rangeSkipSun"
-                                            value="6"> Skip Sundays</label>
-                                    <label><input type="checkbox" class="calendar-checkbox" id="rangeSkipSat"
-                                            value="5"> Skip Saturdays</label>
-                                </div>
-                                <div id="rangeSummary" class="dc-range-summary">Pick the first and last day.</div>
-                                <label class="dc-range-label">Reason (Optional, Internal Note)</label>
-                                <input type="text" id="rangeReason" class="dc-input"
-                                    placeholder="e.g. Out of town - Cebu conference">
-                                <label class="dc-range-label">Message to patients (Optional, shown in their
-                                    notifications)</label>
-                                <input type="text" id="rangeMessage" class="dc-input" maxlength="200"
-                                    placeholder="e.g. The clinic will be closed. We will be back on Oct 28!">
-                                <p class="dc-range-note">Whole days only. Existing appointments are not cancelled.
-                                    Pick the same dates and use "Unblock these days" to reopen them.</p>
-                                <div class="dc-range-actions">
-                                    <button type="button" id="rangeBlockBtn" class="dc-range-btn primary">
-                                        <span class="material-symbols-rounded" style="font-size:18px;">save</span>
-                                        Block these days</button>
-                                    <button type="button" id="rangeUnblockBtn" class="dc-range-btn danger">
-                                        <span class="material-symbols-rounded" style="font-size:18px;">block</span>
-                                        Unblock these days</button>
-                                </div>
-                            </div>
-                        </details>
                     </div>
                 </div>
+
+                <!-- Full width: the range card is not tied to the
+                     single-day panel, so it gets the whole row. -->
+                <details id="blockRangeCard" class="dc-range">
+                    <summary><span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                        Block multiple days</summary>
+                    <div class="dc-range-body">
+                        <div class="dc-range-dates">
+                            <label>From <input type="date" id="rangeFrom" class="dc-input" placeholder="First day"></label>
+                            <label>To <input type="date" id="rangeTo" class="dc-input" placeholder="Last day"></label>
+                        </div>
+                        <div class="dc-range-skip">
+                            <label><input type="checkbox" class="calendar-checkbox" id="rangeSkipSun"
+                                    value="6"> Skip Sundays</label>
+                            <label><input type="checkbox" class="calendar-checkbox" id="rangeSkipSat"
+                                    value="5"> Skip Saturdays</label>
+                        </div>
+                        <div id="rangeSummary" class="dc-range-summary">Pick the first and last day.</div>
+                        <label class="dc-range-label">Reason (Optional, Internal Note)</label>
+                        <input type="text" id="rangeReason" class="dc-input"
+                            placeholder="e.g. Out of town - Cebu conference">
+                        <label class="dc-range-label">Message to patients (Optional, shown in their
+                            notifications)</label>
+                        <input type="text" id="rangeMessage" class="dc-input" maxlength="200"
+                            placeholder="e.g. The clinic will be closed. We will be back on Oct 28!">
+                        <p class="dc-range-note">Whole days only. Existing appointments are not cancelled.
+                            Pick the same dates and use "Unblock these days" to reopen them.</p>
+                        <div class="dc-range-actions">
+                            <button type="button" id="rangeBlockBtn" class="dc-range-btn primary">
+                                <span class="material-symbols-rounded" style="font-size:18px;">save</span>
+                                Block these days</button>
+                            <button type="button" id="rangeUnblockBtn" class="dc-range-btn danger">
+                                <span class="material-symbols-rounded" style="font-size:18px;">block</span>
+                                Unblock these days</button>
+                        </div>
+                    </div>
+                </details>
 
                 <div class="dc-extras">
                     <section class="dc-card">
@@ -109,9 +105,13 @@
                 <section class="dc-card dc-closures">
                     <div class="dc-card-head">
                         <h4>Closure summary</h4>
-                        <label class="dc-month-pick">Month
-                            <input type="month" id="closureMonth" class="dc-input">
-                        </label>
+                        <div class="dc-month-pick">
+                            <span class="dc-month-pick-label">Month</span>
+                            <span id="closureMonthPicker" class="dc-closure-picker">
+                                <select id="closureMonthSel" class="dc-month-select" aria-label="Choose month"></select>
+                                <select id="closureYearSel" class="dc-month-select" aria-label="Choose year"></select>
+                            </span>
+                        </div>
                     </div>
                     <div class="dc-stats">
                         <div class="dc-stat"><span class="dc-stat-num" id="statClosed">&ndash;</span><span class="dc-stat-label">Closed days</span></div>
@@ -130,8 +130,8 @@
                             Mark past days as closed</summary>
                         <div class="dc-range-body">
                             <div class="dc-range-dates">
-                                <label>From <input type="date" id="pastFrom" class="dc-input"></label>
-                                <label>To <input type="date" id="pastTo" class="dc-input"></label>
+                                <label>From <input type="date" id="pastFrom" class="dc-input" placeholder="First day"></label>
+                                <label>To <input type="date" id="pastTo" class="dc-input" placeholder="Last day"></label>
                             </div>
                             <label class="dc-range-label">Reason (Optional, Internal Note)</label>
                             <input type="text" id="pastReason" class="dc-input" maxlength="300"
@@ -150,26 +150,33 @@
         </div>
 
 <style>
+    /* Text inputs share the Reason input's design (admin.css
+       #blockReasonInput): 2px slate border, soft white surface,
+       navy focus ring - and the same dark-mode tokens. */
     #section-doctorscalendar .dc-input {
         width: 100%;
         box-sizing: border-box;
-        padding: 12px 14px;
-        border: 2px solid #dbe3ef;
-        border-radius: 12px;
+        padding: 12px 16px;
+        border: 2px solid #cbd5e1;
+        border-radius: 10px;
         font: inherit;
-        font-size: 15px;
-        background: #fff;
-        color: #1e293b;
+        font-size: 14px;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.8);
+        color: #1a1a1a;
+        transition: all 0.25s ease;
+        outline: none;
     }
 
     #section-doctorscalendar .dc-input:focus {
-        outline: none;
         border-color: #0d47a1;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.12);
     }
 
     #section-doctorscalendar .dc-range {
         margin-top: 22px;
-        border: 2px solid #dbe3ef;
+        border: 1px solid #e2e8f0;
         border-radius: 14px;
         background: rgba(13, 71, 161, 0.03);
     }
@@ -191,7 +198,7 @@
     }
 
     #section-doctorscalendar .dc-range[open]>summary {
-        border-bottom: 1px solid #dbe3ef;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     #section-doctorscalendar .dc-range-body {
@@ -261,51 +268,88 @@
         margin-top: 16px;
     }
 
+    /* Range card buttons share the Save Block / Unblock This
+       Day design (admin.css #saveBlockBtn / #unblockBtn): navy
+       primary with a coloured lift, outlined red danger. */
     #section-doctorscalendar .dc-range-btn {
         flex: 1 1 180px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 12px 16px;
-        border-radius: 12px;
+        gap: 8px;
+        padding: 12px 28px;
+        border: none;
+        border-radius: 10px;
         font: inherit;
         font-weight: 700;
         font-size: 14px;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
         cursor: pointer;
-        border: 2px solid #0d47a1;
+        transition: all 0.25s ease;
+        min-width: 140px;
     }
 
     #section-doctorscalendar .dc-range-btn.primary {
         background: #0d47a1;
-        color: #fff;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(13, 71, 161, 0.35);
+    }
+
+    #section-doctorscalendar .dc-range-btn.primary:hover {
+        background: #0a3b7d;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(13, 71, 161, 0.45);
+    }
+
+    #section-doctorscalendar .dc-range-btn.primary:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.3);
     }
 
     #section-doctorscalendar .dc-range-btn.danger {
         background: transparent;
-        color: #dc2626;
-        border-color: #dc2626;
+        color: #ef4444;
+        border: 2px solid #ef4444;
+    }
+
+    #section-doctorscalendar .dc-range-btn.danger:hover {
+        background: #ef4444;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(239, 68, 68, 0.35);
+    }
+
+    #section-doctorscalendar .dc-range-btn.danger:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
     }
 
     body.dark-mode #section-doctorscalendar .dc-input {
-        background: #1e1e1e;
-        color: #e6e6e6;
-        border-color: #3a3a3a;
+        background: rgba(15, 23, 42, 0.85);
+        border-color: #475569;
+        color: #e2e8f0;
+        color-scheme: dark;
+    }
+
+    body.dark-mode #section-doctorscalendar .dc-input:focus {
+        border-color: #64b5f6;
+        background: rgba(15, 23, 42, 0.95);
+        box-shadow: 0 0 0 4px rgba(100, 181, 246, 0.25);
     }
 
     body.dark-mode #section-doctorscalendar .dc-range {
-        border-color: #3a3a3a;
-        background: rgba(100, 181, 246, 0.05);
+        border-color: #33415a;
+        background: rgba(30, 41, 59, 0.6);
     }
 
     body.dark-mode #section-doctorscalendar .dc-range[open]>summary {
-        border-bottom-color: #3a3a3a;
+        border-bottom-color: #33415a;
     }
 
     body.dark-mode #section-doctorscalendar .dc-range>summary,
     body.dark-mode #section-doctorscalendar .dc-range-summary {
-        color: #90caf9;
+        color: #64b5f6;
     }
 
     body.dark-mode #section-doctorscalendar .dc-range-summary.is-error {
@@ -315,7 +359,29 @@
     body.dark-mode #section-doctorscalendar .dc-range-dates label,
     body.dark-mode #section-doctorscalendar .dc-range-label,
     body.dark-mode #section-doctorscalendar .dc-range-skip label {
-        color: #e6e6e6;
+        color: #e2e8f0;
+    }
+
+    body.dark-mode #section-doctorscalendar .dc-range-btn.primary {
+        background: #42A5F6;
+        color: #0b1a3a;
+        box-shadow: 0 4px 14px rgba(66, 165, 246, 0.4);
+    }
+
+    body.dark-mode #section-doctorscalendar .dc-range-btn.primary:hover {
+        background: #64b5f6;
+        box-shadow: 0 8px 22px rgba(100, 181, 246, 0.5);
+    }
+
+    body.dark-mode #section-doctorscalendar .dc-range-btn.danger {
+        border-color: #f87171;
+        color: #fca5a5;
+    }
+
+    body.dark-mode #section-doctorscalendar .dc-range-btn.danger:hover {
+        background: #f87171;
+        color: #1a0a0a;
+        box-shadow: 0 8px 22px rgba(248, 113, 113, 0.4);
     }
 
     @media (max-width: 520px) {

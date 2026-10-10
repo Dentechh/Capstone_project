@@ -2607,6 +2607,36 @@ body.dark-mode .btn-add-row {
     color: #94a3b8;
 }
 
+/* ---------- next appointment: date + time ----------
+   The next-visit field is the row's one forward-looking value, so
+   it wears its own design instead of the plain date field's: a
+   calendar-clock glyph and a soft indigo wash that separate it from
+   the visit-date field and the text inputs around it. flatpickr
+   puts .adm-next-appt-alt on its alt input (see
+   initTreatmentDatePickers in app-core.js). */
+.td-records .td-records__table td input.adm-next-appt-alt {
+    border-color: #c7d2fe;
+    background-color: #eef2ff;
+    color: #3730a3;
+    font-weight: 600;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' fill='none' stroke='%236366f1' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 11h18' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='15.5' r='2.3' fill='none' stroke='%236366f1' stroke-width='2'/%3E%3Cpath d='M12 14.3v1.5l1 .6' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.td-records .td-records__table td input.adm-next-appt-alt:hover {
+    border-color: #a5b4fc;
+    background-color: #e0e7ff;
+}
+
+.td-records .td-records__table td input.adm-next-appt-alt:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+}
+
+.td-records .td-records__table td input.adm-next-appt-alt::placeholder {
+    color: #818cf8;
+    font-weight: 500;
+}
+
 /* ---------- dentist combobox ----------
    Same component as the Appointments table, scoped under .td-records because
    the originals are pinned to #section-appointments / #newApptModal. The
@@ -2789,6 +2819,27 @@ body.dark-mode .td-records .td-records__table td input.adm-date-alt {
 
 body.dark-mode .td-records .td-records__table td input.adm-date-alt::placeholder {
     color: #64748b;
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-next-appt-alt {
+    background-color: #1e1b4b;
+    border-color: #4338ca;
+    color: #c7d2fe;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='3' y='5' width='18' height='16' rx='3' fill='none' stroke='%23a5b4fc' stroke-width='2'/%3E%3Cpath d='M8 3v4M16 3v4M3 11h18' fill='none' stroke='%23a5b4fc' stroke-width='2' stroke-linecap='round'/%3E%3Ccircle cx='12' cy='15.5' r='2.3' fill='none' stroke='%23a5b4fc' stroke-width='2'/%3E%3Cpath d='M12 14.3v1.5l1 .6' fill='none' stroke='%23a5b4fc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-next-appt-alt:hover {
+    background-color: #241f5e;
+    border-color: #4f46e5;
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-next-appt-alt:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.22);
+}
+
+body.dark-mode .td-records .td-records__table td input.adm-next-appt-alt::placeholder {
+    color: #6366f1;
 }
 
 body.dark-mode .td-records .td-records__table td .dentist-field .dentist-input {
@@ -6460,6 +6511,69 @@ body.dark-mode .datetime-text {
     background: rgba(255, 255, 255, 0.12);
 }
 
+/* ---------- time strip inside the themed calendar ----------
+   Only the Next Appointment picker renders a time section
+   (enableTime), so this is where its hour / minute / AM-PM
+   controls live. flatpickr's own time controls are unstyled,
+   so they get the same tokens as the rest of the calendar. */
+.adm-datepicker .flatpickr-time {
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 0 0 11px 11px;
+    padding: 7px 10px;
+}
+
+.adm-datepicker .flatpickr-time .flatpickr-time-separator {
+    color: #64748b;
+    font-weight: 700;
+}
+
+.adm-datepicker .flatpickr-time input[type="number"],
+.adm-datepicker .flatpickr-time select.flatpickr-am-pm {
+    color: #1f2937;
+    font-weight: 600;
+    font-size: 13px;
+    height: 30px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    text-align: center;
+    padding: 0 4px;
+}
+
+.adm-datepicker .flatpickr-time input[type="number"]:hover,
+.adm-datepicker .flatpickr-time select.flatpickr-am-pm:hover {
+    border-color: var(--navy);
+    background: #eaf2fc;
+}
+
+.adm-datepicker .flatpickr-time .numInputWrapper:hover {
+    background: #eaf2fc;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-time {
+    border-top-color: #33415a;
+    background: #0f172a;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-time .flatpickr-time-separator {
+    color: #94a3b8;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-time input[type="number"],
+body.dark-mode .adm-datepicker .flatpickr-time select.flatpickr-am-pm {
+    color: #e2e8f0;
+    background: #131a26;
+    border-color: #33415a;
+}
+
+body.dark-mode .adm-datepicker .flatpickr-time input[type="number"]:hover,
+body.dark-mode .adm-datepicker .flatpickr-time select.flatpickr-am-pm:hover,
+body.dark-mode .adm-datepicker .flatpickr-time .numInputWrapper:hover {
+    background: #1e3a8a;
+    border-color: var(--navy);
+}
+
 body.dark-mode #checkInfoModal .adm-select > select,
 body.dark-mode #checkInfoModal .adm-date-alt {
     background-color: #131a26;
@@ -9354,6 +9468,7 @@ body.dark-mode #unblockBtn:hover {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    margin-top: 20px;
 }
 
 /* Responsive button group */
@@ -9397,6 +9512,7 @@ body.dark-mode #blockFullDayToggleLabel:hover {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    margin-bottom: 20px;
 }
 
 @media (max-width: 600px) {

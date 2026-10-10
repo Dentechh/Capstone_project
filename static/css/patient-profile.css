@@ -733,6 +733,216 @@ body.dark-mode .modal-actions .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* Reason dropdown inside the decline modal.
+   A native <select> cannot be styled past a
+   handful of properties, so the trigger is a
+   button and the options are a listbox
+   portalled to <body>. The trigger matches the
+   modal form inputs so it sits naturally beside
+   them. */
+.appt-reason-trigger {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    text-align: left;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.appt-reason-trigger:focus,
+.appt-reason-trigger.is-open {
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.1);
+}
+
+.appt-reason-trigger__text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appt-reason-trigger--placeholder .appt-reason-trigger__text {
+    color: #94a3b8;
+}
+
+.appt-reason-trigger__chevron {
+    flex-shrink: 0;
+    font-size: 20px;
+    line-height: 1;
+    color: var(--navy);
+    transition: transform 0.18s ease;
+}
+
+.appt-reason-trigger.is-open .appt-reason-trigger__chevron {
+    transform: rotate(180deg);
+}
+
+body.dark-mode .appt-reason-trigger {
+    background: rgba(255, 255, 255, 0.06);
+    color: #e0e0e0;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .appt-reason-trigger:focus,
+body.dark-mode .appt-reason-trigger.is-open {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+
+body.dark-mode .appt-reason-trigger--placeholder .appt-reason-trigger__text {
+    color: #9e9e9e;
+}
+
+body.dark-mode .appt-reason-trigger__chevron {
+    color: #64b5f6;
+}
+
+/* The option listbox lives on <body> (the modal
+   content scrolls, which would clip an in-modal
+   popup), so these rules are global by necessity. */
+.appt-reason-menu {
+    position: fixed;
+    z-index: 100060;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    max-height: 280px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.1);
+}
+
+.appt-reason-menu[hidden] {
+    display: none;
+}
+
+.appt-reason-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #1f2937;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.appt-reason-option:hover,
+.appt-reason-option.is-active {
+    background: #eef4fb;
+}
+
+.appt-reason-option__label {
+    flex: 1;
+    min-width: 0;
+}
+
+.appt-reason-option.is-selected {
+    background: #dbeafe;
+    color: var(--navy);
+    font-weight: 600;
+}
+
+/* The reschedule reason is the one that opens the
+   booking form so the patient can pick a new date
+   and time, so it carries the accent treatment. */
+.appt-reason-option--reschedule {
+    background: #e3f2fd;
+    font-weight: 700;
+    color: var(--navy);
+}
+
+.appt-reason-option--reschedule:hover,
+.appt-reason-option--reschedule.is-active {
+    background: #bbdefb;
+}
+
+.appt-reason-option--reschedule.is-selected {
+    background: var(--navy);
+    color: #ffffff;
+}
+
+.appt-reason-option__tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(13, 71, 161, 0.12);
+    color: var(--navy);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.appt-reason-option--reschedule.is-selected .appt-reason-option__tag {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+body.dark-mode .appt-reason-menu {
+    background: #1e1e1e;
+    border-color: #444444;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+body.dark-mode .appt-reason-option {
+    color: #e0e0e0;
+}
+
+body.dark-mode .appt-reason-option:hover,
+body.dark-mode .appt-reason-option.is-active {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .appt-reason-option.is-selected {
+    background: rgba(100, 181, 246, 0.22);
+    color: #64b5f6;
+}
+
+body.dark-mode .appt-reason-option--reschedule {
+    background: rgba(100, 181, 246, 0.16);
+    color: #64b5f6;
+}
+
+body.dark-mode .appt-reason-option--reschedule:hover,
+body.dark-mode .appt-reason-option--reschedule.is-active {
+    background: rgba(100, 181, 246, 0.28);
+}
+
+body.dark-mode .appt-reason-option--reschedule.is-selected {
+    background: #64b5f6;
+    color: #0b1220;
+}
+
+body.dark-mode .appt-reason-option__tag {
+    background: rgba(100, 181, 246, 0.16);
+    color: #64b5f6;
+}
+
+body.dark-mode .appt-reason-option--reschedule.is-selected .appt-reason-option__tag {
+    background: rgba(11, 18, 32, 0.25);
+    color: #0b1220;
+}
+
 /* Mobile responsive modals */
 @media (max-width: 768px) {
     .modal {
@@ -829,6 +1039,7 @@ body.dark-mode .modal-actions .btn-secondary:hover {
     color: var(--text-primary);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08);
+    position: relative;
 
     display: flex;
     flex-direction: column;
@@ -874,8 +1085,162 @@ body.dark-mode .nav-card img {
 }
 
 /* =========================
+   CARD NOTIFICATION DOT
+   ========================= */
+
+/* Red circle: toggled by the badge script on the
+   Schedule, Dental Records and Payments cards whenever
+   that section holds data for this patient.
+   Scoped under .nav-card so it outranks the generic
+   .nav-card span rule (which would otherwise force
+   position: static on the dot). */
+.nav-card .nav-card__badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35);
+    pointer-events: none;
+}
+
+body.dark-mode .nav-card .nav-card__badge {
+    border-color: #1e1e1e;
+}
+
+/* =========================
+   SCHEDULE MODAL ACTIONS
+   (admin appointments-tab button designs)
+   ========================= */
+
+#scheduleModal .appt-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+}
+
+/* Icon-only, square tap targets: same geometry as the
+   admin appointments tab so both screens match. */
+#scheduleModal .appt-actions .btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
+    transition: background-color 0.18s ease, color 0.18s ease,
+                border-color 0.18s ease, box-shadow 0.18s ease,
+                transform 0.12s ease;
+}
+
+#scheduleModal .appt-actions .btn-action > .material-symbols-rounded {
+    font-size: 21px;
+    line-height: 1;
+    font-weight: normal;
+    font-style: normal;
+    letter-spacing: normal;
+    text-transform: none;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'liga';
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+}
+
+#scheduleModal .appt-accept-btn {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: #ffffff;
+}
+
+#scheduleModal .appt-decline-btn {
+    background: #ef4444;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+#scheduleModal .appt-accept-btn:hover:not(:disabled) {
+    background: var(--navy-dark);
+    border-color: var(--navy-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(13, 71, 161, 0.26);
+}
+
+#scheduleModal .appt-decline-btn:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+}
+
+#scheduleModal .appt-actions .btn-action:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+#scheduleModal .appt-actions .btn-action:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: 2px;
+}
+
+#scheduleModal .appt-actions .btn-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+body.dark-mode #scheduleModal .appt-accept-btn {
+    background: var(--navy);
+    border-color: var(--gold-light);
+    color: #0b1220;
+}
+
+body.dark-mode #scheduleModal .appt-decline-btn {
+    background: #b91c1c;
+    border-color: #ef4444;
+    color: #ffe4e4;
+}
+
+/* Status label for appointments that already went
+   through: the patient's own bookings (accepted by
+   the admin) and the dentist's direct creations.
+   Only the dentist's "next visit" suggestion is
+   still waiting on the patient, so it is the only
+   row that carries action buttons. */
+#scheduleModal .appt-confirmed {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+body.dark-mode #scheduleModal .appt-confirmed {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+}
+
+/* =========================
     UPDATE MODAL SPECIFIC
-    ========================= */
+========================= */
 
 .modal-overlay {
     display: none;
