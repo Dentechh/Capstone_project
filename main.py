@@ -1179,6 +1179,75 @@ class DentalClinicApp(BaseFlaskApp):
         print("No appointments found for this user.")
         return None
 
+    def get_previous_booking_info(self, uid):
+        """
+        The details the patient last entered on the booking form,
+        for the "fill in my previous info" prompt on the patient
+        side's Book Appointment button.
+
+        Only identity / contact fields are returned. Service,
+        urgency level, the appointment date & time and the medical
+        history answers are deliberately left out: they change from
+        visit to visit, so the patient must choose them fresh every
+        time they book.
+        """
+        if not uid:
+            return None
+
+        account_ref = self.db.collection(self.Customer_Account).document(uid)
+
+        candidates = []
+
+        # Pending requests and accepted appointments both carry the
+        # form answers. The newest booking (by its scheduled date)
+        # is the one the patient filled in most recently.
+        for collection_name in (self.Appointment_cliets, "Approve"):
+            try:
+                for doc in account_ref.collection(collection_name).limit(10).stream():
+                    data = doc.to_dict() or {}
+                    candidates.append(
+                        (str(data.get("appointment_date") or ""), data)
+                    )
+            except Exception as e:
+                print("PREVIOUS BOOKING LOOKUP ERROR:", e)
+
+        if not candidates:
+            return None
+
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        data = candidates[0][1]
+
+        def clean(key):
+            return str(data.get(key) or "").strip()
+
+        info = {
+            "FirstName": clean("FirstName"),
+            "MiddleName": clean("MiddleName"),
+            "LastName": clean("LastName"),
+            "Birthday": clean("Birthday"),
+            "ContactNumber": clean("ContactNumber"),
+            "Age": clean("Age"),
+            "Sex": clean("Sex"),
+            "HouseNo": clean("HouseNo"),
+            "Street": clean("Street"),
+            "Brgy": clean("Brgy"),
+            "Municipality": clean("Municipality"),
+            "City": clean("City"),
+            "Nationality": clean("Nationality"),
+            "Religion": clean("Religion"),
+            "Occupation": clean("Occupation"),
+            "CivilStatus": clean("CivilStatus"),
+            # Only accepted appointments carry the dentist the admin
+            # assigned; pending requests have none yet.
+            "DentistName": clean("DentistName"),
+        }
+
+        # A record without any name is not usable as "previous info".
+        if not (info["FirstName"] or info["LastName"]):
+            return None
+
+        return info
+
     def is_slot_blocked(self, appointment_date, for_patient=False):
         """
         appointment_date format: "YYYY-MM-DD HH:MM" (matches how it's stored everywhere else).
@@ -1281,6 +1350,79 @@ class DentalClinicApp(BaseFlaskApp):
             return jsonify(group_blocked_days(upcoming))
         except Exception as e:
             print("GET CLINIC NOTICES ERROR:", e)
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    def _record_schedule_notification(
+        self, uid, notif_type, main_collection=None, service="",
+        appointment_date="", previous_appointment_date="", dentist_name=""
+    ):
+        """
+        Append a patient-facing schedule event (accepted / declined /
+        rescheduled) to the account's `schedule_notifications`
+        subcollection, so the patient's notification bell can show
+        what the dentist did to their appointment.
+        """
+        try:
+            if not main_collection:
+                if self.db.collection("google_create_account").document(uid).get().exists:
+                    main_collection = "google_create_account"
+                elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+                    main_collection = self.Customer_Account
+
+            if not main_collection:
+                return
+
+            self.db.collection(main_collection).document(uid) \
+                .collection("schedule_notifications").document().set({
+                    "type": notif_type,
+                    "service": service,
+                    "appointment_date": appointment_date,
+                    "previous_appointment_date": previous_appointment_date,
+                    "dentist_name": dentist_name,
+                    "created_at": datetime.now(UTC).isoformat(),
+                })
+        except Exception as e:
+            print("SCHEDULE NOTIFICATION WRITE ERROR:", e)
+
+    def get_schedule_notifications(self):
+        """Patient-side: accept / decline / reschedule events for the logged-in account."""
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+
+        try:
+            main_collection = None
+            if self.db.collection("google_create_account").document(uid).get().exists:
+                main_collection = "google_create_account"
+            elif self.db.collection(self.Customer_Account).document(uid).get().exists:
+                main_collection = self.Customer_Account
+
+            if not main_collection:
+                return jsonify([])
+
+            docs = (
+                self.db.collection(main_collection).document(uid)
+                .collection("schedule_notifications")
+                .order_by("created_at", direction="DESCENDING")
+                .limit(20)
+                .stream()
+            )
+
+            out = []
+            for d in docs:
+                data = d.to_dict()
+                out.append({
+                    "id": d.id,
+                    "type": data.get("type", ""),
+                    "service": data.get("service", ""),
+                    "appointment_date": data.get("appointment_date", ""),
+                    "previous_appointment_date": data.get("previous_appointment_date", ""),
+                    "dentist_name": data.get("dentist_name", ""),
+                    "created_at": data.get("created_at", ""),
+                })
+            return jsonify(out)
+        except Exception as e:
+            print("GET SCHEDULE NOTIFICATIONS ERROR:", e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
 
 
@@ -1845,6 +1987,15 @@ class DentalClinicApp(BaseFlaskApp):
                 "rescheduled_at": datetime.now(UTC).isoformat(),
                 "rescheduled_by": session.get("admin_uid", "")
             })
+
+            # Patient bell: log the reschedule as a schedule update.
+            self._record_schedule_notification(
+                uid, "rescheduled", main_collection=main_collection,
+                service=appt_data.get("Service", ""),
+                appointment_date=new_dt,
+                previous_appointment_date=old_dt,
+                dentist_name=check_dentist,
+            )
 
             user_doc = user_ref.get()
             patient_email = user_doc.to_dict().get("email") if user_doc.exists else None
@@ -3401,7 +3552,30 @@ class DentalClinicApp(BaseFlaskApp):
         except Exception as e:
             print("LINK PATIENT ACCOUNT ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
-    
+
+    def previous_booking_info(self):
+        """
+        Patient-side: the logged-in account's most recent
+        booking details, so the appointment form can offer
+        to fill them in automatically.
+        """
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+
+        try:
+            info = self.get_previous_booking_info(uid)
+            return jsonify({
+                "success": True,
+                "has_previous": info is not None,
+                "info": info or {}
+            })
+        except Exception as e:
+            print("PREVIOUS BOOKING INFO ERROR:", e)
+            return jsonify({
+                "success": False,
+                "message": "Something went wrong. Please try again."
+            }), 500
 
     def p_forms(self):
         return render_template("patientForms.html")
@@ -4301,6 +4475,14 @@ class DentalClinicApp(BaseFlaskApp):
                     civil=data.get("CivilStatus", ""),
                 )
 
+                # Patient bell: log the acceptance as a schedule update.
+                self._record_schedule_notification(
+                    uid, "accepted", main_collection=main_collection,
+                    service=data.get("Service", ""),
+                    appointment_date=data.get("appointment_date", ""),
+                    dentist_name=dentist_name,
+                )
+
 
             elif action == "decline":
 
@@ -4310,6 +4492,14 @@ class DentalClinicApp(BaseFlaskApp):
                 batch.delete(appt_ref)
 
                 batch.commit()
+
+                # Patient bell: log the decline as a schedule update.
+                self._record_schedule_notification(
+                    uid, "declined", main_collection=main_collection,
+                    service=appointment_data.get("Service", ""),
+                    appointment_date=appointment_data.get("appointment_date", ""),
+                    dentist_name=appointment_data.get("DentistName", ""),
+                )
 
 
             threading.Thread(
@@ -7233,7 +7423,8 @@ class DentalClinicApp(BaseFlaskApp):
 
                 return jsonify({
                     "success": True,
-                    "procedures": []
+                    "procedures": [],
+                    "latest_treatment": None
                 })
             
             user_ref = self.db.collection(
@@ -7288,6 +7479,36 @@ class DentalClinicApp(BaseFlaskApp):
             )
 
             # ==========================================
+            # LATEST TREATMENT RECORD (modal header summary)
+            # ==========================================
+            # The header summarizes the most recently
+            # submitted Done_procedure record: its visit
+            # date, dentist, procedure and payment status.
+            # Name, age, birthday, sex, civil status and
+            # mobile number are deliberately left out.
+            latest_treatment = None
+
+            if done_docs:
+                # order_by("updated_at") is ascending, so
+                # the last document is the latest submitted.
+                latest_doc_data = done_docs[-1].to_dict()
+                latest_procs = latest_doc_data.get("procedures", [])
+
+                if latest_procs:
+                    latest_proc = latest_procs[-1]
+                    latest_treatment = {
+                        "procedure": latest_proc.get("procedure", ""),
+                        "date": latest_proc.get("date", ""),
+                        "dentist": latest_proc.get("dentist", ""),
+                        "status": latest_proc.get("status", ""),
+                    }
+
+            print(
+                "LATEST TREATMENT RECORD:",
+                latest_treatment
+            )
+
+            # ==========================================
             # RESPONSE
             # ==========================================
 
@@ -7295,7 +7516,9 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "success": True,
 
-                "procedures": procedures
+                "procedures": procedures,
+
+                "latest_treatment": latest_treatment
 
             })
 
@@ -9145,6 +9368,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/mark_past_closed", methods=["POST"])(self.admin_mark_past_closed)
         self.app.route("/admin/closure_summary")(self.admin_closure_summary)
         self.app.route("/get_clinic_notices")(self.get_clinic_notices)
+        self.app.route("/get_schedule_notifications")(self.get_schedule_notifications)
         self.app.route("/admin/day_schedule")(self.admin_day_schedule)
         self.app.route("/admin/reschedule_appointment", methods=["POST"])(self.admin_reschedule_appointment)
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)
@@ -9155,6 +9379,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/delete_treatment_record", methods=["POST"])(self.delete_treatment_record)
         self.app.route("/admin/check_duplicate_patient", methods=["POST"])(self.check_duplicate_patient)
         self.app.route("/link_patient_account", methods=["POST"])(self.link_patient_account)
+        self.app.route("/previous_booking_info")(self.previous_booking_info)
         self.app.route("/get_patient_profile_data")(self.get_patient_profile_data)
         self.app.route("/admin/merge_patients", methods=["POST"])(self.admin_merge_patients)
         self.app.route("/admin/financial_chart_data")(self.admin_financial_chart_data)

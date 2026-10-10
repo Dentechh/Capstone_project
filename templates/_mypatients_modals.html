@@ -183,6 +183,39 @@
                     <div class="ci-head-text">
                         <h2>Treatment Information</h2>
                         <p class="ci-sub" id="ciSubtitle"></p>
+
+                        <!-- Latest confirmed appointment facts. Deliberately
+                             excludes name / age / birthday / sex / civil
+                             status / mobile number - those stay out of
+                             the header. -->
+                        <div class="ci-appt" id="ciAppointment" hidden>
+                            <span class="ci-appt-label">
+                                <span class="material-symbols-rounded" aria-hidden="true">event_note</span>
+                                Last Appointment Information:
+                            </span>
+                            <div class="ci-appt-items">
+                                <div class="ci-appt-item">
+                                    <span class="ci-appt-key">Service</span>
+                                    <span class="ci-appt-val" id="ciApptService">-</span>
+                                </div>
+                                <div class="ci-appt-item">
+                                    <span class="ci-appt-key">Date &amp; Time</span>
+                                    <span class="ci-appt-val" id="ciApptDate">-</span>
+                                </div>
+                                <div class="ci-appt-item">
+                                    <span class="ci-appt-key">Dentist</span>
+                                    <span class="ci-appt-val" id="ciApptDentist">-</span>
+                                </div>
+                                <div class="ci-appt-item">
+                                    <span class="ci-appt-key">Urgency</span>
+                                    <span class="ci-appt-val" id="ciApptUrgency">-</span>
+                                </div>
+                                <div class="ci-appt-item">
+                                    <span class="ci-appt-key">Status</span>
+                                    <span class="ci-appt-val" id="ciApptStatus">-</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <span class="modal-x" role="button" tabindex="0" aria-label="Close"
                         onclick="closeCheckInfoModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"

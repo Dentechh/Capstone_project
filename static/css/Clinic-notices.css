@@ -1,10 +1,10 @@
-/* Patient notification bell: clinic closures / limited availability. */
+/* Patient notification bell: schedule updates + clinic notices. */
 .notification-btn { position: relative; }
 
 .notif-badge {
     position: absolute;
-    top: 3px;
-    right: 2px;
+    top: 2px;
+    right: 0;
     min-width: 16px;
     height: 16px;
     padding: 0 4px;
@@ -17,52 +17,112 @@
     pointer-events: none;
     display: none;
 }
-.notif-badge.show { display: block; }
+.notif-badge.show {
+    display: block;
+    animation: notif-pop 0.25s ease;
+}
+@keyframes notif-pop {
+    0% { transform: scale(0.4); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
 
 .notif-panel {
     position: fixed;
     z-index: 3000;
-    width: min(360px, calc(100vw - 16px));
-    max-height: min(70vh, 460px);
+    width: min(380px, calc(100vw - 16px));
+    max-height: min(72vh, 480px);
     overflow-y: auto;
     background: #fff;
     color: #1a1a1a;
-    border: 1px solid #e3e8ef;
-    border-radius: 14px;
-    box-shadow: 0 12px 32px rgba(13, 71, 161, 0.18);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(13, 71, 161, 0.20);
     font-family: 'Kumbh Sans', sans-serif;
-    display: none;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
 }
-.notif-panel.open { display: block; }
+.notif-panel.open {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
 
-.notif-head {
-    padding: 14px 16px 10px;
+.notif-panel::-webkit-scrollbar { width: 8px; }
+.notif-panel::-webkit-scrollbar-track { background: transparent; }
+.notif-panel::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.notif-panel::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Panel title + unread count */
+.notif-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 16px 18px 12px;
+}
+.notif-panel-title {
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
+    letter-spacing: -0.01em;
     color: #0d47a1;
-    border-bottom: 1px solid #eef1f6;
+}
+.notif-panel-count {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(13, 71, 161, 0.1);
+    color: #0d47a1;
+    white-space: nowrap;
+}
+
+/* Section labels (Schedule updates / Clinic notices) */
+.notif-head {
+    padding: 12px 18px 8px;
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #64748b;
+    border-bottom: 1px solid #eef2f7;
 }
 
 .notif-empty {
-    padding: 28px 16px;
+    padding: 26px 18px;
     text-align: center;
-    font-size: 14px;
-    color: #667085;
+    font-size: 13.5px;
+    color: #64748b;
+}
+.notif-empty-icon {
+    display: block;
+    font-size: 30px;
+    line-height: 1;
+    color: #cbd5e1;
+    margin-bottom: 8px;
 }
 
 .notif-item {
     display: flex;
     gap: 12px;
-    padding: 14px 16px;
-    border-bottom: 1px solid #eef1f6;
+    padding: 12px 18px;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.15s ease;
 }
 .notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: #f8fafc; }
 
 .notif-icon {
     flex: 0 0 auto;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -73,27 +133,72 @@
     background: rgba(245, 158, 11, 0.14);
     color: #d97706;
 }
+.notif-item.schedule .notif-icon {
+    background: rgba(13, 71, 161, 0.1);
+    color: #0d47a1;
+}
 .notif-icon .material-symbols-rounded,
 .notif-icon svg { font-size: 20px; width: 20px; height: 20px; }
 
-.notif-body { min-width: 0; }
-.notif-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.notif-body { min-width: 0; flex: 1; }
+.notif-title {
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1f2937;
+}
 .notif-new {
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: .4px;
+    letter-spacing: 0.4px;
     padding: 2px 6px;
     border-radius: 6px;
     background: #0d47a1;
     color: #fff;
+    flex-shrink: 0;
 }
-.notif-when { font-size: 13px; color: #0d47a1; font-weight: 600; margin-top: 2px; }
-.notif-msg { font-size: 13px; color: #475467; margin-top: 4px; overflow-wrap: anywhere; }
+.notif-when {
+    font-size: 12.5px;
+    color: #64748b;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.notif-msg {
+    font-size: 13px;
+    color: #475467;
+    margin-top: 4px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
 
-body.dark-mode .notif-panel { background: #1e1e1e; color: #e6e6e6; border-color: #333; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
-body.dark-mode .notif-head { color: #90caf9; border-bottom-color: #333; }
-body.dark-mode .notif-item { border-bottom-color: #2d2d2d; }
+/* Dark mode */
+body.dark-mode .notif-panel {
+    background: #1e1e1e;
+    color: #e6e6e6;
+    border-color: #33415a;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+body.dark-mode .notif-panel::-webkit-scrollbar-thumb { background: #475569; }
+body.dark-mode .notif-panel-title { color: #90caf9; }
+body.dark-mode .notif-panel-count {
+    background: rgba(100, 181, 246, 0.14);
+    color: #64b5f6;
+}
+body.dark-mode .notif-head {
+    color: #94a3b8;
+    border-bottom-color: #2d2d2d;
+}
+body.dark-mode .notif-item { border-bottom-color: #262626; }
+body.dark-mode .notif-item:hover { background: #131a26; }
+body.dark-mode .notif-title { color: #e2e8f0; }
 body.dark-mode .notif-when { color: #90caf9; }
 body.dark-mode .notif-msg,
 body.dark-mode .notif-empty { color: #b0b6c0; }
 body.dark-mode .notif-new { background: #64b5f6; color: #0b2a4a; }
+body.dark-mode .notif-item.schedule .notif-icon {
+    background: rgba(100, 181, 246, 0.14);
+    color: #64b5f6;
+}
+body.dark-mode .notif-empty-icon { color: #475569; }

@@ -830,6 +830,26 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
+<!-- Previous-info auto-fill prompt: shown when the patient has
+     booked before and presses Book an Appointment -->
+<div id="prefillModal" class="modal" style="display:none;">
+    <div class="modal-content auth-card" style="max-width:420px; text-align:center;">
+        <h2>Use Your Previous Details?</h2>
+        <p style="margin:16px 0;">
+            We found the information you entered for your last appointment.
+            Would you like us to fill it in automatically?
+        </p>
+        <p style="font-size:13px; color:#777; margin-bottom:20px;">
+            You'll still choose the service, urgency level, date and time,
+            and answer the medical history questions yourself.
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button type="button" id="prefillYesBtn" class="sign-up-btn">Yes, fill it in</button>
+            <button type="button" id="prefillNoBtn" class="sign-up-btn" style="background:#6b7280;">No, I'll enter it</button>
+        </div>
+    </div>
+</div>
+
 <div id="loginModal" class="modal">
     <div class="modal-content auth-card">
             <button class="close" onclick="closeAuthModal('loginModal')" aria-label="Close">
@@ -1765,6 +1785,12 @@ resetPasswordBtn.addEventListener("click", async () => {
             // 4. Appointment Modal Logic
         const modal = document.getElementById("newApptModal");
 
+        function openAppointmentModalDirect() {
+            modal.style.display = "flex";
+            // Always reopen on the first step of the two-step wizard.
+            if (typeof window.admResetWizard === 'function') window.admResetWizard();
+        }
+
         function openAppointmentModal(e) {
             if (e) e.preventDefault();
             // Check if user is logged in (name is not "Guest")
@@ -1773,10 +1799,102 @@ resetPasswordBtn.addEventListener("click", async () => {
                 showToast("Please login first to book an appointment.", "error");
                 openAuthModal('loginModal');
             } else {
-                modal.style.display = "flex";
-                // Always reopen on the first step of the two-step wizard.
-                if (typeof window.admResetWizard === 'function') window.admResetWizard();
+                // Returning patients are asked whether to carry
+                // their previous booking details over before the
+                // form opens.
+                checkPreviousBooking();
             }
+        }
+
+        function checkPreviousBooking() {
+            fetch('/previous_booking_info')
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.has_previous && data.info) {
+                        showPrefillPrompt(data.info);
+                    } else {
+                        openAppointmentModalDirect();
+                    }
+                })
+                .catch(function () {
+                    // Never block booking because the lookup failed.
+                    openAppointmentModalDirect();
+                });
+        }
+
+        function showPrefillPrompt(info) {
+            const promptModal = document.getElementById('prefillModal');
+            if (!promptModal) {
+                openAppointmentModalDirect();
+                return;
+            }
+            promptModal.style.display = 'flex';
+
+            document.getElementById('prefillYesBtn').onclick = function () {
+                promptModal.style.display = 'none';
+                openAppointmentModalDirect();
+                prefillAppointmentForm(info);
+            };
+
+            document.getElementById('prefillNoBtn').onclick = function () {
+                promptModal.style.display = 'none';
+                openAppointmentModalDirect();
+            };
+        }
+
+        /* Carries the patient's last booking details into the form.
+           Service, urgency level, the appointment date & time and
+           the medical history answers are intentionally NOT filled
+           -- those must be chosen fresh for every visit. */
+        function prefillAppointmentForm(info) {
+            if (!info) return;
+
+            function setInput(id, value) {
+                const el = document.getElementById(id);
+                if (el && value) el.value = value;
+            }
+
+            function setSelect(id, value) {
+                const el = document.getElementById(id);
+                if (!el || !value) return;
+                const hasOption = Array.from(el.options).some(function (opt) {
+                    return opt.value === value;
+                });
+                if (hasOption) {
+                    el.value = value;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
+            // Identity & contact details
+            setInput('admFirstName', info.FirstName);
+            setInput('admMiddleName', info.MiddleName);
+            setInput('admLastName', info.LastName);
+            setInput('admContactNumber', info.ContactNumber);
+            setInput('admAge', info.Age);
+            setInput('admHouseNo', info.HouseNo);
+            setInput('admStreet', info.Street);
+            setInput('admBrgy', info.Brgy);
+            setInput('admMunicipality', info.Municipality);
+            setInput('admCity', info.City);
+            setInput('admNationality', info.Nationality);
+            setInput('admDentistName', info.DentistName);
+
+            // Birthday rides on flatpickr's hidden input; setDate()
+            // keeps the visible calendar input in sync.
+            const birthday = document.getElementById('admBirthday');
+            if (birthday && info.Birthday) {
+                if (birthday._flatpickr && typeof birthday._flatpickr.setDate === 'function') {
+                    birthday._flatpickr.setDate(info.Birthday);
+                } else {
+                    birthday.value = info.Birthday;
+                }
+            }
+
+            setSelect('admSexSelect', info.Sex);
+            setSelect('admReligion', info.Religion);
+            setSelect('admOccupation', info.Occupation);
+            setSelect('admCivilStatus', info.CivilStatus);
         }
 
         document.getElementById("openAppointment").onclick = openAppointmentModal;

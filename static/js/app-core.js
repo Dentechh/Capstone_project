@@ -157,9 +157,11 @@ function showSection(sectionId) {
             setCheckbox('w-nurse-check', w_nurse);
             setCheckbox('w-pill-check', w_pill);
 
-            // Show nav link
+            // Show nav link (flex, not block: the .nav-item class
+            // centers icon + label with flexbox, and an inline
+            // display value overrides it)
             var navLink = document.getElementById('nav-patientdashboard');
-            if (navLink) navLink.style.display = 'block';
+            if (navLink) navLink.style.display = 'flex';
 
             showSection('patientdashboard');
 

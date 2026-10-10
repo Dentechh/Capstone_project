@@ -50,6 +50,49 @@ let currentCheckInfoPatientId = "";
                 return `<span class="ci-badge ${isPaid ? "ci-badge--paid" : "ci-badge--unpaid"}">${isPaid ? "Paid" : "Not Paid"}</span>`;
             }
 
+            // Header summary of the patient's latest confirmed
+            // appointment. Built with textContent: the values come
+            // straight from Firestore and must never be parsed as markup.
+            function setCiApptText(id, value) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const text = (value == null ? "" : String(value)).trim();
+                el.textContent = text || "-";
+            }
+
+            function updateCiAppointment(appt) {
+                const block = document.getElementById("ciAppointment");
+                if (!block) return;
+
+                if (!appt) {
+                    block.hidden = true;
+                    return;
+                }
+
+                setCiApptText("ciApptService", appt.service);
+                setCiApptText("ciApptDate",
+                    (typeof formatApptDateTime === "function")
+                        ? formatApptDateTime(appt.appointment_date)
+                        : appt.appointment_date);
+                setCiApptText("ciApptDentist",
+                    (typeof formatDentistName === "function")
+                        ? formatDentistName(appt.dentist_name)
+                        : appt.dentist_name);
+                setCiApptText("ciApptUrgency", appt.urgency_level);
+
+                // Firestore stores the appointment status as
+                // "accept"; the header reads better in past tense.
+                const rawStatus = (appt.status || "").trim();
+                const statusText = !rawStatus
+                    ? ""
+                    : rawStatus.toLowerCase() === "accept"
+                        ? "Accepted"
+                        : rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+                setCiApptText("ciApptStatus", statusText);
+
+                block.hidden = false;
+            }
+
             async function openCheckInfoModal(patientId, patientName) {
                 const tbody = document.getElementById("checkInfoBody");
                 const modal = document.getElementById("checkInfoModal");
@@ -70,6 +113,12 @@ let currentCheckInfoPatientId = "";
                     if (patientId) bits.push("Patient ID: " + patientId);
                     subtitle.textContent = bits.join("   ·   ");
                 }
+
+                // Latest-appointment summary: hidden until the
+                // treatment-info response says otherwise, so a
+                // previous patient's facts never linger here.
+                const apptBlock = document.getElementById("ciAppointment");
+                if (apptBlock) apptBlock.hidden = true;
 
                 if (!patientId) {
                     modal.style.display = "flex";
@@ -93,6 +142,9 @@ let currentCheckInfoPatientId = "";
                         window.currentProcedures = [];
                         tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No treatment history found.</td></tr>`;
                     }
+
+                    // Header: latest confirmed appointment facts.
+                    updateCiAppointment(result.latest_appointment);
                 } catch (error) {
                     console.error("Error loading treatment info:", error);
                     tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#ef4444;">Failed to load treatment data.</td></tr>`;

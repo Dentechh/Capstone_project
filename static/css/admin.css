@@ -2017,31 +2017,31 @@ body.dark-mode .panel-content {
     overflow: hidden;
     border-collapse: collapse; /* Changed from separate to collapse for cleaner look */
     border-spacing: 0;
-    box-shadow: none; /* Remove shadow since content-panel already has one */
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.10); /* lift the whole table off the panel */
     text-align: left;
     background: transparent; /* ← FIXES double white background */
 }
 
-/* Header Styling */
+/* Header Styling — slate-200 stays visible over the panel's white-to-blue gradient */
 .appointment-table th {
     padding: 14px 20px;
     text-align: center; /* ← FIXES th not centered */
-    color: var(--navy);
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    border-bottom: 2px solid rgba(13, 71, 161, 0.15);
-    background: rgba(13, 71, 161, 0.06); /* Subtle blue tint on header row */
+    border-bottom: 1px solid #cbd5e1;
+    background: #e2e8f0;
 }
 
 /* Cell Styling */
 .appointment-table td {
     padding: 14px 20px;
     text-align: center; /* Center td content too for consistency */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #eef2f7;
     font-size: 14px;
-    color: #333333;
+    color: #1f2937;
     vertical-align: middle;
 }
 
@@ -2052,7 +2052,7 @@ body.dark-mode .panel-content {
 
 /* Subtle hover on rows */
 .appointment-table tbody tr:hover {
-    background: rgba(13, 71, 161, 0.04);
+    background: #f8fafc;
     transition: background 0.2s ease;
 }
 
@@ -2075,24 +2075,25 @@ body.dark-mode .panel-content {
     transform: translateY(-2px);
 }
 
-/* Dark Mode Support */
+/* Dark Mode Support — matched to the td-records / pd-visits tables */
 body.dark-mode .appointment-table {
     background: transparent; /* Keep transparent in dark mode too */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 body.dark-mode .appointment-table th {
-    color: #90caf9;
-    background: rgba(100, 181, 246, 0.08);
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    background: #131a26;
+    border-bottom-color: #33415a;
 }
 
 body.dark-mode .appointment-table td {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    color: #e0e0e0;
+    border-bottom-color: #26303f;
+    color: #e2e8f0;
 }
 
 body.dark-mode .appointment-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: #131a26;
 }
 .treatment-section {
     margin-top: 20px;
@@ -3098,9 +3099,7 @@ body:not(.dark-mode) .top-header {
 }
 
 body:not(.dark-mode) .metric-data h3,
-body:not(.dark-mode) .metric-data p,
-body:not(.dark-mode) .appointment-table th,
-body:not(.dark-mode) .appointment-table td {
+body:not(.dark-mode) .metric-data p {
     color: #000000;
 }
 
@@ -4322,13 +4321,14 @@ body.dark-mode .action-btn:hover {
 }
 
 body.dark-mode .appointment-table th {
-    color: #a0aec0;
-    border-bottom-color: rgba(255,255,255,0.1);
+    color: #94a3b8;
+    background: #131a26;
+    border-bottom-color: #33415a;
 }
 
 body.dark-mode .appointment-table td {
-    border-bottom-color: rgba(255,255,255,0.05);
-    color: #e0e0e0;
+    border-bottom-color: #26303f;
+    color: #e2e8f0;
 }
 
 body.dark-mode .btn-action.accept {
@@ -4452,9 +4452,7 @@ body.dark-mode .segment {
 
 /* Inline color overrides for dark mode */
 body.dark-mode .metric-data h3,
-body.dark-mode .metric-data p,
-body.dark-mode .appointment-table th,
-body.dark-mode.appointment-table td {
+body.dark-mode .metric-data p {
     color: #ffffff;
 }
 
@@ -5903,6 +5901,66 @@ body.dark-mode .datetime-text {
     color: #6b7280;
 }
 
+/* Latest confirmed appointment summary under the Treatment
+   Information header: a tinted panel with a leading
+   "Last Appointment Information:" label, then the
+   service / date-time / dentist / urgency / status facts. */
+#checkInfoModal .ci-appt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 24px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+#checkInfoModal .ci-appt[hidden] { display: none; }
+#checkInfoModal .ci-appt-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #0d47a1;
+}
+#checkInfoModal .ci-appt-label .material-symbols-rounded {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+#checkInfoModal .ci-appt-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 40px;
+    flex: 1 1 320px;
+    min-width: 0;
+}
+#checkInfoModal .ci-appt-item {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+}
+#checkInfoModal .ci-appt-key {
+    flex: 0 0 auto;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #6b7280;
+}
+#checkInfoModal .ci-appt-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy);
+    overflow-wrap: anywhere;
+}
+
 #checkInfoModal .close {
     color: var(--navy);
 }
@@ -5937,9 +5995,9 @@ body.dark-mode .datetime-text {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: #eef3fb;
-    color: var(--navy);
-    border-bottom: 2px solid var(--navy);
+    background: #e2e8f0;
+    color: #64748b;
+    border-bottom: 1px solid #cbd5e1;
     /* Identical box to td below, so a column label sits on the same grid
        line as the value / control beneath it. */
     padding: 11px 12px;
@@ -5955,8 +6013,8 @@ body.dark-mode .datetime-text {
 
 #checkInfoModal .treatment-table td {
     padding: 11px 12px;
-    color: #1a1a1a;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    color: #1f2937;
+    border-bottom: 1px solid #eef2f7;
     font-size: 14px;
     line-height: 1.45;
     vertical-align: middle;
@@ -6017,7 +6075,7 @@ body.dark-mode .datetime-text {
 }
 
 #checkInfoModal .treatment-table tbody tr:hover {
-    background: rgba(13, 71, 161, 0.04);
+    background: #f8fafc;
 }
 
 /* ---------- status badge ----------
@@ -6557,23 +6615,37 @@ body.dark-mode #checkInfoModal .ci-sub {
     color: #9aa5b1;
 }
 
+body.dark-mode #checkInfoModal .ci-appt {
+    background: #131a26;
+    border-color: #33415a;
+}
+body.dark-mode #checkInfoModal .ci-appt-label {
+    color: #90caf9;
+}
+body.dark-mode #checkInfoModal .ci-appt-key {
+    color: #94a3b8;
+}
+body.dark-mode #checkInfoModal .ci-appt-val {
+    color: var(--gold);
+}
+
 body.dark-mode #checkInfoModal .close {
     color: var(--gold);
 }
 
 body.dark-mode #checkInfoModal .treatment-table th {
-    background: #1b2333;
-    color: var(--gold);
-    border-bottom-color: var(--gold);
+    background: #131a26;
+    color: #94a3b8;
+    border-bottom-color: #33415a;
 }
 
 body.dark-mode #checkInfoModal .treatment-table td {
-    color: #e0e0e0;
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border-bottom-color: #26303f;
 }
 
 body.dark-mode #checkInfoModal .treatment-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: #131a26;
 }
 
 body.dark-mode #checkInfoModal .treatment-table td input[type="text"],

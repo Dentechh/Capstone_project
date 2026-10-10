@@ -384,6 +384,11 @@ body.dark-mode .close:hover {
     overflow-x: auto;
     margin-top: 0;
     border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.10);
+}
+
+body.dark-mode .table-container {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
 .modal-body table {
@@ -391,32 +396,33 @@ body.dark-mode .close:hover {
     border-collapse: collapse;
     border-spacing: 0;
     text-align: left;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-/* One continuous gradient across the whole header row */
+/* Slate header row, matched to the admin .appointment-table */
 .modal-body thead tr {
-    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    background: #e2e8f0;
 }
 
 .modal-body th {
     padding: 14px 20px;
     text-align: center;
-    color: #ffffff;
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    border-bottom: 2px solid rgba(13, 71, 161, 0.15);
+    border-bottom: 1px solid #cbd5e1;
 }
 
 .modal-body td {
     padding: 14px 20px;
     text-align: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #eef2f7;
     font-size: 14px;
-    color: #333333;
+    color: #1f2937;
     vertical-align: middle;
-    background: #f8fafc;
 }
 
 .modal-body tbody tr:last-child td {
@@ -424,28 +430,27 @@ body.dark-mode .close:hover {
 }
 
 .modal-body tbody tr:hover td {
-    background: rgba(13, 71, 161, 0.08);
+    background: #f8fafc;
     transition: background 0.2s ease;
 }
 
-/* Dark mode table styles */
+/* Dark mode table styles — matched to the admin .appointment-table */
 body.dark-mode .modal-body thead tr {
-    background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
-}
-
-body.dark-mode .modal-body th {
-    color: #ffffff;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .modal-body td {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    color: #e0e0e0;
     background: #131a26;
 }
 
+body.dark-mode .modal-body th {
+    color: #94a3b8;
+    border-bottom-color: #33415a;
+}
+
+body.dark-mode .modal-body td {
+    border-bottom-color: #26303f;
+    color: #e2e8f0;
+}
+
 body.dark-mode .modal-body tbody tr:hover td {
-    background: rgba(255, 255, 255, 0.06);
+    background: #131a26;
 }
 
 /* Payment table styles (admin .appointment-table look,
@@ -456,32 +461,33 @@ body.dark-mode .modal-body tbody tr:hover td {
     border-spacing: 0;
     margin-top: 0;
     text-align: left;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-/* One continuous gradient across the whole header row */
+/* Slate header row, matched to the admin .appointment-table */
 .payment-table thead tr {
-    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    background: #e2e8f0;
 }
 
 .payment-table th {
     padding: 14px 20px;
     text-align: center;
-    color: #ffffff;
+    color: #64748b;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    border-bottom: 2px solid rgba(13, 71, 161, 0.15);
+    border-bottom: 1px solid #cbd5e1;
 }
 
 .payment-table td {
     padding: 14px 20px;
     text-align: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #eef2f7;
     font-size: 14px;
-    color: #333333;
+    color: #1f2937;
     vertical-align: middle;
-    background: #f8fafc;
 }
 
 .payment-table tbody tr:last-child td {
@@ -489,28 +495,27 @@ body.dark-mode .modal-body tbody tr:hover td {
 }
 
 .payment-table tbody tr:hover td {
-    background: rgba(13, 71, 161, 0.08);
+    background: #f8fafc;
     transition: background 0.2s ease;
 }
 
-/* Dark mode payment table */
+/* Dark mode payment table — matched to the admin .appointment-table */
 body.dark-mode .payment-table thead tr {
-    background: linear-gradient(135deg, #7dd3fc 0%, #38bdf8 100%);
-}
-
-body.dark-mode .payment-table th {
-    color: #ffffff;
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .payment-table td {
-    border-bottom-color: rgba(255, 255, 255, 0.06);
-    color: #e0e0e0;
     background: #131a26;
 }
 
+body.dark-mode .payment-table th {
+    color: #94a3b8;
+    border-bottom-color: #33415a;
+}
+
+body.dark-mode .payment-table td {
+    border-bottom-color: #26303f;
+    color: #e2e8f0;
+}
+
 body.dark-mode .payment-table tbody tr:hover td {
-    background: rgba(255, 255, 255, 0.06);
+    background: #131a26;
 }
 
 /* Action buttons inside modal tables (admin .btn-action.accept pill) */
