@@ -52,7 +52,7 @@
                     <tbody>
                         {% for appointment in my_patients %}
                         <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
-                            <td data-cell="name">{{ appointment.full_name or appointment.FirstName or '' }}</td>
+                            <td data-cell="name">{{ appointment.display_name or appointment.full_name or appointment.FirstName or '' }}</td>
                             <td data-cell="age">{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
                             <td data-cell="birthday">{{ appointment.get('birthday') or '-' }}</td>
                             <td data-cell="sex">{{ appointment.get('sex') or '-' }}</td>

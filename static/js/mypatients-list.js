@@ -6,7 +6,7 @@ function buildMyPatientRow(p) {
                 const sexDisplay = p.sex || '-';
                 const civilStatusDisplay = p.civil_status || '-';
                 tr.innerHTML = `
-            <td data-cell="name">${p.full_name || ''}</td>
+            <td data-cell="name">${p.display_name || p.full_name || ''}</td>
             <td data-cell="age">${ageDisplay}</td>
             <td data-cell="birthday">${birthYearDisplay}</td>
             <td data-cell="sex">${sexDisplay}</td>
@@ -45,7 +45,10 @@ function buildMyPatientRow(p) {
                     const nameCell = cellBy('name');
                     const sexCell = cellBy('sex');
                     const mobileCell = cellBy('mobile');
-                    if (nameCell) nameCell.textContent = fullName;
+                    // Table shows "LAST, FIRST MIDDLE" (matches the server's display_name).
+                    const givenNames = [fields.FirstName, fields.MiddleName].filter(Boolean).join(' ');
+                    const displayName = (fields.LastName && givenNames) ? (fields.LastName + ', ' + givenNames) : (fields.LastName || givenNames);
+                    if (nameCell) nameCell.textContent = displayName;
                     if (sexCell) sexCell.textContent = fields.Sex || '-';
                     if (mobileCell) mobileCell.textContent = fields.ContactNumber || '-';
                     existingBtn.setAttribute('data-firstname', fields.FirstName || '');
@@ -337,7 +340,9 @@ function buildMyPatientRow(p) {
 
             // Live name search for the My Patients table (onkeyup in the section markup).
         function filterMyPatients() {
-            var input = document.getElementById('myPatientSearch').value.toUpperCase();
+            // Names display as "LAST, FIRST MIDDLE", so match every typed word
+            // anywhere in the name: "mary camacho" still finds "CAMACHO, MARY JAY".
+            var terms = document.getElementById('myPatientSearch').value.toUpperCase().split(/[\s,]+/).filter(Boolean);
             var table = document.getElementById('myPatientsTable');
             var tbody = table.querySelector('tbody');
             var rows = tbody.querySelectorAll('tr');
@@ -345,7 +350,8 @@ function buildMyPatientRow(p) {
                 var nameCell = row.querySelector('td');
                 if (nameCell) {
                     var textValue = nameCell.textContent || nameCell.innerText;
-                    row.style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+                    var upper = textValue.toUpperCase();
+                    row.style.display = terms.every(function (t) { return upper.indexOf(t) > -1; }) ? '' : 'none';
                 }
             });
         }
