@@ -259,6 +259,8 @@
         }
     }
 
+
+    
     function init() {
         btn = document.getElementById('notificationBtn');
         if (!btn) return;
