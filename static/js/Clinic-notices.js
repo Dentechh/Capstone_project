@@ -1,9 +1,9 @@
-/* Patient notification bell.
-   Reads /get_clinic_notices (upcoming clinic closures / limited
-   availability that the dentist chose to tell patients about) and
-   /get_schedule_notifications (the patient's own appointment
-   accept / decline / reschedule events), and shows both in a small
-   panel under the bell. A red badge counts anything unseen. */
+    /* Patient notification bell.
+    Reads /get_clinic_notices (upcoming clinic closures / limited
+    availability that the dentist chose to tell patients about) and
+    /get_schedule_notifications (the patient's own appointment
+    accept / decline / reschedule events), and shows both in a small
+    panel under the bell. A red badge counts anything unseen. */
 (function () {
     'use strict';
 
