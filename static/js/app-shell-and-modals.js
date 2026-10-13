@@ -1453,6 +1453,76 @@
                 });
             }
 
+            // -----------------------------------------------------------
+            // Medical History master switch.
+            //
+            // The switch turns the whole medical history block (the
+            // q1-q9 questions and the women's health block) on and
+            // off. While it is off every question is disabled, so
+            // nothing has to be answered and nothing is submitted.
+            // "Existing Patient" switches it off automatically, but
+            // the switch itself stays reachable so the admin can
+            // still record medical history when they want to.
+            // -----------------------------------------------------------
+            function admRefreshSpecFields() {
+                ['q2', 'q3', 'q4', 'q5', 'q7', 'q9'].forEach(function (q) {
+                    const el = document.getElementById('adm_' + q + '_spec');
+                    if (!el) return;
+                    const yes = document.querySelector('input[name="' + q + '"][value="Yes"]');
+                    el.disabled = !(yes && yes.checked);
+                });
+            }
+
+            function admClearMedHistory() {
+                const body = document.getElementById('admMedHistoryBody');
+                if (body) {
+                    body.querySelectorAll('input[type="radio"]').forEach(function (el) {
+                        el.checked = false;
+                    });
+                    body.querySelectorAll('input[type="text"]').forEach(function (el) {
+                        el.value = '';
+                    });
+                }
+                const women = document.getElementById('admWomenSection');
+                if (women) {
+                    women.querySelectorAll('input[type="radio"]').forEach(function (el) {
+                        el.checked = false;
+                    });
+                }
+            }
+
+            function admSyncMedHistory() {
+                const toggle = document.getElementById('admMedHistoryToggle');
+                const wrap = document.getElementById('admMedHistoryWrap');
+                const body = document.getElementById('admMedHistoryBody');
+                const stateText = document.getElementById('admMedHistoryState');
+                if (!toggle || !wrap) return;
+
+                const on = toggle.checked;
+                wrap.classList.toggle('is-off', !on);
+
+                if (!on) admClearMedHistory();
+
+                if (body) {
+                    body.querySelectorAll('input, select, textarea').forEach(function (el) {
+                        el.disabled = !on;
+                    });
+                }
+
+                const women = document.getElementById('admWomenSection');
+                if (women) {
+                    const sexSelect = document.getElementById('admSexSelect');
+                    const female = sexSelect && sexSelect.value === 'Female';
+                    women.style.opacity = (on && female) ? '1' : '0.4';
+                    women.querySelectorAll('input').forEach(function (el) {
+                        el.disabled = !on || !female;
+                    });
+                }
+
+                if (on) admRefreshSpecFields();
+                if (stateText) stateText.textContent = on ? 'Required' : 'Optional';
+            }
+
             function togglePatientMode() {
                 const mode = document.querySelector('input[name="patientMode"]:checked').value;
                 const existingSection = document.getElementById('existingPatientSection');
@@ -1460,6 +1530,7 @@
                 const select = document.getElementById('admPatientSelect');
                 const firstName = document.getElementById('admFirstName');
                 const lastName = document.getElementById('admLastName');
+                const medToggle = document.getElementById('admMedHistoryToggle');
 
                 if (mode === 'existing') {
                     existingSection.style.display = 'block';
@@ -1467,6 +1538,10 @@
                     select.required = true;
                     if (firstName) firstName.required = false;
                     if (lastName) lastName.required = false;
+                    // Existing patients start with the medical history
+                    // questions switched off. The switch stays usable
+                    // so the admin can still answer them when needed.
+                    if (medToggle) medToggle.checked = false;
                 } else {
                     existingSection.style.display = 'none';
                     newSection.style.display = 'block';
@@ -1475,7 +1550,10 @@
                     document.getElementById('admPatientUid').value = '';
                     if (firstName) firstName.required = true;
                     if (lastName) lastName.required = true;
+                    if (medToggle) medToggle.checked = true;
                 }
+
+                admSyncMedHistory();
             }
 
 
@@ -1539,9 +1617,29 @@
             const admWomen = document.getElementById('admWomenSection');
             if (admSex && admWomen) {
                 admSex.addEventListener('change', function () {
-                    const enable = this.value === 'Female';
-                    admWomen.style.opacity = enable ? '1' : '0.4';
-                    admWomen.querySelectorAll('input').forEach(el => el.disabled = !enable);
+                    // The women's block follows the sex selection, but
+                    // only while the medical history switch is on.
+                    admSyncMedHistory();
+                });
+            }
+
+            const admMedToggle = document.getElementById('admMedHistoryToggle');
+            if (admMedToggle) {
+                admMedToggle.addEventListener('change', admSyncMedHistory);
+            }
+
+            // The card header works like a dropdown header:
+            // clicking anywhere on it (except the switch
+            // itself, which toggles natively) flips the
+            // medical history questions open or closed.
+            const admMedHead = document.getElementById('admMedHistoryHead');
+            if (admMedHead) {
+                admMedHead.addEventListener('click', function (e) {
+                    if (e.target.closest('.adm-switch')) return;
+                    const toggle = document.getElementById('admMedHistoryToggle');
+                    if (!toggle) return;
+                    toggle.checked = !toggle.checked;
+                    admSyncMedHistory();
                 });
             }
 
@@ -1825,7 +1923,7 @@
                 });
 
                 // Reopening the modal always starts from step 1.
-                window.admResetWizard = function () { showStep(1); };
+                window.admResetWizard = function () { showStep(1); admSyncMedHistory(); };
                 showStep(1);
             })();
 
@@ -1836,6 +1934,11 @@
             window.admClearSignature = admClearSignature;
             window.admToggleSpec = admToggleSpec;
             window.admCombineDateTime = admCombineDateTime;
+            window.admSyncMedHistory = admSyncMedHistory;
+
+            // The form opens on "Existing Patient", so the medical
+            // history questions start switched off.
+            admSyncMedHistory();
 
             // ---------------------------------------------------------------
             // Custom option panel for the selects inside the appointment modal.

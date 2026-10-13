@@ -237,6 +237,89 @@
             background: transparent;
         }
 
+        /* =========================================
+           MODAL SCROLLBARS
+           The form and consent panes (and the
+           wizard on small screens) scroll with
+           the browser's default scrollbar. Style
+           them like the rest of the admin panel:
+           slim, rounded, themed, with a hover
+           state and dark-mode colours.
+           ========================================= */
+
+        #newApptModal .adm-form-side,
+        #newApptModal .adm-consent-side,
+        #newApptModal .adm-wizard {
+            scrollbar-width: thin;
+            scrollbar-color: #b6c2d2 transparent;
+            overscroll-behavior: contain;
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar,
+        #newApptModal .adm-consent-side::-webkit-scrollbar,
+        #newApptModal .adm-wizard::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar-track,
+        #newApptModal .adm-consent-side::-webkit-scrollbar-track,
+        #newApptModal .adm-wizard::-webkit-scrollbar-track {
+            background: rgba(13, 71, 161, 0.05);
+            border-radius: 10px;
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar-thumb,
+        #newApptModal .adm-consent-side::-webkit-scrollbar-thumb,
+        #newApptModal .adm-wizard::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #0d47a1, #1565c0);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar-thumb:hover,
+        #newApptModal .adm-consent-side::-webkit-scrollbar-thumb:hover,
+        #newApptModal .adm-wizard::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #1565c0, #0d47a1);
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar-button,
+        #newApptModal .adm-consent-side::-webkit-scrollbar-button,
+        #newApptModal .adm-wizard::-webkit-scrollbar-button {
+            display: none;
+        }
+
+        #newApptModal .adm-form-side::-webkit-scrollbar-corner,
+        #newApptModal .adm-consent-side::-webkit-scrollbar-corner,
+        #newApptModal .adm-wizard::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side,
+        body.dark-mode #newApptModal .adm-consent-side,
+        body.dark-mode #newApptModal .adm-wizard {
+            scrollbar-color: #3b4a61 transparent;
+        }
+
+        body.dark-mode #newApptModal .adm-form-side::-webkit-scrollbar-track,
+        body.dark-mode #newApptModal .adm-consent-side::-webkit-scrollbar-track,
+        body.dark-mode #newApptModal .adm-wizard::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side::-webkit-scrollbar-thumb,
+        body.dark-mode #newApptModal .adm-consent-side::-webkit-scrollbar-thumb,
+        body.dark-mode #newApptModal .adm-wizard::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #64b5f6, #90caf9);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+        }
+
+        body.dark-mode #newApptModal .adm-form-side::-webkit-scrollbar-thumb:hover,
+        body.dark-mode #newApptModal .adm-consent-side::-webkit-scrollbar-thumb:hover,
+        body.dark-mode #newApptModal .adm-wizard::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #90caf9, #64b5f6);
+        }
+
         .adm-select-option {
             display: flex;
             align-items: center;
@@ -495,6 +578,194 @@
             margin-bottom: 10px;
             font-size: 0.9rem;
             color: #333;
+        }
+
+        /* =========================================
+           MEDICAL HISTORY COLLAPSIBLE CARD
+           Same pattern as the Doctors Calendar
+           "Block multiple days" card: a header
+           row carrying the title and the on/off
+           switch, and a body that slides away
+           completely while the questions are
+           switched off.
+           ========================================= */
+
+        #newApptModal #admMedHistoryWrap {
+            margin-top: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: rgba(13, 71, 161, 0.03);
+        }
+
+        /* The header labels live inside .adm-form-side, whose
+           generic `label` rule (block, 14px top margin) would
+           otherwise push the switch out of line. Neutralise it
+           here so the header stays one clean row. */
+        #newApptModal .adm-medhead {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 16px;
+        }
+
+        #newApptModal #admMedHistoryWrap:not(.is-off) .adm-medhead {
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        #newApptModal .adm-medhead__title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #0d47a1;
+            min-width: 0;
+        }
+
+        #newApptModal .adm-medhead__title .material-symbols-rounded {
+            font-size: 20px;
+            flex: 0 0 auto;
+        }
+
+        #newApptModal .adm-medhead__chevron {
+            font-size: 20px;
+            color: #64748b;
+            flex: 0 0 auto;
+            transition: transform 0.3s ease;
+        }
+
+        #newApptModal #admMedHistoryWrap.is-off .adm-medhead__chevron {
+            transform: rotate(-90deg);
+        }
+
+        /* --- On/off switch --- */
+        #newApptModal .adm-medhead .adm-switch {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            user-select: none;
+            flex: 0 0 auto;
+        }
+
+        /* The checkbox covers the whole label so the entire
+           switch (track + text) is the click target. It is
+           invisible; the track below is what is drawn. */
+        #newApptModal .adm-switch input[type="checkbox"] {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #newApptModal .adm-switch__track {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            border-radius: 999px;
+            background: #cbd5e1;
+            border: 1px solid #94a3b8;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            flex: 0 0 auto;
+        }
+
+        #newApptModal .adm-switch__thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        #newApptModal .adm-switch input:checked + .adm-switch__track {
+            background: #16a34a;
+            border-color: #15803d;
+        }
+
+        #newApptModal .adm-switch input:checked + .adm-switch__track .adm-switch__thumb {
+            transform: translateX(18px);
+        }
+
+        #newApptModal .adm-switch input:focus-visible + .adm-switch__track {
+            outline: 2px solid #1d4ed8;
+            outline-offset: 2px;
+        }
+
+        #newApptModal .adm-switch__state {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            min-width: 46px;
+        }
+
+        /* --- Collapsible body ---
+           grid-template-rows 1fr -> 0fr gives a smooth
+           height animation; the inner body clips while it
+           shrinks. visibility + opacity fade it out. */
+        #newApptModal .adm-collapse {
+            display: grid;
+            grid-template-rows: 1fr;
+            opacity: 1;
+            visibility: visible;
+            transition: grid-template-rows 0.32s ease,
+                opacity 0.25s ease,
+                visibility 0.32s;
+        }
+
+        #newApptModal #admMedHistoryWrap.is-off .adm-collapse {
+            grid-template-rows: 0fr;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        #newApptModal #admMedHistoryBody {
+            overflow: hidden;
+            min-height: 0;
+            padding: 0 16px;
+        }
+
+        #newApptModal #admMedHistoryBody .adm-women-box {
+            margin-bottom: 12px;
+        }
+
+        /* --- Dark mode --- */
+        body.dark-mode #newApptModal #admMedHistoryWrap {
+            border-color: #33415a;
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        body.dark-mode #newApptModal #admMedHistoryWrap:not(.is-off) .adm-medhead {
+            border-bottom-color: #33415a;
+        }
+
+        body.dark-mode #newApptModal .adm-medhead__title {
+            color: #64b5f6;
+        }
+
+        body.dark-mode #newApptModal .adm-medhead__chevron {
+            color: #94a3b8;
+        }
+
+        body.dark-mode #newApptModal .adm-switch__track {
+            background: #334155;
+            border-color: #475569;
+        }
+
+        body.dark-mode #newApptModal .adm-switch__state {
+            color: #94a3b8;
         }
 
         #newApptModal .adm-sig-canvas {

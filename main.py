@@ -1230,7 +1230,12 @@ class DentalClinicApp(BaseFlaskApp):
             "Sex": clean("Sex"),
             "HouseNo": clean("HouseNo"),
             "Street": clean("Street"),
-            "Brgy": clean("Brgy"),
+            # Older / externally written records may carry the
+            # barangay under the full "Barangay" key instead of
+            # "Brgy", so fall back to it when the short key is
+            # empty -- otherwise the "use previous details" fill
+            # leaves the Barangay field blank.
+            "Brgy": clean("Brgy") or clean("Barangay"),
             "Municipality": clean("Municipality"),
             "City": clean("City"),
             "Nationality": clean("Nationality"),
@@ -7399,6 +7404,97 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
+    def _latest_appointment_summary(self, account_uid):
+        """
+        Latest appointment entered for this patient through the
+        appointment modal, as a header summary for the Treatment
+        Information modal.
+
+        Pending requests ("appointments") and accepted bookings
+        ("Approve") both carry the form answers, so both are
+        scanned and the newest one by scheduled date wins -- the
+        same rule get_previous_booking_info() uses.
+
+        Deliberately excludes name / age / birthday / sex / civil
+        status / mobile number: those are identity fields the modal
+        heading already covers, and they can change between
+        bookings.
+        """
+        if not account_uid:
+            return None
+
+        # The account doc (and its appointment subcollections) lives
+        # under either main collection depending on how the patient
+        # signed up -- same resolution as _record_schedule_notification.
+        main_collection = None
+
+        try:
+            if self.db.collection("google_create_account").document(account_uid).get().exists:
+                main_collection = "google_create_account"
+            elif self.db.collection(self.Customer_Account).document(account_uid).get().exists:
+                main_collection = self.Customer_Account
+        except Exception as e:
+            print("LATEST APPOINTMENT ACCOUNT LOOKUP ERROR:", e)
+
+        if not main_collection:
+            return None
+
+        candidates = []
+
+        for collection_name in (self.Appointment_cliets, "Approve"):
+            try:
+                for doc in (
+                    self.db.collection(main_collection)
+                    .document(account_uid)
+                    .collection(collection_name)
+                    .limit(10)
+                    .stream()
+                ):
+                    data = doc.to_dict() or {}
+                    candidates.append(
+                        (str(data.get("appointment_date") or ""), data)
+                    )
+            except Exception as e:
+                print("LATEST APPOINTMENT LOOKUP ERROR:", e)
+
+        if not candidates:
+            return None
+
+        # Newest scheduled date first.
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        data = candidates[0][1]
+
+        def clean(key):
+            return str(data.get(key) or "").strip()
+
+        return {
+            "service": clean("Service"),
+            "appointment_date": clean("appointment_date"),
+            "dentist_name": clean("DentistName"),
+            # Medical history answers from the same
+            # appointment form, keyed by field name.
+            # The labels live in check-info-modal.js.
+            "medical_history": {
+                "q1": clean("q1"),
+                "q2": clean("q2"),
+                "q2_spec": clean("q2_spec"),
+                "q3": clean("q3"),
+                "q3_spec": clean("q3_spec"),
+                "q4": clean("q4"),
+                "q4_spec": clean("q4_spec"),
+                "q5": clean("q5"),
+                "q5_spec": clean("q5_spec"),
+                "q6": clean("q6"),
+                "q7": clean("q7"),
+                "q7_spec": clean("q7_spec"),
+                "q9": clean("q9"),
+                "q9_spec": clean("q9_spec"),
+                "w_preg": clean("w_preg"),
+                "w_nurse": clean("w_nurse"),
+                "w_pill": clean("w_pill"),
+            },
+        }
+
     def get_treatment_info(self, patient_id):
         
         if not self._is_admin():
@@ -7458,7 +7554,8 @@ class DentalClinicApp(BaseFlaskApp):
                 return jsonify({
                     "success": True,
                     "procedures": [],
-                    "latest_treatment": None
+                    "latest_treatment": None,
+                    "latest_appointment": None
                 })
             
             user_ref = self.db.collection(
@@ -7552,7 +7649,13 @@ class DentalClinicApp(BaseFlaskApp):
 
                 "procedures": procedures,
 
-                "latest_treatment": latest_treatment
+                "latest_treatment": latest_treatment,
+
+                # Header summary of the latest appointment the
+                # patient entered in the appointment modal.
+                "latest_appointment": self._latest_appointment_summary(
+                    account_uid
+                )
 
             })
 

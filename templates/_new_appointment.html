@@ -295,9 +295,28 @@
                             </div>
 
                             <!-- Medical History -->
-                            <div class="form-group">
-                                <label>Medical History</label>
+                            <div id="admMedHistoryWrap">
+                                <div class="adm-medhead" id="admMedHistoryHead">
+                                    <span class="adm-medhead__title">
+                                        <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                        Medical History
+                                        <span class="adm-medhead__chevron material-symbols-rounded"
+                                            aria-hidden="true">expand_more</span>
+                                    </span>
 
+                                    <label class="adm-switch">
+                                        <input type="checkbox" id="admMedHistoryToggle"
+                                            title="Switch the medical history questions on or off">
+                                        <span class="adm-switch__track" aria-hidden="true"><span
+                                                class="adm-switch__thumb"></span></span>
+                                        <span class="adm-switch__state"
+                                            id="admMedHistoryState">Optional</span>
+                                    </label>
+                                </div>
+
+                                <div class="adm-collapse" id="admMedHistoryCollapse">
+                                <div id="admMedHistoryBody">
+                                <div class="form-group">
                                 <div class="adm-q-row">
                                     <span>1. Are you in good health?</span>
                                     <div class="adm-yn">
@@ -385,10 +404,10 @@
                                 </div>
                                 <input type="text" name="q9_spec" id="adm_q9_spec" placeholder="Please specify"
                                     class="form-control" disabled>
-                            </div>
+                                </div>
 
-                            <!-- Women's Health -->
-                            <div id="admWomenSection" class="adm-women-box">
+                                <!-- Women's Health -->
+                                <div id="admWomenSection" class="adm-women-box">
                                 <p style="margin:0 0 8px;font-weight:600;">For Women Only</p>
                                 <div class="adm-q-row">
                                     <span>Pregnant?</span>
@@ -410,6 +429,9 @@
                                         <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
                                         <label><input type="radio" name="w_pill" value="No"> No</label>
                                     </div>
+                                </div>
+                                </div>
+                                </div>
                                 </div>
                             </div>
 

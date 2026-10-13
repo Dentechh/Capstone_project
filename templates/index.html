@@ -608,8 +608,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
 
                         <!-- Medical History -->
-                        <div class="form-group">
-                            <label>Medical History</label>
+                        <div id="admMedHistoryWrap">
+                            <div class="adm-medhead" id="admMedHistoryHead">
+                                <span class="adm-medhead__title">
+                                    <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                    Medical History
+                                    <span class="adm-medhead__chevron material-symbols-rounded"
+                                        aria-hidden="true">expand_more</span>
+                                </span>
+
+                                <label class="adm-switch">
+                                    <input type="checkbox" id="admMedHistoryToggle"
+                                        title="Switch the medical history questions on or off">
+                                    <span class="adm-switch__track" aria-hidden="true"><span
+                                            class="adm-switch__thumb"></span></span>
+                                    <span class="adm-switch__state"
+                                        id="admMedHistoryState">Optional</span>
+                                </label>
+                            </div>
+
+                            <div class="adm-collapse" id="admMedHistoryCollapse">
+                            <div id="admMedHistoryBody">
+                            <div class="form-group">
 
                             <div class="adm-q-row">
                                 <span>1. Are you in good health?</span>
@@ -723,6 +743,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
                                     <label><input type="radio" name="w_pill" value="No"> No</label>
                                 </div>
+                            </div>
+                            </div>
+                            </div>
                             </div>
                         </div>
 
@@ -1810,6 +1833,11 @@ resetPasswordBtn.addEventListener("click", async () => {
             fetch('/previous_booking_info')
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
+                    // A patient who has booked before starts with
+                    // the medical history questions switched off;
+                    // a first-time patient starts with them on.
+                    // The switch itself stays reachable either way.
+                    setMedHistoryInitial(!!(data && data.has_previous));
                     if (data && data.has_previous && data.info) {
                         showPrefillPrompt(data.info);
                     } else {
@@ -1818,6 +1846,7 @@ resetPasswordBtn.addEventListener("click", async () => {
                 })
                 .catch(function () {
                     // Never block booking because the lookup failed.
+                    setMedHistoryInitial(false);
                     openAppointmentModalDirect();
                 });
         }
@@ -1834,6 +1863,12 @@ resetPasswordBtn.addEventListener("click", async () => {
                 promptModal.style.display = 'none';
                 openAppointmentModalDirect();
                 prefillAppointmentForm(info);
+                // Re-apply once the modal is fully open so a
+                // late wizard reset cannot wipe the carried-over
+                // details (the Barangay included).
+                window.setTimeout(function () {
+                    prefillAppointmentForm(info);
+                }, 0);
             };
 
             document.getElementById('prefillNoBtn').onclick = function () {
@@ -1874,7 +1909,7 @@ resetPasswordBtn.addEventListener("click", async () => {
             setInput('admAge', info.Age);
             setInput('admHouseNo', info.HouseNo);
             setInput('admStreet', info.Street);
-            setInput('admBrgy', info.Brgy);
+            setInput('admBrgy', info.Brgy || info.Barangay);
             setInput('admMunicipality', info.Municipality);
             setInput('admCity', info.City);
             setInput('admNationality', info.Nationality);
@@ -2059,14 +2094,14 @@ resetPasswordBtn.addEventListener("click", async () => {
             }
         });
 
-                // Sex dropdown - enable/disable women section
+                // Sex dropdown - the women's health block
+        // only ever answers while the medical history
+        // switch is on.
         const admSexSelect = document.getElementById('admSexSelect');
         const admWomenSection = document.getElementById('admWomenSection');
         if(admSexSelect && admWomenSection) {
             admSexSelect.addEventListener('change', function() {
-                const enable = this.value === 'Female';
-                admWomenSection.style.opacity = enable ? '1' : '0.4';
-                admWomenSection.querySelectorAll('input').forEach(el => el.disabled = !enable);
+                syncMedHistory();
             });
         }
 
@@ -2077,6 +2112,100 @@ resetPasswordBtn.addEventListener("click", async () => {
         const el = document.getElementById('adm_' + q + '_spec');
         if (el) el.disabled = disable;
     }
+
+        // -----------------------------------------------------------
+        // Medical History master switch (patient side).
+        //
+        // Mirrors the admin booking form: the switch turns the
+        // whole medical history block (the q1-q9 questions and
+        // the women's health block) on and off. While it is off
+        // every question is disabled, so nothing has to be
+        // answered and nothing is submitted. A patient who has
+        // booked before starts with the questions switched off,
+        // a first-time patient starts with them on -- the
+        // switch itself stays reachable either way.
+        // -----------------------------------------------------------
+        function clearMedHistoryFields() {
+            const body = document.getElementById('admMedHistoryBody');
+            if (body) {
+                body.querySelectorAll('input[type="radio"]').forEach(function (el) {
+                    el.checked = false;
+                });
+                body.querySelectorAll('input[type="text"]').forEach(function (el) {
+                    el.value = '';
+                });
+            }
+        }
+
+        function refreshMedSpecFields() {
+            ['q2', 'q3', 'q4', 'q5', 'q7', 'q9'].forEach(function (q) {
+                const el = document.getElementById('adm_' + q + '_spec');
+                if (!el) return;
+                const yes = document.querySelector('input[name="' + q + '"][value="Yes"]');
+                el.disabled = !(yes && yes.checked);
+            });
+        }
+
+        function syncMedHistory() {
+            const toggle = document.getElementById('admMedHistoryToggle');
+            const wrap = document.getElementById('admMedHistoryWrap');
+            const body = document.getElementById('admMedHistoryBody');
+            const stateText = document.getElementById('admMedHistoryState');
+            if (!toggle || !wrap) return;
+
+            const on = toggle.checked;
+            wrap.classList.toggle('is-off', !on);
+
+            if (!on) clearMedHistoryFields();
+
+            if (body) {
+                body.querySelectorAll('input, select, textarea').forEach(function (el) {
+                    el.disabled = !on;
+                });
+            }
+
+            const women = document.getElementById('admWomenSection');
+            if (women) {
+                const sexSelect = document.getElementById('admSexSelect');
+                const female = sexSelect && sexSelect.value === 'Female';
+                women.style.opacity = (on && female) ? '1' : '0.4';
+                women.querySelectorAll('input').forEach(function (el) {
+                    el.disabled = !on || !female;
+                });
+            }
+
+            if (on) refreshMedSpecFields();
+            if (stateText) stateText.textContent = on ? 'Required' : 'Optional';
+        }
+
+        // Sets the switch to match whether the account has
+        // booked before. Runs every time the form opens.
+        function setMedHistoryInitial(hasPrevious) {
+            const toggle = document.getElementById('admMedHistoryToggle');
+            if (!toggle) return;
+            toggle.checked = !hasPrevious;
+            syncMedHistory();
+        }
+
+        const medHistoryToggle = document.getElementById('admMedHistoryToggle');
+        if (medHistoryToggle) {
+            medHistoryToggle.addEventListener('change', syncMedHistory);
+        }
+
+        // The card header works like a dropdown header:
+        // clicking anywhere on it (except the switch
+        // itself, which toggles natively) flips the
+        // medical history questions open or closed.
+        const medHistoryHead = document.getElementById('admMedHistoryHead');
+        if (medHistoryHead) {
+            medHistoryHead.addEventListener('click', function (e) {
+                if (e.target.closest('.adm-switch')) return;
+                const toggle = document.getElementById('admMedHistoryToggle');
+                if (!toggle) return;
+                toggle.checked = !toggle.checked;
+                syncMedHistory();
+            });
+        }
 
 
         // Signature Pad

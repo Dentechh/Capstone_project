@@ -5934,7 +5934,84 @@ body.dark-mode .datetime-text {
 
 #checkInfoModal .ci-head-text {
     min-width: 0;
+    flex: 0 1 auto;
+    /* Fill the header height so the heading
+       column never looks empty beside the
+       appointment summary. */
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
 }
+
+/* At-a-glance figures from the treatment
+   records. Grows with the heading column and
+   centers its content vertically. */
+#checkInfoModal .ci-stats {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    flex: 1 1 auto;
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+#checkInfoModal .ci-stats[hidden] { display: none; }
+#checkInfoModal .ci-stats-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: #64748b;
+}
+#checkInfoModal .ci-stats-label .material-symbols-rounded {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+#checkInfoModal .ci-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+#checkInfoModal .ci-stat-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    min-width: 0;
+    font-size: 12.5px;
+    line-height: 1.35;
+}
+#checkInfoModal .ci-stat-q {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: #64748b;
+}
+#checkInfoModal .ci-stat-a {
+    min-width: 0;
+    font-weight: 700;
+    color: var(--navy);
+    overflow-wrap: anywhere;
+    text-align: right;
+}
+
+/* Vertical separator between the heading and the
+   latest-appointment summary. Stretches the full
+   header height and shows/hides with the summary. */
+#checkInfoModal .ci-head-divider {
+    align-self: stretch;
+    flex: 0 0 auto;
+    width: 1px;
+    background: rgba(13, 71, 161, 0.18);
+}
+#checkInfoModal .ci-head-divider[hidden] { display: none; }
 
 #checkInfoModal .ci-head h2 {
     color: var(--navy);
@@ -5952,20 +6029,26 @@ body.dark-mode .datetime-text {
     color: #6b7280;
 }
 
-/* Latest confirmed appointment summary under the Treatment
-   Information header: a tinted panel with a leading
-   "Last Appointment Information:" label, then the
-   service / date-time / dentist / urgency / status facts. */
+/* Latest appointment summary, to the right of the
+   Treatment Information title with a divider in
+   between: the service / date-time / dentist facts
+   in a single landscape row, then the medical
+   history answers from the same appointment below
+   them. */
 #checkInfoModal .ci-appt {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px 24px;
-    margin-top: 12px;
-    padding: 10px 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    /* Match the heading column's height, so
+       the two sides of the header line up. */
+    align-self: stretch;
+    padding: 12px 16px;
+    background: linear-gradient(180deg, #f8fafc, #edf2f9);
+    border: 1px solid #dbe4ef;
+    border-left: 3px solid var(--navy);
+    border-radius: 12px;
 }
 #checkInfoModal .ci-appt[hidden] { display: none; }
 #checkInfoModal .ci-appt-label {
@@ -5976,8 +6059,8 @@ body.dark-mode .datetime-text {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #0d47a1;
+    letter-spacing: 0.7px;
+    color: var(--navy);
 }
 #checkInfoModal .ci-appt-label .material-symbols-rounded {
     font-size: 16px;
@@ -5986,30 +6069,99 @@ body.dark-mode .datetime-text {
 }
 #checkInfoModal .ci-appt-items {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 40px;
-    flex: 1 1 320px;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 8px 28px;
+    flex: 0 0 auto;
     min-width: 0;
+    margin-top: 7px;
+    /* The fact row never wraps; on narrow
+       screens it scrolls horizontally instead. */
+    overflow-x: auto;
 }
 #checkInfoModal .ci-appt-item {
     display: flex;
-    align-items: baseline;
-    gap: 7px;
-    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 110px;
 }
 #checkInfoModal .ci-appt-key {
-    flex: 0 0 auto;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: #6b7280;
+    letter-spacing: 0.7px;
+    color: #64748b;
 }
 #checkInfoModal .ci-appt-val {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--navy);
     overflow-wrap: anywhere;
+}
+
+/* Medical history answers from the latest
+   appointment, under the fact row. Only the
+   questions the patient answered are listed.
+   Fills the panel when the heading column is
+   taller than the facts. */
+#checkInfoModal .ci-appt-med {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-top: 10px;
+    border-top: 1px dashed #d3deeb;
+}
+#checkInfoModal .ci-appt-med[hidden] { display: none; }
+#checkInfoModal .ci-appt-med-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: #64748b;
+}
+#checkInfoModal .ci-appt-med-label .material-symbols-rounded {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+#checkInfoModal .ci-appt-med-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 6px 24px;
+    margin-top: 7px;
+    /* A long history must not push the treatment
+       table off screen. */
+    max-height: 132px;
+    overflow-y: auto;
+}
+#checkInfoModal .ci-appt-med-item {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.35;
+}
+#checkInfoModal .ci-appt-med-q {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: #64748b;
+}
+#checkInfoModal .ci-appt-med-a {
+    min-width: 0;
+    font-weight: 600;
+    color: var(--navy);
+    overflow-wrap: anywhere;
+}
+/* Shown when the latest appointment carries no
+   medical history answers. Keeps the panel's
+   shape consistent across patients. */
+#checkInfoModal .ci-appt-med-empty {
+    font-style: italic;
+    font-weight: 500;
+    color: #94a3b8;
 }
 
 #checkInfoModal .close {
@@ -6721,6 +6873,10 @@ body.dark-mode #checkInfoModal .ci-head {
     border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
+body.dark-mode #checkInfoModal .ci-head-divider {
+    background: rgba(255, 255, 255, 0.14);
+}
+
 body.dark-mode #checkInfoModal .ci-head h2 {
     color: var(--gold);
 }
@@ -6730,8 +6886,9 @@ body.dark-mode #checkInfoModal .ci-sub {
 }
 
 body.dark-mode #checkInfoModal .ci-appt {
-    background: #131a26;
+    background: linear-gradient(180deg, #131a26, #101724);
     border-color: #33415a;
+    border-left-color: var(--gold);
 }
 body.dark-mode #checkInfoModal .ci-appt-label {
     color: #90caf9;
@@ -6740,6 +6897,28 @@ body.dark-mode #checkInfoModal .ci-appt-key {
     color: #94a3b8;
 }
 body.dark-mode #checkInfoModal .ci-appt-val {
+    color: var(--gold);
+}
+body.dark-mode #checkInfoModal .ci-appt-med {
+    border-top-color: #33415a;
+}
+body.dark-mode #checkInfoModal .ci-appt-med-label,
+body.dark-mode #checkInfoModal .ci-appt-med-q {
+    color: #94a3b8;
+}
+body.dark-mode #checkInfoModal .ci-appt-med-a {
+    color: var(--gold);
+}
+
+body.dark-mode #checkInfoModal .ci-stats {
+    background: #131a26;
+    border-color: #33415a;
+}
+body.dark-mode #checkInfoModal .ci-stats-label,
+body.dark-mode #checkInfoModal .ci-stat-q {
+    color: #94a3b8;
+}
+body.dark-mode #checkInfoModal .ci-stat-a {
     color: var(--gold);
 }
 
@@ -7295,6 +7474,25 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
 
     #checkInfoModal .ci-head {
         padding: 16px;
+        /* The summary no longer fits beside the title
+           on a phone, so it steps down to its own
+           full-width row under it. */
+        flex-wrap: wrap;
+    }
+
+    /* Nothing left to separate once the summary
+       drops below the title. */
+    #checkInfoModal .ci-head-divider {
+        display: none;
+    }
+
+    #checkInfoModal .ci-appt {
+        flex: 1 1 100%;
+        order: 3;
+    }
+
+    #checkInfoModal .ci-head .modal-x {
+        order: 2;
     }
 
     #checkInfoModal .ci-head h2 {

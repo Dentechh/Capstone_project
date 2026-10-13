@@ -542,8 +542,28 @@
                             </div>
 
                             <!-- Medical History -->
-                            <div class="form-group">
-                                <label>Medical History</label>
+                            <div id="admMedHistoryWrap">
+                                <div class="adm-medhead" id="admMedHistoryHead">
+                                    <span class="adm-medhead__title">
+                                        <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                        Medical History
+                                        <span class="adm-medhead__chevron material-symbols-rounded"
+                                            aria-hidden="true">expand_more</span>
+                                    </span>
+
+                                    <label class="adm-switch">
+                                        <input type="checkbox" id="admMedHistoryToggle"
+                                            title="Switch the medical history questions on or off">
+                                        <span class="adm-switch__track" aria-hidden="true"><span
+                                                class="adm-switch__thumb"></span></span>
+                                        <span class="adm-switch__state"
+                                            id="admMedHistoryState">Optional</span>
+                                    </label>
+                                </div>
+
+                                <div class="adm-collapse" id="admMedHistoryCollapse">
+                                <div id="admMedHistoryBody">
+                                <div class="form-group">
 
                                 <div class="adm-q-row">
                                     <span>1. Are you in good health?</span>
@@ -657,6 +677,9 @@
                                         <label><input type="radio" name="w_pill" value="Yes"> Yes</label>
                                         <label><input type="radio" name="w_pill" value="No"> No</label>
                                     </div>
+                                </div>
+                                </div>
+                                </div>
                                 </div>
                             </div>
 
@@ -831,6 +854,110 @@
     function admToggleSpec(q, disable) {
         var el = document.getElementById("adm_" + q + "_spec");
         if (el) el.disabled = disable;
+    }
+
+    /* -----------------------------------------------------------
+       Medical History master switch (patient side).
+
+       Mirrors the admin booking form: the switch turns
+       the whole medical history block (the q1-q9 questions
+       and the women's health block) on and off. While it
+       is off every question is disabled, so nothing has to
+       be answered and nothing is submitted. A patient who
+       has booked before starts with the questions switched
+       off, a first-time patient starts with them on -- the
+       switch itself stays reachable either way.
+       ----------------------------------------------------------- */
+    function pdClearMedHistory() {
+        var body = document.getElementById("admMedHistoryBody");
+        if (body) {
+            body.querySelectorAll('input[type="radio"]').forEach(function (el) {
+                el.checked = false;
+            });
+            body.querySelectorAll('input[type="text"]').forEach(function (el) {
+                el.value = "";
+            });
+        }
+    }
+
+    function pdRefreshMedSpecFields() {
+        ["q2", "q3", "q4", "q5", "q7", "q9"].forEach(function (q) {
+            var el = document.getElementById("adm_" + q + "_spec");
+            if (!el) return;
+            var yes = document.querySelector('input[name="' + q + '"][value="Yes"]');
+            el.disabled = !(yes && yes.checked);
+        });
+    }
+
+    function pdSyncMedHistory() {
+        var toggle = document.getElementById("admMedHistoryToggle");
+        var wrap = document.getElementById("admMedHistoryWrap");
+        var body = document.getElementById("admMedHistoryBody");
+        var stateText = document.getElementById("admMedHistoryState");
+        if (!toggle || !wrap) return;
+
+        var on = toggle.checked;
+        wrap.classList.toggle("is-off", !on);
+
+        if (!on) pdClearMedHistory();
+
+        if (body) {
+            body.querySelectorAll("input, select, textarea").forEach(function (el) {
+                el.disabled = !on;
+            });
+        }
+
+        var women = document.getElementById("admWomenSection");
+        if (women) {
+            var sexSelect = document.getElementById("admSexSelect");
+            var female = sexSelect && sexSelect.value === "Female";
+            women.style.opacity = (on && female) ? "1" : "0.4";
+            women.querySelectorAll("input").forEach(function (el) {
+                el.disabled = !on || !female;
+            });
+        }
+
+        if (on) pdRefreshMedSpecFields();
+        if (stateText) stateText.textContent = on ? "Required" : "Optional";
+    }
+
+    /* Sets the switch to match whether the account has
+       booked before. Runs every time the form opens. */
+    function pdSetMedHistoryInitial(hasPrevious) {
+        var toggle = document.getElementById("admMedHistoryToggle");
+        if (!toggle) return;
+        toggle.checked = !hasPrevious;
+        pdSyncMedHistory();
+    }
+
+    var pdMedHistoryToggle = document.getElementById("admMedHistoryToggle");
+    if (pdMedHistoryToggle) {
+        pdMedHistoryToggle.addEventListener("change", pdSyncMedHistory);
+    }
+
+    /* The card header works like a dropdown header:
+       clicking anywhere on it (except the switch
+       itself, which toggles natively) flips the
+       medical history questions open or closed. */
+    var pdMedHistoryHead = document.getElementById("admMedHistoryHead");
+    if (pdMedHistoryHead) {
+        pdMedHistoryHead.addEventListener("click", function (e) {
+            if (e.target.closest(".adm-switch")) return;
+            var toggle = document.getElementById("admMedHistoryToggle");
+            if (!toggle) return;
+            toggle.checked = !toggle.checked;
+            pdSyncMedHistory();
+        });
+    }
+
+    /* Sex dropdown - the women's health block only ever
+       answers while the medical history switch is on. */
+    var pdSexSelect = document.getElementById("admSexSelect");
+    var pdWomenSection = document.getElementById("admWomenSection");
+    if (pdSexSelect && pdWomenSection) {
+        pdSexSelect.addEventListener("change", function () {
+            pdSyncMedHistory();
+        });
     }
 
     function admClearSignature() {
@@ -1222,6 +1349,21 @@
 
         var consumeInput = document.getElementById("admConsumeSuggestion");
         if (consumeInput) consumeInput.value = item.id || "";
+
+        /* Medical history switch: the booking form on this
+           page only opens from a scheduled-appointment
+           suggestion, so the patient has booked before and
+           the questions start switched off (the switch
+           stays reachable). The account lookup confirms it
+           so a first-ever booking would still start with
+           the questions on. */
+        pdSetMedHistoryInitial(true);
+        fetch("/previous_booking_info")
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                pdSetMedHistoryInitial(!!(data && data.has_previous));
+            })
+            .catch(function () { /* keep the switched-off default */ });
 
         if (payload.fillPrevious) {
             fetch("/previous_booking_info")

@@ -50,9 +50,10 @@ let currentCheckInfoPatientId = "";
                 return `<span class="ci-badge ${isPaid ? "ci-badge--paid" : "ci-badge--unpaid"}">${isPaid ? "Paid" : "Not Paid"}</span>`;
             }
 
-            // Header summary of the patient's latest confirmed
-            // appointment. Built with textContent: the values come
-            // straight from Firestore and must never be parsed as markup.
+            // Header summary values: set the text, or a
+            // dash when empty. Built with textContent: the
+            // values come straight from Firestore and must
+            // never be parsed as markup.
             function setCiApptText(id, value) {
                 const el = document.getElementById(id);
                 if (!el) return;
@@ -60,12 +61,145 @@ let currentCheckInfoPatientId = "";
                 el.textContent = text || "-";
             }
 
+            // The appointment summary and its divider
+            // show and hide together.
+            function setCiApptVisible(visible) {
+                const block = document.getElementById("ciAppointment");
+                const divider = document.getElementById("ciApptDivider");
+                if (block) block.hidden = !visible;
+                if (divider) divider.hidden = !visible;
+            }
+
+            // Medical history question labels, keyed by the
+            // field name the appointment modal submits. Kept
+            // here, next to the renderer, so the labels always
+            // match the form the answers came from.
+            const CI_MEDICAL_QUESTIONS = [
+                ["q1", "Are you in good health?"],
+                ["q2", "Under medical treatment now?"],
+                ["q2_spec", "If so, what condition?"],
+                ["q3", "Serious illness / surgical operation?"],
+                ["q3_spec", "What illness/operation?"],
+                ["q4", "Ever been hospitalized?"],
+                ["q4_spec", "When and why?"],
+                ["q5", "Taking any medication?"],
+                ["q5_spec", "Please specify"],
+                ["q6", "Use tobacco products?"],
+                ["q7", "Any allergy?"],
+                ["q7_spec", "Please specify"],
+                ["q9", "Any medical condition/s?"],
+                ["q9_spec", "Please specify"],
+                ["w_preg", "Pregnant?"],
+                ["w_nurse", "Nursing?"],
+                ["w_pill", "Birth control pills?"]
+            ];
+
+            // Medical history answers from the latest
+            // appointment. Built with DOM nodes, not
+            // innerHTML: the answers come straight from
+            // Firestore and must never be parsed as markup.
+            function renderCiMedicalHistory(history) {
+                const section = document.getElementById("ciApptMedical");
+                const list = document.getElementById("ciApptMedicalList");
+                if (!section || !list) return;
+
+                list.textContent = "";
+
+                const entries = [];
+
+                CI_MEDICAL_QUESTIONS.forEach(function (pair) {
+                    const answer = String(
+                        (history || {})[pair[0]] || ""
+                    ).trim();
+                    if (answer) {
+                        entries.push([pair[1], answer]);
+                    }
+                });
+
+                if (!entries.length) {
+                    // Explicit empty state: keeps the
+                    // panel's shape consistent across
+                    // patients.
+                    const item = document.createElement("div");
+                    item.className = "ci-appt-med-item ci-appt-med-empty";
+
+                    const note = document.createElement("span");
+                    note.className = "ci-appt-med-q";
+                    note.textContent = "No medical history recorded.";
+
+                    item.appendChild(note);
+                    list.appendChild(item);
+                } else {
+                    entries.forEach(function (entry) {
+                        const item = document.createElement("div");
+                        item.className = "ci-appt-med-item";
+
+                        const question = document.createElement("span");
+                        question.className = "ci-appt-med-q";
+                        question.textContent = entry[0];
+
+                        const answer = document.createElement("span");
+                        answer.className = "ci-appt-med-a";
+                        answer.textContent = entry[1];
+
+                        item.appendChild(question);
+                        item.appendChild(answer);
+                        list.appendChild(item);
+                    });
+                }
+
+                section.hidden = false;
+            }
+
+            // At-a-glance figures for the patient, computed
+            // from the treatment records already loaded.
+            // null (nothing loaded yet) hides the card; an
+            // empty list still shows it with dashes.
+            function renderCiStats(procedures) {
+                const stats = document.getElementById("ciStats");
+                if (!stats) return;
+
+                if (procedures == null) {
+                    stats.hidden = true;
+                    return;
+                }
+
+                const list = Array.isArray(procedures) ? procedures : [];
+
+                // Treatment record count.
+                setCiApptText("ciStatVisits", String(list.length));
+
+                // Most recent visit date and total
+                // outstanding balance. Visit dates are
+                // stored as "YYYY-MM-DD", so a plain
+                // string comparison orders them.
+                let lastVisit = "";
+                let balance = 0;
+
+                list.forEach(function (item) {
+                    const date = String((item || {}).date || "").trim();
+                    if (date > lastVisit) lastVisit = date;
+                    balance += parseFloat((item || {}).balance) || 0;
+                });
+
+                setCiApptText("ciStatLastVisit",
+                    (typeof formatApptDateTime === "function")
+                        ? formatApptDateTime(lastVisit)
+                        : lastVisit);
+                setCiApptText("ciStatBalance",
+                    (typeof peso === "function")
+                        ? peso(balance)
+                        : "₱" + balance.toFixed(2));
+
+                stats.hidden = false;
+            }
+
             function updateCiAppointment(appt) {
                 const block = document.getElementById("ciAppointment");
                 if (!block) return;
 
                 if (!appt) {
-                    block.hidden = true;
+                    setCiApptVisible(false);
                     return;
                 }
 
@@ -78,19 +212,10 @@ let currentCheckInfoPatientId = "";
                     (typeof formatDentistName === "function")
                         ? formatDentistName(appt.dentist_name)
                         : appt.dentist_name);
-                setCiApptText("ciApptUrgency", appt.urgency_level);
 
-                // Firestore stores the appointment status as
-                // "accept"; the header reads better in past tense.
-                const rawStatus = (appt.status || "").trim();
-                const statusText = !rawStatus
-                    ? ""
-                    : rawStatus.toLowerCase() === "accept"
-                        ? "Accepted"
-                        : rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
-                setCiApptText("ciApptStatus", statusText);
+                renderCiMedicalHistory(appt.medical_history);
 
-                block.hidden = false;
+                setCiApptVisible(true);
             }
 
             async function openCheckInfoModal(patientId, patientName) {
@@ -114,11 +239,12 @@ let currentCheckInfoPatientId = "";
                     subtitle.textContent = bits.join("   ·   ");
                 }
 
-                // Latest-appointment summary: hidden until the
-                // treatment-info response says otherwise, so a
-                // previous patient's facts never linger here.
-                const apptBlock = document.getElementById("ciAppointment");
-                if (apptBlock) apptBlock.hidden = true;
+                // Header extras: hidden until the
+                // treatment-info response says otherwise,
+                // so a previous patient's facts never
+                // linger here.
+                setCiApptVisible(false);
+                renderCiStats(null);
 
                 if (!patientId) {
                     modal.style.display = "flex";
@@ -143,8 +269,10 @@ let currentCheckInfoPatientId = "";
                         tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;">No treatment history found.</td></tr>`;
                     }
 
-                    // Header: latest confirmed appointment facts.
+                    // Header: latest appointment facts
+                    // and the patient summary figures.
                     updateCiAppointment(result.latest_appointment);
+                    renderCiStats(result.success ? result.procedures : null);
                 } catch (error) {
                     console.error("Error loading treatment info:", error);
                     tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:#ef4444;">Failed to load treatment data.</td></tr>`;

@@ -184,39 +184,78 @@
                         <h2>Treatment Information</h2>
                         <p class="ci-sub" id="ciSubtitle"></p>
 
-                        <!-- Latest confirmed appointment facts. Deliberately
-                             excludes name / age / birthday / sex / civil
-                             status / mobile number - those stay out of
-                             the header. -->
-                        <div class="ci-appt" id="ciAppointment" hidden>
-                            <span class="ci-appt-label">
-                                <span class="material-symbols-rounded" aria-hidden="true">event_note</span>
-                                Last Appointment Information:
+                        <!-- At-a-glance figures from the
+                             patient's treatment records.
+                             Stretches the full height of
+                             the heading column so the space
+                             beside the appointment summary
+                             is never empty. -->
+                        <div class="ci-stats" id="ciStats" hidden>
+                            <span class="ci-stats-label">
+                                <span class="material-symbols-rounded" aria-hidden="true">summarize</span>
+                                Patient Summary
                             </span>
-                            <div class="ci-appt-items">
-                                <div class="ci-appt-item">
-                                    <span class="ci-appt-key">Service</span>
-                                    <span class="ci-appt-val" id="ciApptService">-</span>
+                            <div class="ci-stats-list">
+                                <div class="ci-stat-item">
+                                    <span class="ci-stat-q">Treatments</span>
+                                    <span class="ci-stat-a" id="ciStatVisits">-</span>
                                 </div>
-                                <div class="ci-appt-item">
-                                    <span class="ci-appt-key">Date &amp; Time</span>
-                                    <span class="ci-appt-val" id="ciApptDate">-</span>
+                                <div class="ci-stat-item">
+                                    <span class="ci-stat-q">Last visit</span>
+                                    <span class="ci-stat-a" id="ciStatLastVisit">-</span>
                                 </div>
-                                <div class="ci-appt-item">
-                                    <span class="ci-appt-key">Dentist</span>
-                                    <span class="ci-appt-val" id="ciApptDentist">-</span>
-                                </div>
-                                <div class="ci-appt-item">
-                                    <span class="ci-appt-key">Urgency</span>
-                                    <span class="ci-appt-val" id="ciApptUrgency">-</span>
-                                </div>
-                                <div class="ci-appt-item">
-                                    <span class="ci-appt-key">Status</span>
-                                    <span class="ci-appt-val" id="ciApptStatus">-</span>
+                                <div class="ci-stat-item">
+                                    <span class="ci-stat-q">Balance</span>
+                                    <span class="ci-stat-a" id="ciStatBalance">-</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Vertical separator between the heading
+                         and the appointment summary; shows and
+                         hides together with it. -->
+                    <span class="ci-head-divider" id="ciApptDivider"
+                        aria-hidden="true" hidden></span>
+
+                    <!-- Latest appointment facts, straight from
+                         the appointment modal input. Deliberately
+                         excludes name / age / birthday / sex /
+                         civil status / mobile number - those stay
+                         out of the header. -->
+                    <div class="ci-appt" id="ciAppointment" hidden>
+                        <span class="ci-appt-label">
+                            <span class="material-symbols-rounded" aria-hidden="true">event_note</span>
+                            Last Appointment Information
+                        </span>
+                        <div class="ci-appt-items">
+                            <div class="ci-appt-item">
+                                <span class="ci-appt-key">Service</span>
+                                <span class="ci-appt-val" id="ciApptService">-</span>
+                            </div>
+                            <div class="ci-appt-item">
+                                <span class="ci-appt-key">Date &amp; Time</span>
+                                <span class="ci-appt-val" id="ciApptDate">-</span>
+                            </div>
+                            <div class="ci-appt-item">
+                                <span class="ci-appt-key">Dentist</span>
+                                <span class="ci-appt-val" id="ciApptDentist">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Medical history answers from the
+                             same appointment. Only questions
+                             the patient actually answered are
+                             listed. -->
+                        <div class="ci-appt-med" id="ciApptMedical" hidden>
+                            <span class="ci-appt-med-label">
+                                <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                                Medical History
+                            </span>
+                            <div class="ci-appt-med-list" id="ciApptMedicalList"></div>
+                        </div>
+                    </div>
+
                     <span class="modal-x" role="button" tabindex="0" aria-label="Close"
                         onclick="closeCheckInfoModal()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"
                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
