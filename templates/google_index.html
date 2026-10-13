@@ -17,7 +17,7 @@
 {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
     <div id="patient-flashes-data"
-            data-flashes="{{ messages | tojson }}"
+            data-flashes='{{ messages | tojson }}'
             style="display: none;"></div>
     {% endif %}
 {% endwith %}
@@ -1038,6 +1038,17 @@ resetPasswordBtn.addEventListener("click", async () => {
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             navLinks.classList.toggle('active');
+        });
+
+        // Close the mobile menu after tapping a link
+        // (the SERVICES dropbtn is excluded so its
+        // dropdown stays reachable inside the menu).
+        navLinks.querySelectorAll('a').forEach(function (link) {
+            if (link.classList.contains('dropbtn')) return;
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+            });
         });
     }
 

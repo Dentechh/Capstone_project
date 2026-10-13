@@ -1148,6 +1148,11 @@ function showSection(sectionId) {
                         if (result && result.patient) {
                             const grid = document.getElementById('weeklyClientsGrid');
                             if (grid) {
+                                // A fresh acceptance means the "no
+                                // accepted patients" empty state, if
+                                // present, is now wrong.
+                                const emptyBlock = grid.querySelector('.weekly-empty');
+                                if (emptyBlock) emptyBlock.remove();
                                 grid.insertBefore(buildApprovedCard(result.patient), grid.firstChild);
                             }
                             upsertMyPatientRow(result.patient.uid, result.patient);

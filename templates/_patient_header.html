@@ -35,10 +35,14 @@
                 </div>
             </li>
             <li><a href="/location" {% if active_page == 'location' %}class="active"{% endif %}><span class="material-symbols-rounded nav-item__icon" aria-hidden="true">location_on</span>LOCATION</a></li>
+            {% if name == "Guest" or not name %}
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('loginModal')">LOGIN</a></li>
+            <li class="auth-nav-item-mobile"><a href="javascript:void(0)" onclick="openAuthModal('registerModal')">REGISTER</a></li>
+            {% endif %}
         </ul>
 
         {% if name == "Guest" or not name %}
-        <div class="auth-buttons">
+        <div class="nav-actions">
             <button class="theme-toggle" id="themeToggle" title="Toggle Dark Mode">
                 <svg class="theme-icon moon-icon" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
@@ -58,8 +62,15 @@
             <button class="notification-btn" id="notificationBtn" title="Notifications" aria-label="Notifications">
                 <span class="material-symbols-rounded" aria-hidden="true">notifications</span>
             </button>
-            <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
-            <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+            <div class="auth-buttons">
+                <a href="javascript:void(0)" class="btn-login" onclick="openAuthModal('loginModal')">LOGIN</a>
+                <a href="javascript:void(0)" class="btn-register" onclick="openAuthModal('registerModal')">REGISTER</a>
+            </div>
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
         {% else %}
 

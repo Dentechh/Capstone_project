@@ -23,7 +23,7 @@
 {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
     <div id="patient-flashes-data" 
-         data-flashes="{{ messages | tojson }}"
+         data-flashes='{{ messages | tojson }}'
          style="display: none;"></div>
     {% endif %}
 {% endwith %}
@@ -35,11 +35,6 @@
 {% set active_page = 'location' %}
 {% include '_patient_header.html' %}
 
-            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
         </div>
     </nav>
 </header>

@@ -2,11 +2,6 @@
 
 /* Location Page Styles */
 
-/* Auth Nav Items (Login/Register in nav - mobile only) */
-.auth-nav-item-mobile {
-    display: none;
-}
-
 .location-container {
     padding: 40px 5%;
     margin: 0 auto;
@@ -344,51 +339,6 @@ body.dark-mode::before {
     filter: blur(8px) brightness(0.3);
 }
 
-body.dark-mode header {
-    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-}
-
-body.dark-mode .nav-links a {
-    color: #e0e0e0;
-}
-
-body.dark-mode .nav-links a:hover,
-body.dark-mode .nav-links a.active {
-    color: #64b5f6;
-}
-
-body.dark-mode .profile-nav {
-    border-left-color: rgba(255,255,255,0.1);
-}
-
-/* Dark Mode Styles */
-body.dark-mode {
-    background: #121212;
-    color: #e0e0e0;
-    transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-body.dark-mode::before {
-    filter: blur(8px) brightness(0.3);
-}
-
-body.dark-mode header {
-    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-}
-
-body.dark-mode .nav-links a {
-    color: #e0e0e0;
-}
-
-body.dark-mode .nav-links a:hover,
-body.dark-mode .nav-links a.active {
-    color: #64b5f6;
-}
-
-body.dark-mode .profile-nav {
-    border-left-color: rgba(255,255,255,0.1);
-}
-
 body.dark-mode .location-header h2 {
     color: #ffffff;
 }
@@ -464,39 +414,6 @@ body.dark-mode .footer-socials h4 {
 
 body.dark-mode .footer-legal a {
     color: #64b5f6;
-}
-
-body.dark-mode .dropdown-menu {
-    background: #1e1e1e;
-}
-
-body.dark-mode .dropdown-menu a {
-    color: #e0e0e0;
-    border-bottom-color: #333;
-}
-
-body.dark-mode .dropdown-menu a:hover {
-    background: #2d2d2d;
-    color: #64b5f6;
-}
-
-body.dark-mode .dropdown-menu a:last-child {
-    color: #ef5350;
-}
-
-body.dark-mode .dropdown-content {
-    background-color: var(--dark-black);
-}
-
-body.dark-mode .dropdown-content a {
-    color: #e0e0e0 !important;
-    border-bottom-color: #333;
-    transition: all 0.3s ease;
-}
-
-body.dark-mode .dropdown-content a:hover {
-    background: rgba(100, 181, 246, 0.12);
-    color: #64b5f6 !important;
 }
 
 /* Theme Toggle Button */
@@ -691,19 +608,6 @@ body.dark-mode .btn-primary:hover {
     
     .footer-legal a {
         margin: 0 10px;
-    }
-    
-    /* Show mobile auth items, hide desktop auth buttons */
-    .nav-actions .auth-buttons {
-        display: none !important;
-    }
-    
-    .auth-nav-item-mobile {
-        display: block;
-    }
-    
-    body.dark-mode .nav-links {
-        background: var(--dark-black);
     }
 }
 

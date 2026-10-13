@@ -4716,6 +4716,16 @@ body.dark-mode .datetime-text {
         gap: 15px;
         margin-bottom: 25px;
         padding-left: 70px;
+        padding-right: 70px;
+    }
+    
+    /* Dark mode toggle pinned to the top-right corner on mobile, with
+       margins, instead of wrapping onto its own line under the chips. */
+    .admin-profile {
+        position: absolute;
+        top: 0;
+        right: 15px;
+        margin: 0;
     }
     
     .top-header h2 {
@@ -4955,7 +4965,7 @@ body.dark-mode .datetime-text {
     }
     
     #section-mypatients .appointment-table {
-        min-width: 400px;
+        min-width: 745px;
     }
     
     #section-mypatients .btn-action.accept {
@@ -5875,6 +5885,31 @@ body.dark-mode .datetime-text {
     overflow-wrap: anywhere;
 }
 
+/* Name / Age / Birthday / Sex keep readable widths on phones.
+   Without floors, the Civil Status / Mobile / Action floors
+   (374px) plus the table's own min-width crushed these four
+   columns into one-character slivers, because their cells are
+   allowed to wrap anywhere. */
+#section-mypatients .appointment-table th:nth-child(1),
+#section-mypatients .appointment-table td:nth-child(1) {
+    min-width: 100px;
+}
+
+#section-mypatients .appointment-table th:nth-child(2),
+#section-mypatients .appointment-table td:nth-child(2) {
+    min-width: 40px;
+}
+
+#section-mypatients .appointment-table th:nth-child(3),
+#section-mypatients .appointment-table td:nth-child(3) {
+    min-width: 88px;
+}
+
+#section-mypatients .appointment-table th:nth-child(4),
+#section-mypatients .appointment-table td:nth-child(4) {
+    min-width: 52px;
+}
+
 #section-mypatients .appointment-table th:nth-child(5),
 #section-mypatients .appointment-table td:nth-child(5) {
     min-width: 96px;
@@ -5891,9 +5926,137 @@ body.dark-mode .datetime-text {
     text-align: center;
 }
 
+/* =========================================
+   MY PATIENTS / USER MANAGEMENT TABLES — MOBILE
+   Only My Patients had mobile rules: User Management's four
+   columns crushed on phones (long emails were clipped by the
+   table's overflow: hidden), and neither table scaled its
+   type down between 481px and 768px. Both now scroll inside
+   their panel and tighten like the Appointments table does.
+   ========================================= */
+@media (max-width: 768px) {
+    #section-usermanagement .content-panel {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    #section-usermanagement .appointment-table {
+        min-width: 400px;
+    }
+
+    /* Column floors keep the Action column wide enough for its
+       three icon buttons and give the email column room. */
+    #section-usermanagement .appointment-table th:nth-child(1),
+    #section-usermanagement .appointment-table td:nth-child(1) {
+        min-width: 120px;
+    }
+
+    #section-usermanagement .appointment-table th:nth-child(2),
+    #section-usermanagement .appointment-table td:nth-child(2) {
+        min-width: 100px;
+    }
+
+    #section-usermanagement .appointment-table th:nth-child(3),
+    #section-usermanagement .appointment-table td:nth-child(3) {
+        min-width: 140px;
+    }
+
+    /* The action column floor must cover the three buttons
+       plus the cell's own padding: box-sizing is border-box
+       globally, so min-width includes the 12px side padding.
+       3 x 42px buttons + 2 x 6px gaps = 138px, + 24px
+       padding = 162px; 165px keeps them on one line. */
+    #section-usermanagement .appointment-table th:nth-child(4),
+    #section-usermanagement .appointment-table td:nth-child(4) {
+        min-width: 165px;
+        text-align: center;
+    }
+
+    /* Long emails wrap instead of stretching the table wider
+       than its scroll container. */
+    #section-usermanagement .appointment-table th,
+    #section-usermanagement .appointment-table td {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    /* Scale the type with the layout; the id scope keeps this
+       ahead of the shared .appointment-table rules. */
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td,
+    #section-usermanagement .appointment-table th,
+    #section-usermanagement .appointment-table td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    /* Mobile column floors, sized so each column's real
+       content fits without mid-word breaks: names wrap to
+       two lines, dates and "Female" stay on one line, and
+       the action column fits its three 42px buttons. These
+       override the unscoped floors above; desktop keeps
+       those. */
+    #section-mypatients .appointment-table th:nth-child(1),
+    #section-mypatients .appointment-table td:nth-child(1) {
+        min-width: 110px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(2),
+    #section-mypatients .appointment-table td:nth-child(2) {
+        min-width: 60px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(3),
+    #section-mypatients .appointment-table td:nth-child(3) {
+        min-width: 110px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(4),
+    #section-mypatients .appointment-table td:nth-child(4) {
+        min-width: 68px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(5),
+    #section-mypatients .appointment-table td:nth-child(5) {
+        min-width: 100px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(6),
+    #section-mypatients .appointment-table td:nth-child(6) {
+        min-width: 128px;
+    }
+
+    #section-mypatients .appointment-table th:nth-child(7),
+    #section-mypatients .appointment-table td:nth-child(7) {
+        min-width: 165px;
+    }
+}
+
+@media (max-width: 480px) {
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td,
+    #section-usermanagement .appointment-table th,
+    #section-usermanagement .appointment-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    /* Action column on small phones: 3 x 36px buttons +
+       2 x 6px gaps = 120px, + 20px padding (border-box)
+       = 140px; 145px keeps the buttons on one line.
+       Same floor in both tabs for consistency. */
+    #section-mypatients .appointment-table th:nth-child(7),
+    #section-mypatients .appointment-table td:nth-child(7),
+    #section-usermanagement .appointment-table th:nth-child(4),
+    #section-usermanagement .appointment-table td:nth-child(4) {
+        min-width: 145px;
+    }
+}
+
 /* =========================
      TREATMENT INFO MODAL
-   ========================= */
+    ========================= */
 #checkInfoModal {
     background: rgba(0, 0, 0, 0.7);
     padding: 24px;
@@ -7473,7 +7636,7 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
     }
 
     #checkInfoModal .ci-head {
-        padding: 16px;
+        padding: 14px;
         /* The summary no longer fits beside the title
            on a phone, so it steps down to its own
            full-width row under it. */
@@ -7501,6 +7664,61 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
 
     #checkInfoModal .ci-sub {
         font-size: 12.5px;
+    }
+
+    /* Phones: the heading column fills the first header
+       row beside the close button, so the at-a-glance
+       stats become a compact three-column strip instead
+       of a tall vertical list. */
+    #checkInfoModal .ci-head-text {
+        flex: 1 1 auto;
+    }
+
+    #checkInfoModal .ci-stats {
+        margin-top: 10px;
+        padding: 10px 12px;
+    }
+
+    #checkInfoModal .ci-stats-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+    }
+
+    #checkInfoModal .ci-stat-item {
+        flex: 1 1 30%;
+        min-width: 0;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1px;
+    }
+
+    #checkInfoModal .ci-stat-a {
+        text-align: left;
+    }
+
+    /* The appointment facts wrap into two columns instead
+       of scrolling sideways, and the summary panel gets
+       tighter so the table keeps the room. */
+    #checkInfoModal .ci-appt {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    #checkInfoModal .ci-appt-items {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        gap: 10px 16px;
+    }
+
+    #checkInfoModal .ci-appt-item {
+        flex: 1 1 40%;
+        min-width: 0;
+    }
+
+    #checkInfoModal .ci-appt-med-list {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        max-height: 96px;
     }
 
     #checkInfoModal .treatment-table th {
@@ -7611,7 +7829,10 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
 
     #checkInfoModal .treatment-table td::before {
         content: attr(data-label);
-        flex: 0 0 auto;
+        /* A fixed label width lines the values up
+           in a neat column instead of ragged left
+           edges. */
+        flex: 0 0 38%;
         font-size: 11.5px;
         font-weight: 700;
         letter-spacing: 0.4px;
@@ -7667,6 +7888,21 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
         width: 44px;
         min-width: 44px;
         height: 44px;
+    }
+
+    /* The chart row holds a single icon button; keep it
+       in the value column instead of the label column. */
+    #checkInfoModal .treatment-table td:nth-child(11) {
+        justify-content: flex-end;
+    }
+
+    /* The shared .modal-x rule shrinks the close button
+       to 36px on phones; this modal's header is the
+       primary navigation, so keep a 40px target. */
+    #checkInfoModal .modal-x {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
     }
 
 }
@@ -8499,6 +8735,20 @@ body.dark-mode #newApptModal .adm-form-side .dentist-field__toggle:hover {
     align-items: stretch;
 }
 
+/* ---------- Accepted patients: empty state ----------
+   .appt-empty (admin-core.css) supplies the layout and
+   type, but unlike the appointments table there is no cell
+   behind this block, so it gets its own surface. Spans the
+   full grid width so it reads as a panel, not a card. The
+   dashed border follows the app's convention for placeholder
+   states (see .urg-badge--unset). */
+#section-WeeklyClients .weekly-empty {
+    grid-column: 1 / -1;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 16px;
+}
+
 #section-WeeklyClients .appt-card {
     display: flex;
     flex-direction: column;
@@ -8951,6 +9201,11 @@ body.dark-mode #section-WeeklyClients .urg-badge__dot {
     box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
 }
 
+body.dark-mode #section-WeeklyClients .weekly-empty {
+    background: rgba(30, 35, 45, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
 @media (max-width: 768px) {
     #section-WeeklyClients .appt-card__row {
         flex-direction: column;
@@ -9363,6 +9618,25 @@ body.dark-mode .ep-save {
 
     .ep-actions .btn-action {
         width: 100%;
+    }
+}
+
+/* Row actions on phones: trim to 36px so the three
+   buttons per row don't dominate the scrolling table.
+   Placed after the 1024px block above so the 42px rule
+   doesn't win on source order at equal specificity. */
+@media (max-width: 480px) {
+    #section-mypatients .mp-actions .btn-action,
+    #section-usermanagement .mp-actions .btn-action {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+
+    #section-mypatients .mp-actions .btn-action > .material-symbols-rounded,
+    #section-usermanagement .mp-actions .btn-action > .material-symbols-rounded {
+        font-size: 20px;
     }
 }
 

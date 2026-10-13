@@ -1205,6 +1205,18 @@ class DentalClinicApp(BaseFlaskApp):
             try:
                 for doc in account_ref.collection(collection_name).limit(10).stream():
                     data = doc.to_dict() or {}
+                    # The "next visit" suggestion the treatment
+                    # record form writes into Approve also carries
+                    # an appointment_date, but it is not a booking
+                    # the patient filled in: it has no identity
+                    # fields. Skip it (and anything else without a
+                    # name) so it cannot shadow the real last
+                    # booking this lookup is supposed to return.
+                    if not (
+                        str(data.get("FirstName") or "").strip()
+                        or str(data.get("LastName") or "").strip()
+                    ):
+                        continue
                     candidates.append(
                         (str(data.get("appointment_date") or ""), data)
                     )

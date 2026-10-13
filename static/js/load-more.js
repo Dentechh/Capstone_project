@@ -125,6 +125,21 @@
                 const weeklyGrid = document.getElementById('weeklyClientsGrid');
 
                 if (weeklyBtn && weeklyCursor && weeklyGrid) {
+                    // Empty state, built here rather than server-rendered on
+                    // purpose: loadSectionOnce() in app-core.js clears this
+                    // whole grid with innerHTML = '' before the first request,
+                    // which would drop a template-provided block on the floor.
+                    // Creating it per response keeps it correct on every
+                    // lazy-load and Load More pass. Static markup only -- no
+                    // patient data is involved. Reuses the appointments'
+                    // .appt-empty styling so both lists read identically.
+                    const WEEKLY_EMPTY_HTML =
+                        '<div class="weekly-empty appt-empty">' +
+                        '<span class="material-symbols-rounded appt-empty__icon" aria-hidden="true">group_off</span>' +
+                        '<span class="appt-empty__text">No accepted patients yet.</span>' +
+                        '<span class="appt-empty__hint">Approved booking requests will appear here.</span>' +
+                        '</div>';
+
                     weeklyBtn.addEventListener('click', function () {
                         const cursor = weeklyCursor.getAttribute('data-cursor') || '';
                         weeklyBtn.disabled = true;
@@ -142,6 +157,17 @@
                                     weeklyGrid.appendChild(buildApprovedCard(a));
                                 });
 
+                                // Swap in the empty state only when this
+                                // response left the grid with no real cards.
+                                // Keyed off .patient-card rather than a card
+                                // count so it cannot be fooled by anything
+                                // else in the grid.
+                                const emptyBlock = weeklyGrid.querySelector('.weekly-empty');
+                                if (emptyBlock) emptyBlock.remove();
+                                if (!weeklyGrid.querySelector('.patient-card')) {
+                                    weeklyGrid.insertAdjacentHTML('beforeend', WEEKLY_EMPTY_HTML);
+                                }
+
                                 if (result.next_cursor) {
                                     weeklyCursor.setAttribute('data-cursor', result.next_cursor);
                                     weeklyBtn.disabled = false;
@@ -155,6 +181,20 @@
                                 showToast('Failed to load more approved patients. Please try again.');
                                 weeklyBtn.disabled = false;
                                 weeklyBtn.textContent = 'Load More';
+                                // Show a failure state rather than "no
+                                // patients": the grid is not empty, the
+                                // request failed, and the two should not look
+                                // the same. Kept distinct from the success
+                                // empty state so it cannot be mistaken for one.
+                                if (!weeklyGrid.querySelector('.patient-card') &&
+                                    !weeklyGrid.querySelector('.weekly-empty')) {
+                                    weeklyGrid.insertAdjacentHTML('beforeend',
+                                        '<div class="weekly-empty appt-empty">' +
+                                        '<span class="material-symbols-rounded appt-empty__icon" aria-hidden="true">error</span>' +
+                                        '<span class="appt-empty__text">Could not load accepted patients.</span>' +
+                                        '<span class="appt-empty__hint">Check your connection and use Load More to try again.</span>' +
+                                        '</div>');
+                                }
                             });
                     });
                 }

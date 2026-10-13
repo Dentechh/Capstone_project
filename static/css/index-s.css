@@ -247,14 +247,22 @@ body.dark-mode .top-header {
     color: var(--navy);
 }
 
+
+
 body.dark-mode .nav-links a {
     color: #e0e0e0;
 }
 
-body.dark-mode .nav-links a:hover,
+body.dark-mode .nav-links a:hover {
+    background: rgba(100, 181, 246, 0.10);
+    color: #e0e0e0;
+    border-left-color: #64b5f6;
+}
+
 body.dark-mode .nav-links a.active {
-    background: rgba(100, 181, 246, 0.2);
-    color: #64b5f6;
+    background: rgba(100, 181, 246, 0.18);
+    color: #ffffff;
+    border-left-color: #64b5f6;
 }
 
 /* Notification button */
@@ -529,6 +537,13 @@ body.dark-mode .hamburger span {
     transform: rotate(-45deg) translate(6px, -6px);
 }
 
+/* Mobile-only auth links (Login / Register) live inside the
+   collapsible nav menu; hidden on desktop where the
+   .auth-buttons group already provides the same actions. */
+.auth-nav-item-mobile {
+    display: none;
+}
+
 /* Dark mode color overrides */
         body.dark-mode {
             background: #121212;
@@ -607,10 +622,16 @@ body.dark-mode .hamburger span {
             color: #e0e0e0;
         }
 
-        body.dark-mode .nav-links a:hover,
+        body.dark-mode .nav-links a:hover {
+            background: rgba(100, 181, 246, 0.10);
+            color: #e0e0e0;
+            border-left-color: #64b5f6;
+        }
+
         body.dark-mode .nav-links a.active {
-            background: rgba(100, 181, 246, 0.2);
-            color: #64b5f6;
+            background: rgba(100, 181, 246, 0.18);
+            color: #ffffff;
+            border-left-color: #64b5f6;
         }
 
         /* Notification button */
@@ -888,11 +909,18 @@ body.dark-mode .hamburger span {
             transition: color 0.3s ease;
         }
 
-        body.dark-mode .nav-links a:hover,
+        body.dark-mode .nav-links a:hover {
+            background: rgba(100, 181, 246, 0.10);
+            color: #e0e0e0;
+            border-left-color: #64b5f6;
+        }
+
         body.dark-mode .nav-links a.active {
-            color: #64b5f6;
-         }
-         body.dark-mode .user-info-brief {
+            background: rgba(100, 181, 246, 0.18);
+            color: #ffffff;
+            border-left-color: #64b5f6;
+        }
+          body.dark-mode .user-info-brief {
              color: #e0e0e0;
              font-size: inherit;
          }
@@ -962,13 +990,14 @@ body.dark-mode .btn-login {
 
            body.dark-mode .auth-nav-item-mobile a {
               color: #e0e0e0;
-              border: 1px solid rgba(255,255,255,0.2);
+              border: 1.5px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.08);
               transition: all 0.3s ease;
           }
 
           body.dark-mode .auth-nav-item-mobile a:hover {
               background: rgba(255,255,255,0.15);
+              border-color: rgba(255,255,255,0.45);
           }
 
           body.dark-mode .auth-nav-item-mobile:last-child a {
@@ -1051,17 +1080,19 @@ body.dark-mode .btn-login {
               transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease, box-shadow 0.22s ease, background 0.3s ease;
           }
 
-         body.dark-mode .dropdown-content a {
-             color: #e0e0e0 !important;
-             background-color: var(--black);
-             border-bottom-color: #333;
-             transition: all 0.3s ease;
-         }
-
-          body.dark-mode .dropdown-content a:hover {
-              background: rgba(100, 181, 246, 0.12);
-              color: #64b5f6 !important;
+          body.dark-mode .dropdown-content a {
+              color: #e0e0e0 !important;
+              background-color: var(--black);
+              border-bottom-color: #333;
+              border-left-color: transparent;
+              transition: all 0.3s ease;
           }
+
+           body.dark-mode .dropdown-content a:hover {
+               background: rgba(100, 181, 246, 0.12);
+               color: #64b5f6 !important;
+               border-left-color: #64b5f6;
+           }
 
           body.dark-mode .chatbot-launcher {
               background: var(--gold);
@@ -1526,25 +1557,25 @@ body.dark-mode .btn-login {
     min-width: 300px; /* Prevent it from getting too small */
 }
 .crop-container {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
+    width: min(200px, 45vw);
+    height: min(200px, 45vw);
     border-radius: 20px;
-    vertical-align:middle;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
     overflow: hidden; /* Hides everything outside these bounds */
     position: relative;
     margin-bottom: 30px;
     margin-left: 90px;
+}
 
-            }
-            .crop-container img {
-                position: absolute;
-                filter: grayscale(100%);
-            
-                left: -140px; /* Moves the image left to crop from the side */
-                top: -80px;
-                }
+.crop-container img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: grayscale(100%);
+}
 
 .cta-box {
     background: var(--grad-navy);
@@ -4937,12 +4968,13 @@ body.dark-mode .auth-card .footer-text a {
 .dropdown-content a {
     color: var(--navy) !important;
     background-color: transparent;
-    padding: 13px 22px;
+    padding: 12px 22px;
     text-decoration: none;
     display: block;
     font-size: 15px !important;
     font-weight: 500;
     border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+    border-left: 3px solid transparent;
     transition: all 0.2s ease;
 }
 
@@ -4953,7 +4985,8 @@ body.dark-mode .auth-card .footer-text a {
 .dropdown-content a:hover {
     background: linear-gradient(90deg, rgba(13, 71, 161, 0.10) 0%, rgba(13, 71, 161, 0.03) 100%);
     color: var(--navy) !important;
-    padding-left: 28px;
+    border-left-color: var(--navy);
+    padding-left: 26px;
 }
 
 /* Visual feedback for the active button */
@@ -5427,7 +5460,7 @@ body.dark-mode .auth-card .footer-text a {
     }
 
     body.dark-mode .nav-links a {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     body.dark-mode .cta-box p {
@@ -5461,6 +5494,12 @@ body.dark-mode .auth-card .footer-text a {
         gap: 6px;
     }
 
+    /* Reveal the hamburger so the collapsible nav menu
+       can be opened on small screens. */
+    .hamburger {
+        display: flex;
+    }
+
     body.dark-mode .navbar a{
         color: white;
     }
@@ -5487,19 +5526,35 @@ body.dark-mode .auth-card .footer-text a {
     .nav-links {
         display: none;
         position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background: var(--grad-navy);
+        top: calc(100% + 8px);
+        left: 5%;
+        right: 5%;
+        width: auto;
+        background: linear-gradient(180deg, #e3f0ff 0%, #ffffff 100%);
         flex-direction: column;
-        padding: 15px;
-        gap: 5px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.9);
+        padding: 14px 12px;
+        gap: 6px;
+        box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
+        border: 1px solid rgba(13, 71, 161, 0.12);
+        border-radius: 16px;
         z-index: 1000;
+        transform-origin: top center;
     }
     
     .nav-links.active {
         display: flex;
+        animation: navMenuSlide 0.28s ease-out;
+    }
+    
+    @keyframes navMenuSlide {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
     }
     
     .nav-links li {
@@ -5508,37 +5563,171 @@ body.dark-mode .auth-card .footer-text a {
         text-align: center;
     }
     
-    .nav-links a {
-        display: block;
-        padding: 12px 16px;
-        font-size: 19px;
-        border-radius: 10px;
-        font-weight: 500;
+    /* Staggered entrance for each menu row */
+    .nav-links.active li {
+        animation: navItemIn 0.3s ease-out backwards;
     }
     
-    .nav-links a:hover,
+    .nav-links.active li:nth-child(1) { animation-delay: 0.04s; }
+    .nav-links.active li:nth-child(2) { animation-delay: 0.08s; }
+    .nav-links.active li:nth-child(3) { animation-delay: 0.12s; }
+    .nav-links.active li:nth-child(4) { animation-delay: 0.16s; }
+    .nav-links.active li:nth-child(5) { animation-delay: 0.20s; }
+    .nav-links.active li:nth-child(6) { animation-delay: 0.24s; }
+    
+    @keyframes navItemIn {
+        from {
+            opacity: 0;
+            transform: translateX(-12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .nav-links a {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 15px 24px;
+        font-size: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        width: 100%;
+    }
+    
+    /* Fixed-width icons so every icon and its
+       label line up in a clean vertical column.
+       The 1px nudge counters the material-symbol
+       glyph sitting high in its em-box, so the
+       icon optically centers with the text. */
+    .nav-links a .nav-item__icon {
+        width: 24px;
+        font-size: 22px;
+        line-height: 1;
+        flex-shrink: 0;
+        text-align: center;
+        color: var(--navy);
+        transform: translateY(1px);
+    }
+    
+    /* Push the SERVICES dropdown arrow to the right edge */
+    .nav-links .dropbtn::after {
+        margin-left: auto;
+    }
+    
+    .nav-links a:hover {
+        background: rgba(13, 71, 161, 0.10);
+        border-left-color: var(--navy);
+        padding-left: 26px;
+    }
+    
     .nav-links a.active {
-        background: rgba(255,255,255,0.1);
+        background: rgba(13, 71, 161, 0.18);
+        border-left-color: var(--navy);
+        padding-left: 26px;
+    }
+    
+    /* Divider that separates the nav links
+       from the auth actions below them */
+    .auth-nav-item-mobile:not(:last-child) {
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(13, 71, 161, 0.14);
     }
     
     .auth-nav-item-mobile a {
-        display: block;
-        padding: 10px 16px;
-        font-size: 14px;
-        border-radius: 8px;
-        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 18px;
+        font-size: 15px;
+        border-radius: 12px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        margin-top: 6px;
+        transition: all 0.2s ease;
+        width: 100%;
     }
     
-    .auth-nav-item-mobile:first-child a {
-        border: 1px solid rgba(255,255,255,0.3);
-        background: rgba(255,255,255,0.1);
+    .auth-nav-item-mobile:not(:last-child) a {
+        border: 1.5px solid rgba(13, 71, 161, 0.35);
+        background: rgba(13, 71, 161, 0.06);
+        color: var(--navy);
+    }
+    
+    .auth-nav-item-mobile:not(:last-child) a:hover {
+        background: rgba(13, 71, 161, 0.12);
+        border-color: var(--navy);
     }
     
     .auth-nav-item-mobile:last-child a {
         background: var(--grad-gold);
         color: white;
         border: none;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 14px rgba(13, 71, 161, 0.3);
+    }
+    
+    .auth-nav-item-mobile:last-child a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(13, 71, 161, 0.4);
+    }
+
+    /* Dark mode mobile nav panel. Without these the
+       panel keeps its light gradient while the link
+       text turns white, so the menu is unreadable. */
+    body.dark-mode .nav-links {
+        background: linear-gradient(180deg, #0f172a 0%, #16203a 100%);
+        border-color: rgba(100, 181, 246, 0.18);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    }
+
+    body.dark-mode .nav-links a {
+        color: #e0e0e0;
+    }
+
+    body.dark-mode .nav-links a .nav-item__icon {
+        color: #90caf9;
+    }
+
+    body.dark-mode .nav-links a:hover {
+        background: rgba(100, 181, 246, 0.10);
+        border-left-color: #64b5f6;
+    }
+
+    body.dark-mode .nav-links a.active {
+        background: rgba(100, 181, 246, 0.18);
+        border-left-color: #64b5f6;
+    }
+
+    body.dark-mode .auth-nav-item-mobile:not(:last-child) {
+        border-top-color: rgba(255, 255, 255, 0.12);
+    }
+
+    body.dark-mode .auth-nav-item-mobile:not(:last-child) a {
+        border-color: rgba(100, 181, 246, 0.35);
+        background: rgba(100, 181, 246, 0.06);
+        color: #90caf9;
+    }
+
+    body.dark-mode .auth-nav-item-mobile:not(:last-child) a:hover {
+        background: rgba(100, 181, 246, 0.12);
+        border-color: #64b5f6;
+    }
+
+    body.dark-mode .dropdown-content {
+        border-top-color: #64b5f6;
+    }
+
+    body.dark-mode .profile-nav {
+        border-top-color: rgba(255, 255, 255, 0.12);
     }
 
     /* Show mobile auth items, hide desktop auth buttons */
@@ -5556,7 +5745,7 @@ body.dark-mode .auth-card .footer-text a {
         width: 100%;
         margin-top: 0;
         box-shadow: none;
-        border-top: 2px solid var(--navy);
+        border-top: 3px solid var(--navy);
         border-radius: 10px;
         padding: 0 4px;
         z-index: 10000;
@@ -5572,16 +5761,18 @@ body.dark-mode .auth-card .footer-text a {
     }
     
     .dropdown-content a {
-        padding: 14px 24px;
-        border-bottom: 1px solid rgba(0,0,0,0.04);
-        color: inherit;
-        background-color: var(--white);
+        padding: 12px 22px;
+        border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+        border-left: 3px solid transparent;
+        color: var(--navy) !important;
+        background-color: transparent;
     }
 
     .dropdown-content a:hover {
-        background: linear-gradient(90deg, #f0f7ff 0%, #e3f2fd 100%);
+        background: linear-gradient(90deg, rgba(13, 71, 161, 0.10) 0%, rgba(13, 71, 161, 0.03) 100%);
         color: var(--navy) !important;
-        padding-left: 28px;
+        border-left-color: var(--navy);
+        padding-left: 26px;
     }
     
     .profile-nav {
@@ -5615,6 +5806,16 @@ body.dark-mode .auth-card .footer-text a {
         width: 32px;
         height: 32px;
         padding: 5px;
+    }
+    
+    .notification-btn {
+        width: 32px;
+        height: 32px;
+        padding: 5px;
+    }
+    
+    .notification-btn .material-symbols-rounded {
+        font-size: 20px;
     }
     
     .theme-icon {
@@ -5705,13 +5906,7 @@ body.dark-mode .auth-card .footer-text a {
         height: 120px;
         margin: 0 auto 25px;
     }
-    
-    .crop-container img {
-        left: 20%;
-        top: 20%;
-        transform: translate(-25%, -25%);
-    }
-    
+
     .cta-box {
         margin: 0;
         margin-top: 10px;
@@ -6033,8 +6228,8 @@ body.dark-mode .auth-card .footer-text a {
     }
     
     .nav-links a {
-        font-size: 16px;
-        padding: 3px 6px;
+        font-size: 15px;
+        padding: 12px 18px;
     }
     
     /* Hero */
@@ -6047,13 +6242,8 @@ body.dark-mode .auth-card .footer-text a {
     }
     
     .crop-container {
-        width: 200px;
-        height: 200px;
-    }
-    
-    .crop-container img {
-        left: -20px;
-        top: 10px;
+        width: 130px;
+        height: 130px;
     }
     
     .cta-box {
@@ -6811,5 +7001,47 @@ body.dark-mode .cta-box .cta-sub {
 
     body.dark-mode .cta-box .cta-sub {
         margin-bottom: 24px;
+    }
+}
+
+@media (min-width: 768px) {
+    body.dark-mode .nav-links a:hover,
+    body.dark-mode .nav-links a.active {
+        background: transparent;
+    }
+}
+
+
+
+@media (max-width: 767px) {
+    .top-header {
+        padding: 10px 5%;
+    }
+
+    .sidebar-logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        margin-right: 0;
+    }
+
+    .profile-nav {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        border-top: none;
+        width: auto;
+    }
+
+    .user-info-brief {
+        display: none;
+    }
+
+    .profile-img {
+        width: 35px;
+        height: 35px;
     }
 }

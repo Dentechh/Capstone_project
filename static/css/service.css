@@ -1,11 +1,6 @@
 /* =========================
      SERVICE PAGE LAYOUT
-========================== */
-
-/* Auth Nav Items (Login/Register in nav - mobile only) */
-.auth-nav-item-mobile {
-    display: none;
-}
+========================= */
 
 /* Hero Styling - With subtle background for visibility in light mode */
 .service-hero {
@@ -361,45 +356,6 @@
     .footer-legal a {
         margin: 0 10px;
     }
-    
-    /* Show mobile auth items, hide desktop auth buttons */
-    .nav-actions .auth-buttons {
-        display: none !important;
-    }
-    
-    .auth-nav-item-mobile {
-        display: block;
-    }
-
-    .profile-nav {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        padding: 0;
-        border-top: none;
-    }
-
-    .nav-actions {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .theme-toggle {
-        width: 32px;
-        height: 32px;
-        padding: 5px;
-    }
-
-    .theme-icon {
-        width: 18px;
-        height: 18px;
-    }
-
-    body.dark-mode .nav-links {
-        background: var(--dark-black);
-    }
 }
 
 @media (max-width: 480px) {
@@ -535,21 +491,6 @@ body.dark-mode .service-benefits li::before {
     background: rgba(21, 101, 192, 0.15);
     border-color: rgba(21, 101, 192, 0.3);
     color: var(--gold-light);
-}
-
-body.dark-mode .dropdown-content {
-    background-color: var(--dark-black);
-}
-
-body.dark-mode .dropdown-content a {
-    color: #e0e0e0 !important;
-    border-bottom-color: #333;
-    transition: all 0.3s ease;
-}
-
-body.dark-mode .dropdown-content a:hover {
-    background: rgba(100, 181, 246, 0.12);
-    color: #64b5f6 !important;
 }
 
 /* Footer matching index */
