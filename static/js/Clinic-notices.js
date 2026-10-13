@@ -120,6 +120,8 @@
         }
     }
 
+
+    
     function renderScheduleItem(n, newIds) {
         var item = el('div', 'notif-item schedule');
 
