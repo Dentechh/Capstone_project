@@ -61,6 +61,8 @@
         return fmtDate(n.start) + ' \u2013 ' + fmtDate(n.end);
     }
 
+
+    
     function el(tag, cls, text) {
         var e = document.createElement(tag);
         if (cls) e.className = cls;
