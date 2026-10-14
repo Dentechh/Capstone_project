@@ -3366,6 +3366,14 @@ class DentalClinicApp(BaseFlaskApp):
         session["uid"] = uid
         session.pop("profile_pic", None)  # never carry a previous login's picture over
         
+        # Set last_active immediately on login for real-time presence
+        try:
+            self.db.collection(self.Customer_Account).document(uid).update({
+                "last_active": datetime.now(UTC).isoformat()
+            })
+        except Exception:
+            pass
+        
         self.maybe_flag_patient_match(
             uid, 
             user_data.get("firstname", ""), 
@@ -3410,7 +3418,8 @@ class DentalClinicApp(BaseFlaskApp):
                 "uid": session['uid'],
                 "email": session['email'],
                 "provider": "google",
-                "last_login": datetime.now(UTC).isoformat()
+                "last_login": datetime.now(UTC).isoformat(),
+                "last_active": datetime.now(UTC).isoformat(),
             }
             update_data.update(
                 self._resolve_google_name_fields(
@@ -3516,12 +3525,36 @@ class DentalClinicApp(BaseFlaskApp):
 
 
     def logout(self):
+        uid = session.get('uid')
+        if uid:
+            try:
+                self.db.collection(self.Customer_Account).document(uid).update({
+                    "last_logout": datetime.now(UTC).isoformat()
+                })
+            except Exception:
+                pass
         for k in ("uid", "email", "name", "profile_pic", "pending_patient_match"):
             session.pop(k, None)
         flash("You have been logged out.", "success")
         return redirect(url_for("index"))
     
-
+    
+    def heartbeat(self):
+        """Update the user's last_active timestamp for presence tracking."""
+        if not session.get('uid'):
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+        
+        uid = session['uid']
+        try:
+            self.db.collection(self.Customer_Account).document(uid).update({
+                "last_active": datetime.now(UTC).isoformat()
+            })
+            return jsonify({"success": True})
+        except Exception as e:
+            print("HEARTBEAT ERROR:", e)
+            return jsonify({"success": False, "message": "Failed to update presence"}), 500
+    
+    
     def logoutadmin(self):
         session.clear()
         return redirect(url_for("adminLogin"))
@@ -5434,6 +5467,8 @@ class DentalClinicApp(BaseFlaskApp):
 
         rows = []
         identity_cache = {}
+        now = datetime.now(UTC)
+        ONLINE_THRESHOLD_SECONDS = 30  # 30 seconds
         for account_uid, account_data in docs:
             patient_id = account_to_patient.get(account_uid, "")
 
@@ -5445,6 +5480,23 @@ class DentalClinicApp(BaseFlaskApp):
             contact_number, sex, civil_status = self._resolve_account_identity(
                 account_uid, account_data, identity_cache
             )
+
+            # Determine online status
+            last_active_str = account_data.get("last_active")
+            last_logout_str = account_data.get("last_logout")
+            is_online = False
+            if last_active_str:
+                try:
+                    last_active = datetime.fromisoformat(last_active_str.replace("Z", "+00:00"))
+                    if (now - last_active).total_seconds() <= ONLINE_THRESHOLD_SECONDS:
+                        if not last_logout_str:
+                            is_online = True
+                        else:
+                            last_logout = datetime.fromisoformat(last_logout_str.replace("Z", "+00:00"))
+                            if last_active > last_logout:
+                                is_online = True
+                except Exception:
+                    pass
 
             rows.append({
                 "patient_id": patient_id,
@@ -5466,6 +5518,7 @@ class DentalClinicApp(BaseFlaskApp):
                 # table, but nothing was ever returning it.
                 "CivilStatus": civil_status,
                 "disabled": bool(account_data.get("disabled", False)),
+                "is_online": is_online,
             })
 
         next_cursor = None
@@ -9535,6 +9588,7 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/assign_dentist", methods=["POST"])(self.admin_assign_dentist)
         self.app.route("/admin/patient_avatar", methods=["POST"])(self.admin_patient_avatar)
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
+        self.app.route("/api/heartbeat", methods=["POST"])(self.heartbeat)
         self.app.route("/get_patient/<uid>")(self.get_patient)
         self.app.route("/admin_login", methods=["GET", "POST"])(self.adminLogin)
         self.app.route("/services/<service_id>")(self.service_detail)
