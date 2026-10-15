@@ -21,12 +21,16 @@
                             result.rows.forEach(function (a) {
                                 const tr = document.createElement('tr');
                                 const isDisabled = !!a.disabled;
+                                const isOnline = !!a.is_online;
                                 if (isDisabled) tr.style.opacity = '0.6';
                                 tr.innerHTML = `
                         <td data-cell="name">${a.full_name || ''}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
                             <td data-cell="mobile">${a.contact_number || '-'}</td>
 
                         <td>${a.email || '-'}</td>
+                        <td data-cell="status">
+                            ${isOnline ? '<span class="status-badge online">Online</span>' : '<span class="status-badge offline">Offline</span>'}
+                        </td>
                         <td>
                             <div class="mp-actions">
                                 <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"

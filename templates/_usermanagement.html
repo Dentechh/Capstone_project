@@ -13,6 +13,7 @@
                             <th>Name</th>
                             <th>Mobile Number</th>
                             <th>Google Account</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -26,6 +27,13 @@
                             </td>
                             <td data-cell="mobile">{{ account.contact_number or '-' }}</td>
                             <td>{{ account.email or '-' }}</td>
+                            <td data-cell="status">
+                                {% if account.is_online %}
+                                    <span class="status-badge online">Online</span>
+                                {% else %}
+                                    <span class="status-badge offline">Offline</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 {#  Edit sits in the middle so every row-action group in the
                                     admin reads the same way: neutral action, edit, then the
