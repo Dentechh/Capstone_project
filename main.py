@@ -2293,7 +2293,7 @@ class DentalClinicApp(BaseFlaskApp):
             return render_template("error.html", message="Something went wrong. Please try again."), 500
         
     def _setup_security_headers(self):
-        csp = "; ".join([
+        csp = "; ".join([# noqa: FLY002
             "default-src 'self'",
             "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.gstatic.com",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com",
