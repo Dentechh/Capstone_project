@@ -885,6 +885,7 @@ function showSection(sectionId) {
                 if (input._flatpickr) return;
                 var withTime = input.classList.contains('td-next-appt');
                 var opts = {
+                    disableMobile: true,
                     enableTime: withTime,
                     dateFormat: withTime ? 'Y-m-d H:i' : 'Y-m-d',
                     altInput: true,

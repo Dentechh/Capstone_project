@@ -2311,6 +2311,7 @@ function updateDateTime() {
                 // ---------------------------------------------------------------
                 if (typeof flatpickr === 'function') {
                     const baseOptions = {
+                        disableMobile: true,
                         dateFormat: 'Y-m-d',
                         altInput: true,
                         altFormat: 'F j, Y',

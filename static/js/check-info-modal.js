@@ -451,6 +451,7 @@ let currentCheckInfoPatientId = "";
                 row.querySelectorAll("input[type='date']").forEach(function (input) {
                     if (input._flatpickr) return;
                     flatpickr(input, {
+                        disableMobile: true,
                         dateFormat: "Y-m-d",
                         altInput: true,
                         altFormat: "F j, Y",
