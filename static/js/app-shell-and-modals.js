@@ -2372,7 +2372,7 @@ function updateDateTime() {
                     // The visible control is now flatpickr's alt input; keep the
                     // real inputs out of sight but still holding their values.
                     if (modal) {
-                        modal.querySelectorAll('.adm-date-native').forEach(function (input) {
+                        modal.querySelectorAll('.adm-date-native:not(.flatpickr-mobile)').forEach(function (input) {
                             input.style.display = 'none';
                             input.removeAttribute('required');
                         });
