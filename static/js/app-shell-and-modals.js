@@ -158,6 +158,7 @@ function updateDateTime() {
                     showToast("Could not capture the dental chart. Please try again.");
                     return;
                 }
+                const flattenedCanvas = document.createElement('canvas');
                 flattenedCanvas.width = canvas.width;
                 flattenedCanvas.height = canvas.height;
                 const flatCtx = flattenedCanvas.getContext('2d');
