@@ -10294,14 +10294,15 @@ backup. Groups marked "check" may be separate treatments that just share a price
             "counts": {"labels": count_labels, "data": count_values},
             "revenue": {"labels": revenue_labels, "data": revenue_values}
         })
-
-
+    def health_check(self):
+        return jsonify(status="healthy"), 200
     def _register_routes(self):
         """Polymorphism: Register all routes"""
         # PayMongo online payment was discontinued: payments are now confirmed
         # by the clinic (Record Payment). The old handlers stay in this file,
         # unreachable, until the clinic has confirmed nothing is still in
         # flight; then they can be deleted. See online_payment_disabled().
+        self.app.route("/health")(self.health_check)
         self.app.route("/payment-success", endpoint="paymongo_off_success")(self.online_payment_disabled)
         self.app.route("/update-profile", methods=["POST"])(self.update_profile)
         self.app.route("/upload_profile_pic", methods=["POST"])(self.upload_profile_pic)
