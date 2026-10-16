@@ -25,6 +25,7 @@ from flask import (
     jsonify,
     redirect,
     render_template,
+    render_template_string,
     request,
     session,
     url_for,
@@ -2858,6 +2859,23 @@ class DentalClinicApp(BaseFlaskApp):
             url_for("index")
         )
 
+
+    def online_payment_disabled(self):
+        """Replaces the PayMongo routes. POST (the old create-payment call)
+        gets 410 Gone; the browser redirects PayMongo used to send people back
+        to just land on the home page with a short notice."""
+        if request.method == "POST":
+            return jsonify({
+                "success": False,
+                "message": "Online payment through the app has been discontinued. Please use the payment details under Payments, or pay at the clinic."
+            }), 410
+        flash("Online payment through the app is no longer available. Please use the payment details under Payments.", "error")
+        return redirect(url_for("index"))
+
+    def paymongo_webhook_disabled(self):
+        # Acknowledge (200) so PayMongo stops retrying, but do nothing with it.
+        print("PAYMONGO WEBHOOK RECEIVED AFTER DISCONTINUATION (ignored)")
+        return "", 200
 
     def payment_cancel(self):
         flash("Payment was cancelled or expired.", "error")
@@ -6375,9 +6393,24 @@ class DentalClinicApp(BaseFlaskApp):
         updated_paid = self.safe_float(request.form.get("paid", existing.get("paid", 0)))
         old_paid = self.safe_float(existing.get("paid", 0))
         old_balance = self.safe_float(existing.get("balance", 0))
+        is_follow_up = bool(existing.get("plan_ref"))
+        has_payment_log = bool(existing.get("plan_id")) or isinstance(existing.get("payments"), list)
+        if is_follow_up:
+            # A follow-up visit never carries a charge of its own.
+            updated_value = 0.0
+            updated_paid = 0.0
+        elif has_payment_log:
+            # Payments on a plan change only through Record Payment, so the
+            # payment log can never disagree with `paid`.
+            updated_paid = old_paid
+            if updated_value + 0.005 < old_paid:
+                return jsonify({
+                    "success": False,
+                    "message": "Value cannot be lower than what has already been paid."
+                }), 400
         new_balance = round(updated_value - updated_paid, 2)
 
-        procedures[proc_index] = {
+        edited_fields = {
             "date": bleach.clean(request.form.get("date", existing.get("date", ""))),
             "tooth": bleach.clean(request.form.get("tooth", existing.get("tooth", ""))),
             "procedure": bleach.clean(request.form.get("procedure", existing.get("procedure", ""))),
@@ -6387,8 +6420,11 @@ class DentalClinicApp(BaseFlaskApp):
             "balance": round(updated_value - updated_paid, 2),
             "next_appointment": bleach.clean(request.form.get("next_appointment", existing.get("next_appointment", ""))),
             "medicine": bleach.clean(request.form.get("medicine", existing.get("medicine", ""))),
-            "status": bleach.clean(request.form.get("status", existing.get("status", "")))
+            "status": existing.get("status", "") if is_follow_up else ("Paid" if new_balance <= 0 else "Not Paid")
         }
+        new_row = dict(existing)      # keeps plan_id / payments / plan_ref
+        new_row.update(edited_fields)
+        procedures[proc_index] = new_row
 
         try:
             done_ref.update({
@@ -6510,6 +6546,17 @@ class DentalClinicApp(BaseFlaskApp):
 
         if proc_index < 0 or proc_index >= len(procedures):
             return jsonify({"success": False, "message": "Procedure index out of range"}), 400
+
+        target = procedures[proc_index]
+        target_plan_id = target.get("plan_id") if isinstance(target, dict) else None
+        if target_plan_id and not target.get("plan_ref"):
+            for other in self._plan_done_col(account_uid).stream():
+                for r in (other.to_dict() or {}).get("procedures", []):
+                    if isinstance(r, dict) and r.get("plan_ref") == target_plan_id:
+                        return jsonify({
+                            "success": False,
+                            "message": "This plan still has follow-up visits. Delete those first."
+                        }), 409
 
         removed = procedures.pop(proc_index)
         removed_paid = self.safe_float(removed.get("paid", 0))
@@ -6726,8 +6773,14 @@ class DentalClinicApp(BaseFlaskApp):
                     updated_at = done_data.get("updated_at", "")
                     if hasattr(updated_at, "isoformat"):
                         updated_at = updated_at.isoformat()
-                    for p in done_data.get("procedures", []):
+                    for p_index, p in enumerate(done_data.get("procedures", [])):
                         visit_history.append({
+                            "done_doc_id": done.id,
+                            "proc_index": p_index,
+                            "plan_id": p.get("plan_id", ""),
+                            "plan_ref": p.get("plan_ref", ""),
+                            "payments": self._public_payments(p.get("payments")),
+                            "paid_on_plan": p.get("paid_on_plan", 0),
                             "dentist": p.get("dentist", ""),
                             "date": p.get("date", ""),
                             "procedure": p.get("procedure", ""),
@@ -6873,8 +6926,14 @@ class DentalClinicApp(BaseFlaskApp):
             updated_at = done_data.get("updated_at", "")
             if hasattr(updated_at, "isoformat"):
                 updated_at = updated_at.isoformat()
-            for p in done_data.get("procedures", []):
+            for p_index, p in enumerate(done_data.get("procedures", [])):
                 visit_history.append({
+                    "done_doc_id": done.id,
+                    "proc_index": p_index,
+                    "plan_id": p.get("plan_id", ""),
+                    "plan_ref": p.get("plan_ref", ""),
+                    "payments": self._public_payments(p.get("payments")),
+                    "paid_on_plan": p.get("paid_on_plan", 0),
                     "dentist": p.get("dentist", ""),
                     "date": p.get("date", ""),
                     "procedure": p.get("procedure", ""),
@@ -7138,6 +7197,620 @@ class DentalClinicApp(BaseFlaskApp):
     
     
 
+    # =====================================================================
+    # BILLING CLEAN-UP (one-time, admin only)
+    # Old records saved every visit of a multi-visit treatment as its own
+    # charge with the full price repeated. This finds those groups and merges
+    # each into one plan (+ follow-up rows, + payment log). Preview writes
+    # nothing; Apply only touches the groups the admin ticks, and re-checks
+    # them against fresh data first. Running it again is harmless: rows that
+    # were already merged carry plan_id / plan_ref and are skipped.
+    # =====================================================================
+    BC_MULTI_VISIT = ("orthodontic braces", "dentures (pustiso)", "crowns and bridges", "root canal treatment")
+    BC_PAGE = """<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>Billing clean-up</title>
+<style>
+ body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px;color:#1b2b44;background:#f4f7fb}
+ h1{color:#0d47a1;margin:0 0 6px} .sub{color:#546e7a;margin:0 0 18px;max-width:880px;line-height:1.5}
+ button{padding:10px 18px;border-radius:9px;border:1px solid #0d47a1;background:#0d47a1;color:#fff;font-weight:700;cursor:pointer;margin-right:8px}
+ button.secondary{background:#fff;color:#0d47a1} button[disabled]{opacity:.5;cursor:default}
+ .box{background:#fff;border:1px solid #dde5f0;border-radius:12px;padding:14px 18px;margin:14px 0}
+ table{border-collapse:collapse;width:100%;background:#fff} th,td{padding:8px 10px;border-bottom:1px solid #e3eaf3;text-align:left;font-size:13px;vertical-align:top}
+ th{background:#e8eef7} .likely{color:#1b7f3b;font-weight:700} .check{color:#b26a00;font-weight:700} .blocked{color:#c62828;font-weight:700}
+ .rows div{white-space:nowrap} #msg{margin:10px 0;font-weight:600}
+</style></head><body>
+<h1>Billing clean-up</h1>
+<p class="sub">Finds treatments that were saved once per visit with the full price repeated (like braces), and merges each
+group into one plan with its follow-up visits. <strong>Preview changes nothing.</strong> Before you apply, export a Firestore
+backup. Groups marked "check" may be separate treatments that just share a price, so they start unticked.</p>
+<button id="previewBtn" onclick="preview()">Preview</button>
+<button id="applyBtn" class="secondary" onclick="apply()" disabled>Apply selected merges</button>
+<div id="msg"></div><div id="summary"></div><div id="groups"></div>
+<script>
+ var csrf=(document.querySelector('meta[name="csrf-token"]')||{}).content||"";
+ function peso(n){return "\u20b1"+Number(n||0).toLocaleString("en-PH",{maximumFractionDigits:2});}
+ function el(t,c,txt){var e=document.createElement(t);if(c)e.className=c;if(txt!==undefined)e.textContent=txt;return e;}
+ function msg(t){document.getElementById("msg").textContent=t||"";}
+ async function preview(){
+  msg("Scanning every treatment record...");document.getElementById("applyBtn").disabled=true;
+  var r=await fetch("/admin/billing_cleanup/preview",{headers:{"X-CSRFToken":csrf}});var d=await r.json();
+  if(!d.success){msg(d.message||"Failed.");return;}
+  msg(d.groups.length?"":"Nothing to merge. Your data has no repeated-price groups.");
+  var s=document.getElementById("summary");s.textContent="";var b=el("div","box");
+  b.appendChild(el("div","","Rows scanned: "+d.rows_scanned+"  |  Groups found: "+d.groups.length+"  |  Applicable now: "+d.groups.filter(function(g){return !g.blocked}).length));
+  b.appendChild(el("div","","Outstanding balance now: "+peso(d.totals.outstanding_before)+"  \u2192  after merging every applicable group: "+peso(d.totals.outstanding_after_all)));
+  b.appendChild(el("div","","Unpaid procedures now: "+d.totals.unpaid_before+"  \u2192  "+d.totals.unpaid_after_all));
+  s.appendChild(b);
+  var g=document.getElementById("groups");g.textContent="";
+  if(!d.groups.length)return;
+  var t=el("table");var h=t.createTHead().insertRow();
+  ["Merge","Patient","Procedure","Plan value","Rows (date \u00b7 tooth \u00b7 paid)","Outstanding before \u2192 after","Confidence"].forEach(function(x){h.appendChild(el("th","",x));});
+  var tb=t.createTBody();
+  d.groups.forEach(function(x){
+   var tr=tb.insertRow();var c=tr.insertCell();var cb=document.createElement("input");cb.type="checkbox";cb.value=x.id;cb.disabled=!!x.blocked;cb.checked=!x.blocked&&x.confidence==="likely";cb.className="gsel";c.appendChild(cb);
+   tr.insertCell().textContent=x.patient_name+(x.patient_id?" ("+x.patient_id+")":"");
+   tr.insertCell().textContent=x.procedure;tr.insertCell().textContent=peso(x.value);
+   var rc=tr.insertCell();rc.className="rows";x.rows.forEach(function(r){rc.appendChild(el("div","",(r.date||"-")+" \u00b7 "+(r.tooth||"-")+" \u00b7 "+peso(r.paid)));});
+   tr.insertCell().textContent=peso(x.outstanding_before)+" \u2192 "+peso(x.outstanding_after);
+   var cf=tr.insertCell();cf.appendChild(el("span",x.blocked?"blocked":x.confidence,x.blocked?x.blocked:(x.confidence==="likely"?"likely":"check")));
+  });
+  g.appendChild(t);document.getElementById("applyBtn").disabled=false;
+ }
+ async function apply(){
+  var ids=Array.prototype.map.call(document.querySelectorAll(".gsel:checked"),function(c){return c.value;});
+  if(!ids.length){msg("Tick at least one group.");return;}
+  if(!window.confirm("Merge "+ids.length+" group(s)? Make sure you have a Firestore backup first."))return;
+  if(window.prompt('Type MERGE to confirm')!=="MERGE"){msg("Cancelled.");return;}
+  msg("Applying...");document.getElementById("applyBtn").disabled=true;
+  var fd=new FormData();ids.forEach(function(i){fd.append("group_ids[]",i);});fd.append("confirm","MERGE");
+  var r=await fetch("/admin/billing_cleanup/apply",{method:"POST",body:fd,headers:{"X-CSRFToken":csrf}});var d=await r.json();
+  msg(d.message||(d.success?"Done.":"Failed."));if(d.success)preview();
+ }
+</script></body></html>
+"""
+
+    def _bc_scan(self):
+        """Every Done_procedure doc (rows only, no chart images) plus the
+        candidate groups. Returns (docs, groups, totals)."""
+        docs = {}
+        for snap in self.db.collection_group("Done_procedure").select(["procedures", "updated_at"]).stream():
+            acct = snap.reference.parent.parent.id
+            d = snap.to_dict() or {}
+            updated = d.get("updated_at", "")
+            if hasattr(updated, "isoformat"):
+                updated = updated.isoformat()
+            docs[(acct, snap.id)] = {
+                "procedures": [dict(r) if isinstance(r, dict) else r for r in d.get("procedures", [])],
+                "updated": str(updated or ""),
+            }
+
+        names = {}
+        for snap in self.db.collection(self.Doc_Patients).stream():
+            pd = snap.to_dict() or {}
+            acct = pd.get("account_uid")
+            if acct:
+                full = " ".join(filter(None, [
+                    pd.get("first_name") or pd.get("firstname") or "",
+                    pd.get("middle_name") or pd.get("middlename") or "",
+                    pd.get("last_name") or pd.get("lastname") or "",
+                ])).strip()
+                names[acct] = (snap.id, full)
+
+        rows_scanned = 0
+        income = outstanding = 0.0
+        unpaid = 0
+        buckets = {}
+        for (acct, doc_id), info in docs.items():
+            for idx, r in enumerate(info["procedures"]):
+                if not isinstance(r, dict):
+                    continue
+                rows_scanned += 1
+                paid = self.safe_float(r.get("paid", 0))
+                bal = self.safe_float(r.get("balance", 0))
+                value = self.safe_float(r.get("value", 0))
+                income += paid
+                outstanding += bal
+                if bal > 0:
+                    unpaid += 1
+                if r.get("plan_id") or r.get("plan_ref"):
+                    continue                      # already migrated / new-style
+                if value <= 0 or paid >= value - 0.005:
+                    continue                      # free or fully paid: its own sale
+                key = (acct, str(r.get("procedure", "")).strip().lower(), round(value, 2))
+                buckets.setdefault(key, []).append((
+                    str(r.get("date", "") or ""), info["updated"], doc_id, idx, r))
+
+        groups = []
+        out_after_all = outstanding
+        unpaid_after_all = unpaid
+        for (acct, proc_key, value), members in buckets.items():
+            if len(members) < 2:
+                continue
+            members.sort(key=lambda m: (m[0], m[1], m[2], m[3]))
+            sum_paid = round(sum(self.safe_float(m[4].get("paid", 0)) for m in members), 2)
+            before_out = round(sum(self.safe_float(m[4].get("balance", 0)) for m in members), 2)
+            before_unpaid = sum(1 for m in members if self.safe_float(m[4].get("balance", 0)) > 0)
+            after_out = round(value - sum_paid, 2)
+            blocked = ""
+            if sum_paid > value + 0.005:
+                blocked = "Payments add up to more than the value. Fix by hand."
+            paying_rows = sum(1 for m in members if self.safe_float(m[4].get("paid", 0)) > 0)
+            likely = proc_key in self.BC_MULTI_VISIT or paying_rows >= 2
+            keys = sorted(f"{m[2]}:{m[3]}" for m in members)
+            gid = hashlib.sha1((acct + "|" + ",".join(keys)).encode("utf-8")).hexdigest()[:16]
+            pid, pname = names.get(acct, ("", acct))
+            groups.append({
+                "id": gid,
+                "account_uid": acct,
+                "patient_id": pid,
+                "patient_name": pname or "(unknown patient)",
+                "procedure": str(members[0][4].get("procedure", "")),
+                "value": value,
+                "rows": [{
+                    "key": f"{m[2]}:{m[3]}",
+                    "date": m[0],
+                    "tooth": m[4].get("tooth", ""),
+                    "paid": self.safe_float(m[4].get("paid", 0)),
+                } for m in members],
+                "outstanding_before": before_out,
+                "outstanding_after": after_out,
+                "confidence": "likely" if likely else "check",
+                "blocked": blocked,
+                "_members": members,
+                "_sum_paid": sum_paid,
+            })
+            if not blocked:
+                out_after_all += after_out - before_out
+                unpaid_after_all += (1 if after_out > 0 else 0) - before_unpaid
+
+        groups.sort(key=lambda g: (g["patient_name"].lower(), g["procedure"].lower()))
+        totals = {
+            "income": round(income, 2),
+            "outstanding_before": round(outstanding, 2),
+            "outstanding_after_all": round(out_after_all, 2),
+            "unpaid_before": unpaid,
+            "unpaid_after_all": unpaid_after_all,
+        }
+        return docs, groups, totals, rows_scanned
+
+    def billing_cleanup_page(self):
+        if not self._is_admin():
+            return "Unauthorized", 403
+        return render_template_string(self.BC_PAGE)
+
+    def billing_cleanup_preview(self):
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            _docs, groups, totals, rows_scanned = self._bc_scan()
+            public = [{k: v for k, v in g.items() if not k.startswith("_") and k != "account_uid"} for g in groups]
+            return jsonify({"success": True, "rows_scanned": rows_scanned, "groups": public, "totals": totals})
+        except Exception as e:
+            print("BILLING CLEANUP PREVIEW ERROR:", e)
+            return jsonify({"success": False, "message": "Could not scan the records."}), 500
+
+    def billing_cleanup_apply(self):
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        if request.form.get("confirm") != "MERGE":
+            return jsonify({"success": False, "message": "Confirmation missing."}), 400
+        wanted = set(request.form.getlist("group_ids[]"))
+        if not wanted:
+            return jsonify({"success": False, "message": "No groups selected."}), 400
+        try:
+            docs, groups, _totals, _n = self._bc_scan()       # fresh data, not the preview's
+            touched = set()
+            merged = skipped = 0
+            for g in groups:
+                if g["id"] not in wanted:
+                    continue
+                if g["blocked"]:
+                    skipped += 1
+                    continue
+                members = g["_members"]          # oldest first
+                value = g["value"]
+                plan_id = uuid.uuid4().hex
+                payments = []
+                for m in members:
+                    amt = self.safe_float(m[4].get("paid", 0))
+                    if amt > 0:
+                        payments.append({
+                            "id": uuid.uuid4().hex[:12],
+                            "date": m[0],
+                            "amount": amt,
+                            "method": "Not recorded",
+                            "recorded_by": "migration",
+                        })
+                new_paid = g["_sum_paid"]
+                new_bal = round(value - new_paid, 2)
+                status = "Paid" if new_bal <= 0 else "Not Paid"
+                for n, m in enumerate(members):
+                    doc_key = (g["account_uid"], m[2])
+                    row = docs[doc_key]["procedures"][m[3]]
+                    old_paid = self.safe_float(row.get("paid", 0))
+                    if n == 0:
+                        row.update({
+                            "plan_id": plan_id, "payments": payments,
+                            "paid": new_paid, "balance": new_bal, "status": status,
+                        })
+                    else:
+                        row.update({
+                            "plan_ref": plan_id, "paid_on_plan": old_paid,
+                            "value": 0.0, "paid": 0.0, "balance": 0.0, "status": status,
+                        })
+                    touched.add(doc_key)
+                merged += 1
+
+            ops = list(touched)
+            for i in range(0, len(ops), 400):
+                batch = self.db.batch()
+                for acct, doc_id in ops[i:i + 400]:
+                    ref = (self.db.collection(self.Customer_Account).document(acct)
+                           .collection("Done_procedure").document(doc_id))
+                    rows = docs[(acct, doc_id)]["procedures"]
+                    batch.update(ref, {"procedures": rows, "has_unpaid": self._agg_has_unpaid(rows)})
+                batch.commit()
+
+            # Totals and daily aggregates from the corrected rows.
+            income = outstanding = 0.0
+            unpaid = 0
+            for info in docs.values():
+                for r in info["procedures"]:
+                    if isinstance(r, dict):
+                        income += self.safe_float(r.get("paid", 0))
+                        bal = self.safe_float(r.get("balance", 0))
+                        outstanding += bal
+                        if bal > 0:
+                            unpaid += 1
+            self.db.collection("Stats").document("financial_summary").set({
+                "total_income": round(income, 2),
+                "total_outstanding": round(outstanding, 2),
+                "unpaid_procedures": unpaid,
+            }, merge=True)
+            self._agg_rebuild()
+            self._invalidate_financial_cache()
+
+            note = f"Merged {merged} group(s)."
+            if skipped:
+                note += f" Skipped {skipped} that cannot be merged automatically."
+            return jsonify({"success": True, "message": note})
+        except Exception as e:
+            print("BILLING CLEANUP APPLY ERROR:", e)
+            return jsonify({"success": False, "message": "The clean-up failed part-way. Run Preview again to see what is left."}), 500
+
+    # =====================================================================
+    # PAYMENT CHANNELS (admin-editable)
+    # One document per channel in Payment_channels/{gcash|bpi|china_bank}
+    # holding the account name, account number and the QR image as a data URL
+    # (one doc each keeps every one far below Firestore's 1 MiB limit).
+    # Patients only ever read these through /payment-info.
+    # =====================================================================
+    PAYMENT_CHANNELS = (("gcash", "GCash"), ("bpi", "BPI"), ("bdo", "BDO"))
+    PAYMENT_QR_MAX_BYTES = 300 * 1024
+
+    def _public_payments(self, payments):
+        """Payment log entries as a patient may see them (no staff ids)."""
+        out = []
+        for entry in (payments if isinstance(payments, list) else []):
+            if isinstance(entry, dict):
+                out.append({
+                    "date": entry.get("date", ""),
+                    "amount": entry.get("amount", 0),
+                    "method": entry.get("method", ""),
+                })
+        return out
+
+    def _payment_channels_read(self):
+        channels = []
+        for key, label in self.PAYMENT_CHANNELS:
+            snap = self.db.collection("Payment_channels").document(key).get()
+            d = (snap.to_dict() or {}) if snap.exists else {}
+            channels.append({
+                "key": key,
+                "label": label,
+                "account_name": d.get("account_name", ""),
+                "account_number": d.get("account_number", ""),
+                "qr_image": d.get("qr_image", ""),
+            })
+        return channels
+
+    def get_payment_settings(self):
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            return jsonify({"success": True, "channels": self._payment_channels_read()})
+        except Exception as e:
+            print("PAYMENT SETTINGS READ ERROR:", e)
+            return jsonify({"success": False, "message": "Could not load payment settings."}), 500
+
+    def get_payment_info(self):
+        """What a patient sees after pressing Pay Online: only channels that
+        have something to show."""
+        if not (self._is_admin() or session.get("uid")):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            channels = [
+                c for c in self._payment_channels_read()
+                if c["account_number"] or c["qr_image"]
+            ]
+            return jsonify({"success": True, "channels": channels})
+        except Exception as e:
+            print("PAYMENT INFO ERROR:", e)
+            return jsonify({"success": False, "message": "Could not load payment details."}), 500
+
+    def _sniff_image_mime(self, raw):
+        if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+            return "image/png"
+        if raw[:3] == b"\xff\xd8\xff":
+            return "image/jpeg"
+        if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+            return "image/webp"
+        return ""
+
+    def save_payment_settings(self):
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            def clean(value, limit):
+                text = "".join(ch for ch in str(value or "") if ch.isprintable())
+                return text.strip()[:limit]
+
+            updates = {}
+            for key, label in self.PAYMENT_CHANNELS:
+                update = {
+                    "account_name": clean(request.form.get(f"{key}_account_name"), 80),
+                    "account_number": clean(request.form.get(f"{key}_account_number"), 60),
+                    "updated_at": firestore.SERVER_TIMESTAMP,
+                }
+                if request.form.get(f"{key}_remove_qr") == "1":
+                    update["qr_image"] = ""
+                upload = request.files.get(f"{key}_qr")
+                if upload and upload.filename:
+                    raw = upload.read(self.PAYMENT_QR_MAX_BYTES + 1)
+                    if len(raw) > self.PAYMENT_QR_MAX_BYTES:
+                        return jsonify({
+                            "success": False,
+                            "message": f"The {label} QR image is larger than 300 KB. Please use a smaller image."
+                        }), 400
+                    mime = self._sniff_image_mime(raw)
+                    if not mime:
+                        return jsonify({
+                            "success": False,
+                            "message": f"The {label} QR image must be a PNG, JPG or WebP file."
+                        }), 400
+                    update["qr_image"] = f"data:{mime};base64," + base64.b64encode(raw).decode("ascii")
+                updates[key] = update
+
+            # Everything validated: write.
+            for key, update in updates.items():
+                self.db.collection("Payment_channels").document(key).set(update, merge=True)
+
+            return jsonify({
+                "success": True,
+                "message": "Payment settings saved.",
+                "channels": self._payment_channels_read()
+            })
+        except Exception as e:
+            print("PAYMENT SETTINGS SAVE ERROR:", e)
+            return jsonify({"success": False, "message": "Could not save payment settings."}), 500
+
+    # =====================================================================
+    # BILLING PLANS
+    # A "plan" is the one Done_procedure row that carries a procedure's total
+    # price (e.g. braces). Later visits for the same treatment are saved as
+    # follow-up rows (plan_ref = the plan's plan_id) with no charge of their
+    # own, and every payment is added to the plan's `payments` log. `paid`
+    # is always the running total of that log and `balance = value - paid`.
+    # =====================================================================
+    PLAN_METHODS = ("Cash", "GCash", "BPI", "BDO")
+
+    def _plan_account_uid(self, patient_id):
+        patient_id = str(patient_id or "").replace("Patient ID:", "").strip()
+        if not patient_id:
+            return ""
+        doc = self.db.collection(self.Doc_Patients).document(patient_id).get()
+        if not doc.exists:
+            return ""
+        return (doc.to_dict() or {}).get("account_uid") or ""
+
+    def _plan_done_col(self, account_uid):
+        return (
+            self.db.collection(self.Customer_Account)
+            .document(account_uid)
+            .collection("Done_procedure")
+        )
+
+    def _plan_find(self, account_uid, plan_ref):
+        """Locate a plan row. plan_ref is a plan_id, or "<done_doc_id>:<index>"
+        for older rows that have no plan_id yet. Returns
+        (done_doc_id, index, row) or None. Follow-up rows are never a plan."""
+        plan_ref = str(plan_ref or "").strip()
+        if not plan_ref or not account_uid:
+            return None
+        col = self._plan_done_col(account_uid)
+        if ":" in plan_ref:
+            doc_id, _, idx_raw = plan_ref.rpartition(":")
+            try:
+                idx = int(idx_raw)
+            except ValueError:
+                return None
+            snap = col.document(doc_id).get()
+            if not snap.exists:
+                return None
+            rows = (snap.to_dict() or {}).get("procedures", [])
+            if 0 <= idx < len(rows) and isinstance(rows[idx], dict) and not rows[idx].get("plan_ref"):
+                return doc_id, idx, rows[idx]
+            return None
+        for snap in col.stream():
+            rows = (snap.to_dict() or {}).get("procedures", [])
+            for i, r in enumerate(rows):
+                if isinstance(r, dict) and r.get("plan_id") == plan_ref and not r.get("plan_ref"):
+                    return snap.id, i, r
+        return None
+
+    def _plan_today(self):
+        return datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
+
+    def _plan_row_after_payment(self, row, amount, method, staff, when, allow_zero=False):
+        """Pure function: the plan row as it should look after `amount` is
+        paid. Raises ValueError on an invalid amount."""
+        value = self.safe_float(row.get("value", 0))
+        paid = self.safe_float(row.get("paid", 0))
+        amount = round(self.safe_float(amount), 2)
+        balance = round(value - paid, 2)
+        if amount < 0 or (amount == 0 and not allow_zero):
+            raise ValueError("Payment amount must be greater than zero.")
+        if amount > balance + 0.005:
+            raise ValueError("Payment is more than the remaining balance.")
+        new = dict(row)
+        new["plan_id"] = row.get("plan_id") or uuid.uuid4().hex
+        payments = list(row.get("payments") or [])
+        if not payments and paid > 0:
+            # Older row: keep what was already paid as one opening entry.
+            payments.append({
+                "id": uuid.uuid4().hex[:12],
+                "date": row.get("date", "") or when,
+                "amount": paid,
+                "method": "Not recorded",
+                "recorded_by": ""
+            })
+        if amount > 0:
+            payments.append({
+                "id": uuid.uuid4().hex[:12],
+                "date": when,
+                "amount": amount,
+                "method": method,
+                "recorded_by": staff
+            })
+        new_paid = round(paid + amount, 2)
+        new["payments"] = payments
+        new["paid"] = new_paid
+        new["balance"] = round(value - new_paid, 2)
+        new["status"] = "Paid" if new["balance"] <= 0 else "Not Paid"
+        return new
+
+    def _plan_pay(self, account_uid, plan_ref, amount, method, staff, allow_zero=False):
+        """Add a payment to a plan inside a Firestore transaction (two staff
+        cannot overwrite each other), then keep the cached stats and the daily
+        aggregates in step. Returns (old_row, new_row)."""
+        found = self._plan_find(account_uid, plan_ref)
+        if not found:
+            raise LookupError("Plan not found.")
+        doc_id, idx, _ = found
+        ref = self._plan_done_col(account_uid).document(doc_id)
+        when = self._plan_today()
+
+        @firestore.transactional
+        def run(tx):
+            snap = ref.get(transaction=tx)
+            rows = (snap.to_dict() or {}).get("procedures", [])
+            if idx >= len(rows) or not isinstance(rows[idx], dict):
+                raise LookupError("Plan not found.")
+            old = rows[idx]
+            new = self._plan_row_after_payment(old, amount, method, staff, when, allow_zero)
+            rows[idx] = new
+            tx.update(ref, {
+                "procedures": rows,
+                "has_unpaid": self._agg_has_unpaid(rows),
+                "updated_at": firestore.SERVER_TIMESTAMP
+            })
+            return old, new
+
+        old, new = run(self.db.transaction())
+
+        paid_delta = round(self.safe_float(new.get("paid")) - self.safe_float(old.get("paid")), 2)
+        if paid_delta != 0:
+            old_bal = self.safe_float(old.get("balance", 0))
+            new_bal = self.safe_float(new.get("balance", 0))
+            self.db.collection("Stats").document("financial_summary").set({
+                "total_income": firestore.Increment(paid_delta),
+                "total_outstanding": firestore.Increment(new_bal - old_bal),
+                "unpaid_procedures": firestore.Increment(
+                    (1 if new_bal > 0 else 0) - (1 if old_bal > 0 else 0))
+            }, merge=True)
+            self._agg_apply_rows(add=[new], remove=[old])
+            self._invalidate_financial_cache()
+        return old, new
+
+    def _plan_summary(self, doc_id, idx, row):
+        return {
+            "plan_ref": row.get("plan_id") or f"{doc_id}:{idx}",
+            "done_doc_id": doc_id,
+            "proc_index": idx,
+            "procedure": row.get("procedure", ""),
+            "tooth": row.get("tooth", ""),
+            "date": row.get("date", ""),
+            "value": self.safe_float(row.get("value", 0)),
+            "paid": self.safe_float(row.get("paid", 0)),
+            "balance": self.safe_float(row.get("balance", 0)),
+        }
+
+    def open_plans(self, patient_id):
+        """Plans for this patient that still have a balance. Feeds the
+        "follow-up of an existing plan" choice in the treatment form."""
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            account_uid = (request.args.get("account_uid") or "").strip() \
+                            or self._plan_account_uid(patient_id)
+            if not account_uid:
+                return jsonify({"success": True, "plans": []})
+            plans = []
+            for snap in self._plan_done_col(account_uid).order_by("updated_at").stream():
+                rows = (snap.to_dict() or {}).get("procedures", [])
+                for i, r in enumerate(rows):
+                    if not isinstance(r, dict) or r.get("plan_ref"):
+                        continue
+                    if self.safe_float(r.get("balance", 0)) > 0:
+                        plans.append(self._plan_summary(snap.id, i, r))
+            return jsonify({"success": True, "plans": plans})
+        except Exception as e:
+            print("OPEN PLANS ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def _plan_payment_request(self, mark_paid):
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            account_uid = self._plan_account_uid(request.form.get("patient_id", ""))
+            plan_ref = request.form.get("plan_ref", "").strip()
+            method = request.form.get("method", "Cash").strip()
+            if method not in self.PLAN_METHODS:
+                return jsonify({"success": False, "message": "Choose a payment method."}), 400
+            found = self._plan_find(account_uid, plan_ref)
+            if not found:
+                return jsonify({"success": False, "message": "Plan not found."}), 404
+            row = found[2]
+            if mark_paid:
+                amount = round(self.safe_float(row.get("value", 0)) - self.safe_float(row.get("paid", 0)), 2)
+                if amount <= 0:
+                    return jsonify({"success": False, "message": "This plan is already fully paid."}), 400
+            else:
+                amount = round(self.safe_float(request.form.get("amount", 0)), 2)
+            old, new = self._plan_pay(account_uid, plan_ref, amount, method, session.get("admin_uid", ""))
+            return jsonify({
+                "success": True,
+                "message": "Payment recorded.",
+                "paid": new["paid"],
+                "balance": new["balance"],
+                "status": new["status"]
+            })
+        except ValueError as e:
+            return jsonify({"success": False, "message": str(e)}), 400
+        except LookupError as e:
+            return jsonify({"success": False, "message": str(e)}), 404
+        except Exception as e:
+            print("PLAN PAYMENT ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def record_plan_payment(self):
+        return self._plan_payment_request(mark_paid=False)
+
+    def mark_plan_paid(self):
+        return self._plan_payment_request(mark_paid=True)
+
     def save_dental_record(self):
         
         if not self._is_admin():
@@ -7270,6 +7943,11 @@ class DentalClinicApp(BaseFlaskApp):
             # BUILD DONE PROCEDURES
             # =====================================================
             done_procedures = []
+            follow_ups = []          # (row, plan_ref, amount, method)
+            pending_on_plan = {}     # plan_ref -> amount queued in this save
+
+            plan_refs = request.form.getlist("plan_ref[]")
+            methods = request.form.getlist("method[]")
 
             for i in range(length):
 
@@ -7277,34 +7955,88 @@ class DentalClinicApp(BaseFlaskApp):
                 if not procedures[i] and not teeth[i]:
                     continue
 
-                done_procedures.append({
+                plan_ref = plan_refs[i].strip() if i < len(plan_refs) else ""
+                method = methods[i].strip() if i < len(methods) else "Cash"
+                if method not in self.PLAN_METHODS:
+                    method = "Cash"
+                paid_now = round(self.safe_float(paids[i]), 2)
+                if paid_now < 0:
+                    return jsonify({"success": False, "message": "Amount paid cannot be negative."}), 400
 
+                row = {
                     "date": dates[i],
-
                     "tooth": teeth[i],
-
                     "procedure": procedures[i],
-
                     "dentist": dentists[i],
-
-                    "value": self.safe_float(
-                        values[i]
-                    ),
-
-                    "paid": self.safe_float(
-                        paids[i]
-                    ),
-
-                    "balance": self.safe_float(
-                        balances[i]
-                    ),
-
                     "next_appointment": next_appts[i],
-
                     "medicine": medicines[i],
+                }
 
-                    "status": statuses[i]
-                })
+                if plan_ref:
+                    # Follow-up visit: no charge of its own. Any payment goes
+                    # onto the plan it belongs to.
+                    found = self._plan_find(uid, plan_ref)
+                    if not found:
+                        return jsonify({"success": False, "message": "The selected plan was not found."}), 400
+                    remaining = round(
+                        self.safe_float(found[2].get("value", 0))
+                        - self.safe_float(found[2].get("paid", 0))
+                        - pending_on_plan.get(plan_ref, 0), 2)
+                    if paid_now > remaining + 0.005:
+                        return jsonify({
+                            "success": False,
+                            "message": f"Payment for {procedures[i] or 'a follow-up'} is more than the remaining balance (\u20b1{remaining:,.2f})."
+                        }), 400
+                    pending_on_plan[plan_ref] = pending_on_plan.get(plan_ref, 0) + paid_now
+                    row.update({
+                        "value": 0.0,
+                        "paid": 0.0,
+                        "balance": 0.0,
+                        "paid_on_plan": paid_now,
+                        "plan_ref": "",
+                        "status": "Paid"
+                    })
+                    follow_ups.append((row, plan_ref, paid_now, method))
+                else:
+                    value = round(self.safe_float(values[i]), 2)
+                    if value < 0:
+                        return jsonify({"success": False, "message": "Value cannot be negative."}), 400
+                    if paid_now > value + 0.005:
+                        return jsonify({
+                            "success": False,
+                            "message": f"Amount paid for {procedures[i] or 'a row'} is more than its value."
+                        }), 400
+                    balance = round(value - paid_now, 2)
+                    row.update({
+                        "value": value,
+                        "paid": paid_now,
+                        "balance": balance,
+                        "status": "Paid" if balance <= 0 else "Not Paid",
+                        "plan_id": uuid.uuid4().hex,
+                        "payments": ([{
+                            "id": uuid.uuid4().hex[:12],
+                            "date": dates[i] or self._plan_today(),
+                            "amount": paid_now,
+                            "method": method,
+                            "recorded_by": session.get("admin_uid", "")
+                        }] if paid_now > 0 else [])
+                    })
+
+                done_procedures.append(row)
+
+            # Apply follow-up payments to their plans (transactional), and
+            # point each follow-up row at its plan's id.
+            for row, plan_ref, amount, method in follow_ups:
+                try:
+                    _old, new_plan = self._plan_pay(
+                        uid, plan_ref, amount, method,
+                        session.get("admin_uid", ""), allow_zero=True)
+                except ValueError as ve:
+                    return jsonify({"success": False, "message": str(ve)}), 400
+                except LookupError as le:
+                    return jsonify({"success": False, "message": str(le)}), 400
+                row["plan_ref"] = new_plan["plan_id"]
+                row["status"] = new_plan["status"]
 
             # =====================================================
             # SAVE TO DONE_PROCEDURE
@@ -7666,6 +8398,10 @@ class DentalClinicApp(BaseFlaskApp):
                         "balance": p.get("balance", 0),
                         "value": p.get("value", 0),
                         "tooth": p.get("tooth", ""),
+                        "plan_id": p.get("plan_id", ""),
+                        "plan_ref": p.get("plan_ref", ""),
+                        "payments": p.get("payments", []),
+                        "paid_on_plan": p.get("paid_on_plan", 0),
                         "chart_image": chart_image
                     })
 
@@ -9562,12 +10298,16 @@ class DentalClinicApp(BaseFlaskApp):
 
     def _register_routes(self):
         """Polymorphism: Register all routes"""
-        self.app.route("/payment-success")(self.payment_success)
+        # PayMongo online payment was discontinued: payments are now confirmed
+        # by the clinic (Record Payment). The old handlers stay in this file,
+        # unreachable, until the clinic has confirmed nothing is still in
+        # flight; then they can be deleted. See online_payment_disabled().
+        self.app.route("/payment-success", endpoint="paymongo_off_success")(self.online_payment_disabled)
         self.app.route("/update-profile", methods=["POST"])(self.update_profile)
         self.app.route("/upload_profile_pic", methods=["POST"])(self.upload_profile_pic)
-        self.app.route("/payment-cancel")(self.payment_cancel)
-        self.app.route("/webhook/paymongo", methods=["POST"])(self.paymongo_webhook)
-        self.app.route("/create_gcash_payment", methods=["POST"])(self.create_gcash_payment)
+        self.app.route("/payment-cancel", endpoint="paymongo_off_cancel")(self.online_payment_disabled)
+        self.app.route("/webhook/paymongo", methods=["POST"], endpoint="paymongo_off_webhook")(self.paymongo_webhook_disabled)
+        self.app.route("/create_gcash_payment", methods=["POST"], endpoint="paymongo_off_create")(self.online_payment_disabled)
         self.app.route("/", methods=["GET"])(self.index)
         self.app.route("/google_index", methods=["GET"])(self.google_index)
         self.app.route("/login", methods=["POST"])(self.login_manual)
@@ -9616,6 +10356,15 @@ class DentalClinicApp(BaseFlaskApp):
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
         self.app.route("/admin/toggle_user_block", methods=["POST"])(self.toggle_user_block)
         self.app.route("/admin/update_treatment_record", methods=["POST"])(self.update_treatment_record)
+        self.app.route("/admin/open_plans/<patient_id>")(self.open_plans)
+        self.app.route("/admin/billing_cleanup")(self.billing_cleanup_page)
+        self.app.route("/admin/billing_cleanup/preview")(self.billing_cleanup_preview)
+        self.app.route("/admin/billing_cleanup/apply", methods=["POST"])(self.billing_cleanup_apply)
+        self.app.route("/admin/payment_settings", methods=["GET"])(self.get_payment_settings)
+        self.app.route("/admin/payment_settings", methods=["POST"])(self.save_payment_settings)
+        self.app.route("/payment-info")(self.get_payment_info)
+        self.app.route("/admin/record_payment", methods=["POST"])(self.record_plan_payment)
+        self.app.route("/admin/mark_plan_paid", methods=["POST"])(self.mark_plan_paid)
         self.app.route("/admin/delete_treatment_record", methods=["POST"])(self.delete_treatment_record)
         self.app.route("/admin/check_duplicate_patient", methods=["POST"])(self.check_duplicate_patient)
         self.app.route("/link_patient_account", methods=["POST"])(self.link_patient_account)

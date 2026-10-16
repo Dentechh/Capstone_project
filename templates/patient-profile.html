@@ -1901,8 +1901,57 @@ function closeChartView() {
     </div>
     </div>
 
-    <script>
+        <!-- Pay Online: shows the clinic's payment QR codes and account numbers. -->
+    <style>
+        #payOnlineModal { z-index: 10050; }
+        .po-amount { font-size: 15px; margin: 0 0 14px; }
+        .po-amount strong { font-size: 22px; }
+        .po-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .po-tab { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+        .po-tab.active { background: #0d47a1; border-color: #0d47a1; color: #fff; }
+        .po-panel { text-align: center; }
+        .po-qr { max-width: 260px; width: 100%; border-radius: 12px; border: 1px solid rgba(128,128,128,.3); background: #fff; }
+        .po-details { margin: 12px auto 0; text-align: left; max-width: 340px; }
+        .po-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,.25); }
+        .po-row span:first-child { font-size: 12px; font-weight: 700; opacity: .7; text-transform: uppercase; }
+        .po-copy { margin-left: 8px; padding: 3px 10px; border-radius: 8px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+        .po-note { margin: 16px 0 0; font-size: 13px; opacity: .8; line-height: 1.5; }
+        .pay-online-btn { background: #0d47a1; color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+        .pay-hist-link { display: block; margin: 4px auto 0; background: none; border: 0; padding: 0; color: #0d47a1; font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
+        .pay-hist-cell { text-align: left !important; padding: 10px 18px !important; }
+        .pay-hist-table { width: 100%; max-width: 460px; border-collapse: collapse; font-size: 13px; }
+        .pay-hist-table th, .pay-hist-table td { text-align: left; padding: 5px 8px; border-bottom: 1px solid rgba(128,128,128,.25); }
+    </style>
+    <div id="payOnlineModal" class="modal">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">qr_code_2</span>
+                    <h2>Pay Online</h2>
+                </div>
+                <button class="close" onclick="closePayOnline()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="po-amount">Amount due: <strong id="poAmount"></strong> <span id="poProc"></span></p>
+                <div class="po-tabs" id="poTabs" role="tablist"></div>
+                <div class="po-panel" id="poPanel"></div>
+                <p class="po-note">After you pay, please show your receipt or reference number to the clinic. Your balance is updated once the clinic confirms your payment.</p>
+            </div>
+        </div>
+    </div>
+
+<script>
         
+    
+    function pesoFmt(n) {
+        return "\u20b1" + Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
     function openPaymentModal() {
         const paymentModal = document.getElementById("paymentModal");
         paymentModal.style.display = "flex";
@@ -1912,82 +1961,214 @@ function closeChartView() {
         markSectionSeen('payments');
 
         const body = document.getElementById("paymentTableBody");
-
-        body.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center;">
-                    Loading...
-                </td>
-            </tr>
-        `;
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
 
         fetch("/get_patient/{{ user.get('uid','') }}")
         .then(res => res.json())
         .then(data => {
-
-            const procedures = data.Done_procedure || [];
-
+            // One line per charge. A follow-up visit (plan_ref set) has no
+            // charge of its own; its payments are part of the plan's history.
+            const plans = (data.Done_procedure || []).filter(p => !p.plan_ref);
+            window.paymentPlans = plans;
             body.innerHTML = "";
 
-            if (procedures.length === 0) {
-                body.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align:center;">
-                            No payment records found.
-                        </td>
-                    </tr>
-                `;
+            if (plans.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;">No payment records found.</td></tr>';
                 return;
             }
-
-            procedures.forEach(p => {
-
-                const status = p.status || "Not Paid";
-                const isPaid = status.toLowerCase() === "paid";
-
-                body.innerHTML += `
-                    <tr>
-                        <td>${formatScheduleDateTime(p.date) || "-"}</td>
-                        <td>${p.procedure || "-"}</td>
-                        <td>₱${p.value || 0}</td>
-                        <td>₱${p.paid || 0}</td>
-                        <td>₱${p.balance || 0}</td>
-                        <td>
-                            ${isPaid
-                                ? `<span class="paid">Paid</span>`
-                                : `<span class="unpaid">${status}</span>`
-                            }
-                        </td>
-                        <td>
-                            ${isPaid
-                                ? `-`
-                                : `<button class="gcash-btn"
-                                        onclick="payGCash('${p.balance}','${p.procedure}')">
-                                        Pay with GCash
-                                    </button>`
-                            }
-                        </td>
-                    </tr>
-                `;
-
-            });
-
+            plans.forEach((p, i) => body.appendChild(buildPaymentRow(p, i)));
         })
         .catch(err => {
-
-            body.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align:center;color:red;">
-                        Failed to load payment records.
-                    </td>
-                </tr>
-            `;
-
+            body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">Failed to load payment records.</td></tr>';
             console.error(err);
-
         });
-
     }
+
+    function buildPaymentRow(p, index) {
+        const tr = document.createElement("tr");
+        const balance = parseFloat(p.balance) || 0;
+        const status = p.status || "Not Paid";
+        const isPaid = status.toLowerCase() === "paid" || balance <= 0 && (parseFloat(p.value) || 0) > 0;
+        const payments = Array.isArray(p.payments) ? p.payments : [];
+
+        function cell(text) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+            return td;
+        }
+
+        cell(formatScheduleDateTime(p.date) || "-");
+        cell(p.procedure || "-");
+        cell(pesoFmt(p.value));
+
+        const paidTd = cell(pesoFmt(p.paid));
+        if (payments.length) {
+            const link = document.createElement("button");
+            link.type = "button";
+            link.className = "pay-hist-link";
+            link.textContent = "Payments (" + payments.length + ")";
+            link.addEventListener("click", () => togglePaymentHistory(tr, payments));
+            paidTd.appendChild(link);
+        }
+
+        cell(pesoFmt(balance));
+
+        const statusTd = document.createElement("td");
+        const badge = document.createElement("span");
+        badge.className = isPaid ? "paid" : "unpaid";
+        badge.textContent = isPaid ? "Paid" : status;
+        statusTd.appendChild(badge);
+        tr.appendChild(statusTd);
+
+        const payTd = document.createElement("td");
+        if (balance > 0) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "gcash-btn pay-online-btn";
+            btn.textContent = "Pay Online";
+            btn.addEventListener("click", () => openPayOnline(index));
+            payTd.appendChild(btn);
+        } else {
+            payTd.textContent = "-";
+        }
+        tr.appendChild(payTd);
+        return tr;
+    }
+
+    function togglePaymentHistory(tr, payments) {
+        const next = tr.nextElementSibling;
+        if (next && next.classList.contains("pay-hist")) { next.remove(); return; }
+
+        const sub = document.createElement("tr");
+        sub.className = "pay-hist";
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.className = "pay-hist-cell";
+
+        const table = document.createElement("table");
+        table.className = "pay-hist-table";
+        const head = table.createTHead().insertRow();
+        ["Date", "Amount", "Paid via"].forEach(h => {
+            const th = document.createElement("th");
+            th.textContent = h;
+            head.appendChild(th);
+        });
+        const tb = table.createTBody();
+        payments.forEach(pay => {
+            const r = tb.insertRow();
+            r.insertCell().textContent = pay.date || "-";
+            r.insertCell().textContent = pesoFmt(pay.amount);
+            r.insertCell().textContent = pay.method || "-";
+        });
+        td.appendChild(table);
+        sub.appendChild(td);
+        tr.after(sub);
+    }
+
+    let payInfoChannels = null;
+
+    async function openPayOnline(index) {
+        const p = (window.paymentPlans || [])[index];
+        if (!p) return;
+
+        document.getElementById("poAmount").textContent = pesoFmt(p.balance);
+        document.getElementById("poProc").textContent = p.procedure ? "for " + p.procedure : "";
+
+        const modal = document.getElementById("payOnlineModal");
+        modal.style.display = "flex";
+        modal.classList.add("show");
+
+        const tabs = document.getElementById("poTabs");
+        const panel = document.getElementById("poPanel");
+        tabs.textContent = "";
+        panel.textContent = "Loading...";
+
+        try {
+            if (payInfoChannels === null) {
+                const res = await fetch("/payment-info");
+                const result = await res.json();
+                payInfoChannels = (result && result.success && Array.isArray(result.channels)) ? result.channels : [];
+            }
+        } catch (err) {
+            console.error(err);
+            payInfoChannels = null;
+            panel.textContent = "Payment details could not be loaded. Please try again, or contact the clinic.";
+            return;
+        }
+
+        if (!payInfoChannels.length) {
+            panel.textContent = "Online payment details are not available yet. Please pay at the clinic or contact us.";
+            return;
+        }
+
+        payInfoChannels.forEach((c, i) => {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "po-tab";
+            b.textContent = c.label;
+            b.addEventListener("click", () => showPayChannel(i));
+            tabs.appendChild(b);
+        });
+        showPayChannel(0);
+    }
+
+    function showPayChannel(i) {
+        const c = payInfoChannels[i];
+        const panel = document.getElementById("poPanel");
+        document.querySelectorAll("#poTabs .po-tab").forEach((b, k) => b.classList.toggle("active", k === i));
+        panel.textContent = "";
+
+        // Only inline image data URLs are ever used as the QR source.
+        if (c.qr_image && /^data:image\/(png|jpeg|webp);base64,/.test(c.qr_image)) {
+            const img = document.createElement("img");
+            img.className = "po-qr";
+            img.alt = c.label + " payment QR code";
+            img.src = c.qr_image;
+            panel.appendChild(img);
+        }
+
+        const details = document.createElement("div");
+        details.className = "po-details";
+
+        function row(label, value, copyable) {
+            if (!value) return;
+            const r = document.createElement("div");
+            r.className = "po-row";
+            const l = document.createElement("span");
+            l.textContent = label;
+            const v = document.createElement("span");
+            const strong = document.createElement("strong");
+            strong.textContent = value;
+            v.appendChild(strong);
+            if (copyable) {
+                const copy = document.createElement("button");
+                copy.type = "button";
+                copy.className = "po-copy";
+                copy.textContent = "Copy";
+                copy.addEventListener("click", () => {
+                    const done = () => { copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy"; }, 1500); };
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(value).then(done).catch(() => {});
+                    }
+                });
+                v.appendChild(copy);
+            }
+            r.appendChild(l);
+            r.appendChild(v);
+            details.appendChild(r);
+        }
+        row("Account name", c.account_name, false);
+        row("Account number", c.account_number, true);
+        panel.appendChild(details);
+    }
+
+    function closePayOnline() {
+        const modal = document.getElementById("payOnlineModal");
+        modal.style.display = "none";
+        modal.classList.remove("show");
+    }
+
 
     function closePaymentModal() {
         const modal = document.getElementById("paymentModal");

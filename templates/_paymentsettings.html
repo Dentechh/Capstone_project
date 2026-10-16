@@ -1,0 +1,41 @@
+<style>
+    .ps-overlay { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; background: rgba(15, 30, 55, .55); padding: 16px; }
+    .ps-card { background: #fff; color: #1b2b44; width: min(1000px, 96vw); max-height: 92vh; overflow: auto; border-radius: 18px; padding: 24px 26px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+    .ps-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .ps-head h3 { margin: 0; font-size: 20px; color: #0d47a1; }
+    .ps-close { border: 1px solid #d5dde8; background: #f4f7fb; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    .ps-sub { margin: 6px 0 18px; font-size: 13px; color: #546e7a; }
+    .ps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+    .ps-channel { border: 1px solid #dde5f0; border-radius: 14px; padding: 16px; background: #f9fbfe; }
+    .ps-channel h4 { margin: 0 0 12px; font-size: 16px; color: #0d47a1; }
+    .ps-channel label { display: block; font-size: 12px; font-weight: 700; color: #546e7a; margin: 10px 0 4px; }
+    .ps-channel input[type="text"] { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #cfd8e3; border-radius: 9px; font: inherit; }
+    .ps-qr-box { margin-top: 12px; text-align: center; }
+    .ps-qr-box img { max-width: 100%; max-height: 190px; border-radius: 10px; border: 1px solid #dde5f0; background: #fff; }
+    .ps-qr-empty { font-size: 12px; color: #78909c; padding: 18px 0; }
+    .ps-remove { display: flex !important; align-items: center; gap: 6px; font-weight: 600 !important; margin-top: 8px !important; }
+    .ps-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .ps-msg { margin-right: auto; font-size: 13px; color: #546e7a; }
+    .ps-btn { padding: 10px 20px; border-radius: 10px; border: 1px solid #cfd8e3; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+    .ps-btn--save { background: #0d47a1; border-color: #0d47a1; color: #fff; }
+    .ps-btn[disabled] { opacity: .6; cursor: default; }
+</style>
+
+<div id="paymentSettingsModal" class="ps-overlay" role="dialog" aria-modal="true" aria-labelledby="psTitle">
+    <div class="ps-card">
+        <div class="ps-head">
+            <h3 id="psTitle">Payment Settings</h3>
+            <button type="button" class="ps-close" onclick="closePaymentSettings()" aria-label="Close">
+                <span class="material-symbols-rounded" aria-hidden="true">close</span>
+            </button>
+        </div>
+        <p class="ps-sub">This is what patients see when they press <strong>Pay Online</strong>. QR images must be PNG,
+            JPG or WebP, up to 300 KB each. A channel with no account number and no QR is hidden from patients.</p>
+        <div id="psChannels" class="ps-grid"></div>
+        <div class="ps-foot">
+            <span id="psMsg" class="ps-msg" aria-live="polite"></span>
+            <button type="button" class="ps-btn" onclick="closePaymentSettings()">Cancel</button>
+            <button type="button" class="ps-btn ps-btn--save" id="psSaveBtn" onclick="savePaymentSettings()">Save</button>
+        </div>
+    </div>
+</div>

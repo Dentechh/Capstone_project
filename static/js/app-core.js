@@ -171,6 +171,7 @@ function showSection(sectionId) {
 
             // ✅ FIX: always use Patient_unq_id, NOT uid
             loadTreatmentNotes(Patient_unq_id);
+            loadOpenPlans(Patient_unq_id, uid);
 
             // Load Visit History
             fetch(`/get_patient/${uid}`)
@@ -575,6 +576,28 @@ function showSection(sectionId) {
             row.remove();
         }
 
+        // Procedure change -> rebuild that row's Plan choices; Plan change -> lock/unlock Value.
+        (function wirePlanCells() {
+            var tbody = document.querySelector('#td-treatment-table tbody');
+            if (!tbody) return;
+            tbody.addEventListener('change', function (e) {
+                var tr = e.target.closest('tr');
+                if (!tr) return;
+                if (e.target.classList.contains('td-procedure')) {
+                    delete tr.dataset.wantedPlan;
+                    tdApplyToothMode(tr);
+                    refreshPlanCell(tr, '');
+                } else if (e.target.classList.contains('td-area')) {
+                    var toothBox = tr.querySelector('.td-tooth');
+                    if (toothBox) toothBox.value = e.target.value;
+                } else if (e.target.classList.contains('td-plan')) {
+                    delete tr.dataset.wantedPlan;
+                    e.target.style.outline = e.target.value === '' ? '2px solid #c9a227' : '';
+                    applyPlanMode(tr);
+                }
+            });
+        })();
+
         // The placeholder row that ships in the markup needs the same
         // listboxes and date pickers before any patient is opened.
         refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
@@ -789,7 +812,9 @@ function showSection(sectionId) {
                     valueOfWork: tr.querySelector('.td-value') ? tr.querySelector('.td-value').value.trim() : '',
                     amountPaid: tr.querySelector('.td-paid') ? tr.querySelector('.td-paid').value.trim() : '',
                     balance: tr.querySelector('.td-balance') ? tr.querySelector('.td-balance').value.trim() : '',
-                    nextAppt: tr.querySelector('.td-next-appt') ? tr.querySelector('.td-next-appt').value.trim() : ''
+                    nextAppt: tr.querySelector('.td-next-appt') ? tr.querySelector('.td-next-appt').value.trim() : '',
+                    planRef: tr.querySelector('.td-plan') ? tr.querySelector('.td-plan').value : '',
+                    method: tr.querySelector('.td-method') ? tr.querySelector('.td-method').value : ''
                 });
             });
             var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
@@ -837,6 +862,7 @@ function showSection(sectionId) {
                 window.admEnhanceSelects(tbody, '.td-records__scroll', true);
             }
 
+            tbody.querySelectorAll('tr').forEach(tdApplyToothMode);
             initTreatmentDatePickers(tbody);
         }
 
@@ -882,6 +908,163 @@ function showSection(sectionId) {
             });
         }
 
+        // =====================================================================
+        // Plans: new charge vs follow-up
+        // A patient's unfinished procedures (e.g. braces with a balance) are
+        // loaded from /admin/open_plans. When a row's procedure matches one,
+        // the dentist must choose "New charge" or "Follow-up" for it. A
+        // follow-up has no charge of its own: Value is locked, and only today's
+        // payment is entered; the server adds it to the plan.
+        // =====================================================================
+        window.tdOpenPlans = [];
+
+        function tdMoney(n) {
+            return '\u20b1' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function loadOpenPlans(patientId, accountUid) {
+            window.tdOpenPlans = [];
+            refreshAllPlanCells();
+            if (!patientId) return;
+            fetch('/admin/open_plans/' + encodeURIComponent(patientId) +
+                    (accountUid ? '?account_uid=' + encodeURIComponent(accountUid) : ''))
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    // The admin may have opened another patient meanwhile.
+                    if (window.currentPatientId !== patientId) return;
+                    window.tdOpenPlans = (d && d.success && Array.isArray(d.plans)) ? d.plans : [];
+                    refreshAllPlanCells();
+                })
+                .catch(function () { /* the form still works as new charges */ });
+        }
+
+                // Arch-based procedures swap the Tooth# box for an Upper/Lower/Both
+        // dropdown. The text input stays (hidden) and keeps the value, so
+        // everything that reads .td-tooth works unchanged.
+        function tdIsArchProc(p) {
+            return ['Orthodontic Braces'].indexOf(p) !== -1;
+        }
+
+        function tdApplyToothMode(tr) {
+            var input = tr.querySelector('.td-tooth');
+            var area = tr.querySelector('.td-area');
+            if (!input || !area) return;
+            var areas = ['Upper', 'Lower', 'Both'];
+            var arch = tdIsArchProc((tr.querySelector('.td-procedure') || {}).value || '');
+            var cur = input.value.trim();
+
+            if (input.dataset.wasRequired === undefined) {
+                input.dataset.wasRequired = input.required ? '1' : '0';
+            }
+            if (arch) {
+                if (areas.indexOf(cur) === -1) { input.value = ''; cur = ''; }
+                area.value = cur;
+            } else if (areas.indexOf(cur) !== -1) {
+                input.value = '';
+            }
+            input.style.display = arch ? 'none' : '';
+            input.required = !arch && input.dataset.wasRequired === '1';
+            area.required = arch;
+            (area.closest('.adm-select') || area).style.display = arch ? '' : 'none';
+        }
+
+        function refreshAllPlanCells() {
+            document.querySelectorAll('#td-treatment-table tbody tr').forEach(function (tr) {
+                refreshPlanCell(tr);
+            });
+        }
+
+        // Rebuild one row's Plan dropdown from its current procedure.
+        // `wanted` forces a selection (used by the procedure-change handler).
+        function refreshPlanCell(tr, wanted) {
+            var sel = tr.querySelector('.td-plan');
+            if (!sel) return;
+            var proc = (tr.querySelector('.td-procedure') || {}).value || '';
+            var matches = (window.tdOpenPlans || []).filter(function (p) { return p.procedure === proc; });
+
+            var current = wanted;
+            if (current === undefined) {
+                current = sel.value;
+                if ((current === '__new__' || current === '') && tr.dataset.wantedPlan) {
+                    current = tr.dataset.wantedPlan;      // restore a saved draft choice
+                }
+            }
+
+            var html;
+            if (!matches.length) {
+                html = '<option value="__new__">New charge</option>';
+            } else {
+                    html = '<option value="">Choose: new charge or follow-up</option>' +
+                        '<option value="__new__">New charge</option>';
+                matches.forEach(function (p) {
+                    html += '<option value="' + escHtml(p.plan_ref) + '">Follow-up \u00b7 ' +
+                        (p.tooth ? 'tooth ' + escHtml(String(p.tooth)) + ' \u00b7 ' : '') +
+                        tdMoney(p.balance) + ' left of ' + tdMoney(p.value) + '</option>';
+                });
+            }
+            sel.innerHTML = html;
+
+            var valid = Array.prototype.some.call(sel.options, function (o) { return o.value === current; });
+            if (!valid) current = matches.length ? '' : '__new__';
+            sel.value = current;
+            if (valid && current && current !== '__new__') delete tr.dataset.wantedPlan;
+
+            sel.disabled = matches.length === 0;
+            sel.style.outline = (matches.length && sel.value === '') ? '2px solid #c9a227' : '';
+            applyPlanMode(tr);
+        }
+
+        // Lock Value and track the plan's remaining balance for a follow-up.
+        function applyPlanMode(tr) {
+            var sel = tr.querySelector('.td-plan');
+            var valueEl = tr.querySelector('.td-value');
+            if (!sel || !valueEl) return;
+            var plan = (window.tdOpenPlans || []).filter(function (p) { return p.plan_ref === sel.value; })[0];
+
+            if (plan) {
+                valueEl.value = plan.value;
+                valueEl.readOnly = true;
+                valueEl.style.opacity = '0.65';
+                tr.dataset.planBalance = String(plan.balance);
+            } else {
+                if (valueEl.readOnly) valueEl.value = '';
+                valueEl.readOnly = false;
+                valueEl.style.opacity = '';
+                delete tr.dataset.planBalance;
+            }
+            if (typeof window.tdRecalcBalance === 'function') window.tdRecalcBalance(tr);
+        }
+
+        // Checked before submit. Returns a message, or '' when the rows are fine.
+        window.tdCheckPlanRows = function () {
+            var rows = document.querySelectorAll('#td-treatment-table tbody tr');
+            for (var i = 0; i < rows.length; i++) {
+                var tr = rows[i];
+                var proc = ((tr.querySelector('.td-procedure') || {}).value || '').trim();
+                var tooth = ((tr.querySelector('.td-tooth') || {}).value || '').trim();
+                if (!proc && !tooth) continue;                 // empty rows are skipped by the server
+                if (tdIsArchProc(proc) && !tooth) {
+                    return 'Choose Upper, Lower or Both for ' + label + '.';
+                }
+                var sel = tr.querySelector('.td-plan');
+                var paid = parseFloat((tr.querySelector('.td-paid') || {}).value) || 0;
+                var value = parseFloat((tr.querySelector('.td-value') || {}).value) || 0;
+
+                if (sel && !sel.disabled && sel.value === '') {
+                    return 'Choose "New charge" or a follow-up plan for ' + label + '.';
+                }
+                if (sel && sel.value && sel.value !== '__new__') {
+                    var left = parseFloat(tr.dataset.planBalance) || 0;
+                    if (paid > left + 0.005) {
+                        return 'Payment for ' + label + ' is more than the remaining ' + tdMoney(left) + '.';
+                    }
+                } else if (paid > value + 0.005) {
+                    return 'Amount paid for ' + label + ' is more than its value.';
+                }
+            }
+            return '';
+        };
+
         function appendRow(data) {
             var tableBody = document.querySelector('#td-treatment-table tbody');
             if (!tableBody) return;
@@ -891,7 +1074,10 @@ function showSection(sectionId) {
             tr.innerHTML =
                 '<td><input type="date" class="td-date adm-date-native" value="' + escHtml(data.date || '') + '"></td>' +
 
-                '<td><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18"></td>' +
+                '<td class="td-tooth-cell" style="min-width:110px"><input type="text" class="td-tooth" value="' + escHtml(data.tooth || '') + '" placeholder="e.g. 18">' +
+                '<select class="td-area" aria-label="Upper or lower arch">' +
+                '<option value="">Select area</option><option value="Upper">Upper</option>' +
+                '<option value="Lower">Lower</option><option value="Both">Both</option></select></td>' +
 
                 '<td>' +
                 '<select class="td-procedure">' +
@@ -913,11 +1099,16 @@ function showSection(sectionId) {
                 '</select>' +
                 '</td>' +
 
-                /* Same Consulting Dentist combobox as the Appointments table, driven by the
-                   same delegated handlers keyed on .dentist-field / .dentist-input,
-                   so no extra wiring is needed here. The td-dentist class stays
-                   on the input: that is what saveTreatmentNotes(), the
-                   FormData submit and the row validation all read. */
+                /* New charge, or a follow-up of the patient's open plan for this
+                   procedure. Options are filled by refreshPlanCell(). */
+                '<td class="td-plan-cell"><select class="td-plan" aria-label="New charge or follow-up of an existing plan">' +
+                '<option value="__new__">New charge</option></select></td>' +
+
+                    /* Same Consulting Dentist combobox as the Appointments table, driven by the
+                    same delegated handlers keyed on .dentist-field / .dentist-input,
+                    so no extra wiring is needed here. The td-dentist class stays
+                    on the input: that is what saveTreatmentNotes(), the
+                    FormData submit and the row validation all read. */
                 '<td>' +
                 '<div class="dentist-field">' +
                 /* Loaded value goes through formatDentistName() so treatment rows saved
@@ -952,16 +1143,20 @@ function showSection(sectionId) {
                 '</select>' +
                 '</td>' +
 
+                /* Status is now worked out by the server from value and payments,
+                   so this column asks how today's payment was made instead. */
                 '<td>' +
-                '<select class="td-status">' +
-                '<option value="Not Paid"' + ((data.status || "Not Paid") === "Not Paid" ? " selected" : "") + '>Not Paid</option>' +
-                '<option value="Paid"' + (data.status === "Paid" ? " selected" : "") + '>Paid</option>' +
+                '<select class="td-method" aria-label="Paid via">' +
+                '<option value="Cash"' + ((data.method || "Cash") === "Cash" ? " selected" : "") + '>Cash</option>' +
+                '<option value="GCash"' + (data.method === "GCash" ? " selected" : "") + '>GCash</option>' +
+                '<option value="BPI"' + (data.method === "BPI" ? " selected" : "") + '>BPI</option>' +
+                '<option value="BDO"' + (data.method === "BDO" ? " selected" : "") + '>BDO</option>' +
                 '</select>' +
                 '</td>' +
 
-                /* Row actions. The delete control is handled by ONE delegated
-                   listener on the tbody (see below), so a row built here needs
-                   no per-row wiring. */
+                    /* Row actions. The delete control is handled by ONE delegated
+                    listener on the tbody (see below), so a row built here needs
+                    no per-row wiring. */
                 '<td class="td-row-actions">' +
                 '<button type="button" class="td-delete-row" data-td-delete-row title="Delete this treatment row" aria-label="Delete this treatment row">' +
                 '<span class="material-symbols-rounded" aria-hidden="true">delete</span>' +
@@ -969,6 +1164,8 @@ function showSection(sectionId) {
                 '</td>';
 
             tableBody.appendChild(tr);
+            if (data.planRef) tr.dataset.wantedPlan = data.planRef;
+            refreshPlanCell(tr);
         }
 
         function addTreatmentRow() {
@@ -1262,9 +1459,9 @@ function showSection(sectionId) {
             body.classList.add('dark-mode');
         }
 
-        /* Keeps the toggle's accessible name and state honest. Without it the
-           button announced nothing at all (no aria-label) and its title stayed
-           "Toggle Dark Mode" even in dark mode, so a screen-reader user was
+            /* Keeps the toggle's accessible name and state honest. Without it the
+            button announced nothing at all (no aria-label) and its title stayed
+            "Toggle Dark Mode" even in dark mode, so a screen-reader user was
            never told which theme they were in or what the control would do. */
         function syncThemeToggleState() {
             var toggle = document.getElementById('themeToggle');

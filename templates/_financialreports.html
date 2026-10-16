@@ -1,4 +1,4 @@
-        <div id="section-financialreports" class="content-section">
+<div id="section-financialreports" class="content-section">
             <div class="financial-period-toolbar">
                 <div class="period-btn-group" role="group" aria-label="Report period">
                     <button type="button" class="period-btn" data-period="today"
@@ -27,11 +27,18 @@
                         <span>Overall</span>
                     </button>
                 </div>
-                <button type="button" id="download-financial-report-btn" class="financial-download-btn"
-                    onclick="downloadFinancialReportPDF()">
-                    <span class="material-symbols-rounded" aria-hidden="true">download</span>
-                    <span>Download Report</span>
-                </button>
+                <div class="financial-toolbar-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <button type="button" id="payment-settings-btn" class="financial-download-btn"
+                        onclick="openPaymentSettings()">
+                        <span class="material-symbols-rounded" aria-hidden="true">qr_code_2</span>
+                        <span>Payment Settings</span>
+                    </button>
+                    <button type="button" id="download-financial-report-btn" class="financial-download-btn"
+                        onclick="downloadFinancialReportPDF()">
+                        <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                        <span>Download Report</span>
+                    </button>
+                </div>
             </div>
 
             <div class="financial-nav" id="financialNav" style="display:none;">
@@ -198,5 +205,3 @@
                 </div>
             </div>
         </div>
-
-

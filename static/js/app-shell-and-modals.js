@@ -1,4 +1,4 @@
-        function updateDateTime() {
+function updateDateTime() {
             const now = new Date();
             const dateEl = document.getElementById('dt-date');
             const timeEl = document.getElementById('dt-time');
@@ -354,9 +354,19 @@
                             row.querySelector(".td-medicine")?.value || ""
                         );
 
+                        // Status is worked out by the server now; the field is
+                        // still sent so the row-count logic there is unchanged.
+                        formData.append("status[]", "");
+
+                        const planChoice = row.querySelector(".td-plan")?.value || "";
                         formData.append(
-                            "status[]",
-                            row.querySelector(".td-status")?.value || ""
+                            "plan_ref[]",
+                            planChoice === "__new__" ? "" : planChoice
+                        );
+
+                        formData.append(
+                            "method[]",
+                            row.querySelector(".td-method")?.value || "Cash"
                         );
 
                     });
@@ -530,6 +540,14 @@
 
             if (!hasValidNote) {
                 showToast("Please fill in at least one treatment note before submitting.");
+                return;
+            }
+
+            const planProblem = (typeof window.tdCheckPlanRows === "function")
+                ? window.tdCheckPlanRows()
+                : "";
+            if (planProblem) {
+                showToast(planProblem);
                 return;
             }
 
@@ -2314,29 +2332,29 @@
                         window.__admApptDatePicker = flatpickr('#admApptDate', Object.assign({}, baseOptions, {
                             minDate: 'today',
 
-                            /* A fully blocked day cannot host an appointment at
-                               all, so grey it out in the calendar instead of
-                               letting the admin pick it and only then having
-                               the change handler clear it with a toast.
+                                /* A fully blocked day cannot host an appointment at
+                                all, so grey it out in the calendar instead of
+                                letting the admin pick it and only then having
+                                the change handler clear it with a toast.
 
-                               Only `full_day` blocks disable the DATE. Days with
-                               just some times blocked stay selectable and are
-                               handled by disabling those time options instead,
-                               so a partly-blocked morning is still bookable in
-                               the afternoon.
+                                Only `full_day` blocks disable the DATE. Days with
+                                just some times blocked stay selectable and are
+                                handled by disabling those time options instead,
+                                so a partly-blocked morning is still bookable in
+                                the afternoon.
 
-                               Keys in the blocked map are the Mongo document id,
-                               i.e. Y-m-d, which is the same shape flatpickr's
-                               dateFormat produces; the key is derived from the
-                               Date object rather than the passed-in string so it
-                               cannot drift from locale/format settings.
+                                Keys in the blocked map are the Mongo document id,
+                                i.e. Y-m-d, which is the same shape flatpickr's
+                                dateFormat produces; the key is derived from the
+                                Date object rather than the passed-in string so it
+                                cannot drift from locale/format settings.
 
-                               MUST be an array. flatpickr's config setter calls
-                               disable.slice(), so a bare function throws
-                               "e.slice is not a function" during initialisation,
-                               the altInput is never built, and the cleanup loop
-                               below then hides the native input too - leaving no
-                               visible date control at all. */
+                                MUST be an array. flatpickr's config setter calls
+                                disable.slice(), so a bare function throws
+                                "e.slice is not a function" during initialisation,
+                                the altInput is never built, and the cleanup loop
+                                below then hides the native input too - leaving no
+                                visible date control at all. */
                             disable: [function (dObj) {
                                 if (!(dObj instanceof Date)) return false;
                                 const map = window.__blockedSlotsMap || {};
@@ -2361,4 +2379,3 @@
                 }
             })();
         });
-

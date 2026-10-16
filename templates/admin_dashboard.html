@@ -92,20 +92,23 @@
 
 
 
-    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=5"></script>
+    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=6"></script>
 
-    <script src="{{ url_for('static', filename='js/app-shell-and-modals.js') }}?v=2"></script>
+    <script src="{{ url_for('static', filename='js/app-shell-and-modals.js') }}?v=3"></script>
 
 {% include '_new_appointment.html' %}
 {% include '_chart_viewer.html' %}
 {% include '_logout.html' %}
 {% include '_reschedule.html' %}
 {% include '_unblock_confirm.html' %}
+{% include '_paymentsettings.html' %}
     <script src="{{ url_for('static', filename='js/block-dates.js') }}?v=3"></script>
 
     <script src="{{ url_for('static', filename='js/reschedule.js') }}?v=4"></script>
 
     <script src="{{ url_for('static', filename='js/financial-reports.js') }}?v=5"></script>
+
+    <script src="{{ url_for('static', filename='js/payment-settings.js') }}?v=1"></script>
 
 </body>
 

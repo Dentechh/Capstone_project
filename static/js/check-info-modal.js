@@ -45,6 +45,143 @@ let currentCheckInfoPatientId = "";
                 return `<select class="ci-procedure">${optionsHtml}</select>`;
             }
 
+            // ---- Plans: follow-up rows, payments and payment history ------------
+            // A plan row carries the price, paid total and balance. A follow-up
+            // row (item.plan_ref set) is a later visit with no charge of its own.
+            function ciMoney(n) {
+                return "₱" + Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            }
+            function ciIsFollowUp(item) { return !!(item && item.plan_ref); }
+            function ciPlanRef(item) {
+                return item.plan_id || (item.done_doc_id + ":" + item.proc_index);
+            }
+
+            (function ciInjectStyles() {
+                if (document.getElementById("ciPlanStyles")) return;
+                const st = document.createElement("style");
+                st.id = "ciPlanStyles";
+                st.textContent = [
+                    ".ci-muted{color:#6b7c93;font-size:12px;}",
+                    ".ci-badge--follow{background:#e8f0fe;color:#0d47a1;}",
+                    ".ci-sub > td{background:#f6f9fd;padding:12px 18px !important;text-align:left !important;}",
+                    ".ci-pay-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}",
+                    ".ci-pay-form label{font-size:12px;font-weight:700;color:#546e7a;}",
+                    ".ci-pay-form input,.ci-pay-form select{padding:7px 10px;border:1px solid #cfd8e3;border-radius:8px;font:inherit;}",
+                    ".ci-pay-form input{width:130px;}",
+                    ".ci-hist{width:100%;max-width:520px;border-collapse:collapse;font-size:13px;}",
+                    ".ci-hist th,.ci-hist td{padding:6px 10px;text-align:left;border-bottom:1px solid #e3eaf3;}"
+                ].join("");
+                document.head.appendChild(st);
+            })();
+
+            let ciPayBusy = false;
+
+            function ciClosePanels(index) {
+                ["ci-pay-", "ci-hist-"].forEach(function (p) {
+                    const el = document.getElementById(p + index);
+                    if (el) el.remove();
+                });
+            }
+
+            function ciInsertSubRow(index, id, html) {
+                const row = document.getElementById("ci-row-" + index);
+                if (!row) return null;
+                const sub = document.createElement("tr");
+                sub.id = id;
+                sub.className = "ci-sub";
+                sub.innerHTML = '<td colspan="12">' + html + "</td>";
+                // Keep payment panel above the history panel.
+                const hist = document.getElementById("ci-hist-" + index);
+                if (id.indexOf("ci-pay-") === 0 && hist) hist.before(sub); else row.after(sub);
+                return sub;
+            }
+
+            function ciTogglePayPanel(index) {
+                const existing = document.getElementById("ci-pay-" + index);
+                if (existing) { existing.remove(); return; }
+                const item = window.currentProcedures[index];
+                if (!item || ciIsFollowUp(item)) return;
+                const bal = parseFloat(item.balance) || 0;
+                if (bal <= 0) { showToast("This procedure is already fully paid."); return; }
+
+                const sub = ciInsertSubRow(index, "ci-pay-" + index,
+                    '<div class="ci-pay-form">' +
+                    '<label>Amount received<br><input type="number" class="ci-pay-amount" min="0.01" max="' + bal + '" step="0.01" placeholder="' + bal + '"></label>' +
+                    '<label>Paid via<br><select class="ci-pay-method">' +
+                    '<option value="Cash">Cash</option><option value="GCash">GCash</option>' +
+                    '<option value="BPI">BPI</option><option value="BDO">BDO</option></select></label>' +
+                    '<button type="button" class="btn-action accept" onclick="ciSubmitPayment(' + index + ', false)">Record payment</button>' +
+                    '<button type="button" class="btn-action" onclick="ciSubmitPayment(' + index + ', true)">Mark as paid (' + ciMoney(bal) + ')</button>' +
+                    '<button type="button" class="btn-action" onclick="ciClosePanels(' + index + ')">Cancel</button>' +
+                    '</div>');
+                const amt = sub && sub.querySelector(".ci-pay-amount");
+                if (amt) amt.focus();
+            }
+
+            async function ciSubmitPayment(index, markPaid) {
+                if (ciPayBusy) return;
+                const item = window.currentProcedures[index];
+                const panel = document.getElementById("ci-pay-" + index);
+                if (!item || !panel) return;
+
+                const method = panel.querySelector(".ci-pay-method").value;
+                const balance = parseFloat(item.balance) || 0;
+                let amount = parseFloat(panel.querySelector(".ci-pay-amount").value);
+
+                if (markPaid) {
+                    if (!window.confirm("Mark this procedure as fully paid by recording " + ciMoney(balance) + " via " + method + "?")) return;
+                } else {
+                    if (!(amount > 0)) { showToast("Enter the amount received."); return; }
+                    if (amount > balance + 0.005) { showToast("That is more than the remaining balance (" + ciMoney(balance) + ")."); return; }
+                }
+
+                const formData = new FormData();
+                formData.append("patient_id", currentCheckInfoPatientId);
+                formData.append("plan_ref", ciPlanRef(item));
+                formData.append("method", method);
+                if (!markPaid) formData.append("amount", String(amount));
+
+                ciPayBusy = true;
+                panel.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
+                try {
+                    const response = await fetch(markPaid ? "/admin/mark_plan_paid" : "/admin/record_payment",
+                        { method: "POST", body: formData });
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(result.message || "Payment recorded.");
+                        // Re-fetch so every row, the payment history and the
+                        // summary card come from the server's numbers.
+                        await openCheckInfoModal(currentCheckInfoPatientId);
+                    } else {
+                        showToast(result.message || "Could not record the payment.");
+                        panel.querySelectorAll("button").forEach(function (b) { b.disabled = false; });
+                    }
+                } catch (error) {
+                    console.error("Record payment error:", error);
+                    showToast("Could not record the payment. Please try again.");
+                    panel.querySelectorAll("button").forEach(function (b) { b.disabled = false; });
+                } finally {
+                    ciPayBusy = false;
+                }
+            }
+
+            function ciToggleHistory(index) {
+                const existing = document.getElementById("ci-hist-" + index);
+                if (existing) { existing.remove(); return; }
+                const item = window.currentProcedures[index];
+                const pays = (item && Array.isArray(item.payments)) ? item.payments : [];
+                if (!pays.length) { showToast("No payments recorded yet."); return; }
+
+                let html = '<strong>Payment history</strong>' +
+                    '<table class="ci-hist"><thead><tr><th>Date</th><th>Amount</th><th>Paid via</th></tr></thead><tbody>';
+                pays.forEach(function (p) {
+                    html += "<tr><td>" + escAttr(p.date || "-") + "</td><td>" + ciMoney(p.amount) +
+                        "</td><td>" + escAttr(p.method || "-") + "</td></tr>";
+                });
+                html += "</tbody></table>";
+                ciInsertSubRow(index, "ci-hist-" + index, html);
+            }
+
             function statusBadge(status) {
                 const isPaid = (status || "").trim().toLowerCase() === "paid";
                 return `<span class="ci-badge ${isPaid ? "ci-badge--paid" : "ci-badge--unpaid"}">${isPaid ? "Paid" : "Not Paid"}</span>`;
@@ -335,19 +472,36 @@ let currentCheckInfoPatientId = "";
                     tr.dataset.doneDocId = item.done_doc_id || "";
                     tr.dataset.procIndex = item.proc_index;
 
+                    const followUp = ciIsFollowUp(item);
+                    const hasPayments = Array.isArray(item.payments) && item.payments.length > 0;
+                    const valueCell = followUp ? '<span class="ci-muted">Follow-up · no charge</span>' : ciMoney(item.value);
+                    const paidCell = followUp
+                        ? (parseFloat(item.paid_on_plan) > 0 ? ciMoney(item.paid_on_plan) + ' <span class="ci-muted">to plan</span>' : "-")
+                        : ciMoney(item.paid);
+                    const balanceCell = followUp ? "-" : ciMoney(item.balance);
+                    const statusCell = followUp ? '<span class="ci-badge ci-badge--follow">Follow-up</span>' : statusBadge(item.status);
+                    const canPay = !followUp && (parseFloat(item.balance) || 0) > 0;
+                    const payBtn = canPay
+                        ? `<button type="button" class="btn-action accept ci-ico" title="Record payment" aria-label="Record payment" onclick="ciTogglePayPanel(${index})"><span class="material-symbols-rounded" aria-hidden="true">payments</span></button>`
+                        : "";
+                    const histBtn = hasPayments
+                        ? `<button type="button" class="btn-action ci-ico" title="Payment history" aria-label="Payment history" onclick="ciToggleHistory(${index})"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></button>`
+                        : "";
+
                     tr.innerHTML = `
             <td data-label="Assigned Dentist">${formatDentistName(item.dentist) || "-"}</td>
             <td data-label="Medicine">${item.medicine || "-"}</td>
             <td data-label="Visit Date">${item.date || "-"}</td>
             <td data-label="Tooth#">${escAttr(item.tooth) || "-"}</td>
             <td data-label="Procedure">${item.procedure || "-"}</td>
-            <td data-label="Value">₱${item.value || 0}</td>
-            <td data-label="Fee Paid">₱${item.paid || 0}</td>
-            <td data-label="Balance">₱${item.balance || 0}</td>
-            <td data-label="Status">${statusBadge(item.status)}</td>
+            <td data-label="Value">${valueCell}</td>
+            <td data-label="Fee Paid">${paidCell}</td>
+            <td data-label="Balance">${balanceCell}</td>
+            <td data-label="Status">${statusCell}</td>
             <td data-label="Next Appointment">${item.next_appointment || "-"}</td>
             <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
             <td data-label="" class="ci-actions">
+                ${payBtn}${histBtn}
                 <button type="button" class="btn-action ci-btn--edit ci-ico" title="Edit record" aria-label="Edit record" onclick="enterEditMode(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
                 <button type="button" class="btn-action ci-btn--delete ci-delete-btn ci-ico" title="Delete record" aria-label="Delete record" onclick="deleteTreatmentRecord(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
             </td>
@@ -361,7 +515,19 @@ let currentCheckInfoPatientId = "";
                 const row = document.getElementById("ci-row-" + index);
                 if (!row) return;
 
-                const isPaid = (item.status || "").trim().toLowerCase() === "paid";
+                ciClosePanels(index);
+                const followUp = ciIsFollowUp(item);
+                // On a plan, payments change only through "Record payment" so the
+                // payment log can never disagree with Fee Paid. A follow-up
+                // visit has no charge, so its money fields are fixed.
+                const lockPaid = followUp || !!item.plan_id;
+                const lockValue = followUp;
+                const lockTip = followUp
+                    ? "A follow-up visit has no charge of its own."
+                    : "Use the Record payment button to change what has been paid.";
+                const statusCellEdit = followUp
+                    ? '<span class="ci-badge ci-badge--follow">Follow-up</span>'
+                    : statusBadge(item.status);
                 row.innerHTML = `
         <td data-label="Assigned Dentist">
             <input type="text" class="ci-dentist" value="${escAttr(item.dentist)}">
@@ -370,15 +536,10 @@ let currentCheckInfoPatientId = "";
         <td data-label="Visit Date"><input type="date" class="ci-date" value="${escAttr(item.date)}"></td>
         <td data-label="Tooth#"><input type="text" class="ci-tooth" value="${escAttr(item.tooth)}"></td>
         <td data-label="Procedure">${buildProcedureSelect(item.procedure)}</td>
-        <td data-label="Value"><input type="number" class="ci-value" value="${item.value || 0}" step="0.01"></td>
-        <td data-label="Fee Paid"><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01"></td>
+        <td data-label="Value"><input type="number" class="ci-value" value="${item.value || 0}" step="0.01" ${lockValue ? 'readonly title="' + lockTip + '"' : ""}></td>
+        <td data-label="Fee Paid"><input type="number" class="ci-paid" value="${item.paid || 0}" step="0.01" ${lockPaid ? 'readonly title="' + lockTip + '"' : ""}></td>
         <td data-label="Balance"><input type="number" class="ci-balance" value="${item.balance || 0}" step="0.01" readonly></td>
-        <td data-label="Status">
-            <select class="ci-status">
-                <option value="Not Paid" ${!isPaid ? "selected" : ""}>Not Paid</option>
-                <option value="Paid" ${isPaid ? "selected" : ""}>Paid</option>
-            </select>
-        </td>
+        <td data-label="Status">${statusCellEdit}</td>
         <td data-label="Next Appointment"><input type="date" class="ci-next-appt" value="${escAttr(item.next_appointment)}"></td>
         <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
         <td data-label="" class="ci-actions">
@@ -451,7 +612,6 @@ let currentCheckInfoPatientId = "";
                 formData.append("value", row.querySelector(".ci-value").value.trim());
                 formData.append("paid", row.querySelector(".ci-paid").value.trim());
                 formData.append("next_appointment", row.querySelector(".ci-next-appt").value.trim());
-                formData.append("status", row.querySelector(".ci-status").value.trim());
 
                 ciSetSaveState(saveBtn, true);
 
@@ -470,7 +630,8 @@ let currentCheckInfoPatientId = "";
                         item.paid = parseFloat(row.querySelector(".ci-paid").value) || 0;
                         item.balance = parseFloat(row.querySelector(".ci-balance").value) || 0;
                         item.next_appointment = row.querySelector(".ci-next-appt").value.trim();
-                        item.status = row.querySelector(".ci-status").value.trim();
+                        // The server works the status out from value and payments.
+                        if (!ciIsFollowUp(item)) item.status = item.balance <= 0 ? "Paid" : "Not Paid";
 
                         renderCheckInfoTable();
                     } else {

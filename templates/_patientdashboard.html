@@ -416,18 +416,19 @@
                 </div>
                 <div class="td-records__scroll">
                     <table class="treatment-table td-records__table" id="td-treatment-table"
-                        style="min-width:1330px; table-layout:fixed;">
+                        style="min-width:1560px; table-layout:fixed;">
                         <colgroup>
                             <col style="width:134px;"> <!-- Date -->
                             <col style="width:80px;"> <!-- Tooth# -->
                             <col style="width:170px;"> <!-- Procedure -->
+                            <col style="width:230px;"> <!-- Plan: new charge or follow-up -->
                             <col style="width:150px;"> <!-- Dentist/s -->
                             <col style="width:110px;"> <!-- Value of Work -->
                             <col style="width:110px;"> <!-- Amount Paid -->
                             <col style="width:100px;"> <!-- Balance -->
                             <col style="width:156px;"> <!-- Next Appointment -->
                             <col style="width:150px;"> <!-- Medicine -->
-                            <col style="width:110px;"> <!-- Status -->
+                            <col style="width:120px;"> <!-- Paid via -->
                             <col style="width:60px;"> <!-- Row actions -->
                         </colgroup>
                         <thead>
@@ -435,25 +436,32 @@
                                 <th>Date</th>
                                 <th>Tooth#</th>
                                 <th>Procedure</th>
+                                <th>Plan</th>
                                 <th>Dentist/s</th>
                                 <th>Value of Work</th>
                                 <th>Amount Paid</th>
                                 <th>Balance</th>
                                 <th>Next Appointment</th>
                                 <th>Medicine</th>
-                                <th>Status</th>
+                                <th>Paid Via</th>
                                 <th><span class="td-actions-head">Actions</span></th>
                             </tr>
                         </thead>
 
                         <tbody>
                             <!-- One empty row. loadTreatmentNotes() rebuilds this tbody when a patient
-         is opened, so this is only the pre-selection placeholder. It carries
-         the same ten cells as appendRow() builds at runtime, so the Medicine
-         and Status columns are never left orphaned. -->
+                            is opened, so this is only the pre-selection placeholder. It carries
+                            the same ten cells as appendRow() builds at runtime, so the Medicine
+                            and Status columns are never left orphaned. -->
                             <tr>
                                 <td><input type="date" class="td-date adm-date-native" required /></td>
-                                <td><input type="text" class="td-tooth" placeholder="e.g. 18" required /></td>
+                                                                <td class="td-tooth-cell" style="min-width:110px"><input type="text" class="td-tooth" placeholder="e.g. 18" required />
+                                    <select class="td-area" aria-label="Upper or lower arch">
+                                        <option value="">Select area</option>
+                                        <option value="Upper">Upper</option>
+                                        <option value="Lower">Lower</option>
+                                        <option value="Both">Both</option>
+                                    </select></td>
                                 <td>
                                     <select class="td-procedure" required>
                                         <option value="Select Procedure">Select Procedure</option>
@@ -471,6 +479,11 @@
                                         <option value="Periapical Xray">Periapical Xray</option>
                                         <option value="Orthodontic Braces">Orthodontic Braces</option>
                                         <option value="Other">Other</option>
+                                    </select>
+                                </td>
+                                <td class="td-plan-cell">
+                                    <select class="td-plan" aria-label="New charge or follow-up of an existing plan">
+                                        <option value="__new__">New charge</option>
                                     </select>
                                 </td>
                                 <td>
@@ -504,9 +517,11 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select class="td-status">
-                                        <option value="Not Paid" selected>Not Paid</option>
-                                        <option value="Paid">Paid</option>
+                                    <select class="td-method" aria-label="Paid via">
+                                        <option value="Cash" selected>Cash</option>
+                                        <option value="GCash">GCash</option>
+                                        <option value="BPI">BPI</option>
+                                        <option value="BDO">BDO</option>
                                     </select>
                                 </td>
                                 <td class="td-row-actions">
@@ -526,4 +541,4 @@
 
         </div>
 
-        <script src="{{ url_for('static', filename='js/treatment-totals.js') }}?v=1"></script>
+        <script src="{{ url_for('static', filename='js/treatment-totals.js') }}?v=2"></script>
