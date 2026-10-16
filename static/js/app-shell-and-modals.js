@@ -79,7 +79,7 @@ function updateDateTime() {
                 const tempContainer = document.createElement("div");
                 tempContainer.style.cssText =
                     "position:fixed;left:-9999px;top:-9999px;width:" +
-                    chartSection.scrollWidth +
+                    (chartSection.scrollWidth || 1100) +
                     "px;z-index:-1;";
                 document.body.appendChild(tempContainer);
 
@@ -89,6 +89,15 @@ function updateDateTime() {
                 const clonedChart = cleanClone.querySelector(".dental-chart");
                 const clonedPalette = cleanClone.querySelector(".action-palette");
                 cleanClone.style.colorScheme = "light";   // ADD THIS LINE
+
+                // On phones the chart is hidden (display:none) until "Open Dental
+                // Chart" is tapped, so its size reads as 0. Fall back to the
+                // clone's own size, rendered off-screen above.
+                if (window.getComputedStyle(cleanClone).display === "none") {
+                    cleanClone.style.display = "block";
+                }
+                const capW = chartSection.scrollWidth || cleanClone.scrollWidth || 1100;
+                const capH = chartSection.scrollHeight || cleanClone.scrollHeight || 700;
 
                 if (clonedChart) {
                     clonedChart.style.backdropFilter = "none";
@@ -130,10 +139,10 @@ function updateDateTime() {
                         backgroundColor: '#ffffff',
                         scrollX: 0,
                         scrollY: 0,
-                        windowWidth: chartSection.scrollWidth,
-                        windowHeight: chartSection.scrollHeight,
-                        width: chartSection.scrollWidth,
-                        height: chartSection.scrollHeight,
+                        windowWidth: capW,
+                        windowHeight: capH,
+                        width: capW,
+                        height: capH,
                         ignoreElements: (el) => el.classList.contains("action-palette") || el.hasAttribute("data-chart-ui"),
                         logging: false,
                     });
@@ -145,7 +154,10 @@ function updateDateTime() {
                 }
 
                 // ADD THIS BLOCK — force a white background before JPEG conversion
-                const flattenedCanvas = document.createElement('canvas');
+                if (!canvas || !canvas.width || !canvas.height) {
+                    showToast("Could not capture the dental chart. Please try again.");
+                    return;
+                }
                 flattenedCanvas.width = canvas.width;
                 flattenedCanvas.height = canvas.height;
                 const flatCtx = flattenedCanvas.getContext('2d');
