@@ -10296,6 +10296,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
         })
     def health_check(self):
         return jsonify(status="healthy"), 200
+    
+    
     def _register_routes(self):
         """Polymorphism: Register all routes"""
         # PayMongo online payment was discontinued: payments are now confirmed
