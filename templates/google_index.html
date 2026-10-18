@@ -7,6 +7,29 @@
     <title>Capizonda Dental Clinic</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preload"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        as="style" onload="this.rel='stylesheet'">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+        media="print" onload="this.media='all'">
+    <!-- Prevent icon FOUC: hide material-symbols until the web font loads -->
+    <style>
+        .material-symbols-rounded { visibility: hidden !important; }
+        html.fonts-loaded .material-symbols-rounded { visibility: visible !important; }
+    </style>
+    <script>
+        (function () {
+            function reveal() {
+                document.documentElement.classList.add('fonts-loaded');
+            }
+            if (document.fonts && document.fonts.status === 'loaded') {
+                reveal();
+            } else if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(reveal).catch(reveal);
+            }
+        })();
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
@@ -295,13 +318,7 @@
                         <input type="text" placeholder="Last Name" name="Last_Name" required>
                     </div>
                     
-                        <input type="text" placeholder="House No." name="House_No" required>
-                        <input type="text" placeholder="Street" name="Street">
-
-                    
-                    <input type="text" placeholder="Barangay" name="Brgy" required>
-                    <input type="text" placeholder="Municipality/City" name="Municipality" required>
-                    <input type="text" placeholder="Province" name="City" required>
+                    <input type="text" placeholder="Address (House No., Street, Barangay, Municipality/City, Province)" name="Address" required>
 
                     <input type="text" placeholder="Nationality" name="Nationality">
                     
@@ -1354,11 +1371,7 @@ resetPasswordBtn.addEventListener("click", async () => {
         setField('First_Name', info.FirstName);
         setField('Middle_Name', info.MiddleName);
         setField('Last_Name', info.LastName);
-        setField('House_No', info.HouseNo);
-        setField('Street', info.Street);
-        setField('Brgy', info.Brgy || info.Barangay);
-        setField('Municipality', info.Municipality);
-        setField('City', info.City);
+        setField('Address', info.Address);
         setField('Nationality', info.Nationality);
         setField('Age', info.Age);
         setField('Contact_number', info.ContactNumber);

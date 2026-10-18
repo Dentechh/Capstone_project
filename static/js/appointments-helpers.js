@@ -168,9 +168,8 @@
             JS has to emit the same 24 cells or every value after the patient name
             shifts one column left of its heading. */
             const APPOINTMENT_HIDDEN_FIELDS = ['uid', 'id', 'MiddleName', 'LastName',
-                'HouseNo', 'Street', 'Brgy', 'Municipality', 'Province', 'ContactNumber',
-                'Nationality', 'Religion', 'Age', 'Sex', 'Birthday', 'Occupation',
-                'CivilStatus'];
+                'Address', 'ContactNumber', 'Nationality', 'Religion', 'Age', 'Sex',
+                'Birthday', 'Occupation', 'CivilStatus'];
 
             function apptHiddenCells(appt) {
                 return APPOINTMENT_HIDDEN_FIELDS.map(function (field) {

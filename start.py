@@ -436,11 +436,7 @@ def google_bookedCustomer():
     FirstName = bleach.clean(request.form.get("First_Name", ""))
     MiddleName = bleach.clean(request.form.get("Middle_Name", ""))
     LastName = bleach.clean(request.form.get("Last_Name", ""))
-    HouseNo = bleach.clean(request.form.get("House_No", ""))
-    Street = bleach.clean(request.form.get("Street", ""))
-    Brgy = bleach.clean(request.form.get("Brgy", ""))
-    Municipality = bleach.clean(request.form.get("Municipality", ""))
-    City = bleach.clean(request.form.get("City", ""))
+    Address = bleach.clean(request.form.get("Address", ""))
     Nationality = bleach.clean(request.form.get("Nationality", ""))
     Religion = bleach.clean(request.form.get("Religion", ""))
     Age = bleach.clean(request.form.get("Age", ""))
@@ -477,11 +473,7 @@ def google_bookedCustomer():
             "MiddleName": MiddleName,
             "LastName": LastName,
 
-            "HouseNo": HouseNo,
-            "Street": Street,
-            "Brgy": Brgy,
-            "Municipality": Municipality,
-            "City": City,
+            "Address": Address,
 
             "ContactNumber": ContactNumber,
             "Nationality": Nationality,
@@ -534,11 +526,7 @@ def bookedCustomer():
     FirstName = bleach.clean(request.form.get("First_Name", ""))
     MiddleName = bleach.clean(request.form.get("Middle_Name", ""))
     LastName = bleach.clean(request.form.get("Last_Name", ""))
-    HouseNo = bleach.clean(request.form.get("House_No", ""))
-    Street = bleach.clean(request.form.get("Street", ""))
-    Brgy = bleach.clean(request.form.get("Brgy", ""))
-    Municipality = bleach.clean(request.form.get("Municipality", ""))
-    City = bleach.clean(request.form.get("City", ""))
+    Address = bleach.clean(request.form.get("Address", ""))
     Nationality = bleach.clean(request.form.get("Nationality", ""))
     Religion = bleach.clean(request.form.get("Religion", ""))
     Age = bleach.clean(request.form.get("Age", ""))
@@ -575,11 +563,7 @@ def bookedCustomer():
             "MiddleName": MiddleName,
             "LastName": LastName,
 
-            "HouseNo": HouseNo,
-            "Street": Street,
-            "Brgy": Brgy,
-            "Municipality": Municipality,
-            "City": City,
+            "Address": Address,
 
             "ContactNumber": ContactNumber,
             "Nationality": Nationality,
@@ -699,11 +683,15 @@ def approve():
         "MiddleName": request.form.get("middlename", ""),
         "LastName": request.form.get("lastname", ""),
 
-        "HouseNo": request.form.get("houseno", ""),
-        "Street": request.form.get("street", ""),
-        "Brgy": request.form.get("brgy", ""),
-        "Municipality": request.form.get("municipality", ""),
-        "City": request.form.get("city", ""),
+        "Address": request.form.get("address", "") or " ".join(
+            part for part in (
+                request.form.get("houseno") or "",
+                request.form.get("street") or "",
+                request.form.get("brgy") or "",
+                request.form.get("municipality") or "",
+                request.form.get("city") or "",
+            ) if part
+        ),
 
         "ContactNumber": request.form.get("contactnumber", ""),
         "Nationality": request.form.get("nationality", ""),

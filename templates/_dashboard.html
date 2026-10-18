@@ -158,6 +158,21 @@
                     <span>Yearly</span>
                 </button>
             </div>
+            <div class="proc-nav" id="procNav" style="display:none;">
+                <button type="button" class="proc-nav-btn" id="procNavPrev" aria-label="Previous period"
+                    onclick="procNavStep(-1)">
+                    <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+                </button>
+                <span class="proc-nav-label" id="procNavLabel" aria-live="polite"></span>
+                <select class="proc-nav-select" id="procMonthSel" aria-label="Choose month" style="display:none;"
+                    onchange="procNavPick()"></select>
+                <select class="proc-nav-select" id="procYearSel" aria-label="Choose year" style="display:none;"
+                    onchange="procNavPick()"></select>
+                <button type="button" class="proc-nav-btn" id="procNavNext" aria-label="Next period"
+                    onclick="procNavStep(1)">
+                    <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+                </button>
+            </div>
 
             <div class="dashboard-charts" style="margin-top:24px;">
                 <div class="chart-card">

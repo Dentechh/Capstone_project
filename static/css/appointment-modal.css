@@ -1770,6 +1770,15 @@
             #newApptModal .adm-step+.adm-step::before {
                 width: 18px;
             }
+
+            /* Ensure the flatpickr alt input (birthday / appointment date)
+               stays visible and full-width on narrow mobile screens. */
+            #newApptModal .adm-form-side .adm-date-alt,
+            #newApptModal .adm-form-side .flatpickr-input {
+                width: 100% !important;
+                display: block;
+                min-height: 44px;
+            }
         }
 
         @media (max-width: 480px) {

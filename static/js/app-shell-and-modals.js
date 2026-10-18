@@ -2067,9 +2067,11 @@ function updateDateTime() {
                     const natural = menu.scrollHeight || 0;
                     const need = Math.min(natural, 230) || 150;
 
-                    // Only flip when there is genuinely more room above, otherwise
-                    // stay below and let the panel be short.
-                    const mayFlip = below < need && above > below;
+                    // Only flip up when there is genuinely almost no room below
+                    // (<100px) and more room above. Otherwise open below and let
+                    // the panel scroll if it doesn't fully fit, so dropdowns
+                    // (e.g. Paid Via) don't pop "too high up" above their input.
+                    const mayFlip = below < 100 && above > below;
                     wrap.classList.toggle('is-open-up', mayFlip);
                     menu.classList.toggle('is-open-up', mayFlip);
 
@@ -2324,7 +2326,6 @@ function updateDateTime() {
                 // ---------------------------------------------------------------
                 if (typeof flatpickr === 'function') {
                     const baseOptions = {
-                        disableMobile: true,
                         dateFormat: 'Y-m-d',
                         altInput: true,
                         altFormat: 'F j, Y',
@@ -2384,10 +2385,16 @@ function updateDateTime() {
 
                     // The visible control is now flatpickr's alt input; keep the
                     // real inputs out of sight but still holding their values.
+                    // Only hide the native input when flatpickr actually took over;
+                    // otherwise leave the native date picker visible as a fallback.
                     if (modal) {
-                        modal.querySelectorAll('.adm-date-native:not(.flatpickr-mobile)').forEach(function (input) {
-                            input.style.display = 'none';
-                            input.removeAttribute('required');
+                        modal.querySelectorAll('.adm-date-native').forEach(function (input) {
+                             // Only hide the native input when flatpickr actually took over.
+                             // The native input stays visible as a fallback if initialization fails.
+                             if (input._flatpickr) {
+                                input.style.display = 'none';
+                                input.removeAttribute('required');
+                            }
                         });
                     }
                 }

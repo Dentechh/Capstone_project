@@ -33,6 +33,16 @@ function showSection(sectionId) {
             if (sectionId === 'financialreports' && typeof loadUnpaidProcedures === 'function') {
                 loadUnpaidProcedures();
             }
+
+            // Patient Dashboard tab clicked directly (not via opening a patient):
+            // reset the contents to an empty state so no stale patient data shows.
+            // window._patientDashboardOpening is set true only by openPatientDashboard
+            // right before this call, so a direct tab click resets the dashboard.
+            var fromOpen = window._patientDashboardOpening === true;
+            window._patientDashboardOpening = false;
+            if (sectionId === 'patientdashboard' && !fromOpen) {
+                resetPatientDashboardToEmpty();
+            }
         }
 
         // section id -> [load-more button, cursor holder, container to clear]
@@ -157,12 +167,10 @@ function showSection(sectionId) {
             setCheckbox('w-nurse-check', w_nurse);
             setCheckbox('w-pill-check', w_pill);
 
-            // Show nav link (flex, not block: the .nav-item class
-            // centers icon + label with flexbox, and an inline
-            // display value overrides it)
-            var navLink = document.getElementById('nav-patientdashboard');
-            if (navLink) navLink.style.display = 'flex';
-
+            // Flag so showSection() knows this call comes from opening a real
+            // patient (which already filled the dashboard) rather than a direct
+            // click on the Patient Dashboard tab, which should show an empty state.
+            window._patientDashboardOpening = true;
             showSection('patientdashboard');
 
             // Show treatment section
@@ -233,6 +241,77 @@ function showSection(sectionId) {
                     );
                     setVisitCount(null);
                 });
+        }
+
+        /**
+         * Reset the Patient Dashboard to its empty state: no patient selected,
+         * all identity/medical fields cleared, visit history back to the
+         * placeholder, treatment records panel hidden. Used when the Patient
+         * Dashboard tab is clicked directly instead of opening a patient first.
+         */
+        function resetPatientDashboardToEmpty() {
+            var nameEl = document.getElementById('pd-name');
+            if (nameEl) nameEl.textContent = 'Patient Name';
+
+            var idEl = document.getElementById('pd-id');
+            if (idEl) idEl.textContent = '';
+
+            var genderEl = document.getElementById('pd-gender');
+            if (genderEl) genderEl.textContent = '-';
+
+            var ageEl = document.getElementById('pd-age');
+            if (ageEl) ageEl.textContent = 'N/A';
+
+            ['pd-disp-fullname','pd-disp-middlename','pd-disp-birthday',
+             'pd-disp-nationality','pd-disp-religion','pd-disp-occupation',
+             'pd-disp-civilstatus','pd-disp-contact','pd-disp-service',
+             'pd-disp-Patient_unq_id'].forEach(function (fieldId) {
+                var el = document.getElementById(fieldId);
+                if (el) el.textContent = fieldId === 'pd-disp-fullname' ? '' : '-';
+            });
+
+            var tdId = document.getElementById('td-Patient_unq_id');
+            if (tdId) tdId.textContent = '-';
+            var tdUid = document.getElementById('td-history-uid');
+            if (tdUid) tdUid.textContent = 'Unknown';
+
+            // Medical history + women's health: clear to "-" (not answered)
+            ['q1-check','q2-check','q3-check','q4-check','q5-check','q6-check',
+             'q7-check','q9-check','w-preg-check','w-nurse-check','w-pill-check'
+            ].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var span = el.querySelector('.pd-check__value');
+                if (span) {
+                    span.textContent = '-';
+                    span.classList.remove('is-yes', 'is-no');
+                }
+            });
+            ['q2-spec','q3-spec','q4-spec','q5-spec','q7-spec','q9-spec'].forEach(function (id) {
+                setSpec(id, '');
+            });
+
+            syncWomensHealthVisibility('');
+
+            // Visit history back to the empty placeholder
+            var history = document.getElementById('pd-visit-history');
+            if (history) {
+                history.innerHTML = '<tr><td colspan="6">' +
+                    '<div class="pd-empty">' +
+                    '<span class="material-symbols-rounded pd-empty__icon" aria-hidden="true">person_search</span>' +
+                    '<span class="pd-empty__text">Select a patient to view visit history.</span>' +
+                    '</div>' +
+                    '</td></tr>';
+            }
+            setVisitCount(null);
+
+            // Hide the treatment records panel until a patient is opened
+            var tdSection = document.getElementById('td-treatment-section');
+            if (tdSection) tdSection.style.display = 'none';
+
+            // No patient is currently selected
+            window.currentPatientId = null;
+            window.currentPatientUid = null;
         }
 
         /**
@@ -1274,11 +1353,13 @@ function showSection(sectionId) {
                 firstname: appointmentData.FirstName,
                 middlename: appointmentData.MiddleName,
                 lastname: appointmentData.LastName,
-                houseno: appointmentData.HouseNo,
-                street: appointmentData.Street,
-                brgy: appointmentData.Brgy,
-                municipality: appointmentData.Municipality,
-                province: appointmentData.Province,
+                address: appointmentData.Address || [
+                    appointmentData.HouseNo,
+                    appointmentData.Street,
+                    appointmentData.Brgy,
+                    appointmentData.Municipality,
+                    appointmentData.Province,
+                ].filter(Boolean).join(" "),
                 contactnumber: appointmentData.ContactNumber,
                 nationality: appointmentData.Nationality,
                 religion: appointmentData.Religion,

@@ -6,8 +6,29 @@
   <title>Medical Records | Capizonda Dental Clinic</title>
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="preload"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      as="style" onload="this.rel='stylesheet'">
   <link rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+      media="print" onload="this.media='all'">
+  <!-- Prevent icon FOUC: hide material-symbols until the web font loads -->
+  <style>
+    .material-symbols-rounded { visibility: hidden !important; }
+    html.fonts-loaded .material-symbols-rounded { visibility: visible !important; }
+  </style>
+  <script>
+    (function () {
+      function reveal() {
+        document.documentElement.classList.add('fonts-loaded');
+      }
+      if (document.fonts && document.fonts.status === 'loaded') {
+        reveal();
+      } else if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(reveal).catch(reveal);
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
   <style>
 

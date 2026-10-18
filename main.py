@@ -1251,6 +1251,17 @@ class DentalClinicApp(BaseFlaskApp):
             "Brgy": clean("Brgy") or clean("Barangay"),
             "Municipality": clean("Municipality"),
             "City": clean("City"),
+            # Single address line; fall back to joining the legacy
+            # components so older records still pre-fill correctly.
+            "Address": clean("Address") or " ".join(
+                part for part in (
+                    clean("HouseNo"),
+                    clean("Street"),
+                    clean("Brgy") or clean("Barangay"),
+                    clean("Municipality"),
+                    clean("City"),
+                ) if part
+            ),
             "Nationality": clean("Nationality"),
             "Religion": clean("Religion"),
             "Occupation": clean("Occupation"),
@@ -3680,24 +3691,8 @@ class DentalClinicApp(BaseFlaskApp):
             request.form.get("Last_Name", "").strip()
         )
 
-        HouseNo = bleach.clean(
-            request.form.get("House_No", "")
-        )
-
-        Street = bleach.clean(
-            request.form.get("Street", "")
-        )
-
-        Brgy = bleach.clean(
-            request.form.get("Brgy", "")
-        )
-
-        Municipality = bleach.clean(
-            request.form.get("Municipality", "")
-        )
-
-        City = bleach.clean(
-            request.form.get("City", "")
+        Address = bleach.clean(
+            request.form.get("Address", "")
         )
 
         Nationality = bleach.clean(
@@ -3894,11 +3889,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "MiddleName": MiddleName,
                 "LastName": LastName,
 
-                "HouseNo": HouseNo,
-                "Street": Street,
-                "Brgy": Brgy,
-                "Municipality": Municipality,
-                "City": City,
+                "Address": Address,
 
                 "ContactNumber": ContactNumber,
                 "Nationality": Nationality,
@@ -3982,24 +3973,8 @@ class DentalClinicApp(BaseFlaskApp):
             request.form.get("Last_Name", "").strip()
         )
 
-        HouseNo = bleach.clean(
-            request.form.get("House_No", "")
-        )
-
-        Street = bleach.clean(
-            request.form.get("Street", "")
-        )
-
-        Brgy = bleach.clean(
-            request.form.get("Brgy", "")
-        )
-
-        Municipality = bleach.clean(
-            request.form.get("Municipality", "")
-        )
-
-        City = bleach.clean(
-            request.form.get("City", "")
+        Address = bleach.clean(
+            request.form.get("Address", "")
         )
 
         Nationality = bleach.clean(
@@ -4176,11 +4151,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "MiddleName": MiddleName,
                 "LastName": LastName,
 
-                "HouseNo": HouseNo,
-                "Street": Street,
-                "Brgy": Brgy,
-                "Municipality": Municipality,
-                "City": City,
+                "Address": Address,
 
                 "ContactNumber": ContactNumber,
                 "Nationality": Nationality,
@@ -4425,11 +4396,15 @@ class DentalClinicApp(BaseFlaskApp):
             "MiddleName": appointment_data.get("MiddleName", ""),
             "LastName": appointment_data.get("LastName", ""),
 
-            "HouseNo": appointment_data.get("HouseNo", ""),
-            "Street": appointment_data.get("Street", ""),
-            "Brgy": appointment_data.get("Brgy", ""),
-            "Municipality": appointment_data.get("Municipality", ""),
-            "City": appointment_data.get("City", ""),
+            "Address": appointment_data.get("Address") or " ".join(
+                part for part in (
+                    appointment_data.get("HouseNo") or "",
+                    appointment_data.get("Street") or "",
+                    appointment_data.get("Brgy") or appointment_data.get("Barangay") or "",
+                    appointment_data.get("Municipality") or "",
+                    appointment_data.get("City") or "",
+                ) if part
+            ),
 
             "ContactNumber": appointment_data.get("ContactNumber", ""),
             "Nationality": appointment_data.get("Nationality", ""),
@@ -4990,37 +4965,9 @@ class DentalClinicApp(BaseFlaskApp):
             # ADDRESS
             # -----------------------------------------------------
 
-            "HouseNo": bleach.clean(
+            "Address": bleach.clean(
                 request.form.get(
-                    "House_No",
-                    ""
-                )
-            ),
-
-            "Street": bleach.clean(
-                request.form.get(
-                    "Street",
-                    ""
-                )
-            ),
-
-            "Brgy": bleach.clean(
-                request.form.get(
-                    "Brgy",
-                    ""
-                )
-            ),
-
-            "Municipality": bleach.clean(
-                request.form.get(
-                    "Municipality",
-                    ""
-                )
-            ),
-
-            "City": bleach.clean(
-                request.form.get(
-                    "City",
+                    "Address",
                     ""
                 )
             ),
@@ -5851,9 +5798,49 @@ class DentalClinicApp(BaseFlaskApp):
         # =========================
         # COUNTS (server-side aggregation, ~1 read per 1000 index entries)
         # =========================
-        total_patients = self.db.collection(self.Doc_Patients).count().get()[0][0].value
+        # Total patients must match the My Patients tab: that tab lists
+        # accounts with visit history (an accepted appointment or completed
+        # treatment), so count those accounts instead of every Patients doc,
+        # which also holds records that never became a patient account.
+        try:
+            total_patients = (
+                self.db.collection(self.Customer_Account)
+                .where("has_history", "==", True)
+                .count().get()[0][0].value
+            )
+        except Exception as e:
+            print(f"TOTAL PATIENTS COUNT FALLBACK: {e}")
+            total_patients = sum(
+                1 for _, d in self._get_manageable_accounts_cached()
+                if d.get("has_history")
+            )
+
         pending_count = self.db.collection_group("appointments").count().get()[0][0].value
-        approved_count = self.db.collection_group("Approve").count().get()[0][0].value
+
+        # Accepted patients: distinct accounts with an approved appointment that
+        # do not already have a completed treatment record. A patient who has
+        # moved into Done_procedure is past the accepted stage and must not
+        # inflate the accepted count.
+        try:
+            approved_uids = set()
+            for doc in self.db.collection_group("Approve").stream():
+                try:
+                    uid = doc.reference.parent.parent.id
+                except Exception:
+                    uid = ""
+                if uid:
+                    approved_uids.add(uid)
+
+            done_uids = {
+                str(d.get("_account_uid") or "")
+                for d in self._get_done_procedures_cached()
+                if d.get("_account_uid")
+            }
+
+            approved_count = len(approved_uids - done_uids)
+        except Exception as e:
+            print(f"ACCEPTED COUNT FALLBACK: {e}")
+            approved_count = self.db.collection_group("Approve").count().get()[0][0].value
 
         # Urgency cards: one count() per level. Needs a collection-group
         # index on UrgencyLevel; if it is missing, fall back to counting
@@ -5876,8 +5863,23 @@ class DentalClinicApp(BaseFlaskApp):
                 if level in urgency_counts:
                     urgency_counts[level] += 1
 
-        # Only the 3 newest accepted patients are needed for the overview card.
-        recent_approve, _ = self._fetch_approved_page(page_size=3)
+        # Recent Accepted Patients: one card per patient, not per procedure.
+        # _fetch_approved_page returns Approve documents newest-accepted_at
+        # first, so the first occurrence of each account is that patient's
+        # latest acceptance. Deduplicate by account uid and take the 3 newest
+        # distinct patients, so a patient with several re-booked procedures
+        # shows once instead of once per procedure.
+        recent_rows, _ = self._fetch_approved_page(page_size=25)
+        seen_uids = set()
+        recent_approve = []
+        for row in recent_rows:
+            uid = row.get("uid") or ""
+            if uid and uid in seen_uids:
+                continue
+            seen_uids.add(uid)
+            recent_approve.append(row)
+            if len(recent_approve) >= 3:
+                break
 
         # =========================
         # FINANCIAL CALCULATIONS (Step 2: cached, no full scan)
@@ -9263,19 +9265,55 @@ backup. Groups marked "check" may be separate treatments that just share a price
             return self._agg_admin_procedure_chart_data()
 
         period = request.args.get("period", "overall").strip().lower()
+        if period not in ("today", "weekly", "monthly", "yearly", "overall"):
+            period = "overall"
         today = datetime.now(UTC).date()
-        
-        # Determine start date for filtering
+
+        def int_arg(name, default):
+            try:
+                return int(request.args.get(name, default))
+            except (TypeError, ValueError):
+                return default
+
+        week = int_arg("week", 0)
+        month = request.args.get("month", "").strip()
+        year = int_arg("year", today.year)
+
+        # Determine the date window for the selected period.
         start_date = None
+        end_date = None
+        month_num = today.month
         if period == "today":
             start_date = today
+            end_date = today
         elif period == "weekly":
-            start_date = today - timedelta(days=6)
+            # week=0 is the current 7-day window ending today; week=N steps back.
+            end_date = today - timedelta(days=7 * week)
+            start_date = end_date - timedelta(days=6)
         elif period == "monthly":
-            start_date = today - timedelta(days=29)
+            if month:
+                try:
+                    y, m = int(month[:4]), int(month[5:7])
+                    year = max(1, min(y, today.year))
+                    month_num = max(1, min(m, 12))
+                    if year == today.year and month_num > today.month:
+                        month_num = today.month
+                except (ValueError, IndexError):
+                    year = today.year
+                    month_num = today.month
+            else:
+                year = today.year
+                month_num = today.month
+            start_date = datetime(year, month_num, 1).date()
+            if month_num == 12:
+                end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                end_date = datetime(year, month_num + 1, 1).date() - timedelta(days=1)
         elif period == "yearly":
-            start_date = today - timedelta(days=364) # Last 12 months
-        # 'overall' leaves start_date as None (no filter)
+            year = max(1, min(year, today.year))
+            start_date = datetime(year, 1, 1).date()
+            end_date = datetime(year, 12, 31).date()
+        # 'overall' leaves start_date / end_date as None (no filter)
 
         counts = {}
         revenue = {}
@@ -9292,7 +9330,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                             continue
                         try:
                             proc_date = datetime.fromisoformat(date_str).date()
-                            if proc_date < start_date:
+                            if proc_date < start_date or proc_date > end_date:
                                 continue
                         except ValueError:
                             continue # Skip invalid dates
@@ -9307,6 +9345,50 @@ backup. Groups marked "check" may be separate treatments that just share a price
         except Exception as e:
             print("PROCEDURE CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        # Earliest year with data, for the year/month pickers.
+        earliest_year = today.year - 4
+        try:
+            for data in done_docs:
+                for p in data.get("procedures", []):
+                    date_str = str(p.get("date", "")).strip()
+                    if not date_str:
+                        continue
+                    try:
+                        d = datetime.fromisoformat(date_str).date()
+                        if d.year < earliest_year:
+                            earliest_year = d.year
+                    except ValueError:
+                        continue
+        except Exception:
+            pass
+        min_year = max(earliest_year, today.year - 4)
+        max_year = today.year
+        max_month = today.month
+
+        # Range label + stepper flags for the procedure chart picker.
+        if period == "today":
+            range_label = f"{today:%B} {today.day}, {today.year}"
+            can_prev = False
+            can_next = False
+        elif period == "weekly":
+            range_label = (
+                f"{start_date:%b} {start_date.day} – {end_date:%b} {end_date.day}, {end_date.year}"
+            )
+            can_prev = True
+            can_next = week > 0
+        elif period == "monthly":
+            range_label = f"{datetime(year, month_num, 1):%B} {year}"
+            can_prev = year > min_year or (year == min_year and month_num > 1)
+            can_next = year < today.year or (year == today.year and month_num < today.month)
+        elif period == "yearly":
+            range_label = str(year)
+            can_prev = year > min_year
+            can_next = year < today.year
+        else:
+            range_label = "All time"
+            can_prev = False
+            can_next = False
 
         def top_n(metric_dict, limit=10):
             sorted_keys = sorted(metric_dict.keys(), key=lambda k: metric_dict[k], reverse=True)
@@ -9327,7 +9409,17 @@ backup. Groups marked "check" may be separate treatments that just share a price
         return jsonify({
             "success": True,
             "counts": {"labels": count_labels, "data": count_values},
-            "revenue": {"labels": revenue_labels, "data": revenue_values}
+            "revenue": {"labels": revenue_labels, "data": revenue_values},
+            "period": period,
+            "week": week,
+            "month": f"{year}-{month_num:02d}" if period == "monthly" else "",
+            "year": year if period == "yearly" else None,
+            "range_label": range_label,
+            "can_prev": can_prev,
+            "can_next": can_next,
+            "min_year": min_year,
+            "max_year": max_year,
+            "max_month": max_month,
         })
 
 
@@ -10228,19 +10320,53 @@ backup. Groups marked "check" may be separate treatments that just share a price
             return jsonify({"success": False, "message": "Unauthorized"}), 403
             
         period = request.args.get("period", "overall").strip().lower()
+        if period not in ("today", "weekly", "monthly", "yearly", "overall"):
+            period = "overall"
         today = datetime.now(UTC).date()
-        
-        # Determine start date for filtering
+
+        def int_arg(name, default):
+            try:
+                return int(request.args.get(name, default))
+            except (TypeError, ValueError):
+                return default
+
+        week = int_arg("week", 0)
+        month = request.args.get("month", "").strip()
+        year = int_arg("year", today.year)
+
+        # Determine the date window for the selected period.
         start_date = None
+        end_date = None
+        month_num = today.month
         if period == "today":
             start_date = today
+            end_date = today
         elif period == "weekly":
-            start_date = today - timedelta(days=6)
+            end_date = today - timedelta(days=7 * week)
+            start_date = end_date - timedelta(days=6)
         elif period == "monthly":
-            start_date = today - timedelta(days=29)
+            if month:
+                try:
+                    y, m = int(month[:4]), int(month[5:7])
+                    year = max(1, min(y, today.year))
+                    month_num = max(1, min(m, 12))
+                    if year == today.year and month_num > today.month:
+                        month_num = today.month
+                except (ValueError, IndexError):
+                    year = today.year
+                    month_num = today.month
+            else:
+                year = today.year
+                month_num = today.month
+            start_date = datetime(year, month_num, 1).date()
+            if month_num == 12:
+                end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                end_date = datetime(year, month_num + 1, 1).date() - timedelta(days=1)
         elif period == "yearly":
-            start_date = today - timedelta(days=364) # Last 12 months
-        # 'overall' leaves start_date as None (no filter)
+            year = max(1, min(year, today.year))
+            start_date = datetime(year, 1, 1).date()
+            end_date = datetime(year, 12, 31).date()
 
         counts = {}
         revenue = {}
@@ -10257,7 +10383,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                             continue
                         try:
                             proc_date = datetime.fromisoformat(date_str).date()
-                            if proc_date < start_date:
+                            if proc_date < start_date or proc_date > end_date:
                                 continue
                         except ValueError:
                             continue # Skip invalid dates
@@ -10272,6 +10398,50 @@ backup. Groups marked "check" may be separate treatments that just share a price
         except Exception as e:
             print("PROCEDURE CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        # Earliest year with data, for the year/month pickers.
+        earliest_year = today.year - 4
+        try:
+            for data in done_docs:
+                for p in data.get("procedures", []):
+                    date_str = str(p.get("date", "")).strip()
+                    if not date_str:
+                        continue
+                    try:
+                        d = datetime.fromisoformat(date_str).date()
+                        if d.year < earliest_year:
+                            earliest_year = d.year
+                    except ValueError:
+                        continue
+        except Exception:
+            pass
+        min_year = max(earliest_year, today.year - 4)
+        max_year = today.year
+        max_month = today.month
+
+        # Range label + stepper flags for the procedure chart picker.
+        if period == "today":
+            range_label = f"{today:%B} {today.day}, {today.year}"
+            can_prev = False
+            can_next = False
+        elif period == "weekly":
+            range_label = (
+                f"{start_date:%b} {start_date.day} – {end_date:%b} {end_date.day}, {end_date.year}"
+            )
+            can_prev = True
+            can_next = week > 0
+        elif period == "monthly":
+            range_label = f"{datetime(year, month_num, 1):%B} {year}"
+            can_prev = year > min_year or (year == min_year and month_num > 1)
+            can_next = year < today.year or (year == today.year and month_num < today.month)
+        elif period == "yearly":
+            range_label = str(year)
+            can_prev = year > min_year
+            can_next = year < today.year
+        else:
+            range_label = "All time"
+            can_prev = False
+            can_next = False
 
         def top_n(metric_dict, limit=10):
             sorted_keys = sorted(metric_dict.keys(), key=lambda k: metric_dict[k], reverse=True)
@@ -10292,7 +10462,17 @@ backup. Groups marked "check" may be separate treatments that just share a price
         return jsonify({
             "success": True,
             "counts": {"labels": count_labels, "data": count_values},
-            "revenue": {"labels": revenue_labels, "data": revenue_values}
+            "revenue": {"labels": revenue_labels, "data": revenue_values},
+            "period": period,
+            "week": week,
+            "month": f"{year}-{month_num:02d}" if period == "monthly" else "",
+            "year": year if period == "yearly" else None,
+            "range_label": range_label,
+            "can_prev": can_prev,
+            "can_next": can_next,
+            "min_year": min_year,
+            "max_year": max_year,
+            "max_month": max_month,
         })
     def health_check(self):
         return jsonify(status="healthy"), 200

@@ -16,11 +16,7 @@
                             <th style="display:none;">Appointment ID</th>
                             <th style="display:none;">Middle Name</th>
                             <th style="display:none;">Last Name</th>
-                            <th style="display:none;">House No.</th>
-                            <th style="display:none;">Street</th>
-                            <th style="display:none;">Barangay</th>
-                            <th style="display:none;">Municipality</th>
-                            <th style="display:none;">Province</th>
+                            <th style="display:none;">Address</th>
                             <th style="display:none;">Contact Number</th>
                             <th style="display:none;">Nationality</th>
                             <th style="display:none;">Religion</th>
@@ -51,11 +47,7 @@
                             <td style="display:none;">{{ appointment.id }}</td>
                             <td style="display:none;">{{ appointment.MiddleName }}</td>
                             <td style="display:none;">{{ appointment.LastName }}</td>
-                            <td style="display:none;">{{ appointment.HouseNo }}</td>
-                            <td style="display:none;">{{ appointment.Street }}</td>
-                            <td style="display:none;">{{ appointment.Brgy }}</td>
-                            <td style="display:none;">{{ appointment.Municipality }}</td>
-                            <td style="display:none;">{{ appointment.Province }}</td>
+                            <td style="display:none;">{{ (appointment.Address or ((appointment.HouseNo or '') ~ ' ' ~ (appointment.Street or '') ~ ' ' ~ (appointment.Brgy or '') ~ ' ' ~ (appointment.Municipality or '') ~ ' ' ~ (appointment.City or '')))|trim }}</td>
                             <td style="display:none;">{{ appointment.ContactNumber }}</td>
                             <td style="display:none;">{{ appointment.Nationality }}</td>
                             <td style="display:none;">{{ appointment.Religion }}</td>

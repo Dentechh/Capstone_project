@@ -7,8 +7,29 @@
     <title>Capizonda Dental Clinic</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="preload"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+        as="style" onload="this.rel='stylesheet'">
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+        media="print" onload="this.media='all'">
+    <!-- Prevent icon FOUC: hide material-symbols until the web font loads -->
+    <style>
+        .material-symbols-rounded { visibility: hidden !important; }
+        html.fonts-loaded .material-symbols-rounded { visibility: visible !important; }
+    </style>
+    <script>
+        (function () {
+            function reveal() {
+                document.documentElement.classList.add('fonts-loaded');
+            }
+            if (document.fonts && document.fonts.status === 'loaded') {
+                reveal();
+            } else if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(reveal).catch(reveal);
+            }
+        })();
+    </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
@@ -463,30 +484,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
 
                         <!-- Address -->
-                        <div class="adm-row3">
-                            <div class="form-group">
-                                <label for="admHouseNo">House No.</label>
-                                <input type="text" id="admHouseNo" name="House_No" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="admStreet">Street</label>
-                                <input type="text" id="admStreet" name="Street" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="admBrgy">Barangay</label>
-                                <input type="text" id="admBrgy" name="Brgy" class="form-control">
-                            </div>
-                        </div>
-
-                        <div class="adm-row2">
-                            <div class="form-group">
-                                <label for="admMunicipality">Municipality/City</label>
-                                <input type="text" id="admMunicipality" name="Municipality" class="form-control">
-                            </div>
-                            <div class="form-group">
-                                <label for="admCity">Province</label>
-                                <input type="text" id="admCity" name="City" class="form-control">
-                            </div>
+                        <div class="form-group">
+                            <label for="admAddress">Address <span class="adm-req" aria-hidden="true">*</span></label>
+                            <input type="text" id="admAddress" name="Address" class="form-control"
+                                placeholder="House No., Street, Barangay, Municipality/City, Province">
                         </div>
 
                         <div class="adm-row2">
@@ -1919,11 +1920,7 @@ resetPasswordBtn.addEventListener("click", async () => {
             setInput('admLastName', info.LastName);
             setInput('admContactNumber', info.ContactNumber);
             setInput('admAge', info.Age);
-            setInput('admHouseNo', info.HouseNo);
-            setInput('admStreet', info.Street);
-            setInput('admBrgy', info.Brgy || info.Barangay);
-            setInput('admMunicipality', info.Municipality);
-            setInput('admCity', info.City);
+            setInput('admAddress', info.Address);
             setInput('admNationality', info.Nationality);
             setInput('admDentistName', info.DentistName);
 
@@ -2056,8 +2053,11 @@ resetPasswordBtn.addEventListener("click", async () => {
         const apptModal = document.getElementById('newApptModal');
         if (apptModal) {
             apptModal.querySelectorAll('.adm-date-native').forEach(function (input) {
-                input.style.display = 'none';
-                input.removeAttribute('required');
+                // Only hide the native input when flatpickr actually took over.
+                if (input._flatpickr) {
+                    input.style.display = 'none';
+                    input.removeAttribute('required');
+                }
             });
         }
     }

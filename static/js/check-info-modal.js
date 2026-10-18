@@ -64,12 +64,28 @@ let currentCheckInfoPatientId = "";
                     ".ci-muted{color:#6b7c93;font-size:12px;}",
                     ".ci-badge--follow{background:#e8f0fe;color:#0d47a1;}",
                     ".ci-sub > td{background:#f6f9fd;padding:12px 18px !important;text-align:left !important;}",
-                    ".ci-pay-form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}",
-                    ".ci-pay-form label{font-size:12px;font-weight:700;color:#546e7a;}",
-                    ".ci-pay-form input,.ci-pay-form select{padding:7px 10px;border:1px solid #cfd8e3;border-radius:8px;font:inherit;}",
-                    ".ci-pay-form input{width:130px;}",
-                    ".ci-hist{width:100%;max-width:520px;border-collapse:collapse;font-size:13px;}",
-                    ".ci-hist th,.ci-hist td{padding:6px 10px;text-align:left;border-bottom:1px solid #e3eaf3;}"
+                    ".ci-pay-panel{display:flex;flex-wrap:wrap;gap:14px;padding:12px 16px;width:100%;box-sizing:border-box;background:#f8fafc;border:1px solid #dbe4ef;border-radius:10px;align-items:center;}",
+                    ".ci-pay-fields{display:flex;flex-wrap:wrap;gap:12px;align-items:center;flex:1 1 auto;}",
+                    ".ci-pay-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;color:#546e7a;white-space:nowrap;}",
+                    "#checkInfoModal .ci-pay-field input{height:36px;padding:0 11px;border:1px solid #cfd8e3;border-radius:8px;font:inherit;color:#1f2937;background:#fff;box-sizing:border-box;width:160px;min-width:0;display:inline-block;transition:border-color .15s ease,box-shadow .15s ease;}",
+                    "#checkInfoModal .ci-pay-field select{height:36px;padding:0 28px 0 11px;border:1px solid #cfd8e3;border-radius:8px;font:inherit;color:#1f2937;background:#fff url('data:image/svg+xml;charset=UTF-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22></polyline></svg>') no-repeat right 11px center;background-size:16px;-webkit-appearance:none;appearance:none;box-sizing:border-box;width:160px;min-width:0;display:inline-block;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease;}",
+                    "#checkInfoModal .ci-pay-field input:focus,#checkInfoModal .ci-pay-field select:focus{border-color:#0d47a1;box-shadow:0 0 0 3px rgba(13,71,161,.15);outline:none;}",
+                    "@keyframes ci-panel-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}",
+                    ".ci-sub{animation:ci-panel-in 0.25s ease both;}",
+                    "@keyframes ci-pay-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}",
+                    ".ci-pay-spinner{display:none;width:14px;height:14px;margin-right:6px;vertical-align:-1px;border:2px solid #cbd5e1;border-top-color:#0d47a1;border-radius:50%;}",
+                    ".ci-pay-busy .ci-pay-spinner{display:inline-block;animation:ci-pay-spin 0.8s linear infinite;}",
+                    ".ci-pay-busy .ci-pay-label{opacity:0.55;}",
+                    ".ci-pay-busy .btn-action{opacity:0.55;cursor:not-allowed;}",
+                    "#checkInfoModal .ci-pay-field .adm-select{position:relative;width:160px;margin:0;}",
+                    "#checkInfoModal .ci-pay-field .adm-select>select{width:100%;min-width:0;}",
+                    ".ci-pay-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;white-space:nowrap;}",
+                    ".ci-hist-panel{display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#f8fafc;border:1px solid #dbe4ef;border-radius:10px;}",
+                    ".ci-hist-title{font-size:13px;font-weight:700;color:#1f2937;}",
+                    ".ci-hist{width:100%;max-width:520px;border-collapse:separate;border-spacing:0;font-size:13px;border:1px solid #e3eaf3;border-radius:8px;overflow:hidden;}",
+                    ".ci-hist th{padding:8px 10px;text-align:left;background:#eef3fa;color:#475569;font-weight:700;border-bottom:1px solid #e3eaf3;}",
+                    ".ci-hist td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#1f2937;}",
+                    ".ci-hist tbody tr:last-child td{border-bottom:none;}"
                 ].join("");
                 document.head.appendChild(st);
             })();
@@ -105,17 +121,27 @@ let currentCheckInfoPatientId = "";
                 if (bal <= 0) { showToast("This procedure is already fully paid."); return; }
 
                 const sub = ciInsertSubRow(index, "ci-pay-" + index,
-                    '<div class="ci-pay-form">' +
-                    '<label>Amount received<br><input type="number" class="ci-pay-amount" min="0.01" max="' + bal + '" step="0.01" placeholder="' + bal + '"></label>' +
-                    '<label>Paid via<br><select class="ci-pay-method">' +
+                    '<div class="ci-pay-panel">' +
+                    '<div class="ci-pay-fields">' +
+                    '<label class="ci-pay-field"><span class="ci-pay-label">Amount received</span><input type="number" class="ci-pay-amount" min="0.01" max="' + bal + '" step="0.01" placeholder="' + bal + '"></label>' +
+                    '<label class="ci-pay-field"><span class="ci-pay-label">Paid via</span><select class="ci-pay-method">' +
                     '<option value="Cash">Cash</option><option value="GCash">GCash</option>' +
                     '<option value="BPI">BPI</option><option value="BDO">BDO</option></select></label>' +
-                    '<button type="button" class="btn-action accept" onclick="ciSubmitPayment(' + index + ', false)">Record payment</button>' +
-                    '<button type="button" class="btn-action" onclick="ciSubmitPayment(' + index + ', true)">Mark as paid (' + ciMoney(bal) + ')</button>' +
-                    '<button type="button" class="btn-action" onclick="ciClosePanels(' + index + ')">Cancel</button>' +
+                    '</div>' +
+                    '<div class="ci-pay-actions">' +
+                    '<button type="button" class="btn-action ci-btn--edit" onclick="ciSubmitPayment(' + index + ', false)"><span class="ci-pay-label">Record payment</span><span class="ci-pay-spinner" aria-hidden="true"></span></button>' +
+                    '<button type="button" class="btn-action accept ci-btn--save" onclick="ciSubmitPayment(' + index + ', true)"><span class="ci-pay-label">Mark as paid (' + ciMoney(bal) + ')</span><span class="ci-pay-spinner" aria-hidden="true"></span></button>' +
+                    '<button type="button" class="btn-action ci-btn--cancel" onclick="ciClosePanels(' + index + ')">Cancel</button>' +
+                    '</div>' +
                     '</div>');
                 const amt = sub && sub.querySelector(".ci-pay-amount");
                 if (amt) amt.focus();
+                // Turn the native "Paid via" popup into the app's custom,
+                // stylable option list (Cash / GCash / BPI / BDO) so the
+                // options match the rest of the design instead of the OS look.
+                if (typeof window.admEnhanceSelects === "function") {
+                    window.admEnhanceSelects(sub, ".ci-table-scroll", false);
+                }
             }
 
             async function ciSubmitPayment(index, markPaid) {
@@ -142,6 +168,7 @@ let currentCheckInfoPatientId = "";
                 if (!markPaid) formData.append("amount", String(amount));
 
                 ciPayBusy = true;
+                panel.classList.add("ci-pay-busy");
                 panel.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
                 try {
                     const response = await fetch(markPaid ? "/admin/mark_plan_paid" : "/admin/record_payment",
@@ -154,11 +181,13 @@ let currentCheckInfoPatientId = "";
                         await openCheckInfoModal(currentCheckInfoPatientId);
                     } else {
                         showToast(result.message || "Could not record the payment.");
+                        panel.classList.remove("ci-pay-busy");
                         panel.querySelectorAll("button").forEach(function (b) { b.disabled = false; });
                     }
                 } catch (error) {
                     console.error("Record payment error:", error);
                     showToast("Could not record the payment. Please try again.");
+                    panel.classList.remove("ci-pay-busy");
                     panel.querySelectorAll("button").forEach(function (b) { b.disabled = false; });
                 } finally {
                     ciPayBusy = false;
@@ -172,13 +201,13 @@ let currentCheckInfoPatientId = "";
                 const pays = (item && Array.isArray(item.payments)) ? item.payments : [];
                 if (!pays.length) { showToast("No payments recorded yet."); return; }
 
-                let html = '<strong>Payment history</strong>' +
+                let html = '<div class="ci-hist-panel"><span class="ci-hist-title">Payment history</span>' +
                     '<table class="ci-hist"><thead><tr><th>Date</th><th>Amount</th><th>Paid via</th></tr></thead><tbody>';
                 pays.forEach(function (p) {
                     html += "<tr><td>" + escAttr(p.date || "-") + "</td><td>" + ciMoney(p.amount) +
                         "</td><td>" + escAttr(p.method || "-") + "</td></tr>";
                 });
-                html += "</tbody></table>";
+                html += "</tbody></table></div>";
                 ciInsertSubRow(index, "ci-hist-" + index, html);
             }
 
@@ -483,10 +512,10 @@ let currentCheckInfoPatientId = "";
                     const statusCell = followUp ? '<span class="ci-badge ci-badge--follow">Follow-up</span>' : statusBadge(item.status);
                     const canPay = !followUp && (parseFloat(item.balance) || 0) > 0;
                     const payBtn = canPay
-                        ? `<button type="button" class="btn-action accept ci-ico" title="Record payment" aria-label="Record payment" onclick="ciTogglePayPanel(${index})"><span class="material-symbols-rounded" aria-hidden="true">payments</span></button>`
+                        ? `<button type="button" class="btn-action accept ci-btn--save ci-ico" title="Record payment" aria-label="Record payment" onclick="ciTogglePayPanel(${index})"><span class="material-symbols-rounded" aria-hidden="true">payments</span></button>`
                         : "";
                     const histBtn = hasPayments
-                        ? `<button type="button" class="btn-action ci-ico" title="Payment history" aria-label="Payment history" onclick="ciToggleHistory(${index})"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></button>`
+                        ? `<button type="button" class="btn-action ci-btn--view ci-ico" title="Payment history" aria-label="Payment history" onclick="ciToggleHistory(${index})"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span></button>`
                         : "";
 
                     tr.innerHTML = `

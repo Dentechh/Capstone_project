@@ -25,7 +25,7 @@
                                 // on the floor. Creating it per response keeps it
                                 // correct on every lazy-load and Load More pass.
                                 // Static markup only -- no patient data is involved.
-                                const APPT_COLUMNS = 24;   // 7 visible + 17 hidden
+                                const APPT_COLUMNS = 20;   // 7 visible + 13 hidden
                                 const APPT_EMPTY_HTML =
                                     '<tr class="appt-empty-row">' +
                                     '<td colspan="' + APPT_COLUMNS + '">' +

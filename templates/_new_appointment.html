@@ -113,6 +113,27 @@
                                         class="form-control adm-date-native">
                                 </div>
 
+                                <!-- Contact & Personal Info: only shown for new patients,
+                                   existing patients keep these on file (auto-filled by JS). -->
+                                <div class="adm-row3">
+                                    <div class="form-group">
+                                        <label for="admContactNumber">Contact Number</label>
+                                        <input type="tel" id="admContactNumber" name="Contact_number" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admAge">Age</label>
+                                        <input type="number" id="admAge" name="Age" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="admSexSelect">Sex</label>
+                                        <select id="admSexSelect" name="Sex" class="form-control">
+                                            <option value="" disabled selected>Sex</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                        </select>
+                                    </div>
+                                </div>
+
                             </div>
 
                             <div id="admDuplicateWarning"
@@ -128,51 +149,13 @@
                             </div>
 
 
-                            <!-- Contact & Personal Info -->
-                            <div class="adm-row3">
-                                <div class="form-group">
-                                    <label for="admContactNumber">Contact Number</label>
-                                    <input type="tel" id="admContactNumber" name="Contact_number" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admAge">Age</label>
-                                    <input type="number" id="admAge" name="Age" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admSexSelect">Sex</label>
-                                    <select id="admSexSelect" name="Sex" class="form-control">
-                                        <option value="" disabled selected>Sex</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                    </select>
-                                </div>
-                            </div>
+                            <!-- Contact & Personal Info (moved into New Patient section below) -->
 
                             <!-- Address -->
-                            <div class="adm-row3">
-                                <div class="form-group">
-                                    <label for="admHouseNo">House No.</label>
-                                    <input type="text" id="admHouseNo" name="House_No" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admStreet">Street</label>
-                                    <input type="text" id="admStreet" name="Street" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admBrgy">Barangay</label>
-                                    <input type="text" id="admBrgy" name="Brgy" class="form-control">
-                                </div>
-                            </div>
-
-                            <div class="adm-row2">
-                                <div class="form-group">
-                                    <label for="admMunicipality">Municipality/City</label>
-                                    <input type="text" id="admMunicipality" name="Municipality" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admCity">Province</label>
-                                    <input type="text" id="admCity" name="City" class="form-control">
-                                </div>
+                            <div class="form-group">
+                                <label for="admAddress">Address <span class="adm-req" aria-hidden="true">*</span></label>
+                                <input type="text" id="admAddress" name="Address" class="form-control"
+                                    placeholder="House No., Street, Barangay, Municipality/City, Province">
                             </div>
 
                             <div class="adm-row2">

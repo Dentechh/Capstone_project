@@ -2876,6 +2876,105 @@ body.dark-mode .td-records .td-records__table td .dentist-field__toggle:hover {
     }
 }
 
+/* =========================================================
+   Treatment Records: horizontal row, scrollable on mobile
+   Keeps every input in one horizontal row (table layout)
+   and lets the row scroll sideways on phones so all columns
+   - including the Delete button at the far right - stay
+   reachable. Desktop/tablet layout is untouched.
+   ========================================================= */
+@media (max-width: 768px) {
+    .td-records__scroll {
+        overflow-x: auto;
+        overflow-y: hidden;
+        /* Padding so the last column scrolls fully into view
+           instead of stopping flush against the screen edge. */
+        padding-right: 16px;
+    }
+
+    .td-records .td-records__table {
+        table-layout: fixed;
+        width: max-content;
+        min-width: 100%;
+    }
+
+    /* Keep the Actions column (with Delete) at a fixed width so
+       the button is never squeezed out of the row. */
+    .td-records .td-records__table td.td-row-actions,
+    .td-records .td-records__table th:last-child {
+        min-width: 64px;
+        width: 64px;
+    }
+
+    /* Inputs stay readable inside their fixed cells. */
+    .td-records .td-records__table td input,
+    .td-records .td-records__table td select {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    /* Header buttons stay on one row, right-aligned. */
+    .td-records__actions {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        gap: 8px;
+        width: auto;
+    }
+
+    /* Table header labels on mobile: keep them readable and never
+       colliding with neighbouring column labels while scrolling. */
+    .td-records .td-records__table thead th {
+        font-size: 9.5px;
+        padding: 8px 6px;
+        letter-spacing: 0.4px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 0;
+    }
+
+    .td-records .td-records__add,
+    .td-records .td-records__submit {
+        width: auto;
+        white-space: nowrap;
+    }
+}
+
+/* Delete button: prominent destructive icon button on all screen sizes. */
+.td-records .td-delete-row {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    margin: 0 auto;
+    border-radius: 8px;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #b91c1c;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.td-records .td-delete-row > .material-symbols-rounded {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.td-records .td-delete-row:hover {
+    background: #fee2e2;
+    border-color: #f87171;
+    color: #991b1b;
+}
+
+.td-records .td-delete-row:active {
+    transform: translateY(0);
+}
+
 /* Status Badge */
 .badge {
     display: inline-block;

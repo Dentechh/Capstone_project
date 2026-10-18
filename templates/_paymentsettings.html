@@ -1,41 +1,682 @@
 <style>
-    .ps-overlay { position: fixed; inset: 0; z-index: 10000; display: none; align-items: center; justify-content: center; background: rgba(15, 30, 55, .55); padding: 16px; }
-    .ps-card { background: #fff; color: #1b2b44; width: min(1000px, 96vw); max-height: 92vh; overflow: auto; border-radius: 18px; padding: 24px 26px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
-    .ps-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .ps-head h3 { margin: 0; font-size: 20px; color: #0d47a1; }
-    .ps-close { border: 1px solid #d5dde8; background: #f4f7fb; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-    .ps-sub { margin: 6px 0 18px; font-size: 13px; color: #546e7a; }
-    .ps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
-    .ps-channel { border: 1px solid #dde5f0; border-radius: 14px; padding: 16px; background: #f9fbfe; }
-    .ps-channel h4 { margin: 0 0 12px; font-size: 16px; color: #0d47a1; }
-    .ps-channel label { display: block; font-size: 12px; font-weight: 700; color: #546e7a; margin: 10px 0 4px; }
-    .ps-channel input[type="text"] { width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid #cfd8e3; border-radius: 9px; font: inherit; }
-    .ps-qr-box { margin-top: 12px; text-align: center; }
-    .ps-qr-box img { max-width: 100%; max-height: 190px; border-radius: 10px; border: 1px solid #dde5f0; background: #fff; }
-    .ps-qr-empty { font-size: 12px; color: #78909c; padding: 18px 0; }
-    .ps-remove { display: flex !important; align-items: center; gap: 6px; font-weight: 600 !important; margin-top: 8px !important; }
-    .ps-foot { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    .ps-msg { margin-right: auto; font-size: 13px; color: #546e7a; }
-    .ps-btn { padding: 10px 20px; border-radius: 10px; border: 1px solid #cfd8e3; background: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-    .ps-btn--save { background: #0d47a1; border-color: #0d47a1; color: #fff; }
-    .ps-btn[disabled] { opacity: .6; cursor: default; }
+    /* ========================================================
+       PAYMENT SETTINGS MODAL — redesigned contents
+       Classes kept identical so payment-settings.js keeps working.
+       ======================================================== */
+
+    .ps-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, .5);
+        padding: 24px;
+        opacity: 0;
+        transition: opacity .22s ease, display .22s ease;
+        allow-discrete: display;
+        transition-behavior: allow-discrete;
+    }
+
+    .ps-overlay[style*="flex"] {
+        opacity: 1;
+    }
+
+    .ps-card {
+        background: #ffffff;
+        color: #1e293b;
+        width: min(980px, 94vw);
+        max-height: 90vh;
+        overflow: auto;
+        border-radius: 22px;
+        padding: 0;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, .22);
+        border: 1px solid rgba(13, 71, 161, .08);
+        transform: translateY(14px) scale(.97);
+        opacity: 0;
+        transition: transform .22s ease, opacity .22s ease;
+    }
+
+    .ps-overlay[style*="flex"] .ps-card {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    .ps-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 26px 30px 0;
+    }
+
+    .ps-head-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .ps-head-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #eef4ff;
+        color: #0d47a1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 2px 8px rgba(13, 71, 161, .14);
+    }
+
+    .ps-head h3 {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 800;
+        color: #0d47a1;
+        letter-spacing: .2px;
+    }
+
+    .ps-sub {
+        margin: 16px 30px 0;
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.55;
+    }
+
+    .ps-sub strong {
+        color: #334155;
+    }
+
+    .ps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+        padding: 24px 30px 0;
+    }
+
+    .ps-channel {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        background: #ffffff;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, .04);
+        transition: border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+    }
+
+    .ps-channel:hover {
+        border-color: #c7d6ea;
+        box-shadow: 0 6px 20px rgba(13, 71, 161, .1);
+    }
+
+    .ps-channel__top {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .ps-channel__icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .ps-channel.gcash .ps-channel__icon { background: #e8f7ef; color: #047857; }
+    .ps-channel.bpi    .ps-channel__icon { background: #eef6ff; color: #0d47a1; }
+    .ps-channel.bdo    .ps-channel__icon { background: #fdf2e3; color: #b45309; }
+
+    .ps-channel h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+        color: #0d47a1;
+        letter-spacing: .3px;
+    }
+
+    .ps-channel__label {
+        margin-left: auto;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        color: #94a3b8;
+    }
+
+    .ps-channel .ps-field-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        color: #475569;
+        margin: 0 0 6px;
+        letter-spacing: .3px;
+        text-transform: uppercase;
+    }
+
+    .ps-channel .ps-field-label input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        margin-top: 6px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font: inherit;
+        font-size: 14px;
+        color: #1e293b;
+        background: #f8fafc;
+        display: block;
+        transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .ps-channel .ps-field-label input[type="text"]:focus {
+        outline: none;
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, .12);
+        background: #ffffff;
+    }
+
+    .ps-channel .ps-field-label input[type="text"]::placeholder {
+        color: #94a3b8;
+    }
+
+    .ps-qr-area {
+        margin-top: 4px;
+    }
+
+    .ps-qr-box {
+        margin-top: 8px;
+        text-align: center;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
+        min-height: 130px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color .18s ease, background .18s ease;
+        position: relative;
+    }
+
+    .ps-qr-box.has-preview {
+        border-style: solid;
+        border-color: #0d47a1;
+        background: #f0f7ff;
+        padding: 10px;
+    }
+
+    .ps-qr-box img {
+        max-width: 110px;
+        max-height: 110px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+    }
+
+    .ps-qr-empty {
+        font-size: 12px;
+        color: #94a3b8;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .ps-qr-empty .material-symbols-rounded {
+        font-size: 18px;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+
+    .ps-file-label {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #0d47a1;
+        font-size: 12.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: border-color .18s ease, background .18s ease, color .18s ease, box-shadow .12s ease;
+    }
+
+    .ps-file-label input[type="file"] {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 2;
+        margin: 0;
+    }
+
+    .ps-file-label:hover {
+        border-color: #0d47a1;
+        background: #eef4ff;
+        box-shadow: 0 2px 6px rgba(13, 71, 161, .08);
+    }
+
+    .ps-file-label .material-symbols-rounded {
+        font-size: 16px;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 22;
+        position: relative;
+        z-index: 1;
+    }
+
+    .ps-hint {
+        font-size: 11.5px;
+        color: #94a3b8;
+        margin: 6px 0 0;
+        line-height: 1.4;
+    }
+
+    .ps-remove {
+        margin-top: 10px;
+        font-size: 12.5px;
+        color: #475569;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        user-select: none;
+        transition: color .18s ease;
+    }
+
+    .ps-remove input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #0d47a1;
+        border: 1px solid #cbd5e1;
+        border-radius: 5px;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: border-color .15s ease, background .15s ease;
+    }
+
+    .ps-remove input[type="checkbox"]:checked {
+        background: #0d47a1;
+        border-color: #0d47a1;
+    }
+
+    .ps-remove input[type="checkbox"]:focus-visible {
+        outline: 2px solid #0d47a1;
+        outline-offset: 2px;
+        border-radius: 4px;
+    }
+
+    .ps-remove:hover {
+        color: #0d47a1;
+    }
+
+    .ps-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 4px;
+        padding: 22px 30px 28px;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .ps-msg {
+        font-size: 12.5px;
+        color: #64748b;
+        min-height: 18px;
+        flex: 1;
+        line-height: 1.4;
+    }
+
+    .ps-msg[aria-live="polite"]::-moz-placeholder,
+    .ps-msg:empty::before {
+        content: "";
+    }
+
+    .ps-btn {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        transition: background .18s ease, border-color .18s ease, color .18s ease, transform .12s ease;
+        flex-shrink: 0;
+    }
+
+    .ps-btn:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+
+    .ps-btn--save {
+        background: #0d47a1;
+        border-color: #0a3b7d;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(30, 64, 175, .28), inset 0 1px 0 rgba(255, 255, 255, .18);
+    }
+
+    .ps-btn--save:hover {
+        background: #0a3b7d;
+        border-color: #0a3b7d;
+        color: #ffffff;
+        box-shadow: 0 6px 20px rgba(30, 64, 175, .38);
+        transform: translateY(-1px);
+    }
+
+    .ps-btn--save:active {
+        transform: translateY(0);
+    }
+
+    .ps-btn--save:focus-visible {
+        outline: 2px solid #0d47a1;
+        outline-offset: 3px;
+    }
+
+    .ps-btn[disabled] {
+        opacity: .65;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Empty state when there are no channels */
+    .ps-empty {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 56px 20px;
+        color: #64748b;
+        text-align: center;
+    }
+
+    .ps-empty .material-symbols-rounded {
+        font-size: 40px;
+        opacity: .45;
+        margin-bottom: 12px;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 40;
+    }
+
+    /* Dark mode */
+    body.dark-mode .ps-card {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, .08);
+    }
+
+    body.dark-mode .ps-head h3 {
+        color: #60a5fa;
+    }
+
+    body.dark-mode .ps-head-icon {
+        background: #1e3a8a;
+        color: #93c5fd;
+    }
+
+    body.dark-mode .ps-sub {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .ps-sub strong {
+        color: #cbd5e1;
+    }
+
+    body.dark-mode .ps-channel {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, .08);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .2);
+    }
+
+    body.dark-mode .ps-channel:hover {
+        border-color: rgba(255, 255, 255, .18);
+        box-shadow: 0 6px 20px rgba(13, 71, 161, .15);
+    }
+
+    body.dark-mode .ps-channel h4 {
+        color: #93c5fd;
+    }
+
+    body.dark-mode .ps-channel__label {
+        color: #64748b;
+    }
+
+    body.dark-mode .ps-channel label {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .ps-channel input[type="text"] {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, .14);
+    }
+
+    body.dark-mode .ps-channel input[type="text"]:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        background: #0f172a;
+    }
+
+    body.dark-mode .ps-channel input[type="text"]::placeholder {
+        color: #64748b;
+    }
+
+    body.dark-mode .ps-qr-box {
+        background: #0f172a;
+        border-color: rgba(255, 255, 255, .1);
+    }
+
+    body.dark-mode .ps-qr-box.has-preview {
+        border-color: #3b82f6;
+        background: #0b1120;
+    }
+
+    body.dark-mode .ps-qr-box img {
+        border-color: rgba(255, 255, 255, .12);
+        background: #0f172a;
+    }
+
+    body.dark-mode .ps-qr-empty {
+        color: #64748b;
+    }
+
+    body.dark-mode .ps-channel .ps-field-label {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .ps-channel .ps-field-label input[type="text"] {
+        background: #0f172a;
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, .14);
+    }
+
+    body.dark-mode .ps-channel .ps-field-label input[type="text"]:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+        background: #0f172a;
+    }
+
+    body.dark-mode .ps-channel .ps-field-label input[type="text"]::placeholder {
+        color: #64748b;
+    }
+
+    body.dark-mode .ps-file-label {
+        background: #0f172a;
+        border-color: rgba(255, 255, 255, .14);
+        color: #93c5fd;
+    }
+
+    body.dark-mode .ps-file-label:hover {
+        border-color: #3b82f6;
+        background: #1e3a8a;
+        color: #dbeafe;
+        box-shadow: 0 2px 6px rgba(13, 71, 161, .15);
+    }
+
+    body.dark-mode .ps-hint {
+        color: #64748b;
+    }
+
+    body.dark-mode .ps-remove input[type="checkbox"] {
+        background: #0f172a;
+        border-color: rgba(255, 255, 255, .14);
+    }
+
+    body.dark-mode .ps-remove input[type="checkbox"]:checked {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    body.dark-mode .ps-remove {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .ps-remove:hover {
+        color: #93c5fd;
+    }
+
+    body.dark-mode .ps-foot {
+        border-top-color: rgba(255, 255, 255, .08);
+    }
+
+    body.dark-mode .ps-msg {
+        color: #94a3b8;
+    }
+
+    body.dark-mode .ps-btn {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, .12);
+        color: #e2e8f0;
+    }
+
+    body.dark-mode .ps-btn:hover {
+        background: #334155;
+        border-color: rgba(255, 255, 255, .25);
+        color: #f8fafc;
+    }
+
+    body.dark-mode .ps-btn--save {
+        background: #2563eb;
+        border-color: #1e40af;
+        color: #eff6ff;
+        box-shadow: 0 4px 14px rgba(30, 64, 175, .35), inset 0 1px 0 rgba(255, 255, 255, .12);
+    }
+
+    body.dark-mode .ps-btn--save:hover {
+        background: #3b82f6;
+        border-color: #2563eb;
+        color: #eff6ff;
+        box-shadow: 0 6px 20px rgba(30, 64, 175, .45);
+    }
+
+    /* Scrollbar for the modal content area */
+    .ps-card::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .ps-card::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .ps-card::-webkit-scrollbar-thumb {
+        background: rgba(13, 71, 161, .25);
+        border-radius: 10px;
+    }
+
+    body.dark-mode .ps-card::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, .1);
+    }
+
+    @media (max-width: 560px) {
+        .ps-grid {
+            grid-template-columns: 1fr;
+            padding: 16px 18px 0;
+        }
+
+        .ps-head {
+            padding: 20px 18px 0;
+        }
+
+        .ps-sub {
+            margin: 14px 18px 0;
+        }
+
+        .ps-foot {
+            padding: 18px 18px 24px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .ps-foot .ps-msg {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .ps-foot .ps-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .ps-card {
+            width: min(92vw, 560px);
+            max-height: 94vh;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .ps-channel {
+            padding: 16px;
+        }
+    }
 </style>
 
 <div id="paymentSettingsModal" class="ps-overlay" role="dialog" aria-modal="true" aria-labelledby="psTitle">
     <div class="ps-card">
         <div class="ps-head">
-            <h3 id="psTitle">Payment Settings</h3>
-            <button type="button" class="ps-close" onclick="closePaymentSettings()" aria-label="Close">
-                <span class="material-symbols-rounded" aria-hidden="true">close</span>
-            </button>
+            <div class="ps-head-wrap">
+                <span class="ps-head-icon" aria-hidden="true">
+                    <span class="material-symbols-rounded">account_balance_wallet</span>
+                </span>
+                <h3 id="psTitle">Payment Settings</h3>
+            </div>
+            <button type="button" class="modal-x" onclick="closePaymentSettings()" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg></button>
         </div>
-        <p class="ps-sub">This is what patients see when they press <strong>Pay Online</strong>. QR images must be PNG,
-            JPG or WebP, up to 300 KB each. A channel with no account number and no QR is hidden from patients.</p>
+        <p class="ps-sub">This is what patients see when they press <strong>Pay Online</strong>. QR images must be PNG, JPG or WebP, up to 300 KB each. A channel with no account number and no QR is hidden from patients.</p>
         <div id="psChannels" class="ps-grid"></div>
         <div class="ps-foot">
             <span id="psMsg" class="ps-msg" aria-live="polite"></span>
             <button type="button" class="ps-btn" onclick="closePaymentSettings()">Cancel</button>
-            <button type="button" class="ps-btn ps-btn--save" id="psSaveBtn" onclick="savePaymentSettings()">Save</button>
+            <button type="button" class="ps-btn ps-btn--save" id="psSaveBtn" onclick="savePaymentSettings()">Save changes</button>
         </div>
     </div>
 </div>

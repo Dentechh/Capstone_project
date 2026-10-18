@@ -14,13 +14,16 @@
 
     function setPreview(card, src) {
         var box = card.querySelector(".ps-qr-box");
+        var hasImage = src && /^(data:image\/(png|jpeg|webp);base64,|blob:)/.test(src);
         box.textContent = "";
-        if (src && /^(data:image\/(png|jpeg|webp);base64,|blob:)/.test(src)) {
+        if (hasImage) {
+            box.classList.add("has-preview");
             var img = document.createElement("img");
             img.alt = "QR code preview";
             img.src = src;
             box.appendChild(img);
         } else {
+            box.classList.remove("has-preview");
             var empty = document.createElement("div");
             empty.className = "ps-qr-empty";
             empty.textContent = "No QR image uploaded";
@@ -31,6 +34,7 @@
     function field(card, labelText, name, value) {
         var label = document.createElement("label");
         label.textContent = labelText;
+        label.className = "ps-field-label";
         var input = document.createElement("input");
         input.type = "text";
         input.name = name;
@@ -58,6 +62,7 @@
             field(card, "Account number", "account_number", c.account_number);
 
             var fileLabel = document.createElement("label");
+            fileLabel.className = "ps-file-label";
             fileLabel.textContent = "QR image";
             var file = document.createElement("input");
             file.type = "file";

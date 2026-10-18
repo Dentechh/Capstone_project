@@ -1011,14 +1011,22 @@ body.dark-mode .btn-login {
           }
 
         body.dark-mode .cta-box {
-               background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
-               transition: background 0.4s ease;
-               max-width: 500px;
-               width: 100%;
-               margin-bottom: 250px;
-               margin-top: 200px;
-               padding: 70px;
-           }
+            background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 100%);
+            transition: background 0.4s ease;
+            max-width: 500px;
+            width: 100%;
+            margin-bottom: 250px;
+            margin-top: 200px;
+            padding: 70px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+        }
 
           body.dark-mode .cta-box p {
               color: #e0e0e0;
@@ -1208,19 +1216,32 @@ body.dark-mode .btn-login {
          body.dark-mode #appointmentForm input[type="tel"],
          body.dark-mode #appointmentForm input[type="number"],
          body.dark-mode #appointmentForm input[type="date"],
-         body.dark-mode #appointmentForm input[type="datetime-local"],
+         body.dark-mode #appointmentForm input[type="datetime-local"] {
+             background: #1e1e1e;
+             color: #e0e0e0;
+             border-color: #555;
+             transition: all 0.3s ease;
+         }
          body.dark-mode #appointmentForm select {
-             background: #ffffff;
-             color: #000000;
-             border-color: #cccccc;
+             background: #1e1e1e
+                 url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+                 no-repeat right 10px center / 20px 20px;
+             color: #e0e0e0;
+             border-color: #555;
              transition: all 0.3s ease;
          }
 
          body.dark-mode #appointmentForm input:focus,
          body.dark-mode #appointmentForm select:focus {
              border-color: #64b5f6;
-             background: #ffffff;
-             color: #000000;
+             background: #1e1e1e;
+             color: #e0e0e0;
+         }
+         body.dark-mode #appointmentForm select:focus {
+             box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+             background: #1e1e1e
+                 url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+                 no-repeat right 10px center / 20px 20px;
          }
 
           body.dark-mode #signaturePad {
@@ -2849,7 +2870,9 @@ body.dark-mode .personal-info-grid input[type="date"]:focus {
     font-family: 'Kumbh Sans', sans-serif;
     cursor: pointer;
     box-sizing: border-box;
-    appearance: auto;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 .schedule-card .card-icon {
@@ -3729,6 +3752,18 @@ body.dark-mode #appointmentForm .flatpickr__toggle svg {
     fill: #64b5f6;
 }
 
+/* Admin appointment modals: flatpickr hides the native date input and shows
+   an .adm-date-alt alt input instead. flatpickr does not copy form-control
+   onto the alt input, so without an explicit width the birthday / appointment
+   date field can collapse on narrow mobile modals. Keep it full-width so it
+   stays visible everywhere. The #appointmentForm rules above are more specific
+   and continue to govern the patient form. */
+.adm-date-alt {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+}
+
 /* ==========================================================
    Patient info form - same setup as the admin appointment modal
    ========================================================== */
@@ -4004,8 +4039,7 @@ body.dark-mode #appointmentForm .form-group .flatpickr__toggle svg {
 #appointmentForm input[type="email"],
 #appointmentForm input[type="tel"],
 #appointmentForm input[type="number"],
-#appointmentForm input[type="date"],
-#appointmentForm select {
+#appointmentForm input[type="date"] {
     width: 100%;
     padding: 10px 12px;
     margin: 5px 0;
@@ -4016,12 +4050,45 @@ body.dark-mode #appointmentForm .form-group .flatpickr__toggle svg {
     transition: border-color 0.3s;
     background-color: #f1f8ff;
 }
+#appointmentForm select {
+    width: 100%;
+    padding: 12px 46px 12px 14px;
+    margin: 5px 0;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-family: 'Kumbh Sans', sans-serif;
+    font-weight: 600;
+    color: #0d47a1;
+    cursor: pointer;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    box-sizing: border-box;
+    background: #f1f8ff
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 10px center / 20px 20px;
+}
+
+#appointmentForm select:hover {
+    border-color: #0d47a1;
+    background: #e8f2ff
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 10px center / 20px 20px;
+}
 
 #appointmentForm input:focus,
 #appointmentForm select:focus {
     border-color: #0d47a1;
     outline: none;
     background-color: #f1f8ff;
+}
+#appointmentForm select:focus {
+    box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+    background: #e8f2ff
+        url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+        no-repeat right 10px center / 20px 20px;
 }
 
 /* Medical History Section Styling */
@@ -5261,6 +5328,12 @@ body.dark-mode .auth-card .footer-text a {
         margin-bottom: 50px;
         max-width: 400px;
     }
+
+    body.dark-mode .cta-box {
+        margin-top: 0;
+        margin-bottom: 50px;
+        max-width: 400px;
+    }
 }
 
 @media (max-width: 768px) {
@@ -5273,6 +5346,10 @@ body.dark-mode .auth-card .footer-text a {
     }
     
     .cta-box {
+        padding: 40px;
+    }
+
+    body.dark-mode .cta-box {
         padding: 40px;
     }
 }
@@ -6254,12 +6331,6 @@ body.dark-mode .auth-card .footer-text a {
         padding: 20px 15px;
     }
 
-    body.dark-mode .cta-box {
-        margin: 0;
-        margin-bottom: 30px;
-        margin-top: 10px;
-    }
-    
     .cta-box p {
         font-size: 14px;
     }
@@ -6356,7 +6427,13 @@ body.dark-mode .auth-card .footer-text a {
         padding: 15px;
         max-width: 300px;
     }
-    
+
+    body.dark-mode .cta-box {
+        margin: 0;
+        padding: 15px;
+        max-width: 300px;
+    }
+
     .cta-box p {
         font-size: 14px;
         margin-bottom: 15px;

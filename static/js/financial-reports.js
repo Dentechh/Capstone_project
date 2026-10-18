@@ -17,8 +17,13 @@
 
         // Which week / month / year is on screen for the Weekly, Monthly and
         // Yearly views. null month / year means "the current one".
-        let financialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
-        let financialChartRequestId = 0; // so a slow, older response can't overwrite a newer one
+let financialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let financialChartRequestId = 0; // so a slow, older response can't overwrite a newer one
+
+// Same picker state for the dashboard procedure charts (Procedures Performed,
+// Revenue by Procedure): week / month / year selection with prev-next stepping.
+let procNav = { period: 'overall', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let procChartRequestId = 0;
 
         function loadFinancialChart(period) {
             // Switching to a different period button starts at the current
@@ -184,6 +189,102 @@
             loadFinancialChart(n.period);
         }
 
+        // --- Dashboard procedure chart picker (mirrors financialNav) ---
+
+        // Shows the prev/next + month/year picker for Weekly / Monthly / Yearly.
+        function renderProcNav(period, rangeLabel) {
+            const nav = document.getElementById('procNav');
+            if (!nav) return;
+            const hasPicker = period === 'weekly' || period === 'monthly' || period === 'yearly';
+            nav.style.display = hasPicker ? 'flex' : 'none';
+            if (!hasPicker) return;
+            document.getElementById('procNavLabel').textContent = rangeLabel || '';
+            document.getElementById('procNavPrev').disabled = !procNav.canPrev;
+            document.getElementById('procNavNext').disabled = !procNav.canNext;
+
+            const label = document.getElementById('procNavLabel');
+            const monthSel = document.getElementById('procMonthSel');
+            const yearSel = document.getElementById('procYearSel');
+            const showYear = period === 'monthly' || period === 'yearly';
+            const showMonth = period === 'monthly';
+            label.style.display = (showYear || showMonth) ? 'none' : '';
+            setProcNavVisible(monthSel, showMonth);
+            setProcNavVisible(yearSel, showYear);
+
+            if (showYear && procNav.minYear != null) {
+                const selYear = period === 'monthly'
+                    ? Number((procNav.month || '').split('-')[0])
+                    : procNav.year;
+                yearSel.innerHTML = '';
+                for (let y = procNav.maxYear; y >= procNav.minYear; y--) {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    if (y === selYear) opt.selected = true;
+                    yearSel.appendChild(opt);
+                }
+            }
+            if (showMonth) {
+                const parts = (procNav.month || '').split('-');
+                const selYear = Number(parts[0]);
+                const selMonth = Number(parts[1]);
+                monthSel.innerHTML = '';
+                FIN_MONTH_NAMES.forEach(function (name, idx) {
+                    const opt = document.createElement('option');
+                    opt.value = idx + 1;
+                    opt.textContent = name;
+                    if (selYear === procNav.maxYear && idx + 1 > procNav.maxMonth) opt.disabled = true;
+                    if (idx + 1 === selMonth) opt.selected = true;
+                    monthSel.appendChild(opt);
+                });
+            }
+        }
+
+        // Show/hide a stepper dropdown. Same pattern as setFinNavVisible.
+        function setProcNavVisible(select, visible) {
+            if (!select) return;
+            select.style.display = visible ? '' : 'none';
+            const wrapper = select.closest('.adm-select');
+            if (wrapper) wrapper.style.display = visible ? '' : 'none';
+        }
+
+        // Called when the Month or Year dropdown changes.
+        function procNavPick() {
+            const n = procNav;
+            const yearSel = document.getElementById('procYearSel');
+            const monthSel = document.getElementById('procMonthSel');
+            if (n.period === 'yearly') {
+                n.year = Number(yearSel.value);
+            } else if (n.period === 'monthly') {
+                const y = Number(yearSel.value);
+                let m = Number(monthSel.value);
+                if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
+                n.month = y + '-' + String(m).padStart(2, '0');
+            } else {
+                return;
+            }
+            loadProcedureCharts(n.period);
+        }
+
+        // dir = -1 goes to the previous week / month / year, +1 to the next.
+        function procNavStep(dir) {
+            const n = procNav;
+            if ((dir < 0 && !n.canPrev) || (dir > 0 && !n.canNext)) return;
+
+            if (n.period === 'weekly') {
+                n.week = Math.max(0, n.week - dir);
+            } else if (n.period === 'monthly' && n.month) {
+                const parts = n.month.split('-');
+                const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + dir, 1);
+                n.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            } else if (n.period === 'yearly' && n.year) {
+                n.year = n.year + dir;
+            } else {
+                return;
+            }
+            loadProcedureCharts(n.period);
+        }
+
         function updateFinancialCards(totalIncome, totalOutstanding, unpaidProcedures) {
             const incomeEl = document.getElementById('finTotalIncome');
             const outstandingEl = document.getElementById('finTotalOutstanding');
@@ -344,20 +445,47 @@
         let procRevenueChartInstance = null;
 
         function loadProcedureCharts(period) {
+            // Switching to a different period button starts at the current
+            // week / month / year. Reloading the SAME period keeps the pick.
+            if (period !== procNav.period) {
+                procNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
+                    minYear: procNav.minYear, maxYear: procNav.maxYear, maxMonth: procNav.maxMonth };
+            }
+
             // Update active button state for procedure buttons
             document.querySelectorAll('.proc-period-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if (btn.dataset.period === period) btn.classList.add('active');
             });
 
-            fetch(`/admin/procedure_chart_data?period=${period}`)
+            const query = new URLSearchParams({ period: period });
+            if (period === 'weekly') query.set('week', procNav.week);
+            if (period === 'monthly' && procNav.month) query.set('month', procNav.month);
+            if (period === 'yearly' && procNav.year) query.set('year', procNav.year);
+
+            const requestId = ++procChartRequestId;
+
+            fetch(`/admin/procedure_chart_data?${query.toString()}`)
                 .then(response => response.json())
                 .then(data => {
+                    if (requestId !== procChartRequestId) return; // a newer request is in flight
                     if (data.success) {
                         updateBarChart('procedureCountChart', data.counts.labels, data.counts.data, 'Count', procCountChartInstance, (instance) => procCountChartInstance = instance, '#64B5F6');
                         updateBarChart('procedureRevenueChart', data.revenue.labels, data.revenue.data, 'Revenue (₱)', procRevenueChartInstance, (instance) => procRevenueChartInstance = instance, '#42A5F6');
+
+                        // Remember what the server resolved, then redraw the picker.
+                        procNav.week = data.week || 0;
+                        procNav.month = data.month || null;
+                        procNav.year = data.year || null;
+                        procNav.canPrev = !!data.can_prev;
+                        procNav.canNext = !!data.can_next;
+                        procNav.minYear = data.min_year;
+                        procNav.maxYear = data.max_year;
+                        procNav.maxMonth = data.max_month;
+                        renderProcNav(period, data.range_label);
                     }
-                });
+                })
+                .catch(err => console.error('Failed to load procedure charts:', err));
         }
 
         /* Mix a hex colour toward white. Used for the bar gradient's light end. */

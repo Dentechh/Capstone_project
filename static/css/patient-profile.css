@@ -544,52 +544,231 @@ body.dark-mode .modal-body .btn-action {
     border-color: rgba(100, 181, 246, 0.3);
 }
 
-/* GCash button */
-.gcash-btn {
-    background: var(--navy);
-    color: white;
+/* GCash / Pay Online action button (payments table row) */
+.gcash-btn,
+.pay-online-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    color: #fff;
     border: none;
     padding: 8px 16px;
-    border-radius: 8px;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
     cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 600;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 7px rgba(13, 71, 161, 0.28);
 }
 
-.gcash-btn:hover {
-    background: var(--navy-dark);
+.gcash-btn svg,
+.pay-online-btn svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.gcash-btn:hover,
+.pay-online-btn:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 11px rgba(13, 71, 161, 0.38);
+    filter: brightness(1.06);
 }
 
-/* Dark mode GCash button */
-body.dark-mode .gcash-btn {
-    background: #1565c0;
+.gcash-btn:active,
+.pay-online-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+body.dark-mode .gcash-btn,
+body.dark-mode .pay-online-btn {
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
     color: #ffffff;
 }
 
-body.dark-mode .gcash-btn:hover {
-    background: #0d47a1;
+body.dark-mode .gcash-btn:hover,
+body.dark-mode .pay-online-btn:hover {
+    background: linear-gradient(135deg, #1e76d6 0%, #1565c0 100%);
 }
 
-/* Paid/Unpaid status pills */
+/* Pay column in the payments table */
+.payment-table .pay-col {
+    text-align: center;
+}
+
+/* Empty state for the payments table */
+.payment-empty {
+    text-align: center;
+    padding: 44px 16px;
+    color: #64748b;
+}
+.payment-empty .material-symbols-rounded {
+    font-size: 44px;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+    display: block;
+    opacity: 0.6;
+}
+
+/* Paid/Unpaid status pills — enhanced */
 .payment-table .paid,
 .payment-table .unpaid {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
 }
 
-.payment-table .paid {
-    color: #16a34a;
-    background: rgba(22, 163, 74, 0.1);
+/* =========================
+   Pay Online modal defaults
+   ========================= */
+.po-amount {
+    font-size: 15px;
+    margin: 0 0 10px;
+    color: var(--text-secondary);
+}
+.po-amount strong {
+    font-size: 26px;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
 }
 
-.payment-table .unpaid {
-    color: #dc2626;
-    background: rgba(220, 38, 38, 0.1);
+.po-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    justify-content: center;
+}
+.po-tab {
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(128, 128, 128, 0.45);
+    background: #f8fafc;
+    color: var(--text-secondary);
+    font: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.po-tab:hover {
+    border-color: #0d47a1;
+    color: #0d47a1;
+    background: #eef4ff;
+}
+.po-tab.active {
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    border-color: #0d47a1;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(13, 71, 161, 0.25);
+}
+body.dark-mode .po-tab {
+    background: rgba(255, 255, 255, 0.06);
+    color: #94a3b8;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+body.dark-mode .po-tab:hover {
+    background: rgba(100, 181, 246, 0.1);
+    color: #64b5f6;
+    border-color: #64b5f6;
+}
+body.dark-mode .po-tab.active {
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+    color: #fff;
+}
+
+.po-panel {
+    text-align: center;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+}
+.po-qr {
+    max-width: 260px;
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid rgba(128, 128, 128, 0.3);
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.08);
+}
+body.dark-mode .po-qr {
+    background: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.po-details {
+    margin: 12px auto 0;
+    text-align: left;
+    max-width: 340px;
+    width: 100%;
+}
+.po-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.25);
+}
+.po-row:last-child {
+    border-bottom: none;
+}
+.po-row span:first-child {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.po-row strong {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+.po-copy {
+    padding: 4px 11px;
+    border-radius: 8px;
+    border: 1px solid rgba(128, 128, 128, 0.45);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.po-copy:hover {
+    background: #0d47a1;
+    color: #fff;
+    border-color: #0d47a1;
+}
+body.dark-mode .po-copy:hover {
+    background: #64b5f6;
+    color: #000;
+    border-color: #64b5f6;
+}
+
+.po-note {
+    margin: 18px 0 0;
+    font-size: 13px;
+    opacity: 0.8;
+    line-height: 1.55;
+    text-align: center;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* Sync payment status button */

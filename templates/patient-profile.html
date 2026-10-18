@@ -6,8 +6,29 @@
         <title>Patient Profile | Capizona Dental</title>
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo_lightMode.png') }}?v=2">
         <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+        <link rel="preload"
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+            as="style" onload="this.rel='stylesheet'">
         <link rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
+            media="print" onload="this.media='all'">
+    <!-- Prevent icon FOUC: hide material-symbols until the web font loads -->
+    <style>
+        .material-symbols-rounded { visibility: hidden !important; }
+        html.fonts-loaded .material-symbols-rounded { visibility: visible !important; }
+    </style>
+    <script>
+        (function () {
+            function reveal() {
+                document.documentElement.classList.add('fonts-loaded');
+            }
+            if (document.fonts && document.fonts.status === 'loaded') {
+                reveal();
+            } else if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(reveal).catch(reveal);
+            }
+        })();
+    </script>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
@@ -397,30 +418,10 @@
                             </div>
 
                             <!-- Address -->
-                            <div class="adm-row3">
-                                <div class="form-group">
-                                    <label for="admHouseNo">House No.</label>
-                                    <input type="text" id="admHouseNo" name="House_No" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admStreet">Street</label>
-                                    <input type="text" id="admStreet" name="Street" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admBrgy">Barangay</label>
-                                    <input type="text" id="admBrgy" name="Brgy" class="form-control">
-                                </div>
-                            </div>
-
-                            <div class="adm-row2">
-                                <div class="form-group">
-                                    <label for="admMunicipality">Municipality/City</label>
-                                    <input type="text" id="admMunicipality" name="Municipality" class="form-control">
-                                </div>
-                                <div class="form-group">
-                                    <label for="admCity">Province</label>
-                                    <input type="text" id="admCity" name="City" class="form-control">
-                                </div>
+                            <div class="form-group">
+                                <label for="admAddress">Address <span class="adm-req" aria-hidden="true">*</span></label>
+                                <input type="text" id="admAddress" name="Address" class="form-control"
+                                    placeholder="House No., Street, Barangay, Municipality/City, Province">
                             </div>
 
                             <div class="adm-row2">
@@ -972,16 +973,15 @@
     }
 
     if (typeof flatpickr === "function") {
-        var pdBaseOptions = {
-            disableMobile: true,
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "F j, Y",
-            altInputClass: "adm-date-alt",
-            className: "adm-datepicker",
-            allowInput: false,
-            monthSelectorType: "static"
-        };
+    var pdBaseOptions = {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "F j, Y",
+        altInputClass: "adm-date-alt",
+        className: "adm-datepicker",
+        allowInput: false,
+        monthSelectorType: "static"
+    };
 
         var pdBirthdayInput = document.getElementById("admBirthday");
         if (pdBirthdayInput) {
@@ -1014,9 +1014,13 @@
         // real inputs out of sight but still holding their values.
         var pdWizardModal = document.getElementById("newApptModal");
         if (pdWizardModal) {
-                pdWizardModal.querySelectorAll(".adm-date-native:not(.flatpickr-mobile)").forEach(function (input) {
-                input.style.display = "none";
-                input.removeAttribute("required");
+                pdWizardModal.querySelectorAll(".adm-date-native").forEach(function (input) {
+                // Only hide the native input when flatpickr actually took over.
+                // The native input stays visible as a fallback if initialization fails.
+                if (input._flatpickr) {
+                    input.style.display = "none";
+                    input.removeAttribute("required");
+                }
             });
         }
     }
@@ -1311,11 +1315,7 @@
         setInput("admLastName", info.LastName);
         setInput("admContactNumber", info.ContactNumber);
         setInput("admAge", info.Age);
-        setInput("admHouseNo", info.HouseNo);
-        setInput("admStreet", info.Street);
-        setInput("admBrgy", info.Brgy);
-        setInput("admMunicipality", info.Municipality);
-        setInput("admCity", info.City);
+        setInput("admAddress", info.Address);
         setInput("admNationality", info.Nationality);
         setInput("admDentistName", info.DentistName);
 
@@ -1905,22 +1905,49 @@ function closeChartView() {
         <!-- Pay Online: shows the clinic's payment QR codes and account numbers. -->
     <style>
         #payOnlineModal { z-index: 10050; }
-        .po-amount { font-size: 15px; margin: 0 0 14px; }
-        .po-amount strong { font-size: 22px; }
-        .po-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-        .po-tab { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
-        .po-tab.active { background: #0d47a1; border-color: #0d47a1; color: #fff; }
-        .po-panel { text-align: center; }
-        .po-qr { max-width: 260px; width: 100%; border-radius: 12px; border: 1px solid rgba(128,128,128,.3); background: #fff; }
-        .po-details { margin: 12px auto 0; text-align: left; max-width: 340px; }
-        .po-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,.25); }
-        .po-row span:first-child { font-size: 12px; font-weight: 700; opacity: .7; text-transform: uppercase; }
-        .po-copy { margin-left: 8px; padding: 3px 10px; border-radius: 8px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
-        .po-note { margin: 16px 0 0; font-size: 13px; opacity: .8; line-height: 1.5; }
-        .pay-online-btn { background: #0d47a1; color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font: inherit; font-weight: 700; cursor: pointer; }
-        .pay-hist-link { display: block; margin: 4px auto 0; background: none; border: 0; padding: 0; color: #0d47a1; font: inherit; font-size: 12px; text-decoration: underline; cursor: pointer; }
+        .po-amount-card { background: #f8fafc; border: 1px solid rgba(128,128,128,.16); border-radius: 14px; padding: 16px 18px; margin-bottom: 14px; text-align: center; box-shadow: 0 2px 8px rgba(13,71,161,.06); }
+        body.dark-mode .po-amount-card { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.08); }
+        .po-amount { margin: 0 0 6px; color: var(--text-secondary); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+        .po-amount strong { display: block; font-size: 28px; color: var(--text-primary); letter-spacing: -0.02em; }
+        .po-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; justify-content: center; }
+        .po-tab { padding: 9px 18px; border-radius: 999px; border: 1px solid rgba(128,128,128,.45); background: #f8fafc; color: var(--text-secondary); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; transition: all .2s ease; white-space: nowrap; }
+        .po-tab:hover { border-color: #0d47a1; color: #0d47a1; background: #eef4ff; }
+        .po-tab.active { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); border-color: #0d47a1; color: #fff; box-shadow: 0 2px 6px rgba(13,71,161,.25); }
+        body.dark-mode .po-tab { background: rgba(255,255,255,.06); color: #94a3b8; border-color: rgba(255,255,255,.12); }
+        body.dark-mode .po-tab:hover { background: rgba(100,181,246,.1); color: #64b5f6; border-color: #64b5f6; }
+        body.dark-mode .po-tab.active { background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%); color: #fff; }
+        .po-panel-card { background: #fff; border: 1px solid rgba(128,128,128,.16); border-radius: 16px; padding: 18px; box-shadow: 0 8px 24px rgba(13,71,161,.08); }
+        body.dark-mode .po-panel-card { background: #1e1e1e; border-color: rgba(255,255,255,.08); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+        .po-content { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+        .po-qr { max-width: 300px; width: 100%; border-radius: 16px; border: 1px solid rgba(128,128,128,.22); background: #fff; padding: 14px; box-shadow: 0 6px 18px rgba(13,71,161,.08); display: block; cursor: zoom-in; transition: transform .2s ease, box-shadow .2s ease; }
+        .po-qr:hover { transform: scale(1.04); box-shadow: 0 8px 24px rgba(13,71,161,.14); }
+        body.dark-mode .po-qr { background: #252525; border-color: rgba(255,255,255,.1); }
+        .po-qr-zoom { display: none; position: fixed; inset: 0; z-index: 10060; background: rgba(0,0,0,.85); align-items: center; justify-content: center; cursor: zoom-out; padding: 20px; }
+        .po-qr-zoom.open { display: flex; }
+        .po-qr-zoom img { max-width: 90vw; max-height: 80vh; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.5); }
+        .po-details { max-width: 300px; width: 100%; text-align: left; }
+        .po-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,.16); }
+        .po-row:last-child { border-bottom: none; }
+        .po-row span:first-child { font-size: 11px; font-weight: 700; opacity: .7; text-transform: uppercase; letter-spacing: .4px; color: var(--text-secondary); }
+        .po-row strong { color: var(--text-primary); font-weight: 700; }
+        .po-copy { padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; transition: all .2s ease; white-space: nowrap; flex-shrink: 0; }
+        .po-copy:hover { background: #0d47a1; color: #fff; border-color: #0d47a1; }
+        body.dark-mode .po-copy:hover { background: #64b5f6; color: #000; border-color: #64b5f6; }
+        .po-note { margin: 16px 0 0; font-size: 12.5px; opacity: .75; line-height: 1.55; text-align: center; max-width: 420px; margin-left: auto; margin-right: auto; color: var(--text-secondary); }
+        @media (max-width: 560px) {
+            .po-content { flex-direction: column; align-items: center; }
+            .po-qr { max-width: 220px; }
+            .po-details { max-width: 100%; }
+        }
+        .pay-hist-link { display: inline-flex; align-items: center; gap: 6px; margin: 4px auto 0; background: #f8fafc; border: 1px solid rgba(128,128,128,.3); color: #0d47a1; font: inherit; font-weight: 700; font-size: 12px; padding: 5px 12px; border-radius: 999px; text-decoration: none; cursor: pointer; transition: all .2s ease; white-space: nowrap; }
+        .pay-hist-link:hover { background: #eef4ff; border-color: #0d47a1; color: #0d47a1; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(13,71,161,.15); }
+        .pay-hist-link:active { transform: translateY(0) scale(.97); }
+        .pay-hist-link svg { width: 12px; height: 12px; display: block; }
+        body.dark-mode .pay-hist-link { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); color: #64b5f6; }
+        body.dark-mode .pay-hist-link:hover { background: rgba(100,181,246,.1); border-color: #64b5f6; color: #64b5f6; }
         .pay-hist-cell { text-align: left !important; padding: 10px 18px !important; }
-        .pay-hist-table { width: 100%; max-width: 460px; border-collapse: collapse; font-size: 13px; }
+        .pay-hist-table { width: 100%; max-width: 460px; border-collapse: collapse; font-size: 13px; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 24px rgba(13, 71, 161, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04); border: 1px solid rgba(128, 128, 128, 0.14); background: #fff; }
+        body.dark-mode .pay-hist-table { background: #1e1e1e; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); }
         .pay-hist-table th, .pay-hist-table td { text-align: left; padding: 5px 8px; border-bottom: 1px solid rgba(128,128,128,.25); }
     </style>
     <div id="payOnlineModal" class="modal">
@@ -1938,10 +1965,17 @@ function closeChartView() {
                 </button>
             </div>
             <div class="modal-body">
-                <p class="po-amount">Amount due: <strong id="poAmount"></strong> <span id="poProc"></span></p>
+                <div class="po-amount-card">
+                    <p class="po-amount">Amount due: <strong id="poAmount"></strong> <span id="poProc"></span></p>
+                </div>
                 <div class="po-tabs" id="poTabs" role="tablist"></div>
-                <div class="po-panel" id="poPanel"></div>
+                <div class="po-panel-card">
+                    <div class="po-content" id="poPanel"></div>
+                </div>
                 <p class="po-note">After you pay, please show your receipt or reference number to the clinic. Your balance is updated once the clinic confirms your payment.</p>
+            </div>
+            <div class="po-qr-zoom" id="poQrZoom" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Zoomed QR code" onclick="closeQrZoom()">
+                <img id="poQrZoomImg" src="" alt="QR code">
             </div>
         </div>
     </div>
@@ -1974,7 +2008,7 @@ function closeChartView() {
             body.innerHTML = "";
 
             if (plans.length === 0) {
-                body.innerHTML = '<tr><td colspan="7" style="text-align:center;">No payment records found.</td></tr>';
+                body.innerHTML = '<tr><td colspan="7" class="payment-empty"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span>No payment records found.</td></tr>';
                 return;
             }
             plans.forEach((p, i) => body.appendChild(buildPaymentRow(p, i)));
@@ -2008,7 +2042,7 @@ function closeChartView() {
             const link = document.createElement("button");
             link.type = "button";
             link.className = "pay-hist-link";
-            link.textContent = "Payments (" + payments.length + ")";
+            link.innerHTML = '<span class="material-symbols-rounded" style="font-size:14px;" aria-hidden="true">history</span><span>Payments (' + payments.length + ')</span>';
             link.addEventListener("click", () => togglePaymentHistory(tr, payments));
             paidTd.appendChild(link);
         }
@@ -2023,11 +2057,12 @@ function closeChartView() {
         tr.appendChild(statusTd);
 
         const payTd = document.createElement("td");
+        payTd.className = "pay-col";
         if (balance > 0) {
             const btn = document.createElement("button");
             btn.type = "button";
             btn.className = "gcash-btn pay-online-btn";
-            btn.textContent = "Pay Online";
+            btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path><polyline points="12 6 12 12 16 12"></polyline></svg><span>Pay Online</span>';
             btn.addEventListener("click", () => openPayOnline(index));
             payTd.appendChild(btn);
         } else {
@@ -2126,6 +2161,7 @@ function closeChartView() {
             img.className = "po-qr";
             img.alt = c.label + " payment QR code";
             img.src = c.qr_image;
+            img.addEventListener("click", () => openQrZoom(c.qr_image));
             panel.appendChild(img);
         }
 
@@ -2168,7 +2204,28 @@ function closeChartView() {
         const modal = document.getElementById("payOnlineModal");
         modal.style.display = "none";
         modal.classList.remove("show");
+        closeQrZoom();
     }
+
+    function openQrZoom(src) {
+        const zoom = document.getElementById("poQrZoom");
+        const img = document.getElementById("poQrZoomImg");
+        img.src = src;
+        zoom.classList.add("open");
+        zoom.setAttribute("aria-hidden", "false");
+    }
+
+    function closeQrZoom() {
+        const zoom = document.getElementById("poQrZoom");
+        const img = document.getElementById("poQrZoomImg");
+        zoom.classList.remove("open");
+        zoom.setAttribute("aria-hidden", "true");
+        img.src = "";
+    }
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeQrZoom();
+    });
 
 
     function closePaymentModal() {
