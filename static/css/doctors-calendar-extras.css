@@ -531,8 +531,38 @@
             }
         }
 
-        @media (max-width: 1000px) {
-            .dc-extras {
-                grid-template-columns: 1fr;
-            }
-        }
+@media (max-width: 1000px) {
+    .dc-extras {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    #upcomingBlocked .dc-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    #upcomingBlocked .dc-date {
+        flex: none;
+        width: auto;
+        font-size: 13px;
+    }
+
+    #upcomingBlocked .dc-main {
+        width: 100%;
+    }
+
+    #upcomingBlocked .dc-actions {
+        width: 100%;
+        justify-content: stretch;
+        flex-wrap: wrap;
+    }
+
+    #upcomingBlocked .dc-actions .dc-mini-btn {
+        flex: 1 1 0;
+        min-width: 0;
+        text-align: center;
+    }
+}

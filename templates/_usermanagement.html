@@ -2,8 +2,21 @@
         <div id="section-usermanagement" class="content-section">
             <section class="content-panel">
                 <div class="filter-bar">
-                    <input type="text" id="userMgmtSearch" placeholder="Search accounts..."
-                        class="search-input filter-search" onkeyup="filterUserManagement()">
+                    <div class="filter-search-wrap">
+                        <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
+                        <input type="text" id="userMgmtSearch" placeholder="Search accounts..."
+                            class="search-input filter-search" aria-label="Search accounts"
+                            onkeyup="filterUserManagement()">
+                    </div>
+                    <div class="filter-group">
+                        <button type="button" id="sortUserMgmtBtn" class="btn-action filter-btn filter-btn--sort"
+                            data-sort="desc" onclick="sortUserManagement()">
+                            <span class="material-symbols-rounded" aria-hidden="true">sort_by_alpha</span>
+                            <span class="filter-btn__label">A-Z</span>
+                            <span class="material-symbols-rounded filter-btn__dir"
+                                aria-hidden="true">arrow_upward</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="userMgmtCursor" data-cursor="{{ manageable_accounts_next_cursor or '' }}"
                     style="display:none;"></div>

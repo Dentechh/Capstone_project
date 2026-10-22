@@ -4716,7 +4716,8 @@ body.dark-mode .datetime-text {
     }
     
     .top-header h2 {
-        font-size: 24px;
+        font-size: 28px;
+        margin-top: 6px;
     }
     
     .top-header span {
@@ -4818,17 +4819,19 @@ body.dark-mode .datetime-text {
         padding-right: 70px;
     }
     
-    /* Dark mode toggle pinned to the top-right corner on mobile, with
-       margins, instead of wrapping onto its own line under the chips. */
+    /* Dark mode toggle moved below the hamburger (sidebar toggle) on mobile. */
     .admin-profile {
-        position: absolute;
-        top: 0;
-        right: 15px;
+        position: fixed;
+        top: 65px;
+        left: 15px;
+        right: auto;
         margin: 0;
+        z-index: 2400;
     }
     
     .top-header h2 {
-        font-size: 20px;
+        font-size: 26px;
+        margin-top: 6px;
     }
     
     .metric-cards {
@@ -5748,7 +5751,8 @@ body.dark-mode .datetime-text {
     }
     
     .top-header h2 {
-        font-size: 18px;
+        font-size: 24px;
+        margin-top: 6px;
     }
     
     .datetime-text {

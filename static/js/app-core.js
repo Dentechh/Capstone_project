@@ -463,12 +463,15 @@ function showSection(sectionId) {
             btn.textContent = label;
         }
 
-        function sortMyPatients() {
+        function sortMyPatients(forceAsc) {
             var table = document.getElementById('myPatientsTable');
             var tbody = table.querySelector('tbody');
             var rows = Array.from(tbody.querySelectorAll('tr'));
             var sortBtn = document.getElementById('sortMyPatientsBtn');
-            var isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
+            var isAsc;
+            if (forceAsc === true) isAsc = true;
+            else if (forceAsc === false) isAsc = false;
+            else isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
             sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
             setFilterSortLabel(sortBtn, isAsc ? 'A-Z' : 'Z-A');
             rows.sort(function (a, b) {

@@ -7,6 +7,7 @@
 
                 loadMoreBtn.addEventListener('click', function () {
                     const cursor = cursorHolder.getAttribute('data-cursor') || '';
+                    const isFirstPage = (cursor === '');
                     loadMoreBtn.disabled = true;
                     loadMoreBtn.textContent = 'Loading...';
 
@@ -47,6 +48,10 @@
                                 tbody.appendChild(tr);
                             });
 
+                            if (isFirstPage && typeof sortUserManagement === 'function') {
+                                sortUserManagement(true);
+                            }
+
                             if (result.next_cursor) {
                                 cursorHolder.setAttribute('data-cursor', result.next_cursor);
                                 loadMoreBtn.disabled = false;
@@ -66,15 +71,42 @@
 
             // Live name search for the User Management table (onkeyup in the section markup).
         function filterUserManagement() {
-            var input = document.getElementById('userMgmtSearch').value.toUpperCase();
+            var terms = document.getElementById('userMgmtSearch').value.toUpperCase().split(/[\s,]+/).filter(Boolean);
             var table = document.getElementById('userManagementTable');
             var tbody = table.querySelector('tbody');
             var rows = tbody.querySelectorAll('tr');
             rows.forEach(function (row) {
-                var nameCell = row.querySelector('td');
+                var nameCell = row.querySelector('td[data-cell="name"]');
                 if (nameCell) {
                     var textValue = nameCell.textContent || nameCell.innerText;
-                    row.style.display = textValue.toUpperCase().indexOf(input) > -1 ? '' : 'none';
+                    var upper = textValue.toUpperCase();
+                    row.style.display = terms.every(function (t) { return upper.indexOf(t) > -1; }) ? '' : 'none';
                 }
+            });
+        }
+
+        function sortUserManagement(forceAsc) {
+            var table = document.getElementById('userManagementTable');
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var sortBtn = document.getElementById('sortUserMgmtBtn');
+            var isAsc;
+            if (forceAsc === true) isAsc = true;
+            else if (forceAsc === false) isAsc = false;
+            else isAsc = sortBtn.getAttribute('data-sort') !== 'asc';
+            sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
+            var label = sortBtn.querySelector('.filter-btn__label');
+            if (label) label.textContent = isAsc ? 'A-Z' : 'Z-A';
+            rows.sort(function (a, b) {
+                var aCell = a.querySelector('td[data-cell="name"]');
+                var bCell = b.querySelector('td[data-cell="name"]');
+                var aName = aCell ? aCell.textContent.toLowerCase() : '';
+                var bName = bCell ? bCell.textContent.toLowerCase() : '';
+                if (aName < bName) return isAsc ? -1 : 1;
+                if (aName > bName) return isAsc ? 1 : -1;
+                return 0;
+            });
+            rows.forEach(function (row) {
+                tbody.appendChild(row);
             });
         }

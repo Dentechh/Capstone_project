@@ -809,10 +809,12 @@
                     document.querySelectorAll('.block-time-cb').forEach(cb => cb.disabled = this.checked);
                 });
 
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
                 calendarInstance = flatpickr('#doctorCalendarPicker', {
                     inline: true,
-                    minDate: 'today',
                     maxDate: new Date().fp_incr(365),
+                    disable: [function (d) { return d < todayStart; }],
                     onChange: function (selectedDates, dateStr) { selectDate(dateStr); },
                     onDayCreate: function (dObj, dStr, fp, dayElem) {
                         const key = toDateStr(dayElem.dateObj);

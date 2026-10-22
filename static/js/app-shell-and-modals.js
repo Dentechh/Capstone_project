@@ -2338,7 +2338,30 @@ function updateDateTime() {
                     const birthday = document.getElementById('admBirthday');
                     if (birthday) {
                         flatpickr('#admBirthday', Object.assign({}, baseOptions, {
-                            maxDate: 'today'
+                            maxDate: 'today',
+                            altFormat: 'm/d/Y',
+                            allowInput: true,
+                            onReady: function (selectedDates, dateStr, instance) {
+                                var alt = instance.altInput;
+                                if (!alt) return;
+                                alt.setAttribute('inputmode', 'numeric');
+                                alt.setAttribute('placeholder', 'MM/DD/YYYY');
+                                alt.addEventListener('keydown', function (e) {
+                                    if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+                                        e.preventDefault();
+                                    }
+                                });
+                                alt.addEventListener('input', function () {
+                                    var digits = alt.value.replace(/\D/g, '').slice(0, 8);
+                                    if (digits.length > 4) {
+                                        alt.value = digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4);
+                                    } else if (digits.length > 2) {
+                                        alt.value = digits.slice(0, 2) + '/' + digits.slice(2);
+                                    } else {
+                                        alt.value = digits;
+                                    }
+                                });
+                            }
                         }));
                     }
 

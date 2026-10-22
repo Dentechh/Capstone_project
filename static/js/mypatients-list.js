@@ -301,11 +301,13 @@ function buildMyPatientRow(p) {
                 const loadMoreBtn = document.getElementById('myPatientsLoadMoreBtn');
                 const cursorHolder = document.getElementById('myPatientsCursor');
                 const tbody = document.querySelector('#myPatientsTable tbody');
+                const sortBtn = document.getElementById('sortMyPatientsBtn');
 
                 if (!loadMoreBtn || !cursorHolder || !tbody) return;
 
                 loadMoreBtn.addEventListener('click', function () {
                     const cursor = cursorHolder.getAttribute('data-cursor') || '';
+                    const isFirstPage = (cursor === '');
                     loadMoreBtn.disabled = true;
                     loadMoreBtn.textContent = 'Loading...';
 
@@ -320,6 +322,12 @@ function buildMyPatientRow(p) {
                             result.rows.forEach(function (p) {
                                 tbody.appendChild(buildMyPatientRow(p));
                             });
+
+                            if (isFirstPage && typeof sortMyPatients === 'function') {
+                                sortMyPatients(true);
+                            } else if (sortBtn && sortBtn.getAttribute('data-sort') === 'asc' && typeof sortMyPatients === 'function') {
+                                sortMyPatients(true);
+                            }
 
                             if (result.next_cursor) {
                                 cursorHolder.setAttribute('data-cursor', result.next_cursor);
