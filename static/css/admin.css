@@ -7859,6 +7859,10 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
         font-size: 12.5px;
     }
 
+    #checkInfoModal .treatment-table td input.adm-date-alt {
+        padding-left: 32px;
+    }
+
     #checkInfoModal .adm-select {
         height: 36px;
     }
@@ -7979,6 +7983,10 @@ body.dark-mode #confirmModal .ci-danger-cancel:hover:not(:disabled) {
         min-width: 0;
         height: 44px;
         max-width: 65%;
+    }
+
+    #checkInfoModal .treatment-table td input.adm-date-alt {
+        padding-left: 32px;
     }
 
     #checkInfoModal .adm-select {
@@ -9678,6 +9686,9 @@ body.dark-mode .ep-save {
         height: 100dvh;
         border-radius: 0;
         border-width: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .ep-head {
@@ -9694,6 +9705,13 @@ body.dark-mode .ep-save {
 
     .ep-body {
         padding: 16px 16px 4px;
+        touch-action: pan-y;
+        overflow: visible;
+        min-height: auto;
+    }
+
+    .ep-body * {
+        touch-action: pan-y;
     }
 
     .ep-grid {
