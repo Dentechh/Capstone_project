@@ -1347,6 +1347,49 @@ class DentalClinicApp(BaseFlaskApp):
 
         return result
 
+    BLOCKED_SLOTS_PAST_CACHE_KEY = "blocked_slots_past"
+    BLOCKED_SLOTS_PAST_TTL_SECONDS = 600
+
+    def _load_past_blocked_slots(self):
+        """
+        Admin calendar only: blocked / closed days BEFORE today, so the red and
+        orange markers stay on the calendar after the date has passed. Goes back
+        as far as past days can be marked (MAX_PAST_MARK_LOOKBACK_DAYS). Cached;
+        the cache is cleared with the upcoming one whenever a block changes.
+        Never raises: if this read fails the calendar simply shows no past marks.
+        """
+        try:
+            result = self.cache.get(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
+            if result is None:
+                now = datetime.now(UTC)
+                upper = (now - timedelta(days=1)).strftime("%Y-%m-%d")
+                lower = (now - timedelta(days=MAX_PAST_MARK_LOOKBACK_DAYS)).strftime("%Y-%m-%d")
+                query = (
+                    self.db.collection(self.Blocked_Slots)
+                    .where(filter=FieldFilter("date", ">=", lower))
+                    .where(filter=FieldFilter("date", "<", upper))
+                )
+                result = []
+                for doc in query.stream():
+                    data = doc.to_dict() or {}
+                    result.append({
+                        "date": doc.id,
+                        "full_day": bool(data.get("full_day", False)),
+                        "blocked_times": data.get("blocked_times", []),
+                        "reason": data.get("reason", ""),
+                        "patient_message": data.get("patient_message", ""),
+                        "range_id": data.get("range_id", "")
+                    })
+                self.cache.set(
+                    self.BLOCKED_SLOTS_PAST_CACHE_KEY,
+                    result,
+                    ttl_seconds=self.BLOCKED_SLOTS_PAST_TTL_SECONDS
+                )
+            return result
+        except Exception as e:
+            print("PAST BLOCKED SLOTS READ FAILED:", e)
+            return []
+
     def get_blocked_slots(self):
         try:
             result = self._load_blocked_slots()
@@ -1355,7 +1398,11 @@ class DentalClinicApp(BaseFlaskApp):
             # else gets only what is safe for patients: the internal note is
             # never sent, and "reason" carries the patient message.
             if session.get('admin_logged_in'):
-                return jsonify(result)
+                # Past closures stay on the calendar too (patients never get them).
+                merged = {item["date"]: item for item in self._load_past_blocked_slots()}
+                for item in result:
+                    merged[item["date"]] = item
+                return jsonify(sorted(merged.values(), key=lambda i: i["date"]))
 
             return jsonify([
                 {
@@ -1549,6 +1596,7 @@ class DentalClinicApp(BaseFlaskApp):
                 "updated_at": datetime.now(UTC).isoformat()
             })
             self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            self.cache.invalidate(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
             return jsonify({"success": True, "message": "Slot blocked successfully"})
         except Exception as e:
             print("ADMIN BLOCK SLOT ERROR:", e)
@@ -1572,6 +1620,7 @@ class DentalClinicApp(BaseFlaskApp):
         try:
             self.db.collection(self.Blocked_Slots).document(date).delete()
             self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            self.cache.invalidate(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
             return jsonify({"success": True, "message": "Slot unblocked successfully"})
         except Exception as e:
             print("ADMIN UNBLOCK SLOT ERROR:", e)
@@ -1684,6 +1733,7 @@ class DentalClinicApp(BaseFlaskApp):
                 })
             batch.commit()
             self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            self.cache.invalidate(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
             return jsonify({
                 "success": True,
                 "message": f"Blocked {len(days)} day{'s' if len(days) != 1 else ''}",
@@ -1730,6 +1780,7 @@ class DentalClinicApp(BaseFlaskApp):
                     batch.delete(ref)
                 batch.commit()
                 self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+                self.cache.invalidate(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
             return jsonify({
                 "success": True,
                 "message": f"Unblocked {len(refs)} day{'s' if len(refs) != 1 else ''}" if refs
@@ -1779,6 +1830,7 @@ class DentalClinicApp(BaseFlaskApp):
                 batch.set(self.db.collection(self.Blocked_Slots).document(day), payload, merge=True)
             batch.commit()
             self.cache.invalidate(self.BLOCKED_SLOTS_CACHE_KEY)
+            self.cache.invalidate(self.BLOCKED_SLOTS_PAST_CACHE_KEY)
             return jsonify({
                 "success": True,
                 "message": f"Marked {len(days)} day{'s' if len(days) != 1 else ''} as closed",
@@ -4311,6 +4363,102 @@ class DentalClinicApp(BaseFlaskApp):
             return False
     
     
+    def send_appointment_reminder_email(self, patient_email, fullname, appointment_data):
+        """Day-before reminder. Separate from send_appointment_email on purpose."""
+        try:
+            if not patient_email:
+                return False
+            service = appointment_data.get("Service") or "your appointment"
+            dentist = self.display_dentist_name(appointment_data.get("DentistName", "")) or "our dentist"
+            when = self.display_appt_datetime(appointment_data.get("appointment_date", ""))
+
+            msg = Message(
+                subject="Appointment Reminder - Capizonda Dental Clinic",
+                sender=self.app.config["MAIL_DEFAULT_SENDER"],
+                recipients=[patient_email],
+            )
+            msg.body = (
+                f"Hello {fullname},\n\n"
+                f"This is a friendly reminder of your appointment tomorrow.\n\n"
+                f"Service: {service}\n"
+                f"Dentist: {dentist}\n"
+                f"Schedule: {when}\n\n"
+                f"Please arrive 10 minutes before your scheduled time.\n"
+                f"If you cannot make it, please contact the clinic so we can offer your slot to someone else.\n\n"
+                f"Best regards,\n"
+                f"Capizonda Dental Clinic Team\n"
+            )
+            self.mail.send(msg)
+            return True
+        except Exception as e:
+            print(f"REMINDER EMAIL ERROR: {e}")
+            return False
+
+    def cron_send_reminders(self):
+        """
+        Daily job: email tomorrow's accepted patients. Called by an external
+        scheduler with the X-Cron-Token header. Safe to call more than once a
+        day: reminder_for records which appointment_date was already reminded.
+        """
+        expected = os.getenv("REMINDER_CRON_TOKEN", "")
+        supplied = request.headers.get("X-Cron-Token", "")
+        if len(expected) < 24 or not hmac.compare_digest(
+            supplied.encode("utf-8"), expected.encode("utf-8")
+        ):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        tomorrow = (datetime.now(PH_TZ) + timedelta(days=1)).strftime("%Y-%m-%d")
+        sent = skipped = failed = 0
+        email_cache = {}
+
+        query = (
+            self.db.collection_group("Approve")
+            .where(filter=FieldFilter("appointment_date", ">=", tomorrow + " 00:00"))
+            .where(filter=FieldFilter("appointment_date", "<=", tomorrow + " 23:59"))
+        )
+
+        for doc in query.stream():
+            data = doc.to_dict() or {}
+            appt_date = str(data.get("appointment_date", "")).strip()
+            fullname = f"{data.get('FirstName', '')} {data.get('LastName', '')}".strip()
+
+            # next_visit is only a suggestion written by the treatment record
+            # form; real bookings are accepted and carry a patient name.
+            if (
+                doc.id == "next_visit"
+                or str(data.get("status", "")).strip().lower() not in ("accept", "accepted")
+                or not fullname
+                or data.get("reminder_for") == appt_date
+            ):
+                skipped += 1
+                continue
+
+            account_ref = doc.reference.parent.parent
+            if account_ref is None:
+                skipped += 1
+                continue
+            if account_ref.id not in email_cache:
+                acc = account_ref.get()
+                email_cache[account_ref.id] = (acc.to_dict() or {}).get("email") if acc.exists else None
+            patient_email = email_cache[account_ref.id]
+            if not patient_email:
+                skipped += 1
+                continue
+
+            if self.send_appointment_reminder_email(patient_email, fullname, data):
+                try:
+                    doc.reference.update({
+                        "reminder_for": appt_date,
+                        "reminder_sent_at": datetime.now(UTC).isoformat(),
+                    })
+                except Exception as e:
+                    print(f"REMINDER MARK ERROR: {e}")
+                sent += 1
+            else:
+                failed += 1
+
+        print(f"REMINDERS for {tomorrow}: sent={sent} skipped={skipped} failed={failed}")
+        return jsonify({"success": True, "date": tomorrow, "sent": sent, "skipped": skipped, "failed": failed})
 
 
     def approve(self):
@@ -8671,6 +8819,37 @@ backup. Groups marked "check" may be separate treatments that just share a price
             "paid_by_year": paid_by_year,
         }
 
+    def _financial_period_unpaid(self, done_docs, start_date, end_date):
+        """
+        Outstanding balance and unpaid-procedure count for rows whose date
+        (the date the balance started) falls between start_date and end_date,
+        both included. Reads the same cached scan the income chart uses, so
+        no extra Firestore reads. Undated rows only count in Overall.
+        """
+        outstanding = 0.0
+        count = 0
+        for data in done_docs:
+            procs = data.get("procedures", [])
+            if not isinstance(procs, list):
+                continue
+            for p in procs:
+                if not isinstance(p, dict):
+                    continue
+                balance = self.safe_float(p.get("balance", 0))
+                if not balance > 0:
+                    continue
+                date_str = str(p.get("date", "")).strip()
+                if not date_str:
+                    continue
+                try:
+                    proc_date = datetime.fromisoformat(date_str).date()
+                except Exception:
+                    continue
+                if start_date <= proc_date <= end_date:
+                    outstanding += balance
+                    count += 1
+        return {"period_outstanding": outstanding, "period_unpaid": count}
+
     def admin_financial_chart_data(self):
         """
         Returns income-over-time data for the Financial Reports trend chart.
@@ -8681,8 +8860,10 @@ backup. Groups marked "check" may be separate treatments that just share a price
         period=yearly   -> January to December of one year; &year=YYYY
         period=overall  -> one point per year, earliest year to this year
 
-        Total income follows the selected period. Outstanding Balance and
-        Unpaid Procedures always cover everything unpaid (same as the table).
+        Total income, Outstanding Balance and Unpaid Procedures all follow the
+        selected period (balances are counted on the date they started).
+        Overall covers everything. The Unpaid Procedures table below is
+        separate and always lists everything unpaid.
         """
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
@@ -8717,15 +8898,23 @@ backup. Groups marked "check" may be separate treatments that just share a price
         first_year = min(earliest.year if earliest else today.year, today.year - 4)
 
         def respond(labels, values, total_income, range_label, **extra):
+            # Period outstanding / unpaid count; Overall passes nothing, so it
+            # falls back to the all-time figures.
+            p_out = extra.pop("period_outstanding", stats["outstanding"])
+            p_cnt = extra.pop("period_unpaid", stats["unpaid_count"])
             payload = {
                 "success": True,
                 "period": period,
                 "labels": labels,
                 "data": values,
                 "total_income": round(total_income, 2),
-                # Always everything unpaid, whatever period is on screen.
-                "total_outstanding": round(stats["outstanding"], 2),
-                "unpaid_procedures": stats["unpaid_count"],
+                # Follow the selected period, counted by the date the balance
+                # started (the procedure / plan date). Overall = everything.
+                # The all-time figures stay available under the all_* keys.
+                "total_outstanding": round(p_out, 2),
+                "unpaid_procedures": p_cnt,
+                "all_outstanding": round(stats["outstanding"], 2),
+                "all_unpaid_procedures": stats["unpaid_count"],
                 "range_label": range_label,
                 "as_of_label": f"{today:%B} {today.day}, {today.year}",
                 "chart_type": "line",
@@ -8777,6 +8966,11 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 year=year,
                 can_prev=year > min_year,
                 can_next=year < today.year,
+                **self._financial_period_unpaid(
+                    done_docs,
+                    today.replace(year=year, month=1, day=1),
+                    today.replace(year=year, month=12, day=31),
+                ),
             )
 
         # --- Overall: one point per year ---
@@ -8873,6 +9067,10 @@ backup. Groups marked "check" may be separate treatments that just share a price
             ]
         values = [round(income_by_date[d], 2) for d in date_keys]
 
+        window_end = start_date + timedelta(days=num_days - 1)
+        extra.update(self._financial_period_unpaid(done_docs, start_date, window_end))
+        window_end = start_date + timedelta(days=num_days - 1)
+        extra.update(self._agg_period_unpaid(self._agg_load_all(), start_date, window_end))
         return respond(labels, values, total_income, range_label, **extra)
 
     def admin_unpaid_procedures(self):
@@ -9961,6 +10159,23 @@ backup. Groups marked "check" may be separate treatments that just share a price
     # the original function text with only the data source swapped (see
     # the marked lines); they run only when the aggregate switch is on.
     # ------------------------------------------------------------
+    def _agg_period_unpaid(self, agg, start_date, end_date):
+        """Aggregate twin of _financial_period_unpaid(): sums the per-day
+        outstanding / unpaid fields of Stats_daily between the two dates."""
+        outstanding = 0.0
+        count = 0
+        for key, d in self._agg_live_buckets(agg):
+            if key == self.AGG_UNDATED:
+                continue
+            try:
+                day = datetime.fromisoformat(key).date()
+            except Exception:
+                continue
+            if start_date <= day <= end_date:
+                outstanding += self._agg_num(d.get("outstanding"))
+                count += int(round(self._agg_num(d.get("unpaid"))))
+        return {"period_outstanding": outstanding, "period_unpaid": count}
+
     def _agg_admin_financial_chart_data(self):
         """
         Returns income-over-time data for the Financial Reports trend chart.
@@ -9971,8 +10186,10 @@ backup. Groups marked "check" may be separate treatments that just share a price
         period=yearly   -> January to December of one year; &year=YYYY
         period=overall  -> one point per year, earliest year to this year
 
-        Total income follows the selected period. Outstanding Balance and
-        Unpaid Procedures always cover everything unpaid (same as the table).
+        Total income, Outstanding Balance and Unpaid Procedures all follow the
+        selected period (balances are counted on the date they started).
+        Overall covers everything. The Unpaid Procedures table below is
+        separate and always lists everything unpaid.
         """
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
@@ -10002,15 +10219,23 @@ backup. Groups marked "check" may be separate treatments that just share a price
         first_year = min(earliest.year if earliest else today.year, today.year - 4)
 
         def respond(labels, values, total_income, range_label, **extra):
+            # Period outstanding / unpaid count; Overall passes nothing, so it
+            # falls back to the all-time figures.
+            p_out = extra.pop("period_outstanding", stats["outstanding"])
+            p_cnt = extra.pop("period_unpaid", stats["unpaid_count"])
             payload = {
                 "success": True,
                 "period": period,
                 "labels": labels,
                 "data": values,
                 "total_income": round(total_income, 2),
-                # Always everything unpaid, whatever period is on screen.
-                "total_outstanding": round(stats["outstanding"], 2),
-                "unpaid_procedures": stats["unpaid_count"],
+                # Follow the selected period, counted by the date the balance
+                # started (the procedure / plan date). Overall = everything.
+                # The all-time figures stay available under the all_* keys.
+                "total_outstanding": round(p_out, 2),
+                "unpaid_procedures": p_cnt,
+                "all_outstanding": round(stats["outstanding"], 2),
+                "all_unpaid_procedures": stats["unpaid_count"],
                 "range_label": range_label,
                 "as_of_label": f"{today:%B} {today.day}, {today.year}",
                 "chart_type": "line",
@@ -10062,6 +10287,11 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 year=year,
                 can_prev=year > min_year,
                 can_next=year < today.year,
+                **self._agg_period_unpaid(
+                    self._agg_load_all(),
+                    today.replace(year=year, month=1, day=1),
+                    today.replace(year=year, month=12, day=31),
+                ),
             )
 
         # --- Overall: one point per year ---
@@ -10562,6 +10792,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/aggregates/repair")(self.admin_aggregates_repair)
         self.app.route("/admin/aggregates/compare")(self.admin_aggregates_compare)
         self.app.route("/admin/aggregates/switch")(self.admin_aggregates_switch)
+        self.app.route("/cron/send-reminders", methods=["GET"])(self.cron_send_reminders)
 
 
 

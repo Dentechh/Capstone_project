@@ -1,4 +1,4 @@
-        /* Doctors Calendar: day schedule + upcoming blocked days */
+/* Doctors Calendar: day schedule + upcoming blocked days */
         .dc-extras {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -564,5 +564,344 @@
         flex: 1 1 0;
         min-width: 0;
         text-align: center;
+    }
+}
+
+/* ==========================================================================
+   DOCTORS CALENDAR - BIG CALENDAR LAYOUT
+   Full-width calendar on top, the block panel below it, then the rest.
+   Every rule is scoped to #section-doctorscalendar .doctor-cal-panel so the
+   Reschedule calendar (.rs-cal), which shares the flatpickr theme, is not
+   touched. The ID in the selector beats the theme's !important rules.
+   ========================================================================== */
+
+#section-doctorscalendar .dc-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#section-doctorscalendar .doctor-cal-panel {
+    width: 100%;
+    max-width: none;
+    flex: none;
+}
+
+/* ---- Header + weekday band: a little larger ---- */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-months {
+    padding: 18px 16px 14px !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year,
+#section-doctorscalendar .doctor-cal-panel .adm-month-dd {
+    font-size: 20px !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-weekday {
+    font-size: 13px !important;
+    padding: 6px 0 !important;
+}
+
+/* ---- Day grid: 7 equal columns, tall cells ---- */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-days {
+    padding: 14px !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .dayContainer {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    justify-content: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+    width: 100% !important;
+    height: clamp(72px, 9vh, 104px) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    padding: 10px 12px !important;
+    font-size: 17px !important;
+    font-weight: 700 !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+    overflow: hidden;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day:hover,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day:focus {
+    background: #eff6ff !important;
+    border-color: #93c5fd !important;
+    transform: translateY(-2px) !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.today {
+    border: 2px solid #1e63cd !important;
+    background: #eff6ff !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected:hover {
+    background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+    border-color: transparent !important;
+    transform: none !important;
+}
+
+/* Past days, other months */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.prevMonthDay,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.nextMonthDay,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled:hover,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.prevMonthDay:hover,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.nextMonthDay:hover {
+    background: #f8fafc !important;
+    border-color: #f1f5f9 !important;
+    color: #cbd5e1 !important;
+    font-weight: 600 !important;
+    transform: none !important;
+}
+
+/* Blocked days: tint + status tag inside the cell */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.dc-day-full {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.dc-day-partial {
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected.dc-day-full,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected.dc-day-partial {
+    background: linear-gradient(135deg, #0d47a1 0%, #1e63cd 100%) !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .dc-day-tag {
+    position: absolute;
+    left: 12px;
+    right: 8px;
+    bottom: 9px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #b45309;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#section-doctorscalendar .doctor-cal-panel .dc-day-full .dc-day-tag {
+    color: #b91c1c;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected .dc-day-tag {
+    color: #ffffff;
+}
+
+/* The status dot moves to the top-right corner and gets bigger */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"] {
+    top: 12px !important;
+    right: 12px !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    width: 10px !important;
+    height: 10px !important;
+}
+
+/* ---- Legend: one row ---- */
+#section-doctorscalendar .calendar-legend {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px 28px !important;
+    font-size: 13.5px !important;
+}
+
+/* ---- Block panel: a card below the calendar, two columns ---- */
+#section-doctorscalendar .dc-block-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 32px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.6);
+    box-sizing: border-box;
+}
+
+#section-doctorscalendar .dc-block-col {
+    min-width: 0;
+}
+
+/* ---- Dark mode ---- */
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day:hover,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day:focus {
+    background: #1e3a8a !important;
+    border-color: #3b82f6 !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.today {
+    background: #172554 !important;
+    border-color: #60a5fa !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected:hover,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected.dc-day-full,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected.dc-day-partial {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+    border-color: transparent !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.prevMonthDay,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.nextMonthDay,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled:hover,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.prevMonthDay:hover,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.nextMonthDay:hover {
+    background: #0f172a !important;
+    border-color: #1e293b !important;
+    color: #475569 !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.dc-day-full {
+    background: rgba(127, 29, 29, 0.35) !important;
+    border-color: #7f1d1d !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.dc-day-partial {
+    background: rgba(120, 53, 15, 0.35) !important;
+    border-color: #78350f !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .dc-day-full .dc-day-tag {
+    color: #fca5a5;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .dc-day-partial .dc-day-tag {
+    color: #fcd34d;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.selected .dc-day-tag {
+    color: #ffffff;
+}
+
+body.dark-mode #section-doctorscalendar .dc-block-panel {
+    border-color: #33415a;
+    background: rgba(30, 41, 59, 0.6);
+}
+
+/* Past blocked days keep their record: same tint (and no hover wash-out) as upcoming ones */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-full,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-full:hover {
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-partial,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-partial:hover {
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-full,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-full:hover {
+    background: rgba(127, 29, 29, 0.35) !important;
+    border-color: #7f1d1d !important;
+}
+
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-partial,
+body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpickr-disabled.dc-day-partial:hover {
+    background: rgba(120, 53, 15, 0.35) !important;
+    border-color: #78350f !important;
+}
+
+/* ---- Safety: the tall calendar must never cover or hide the cards below it ---- */
+#section-doctorscalendar .doctor-cal-panel {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: relative;
+}
+
+#section-doctorscalendar .doctor-cal-panel .flatpickr-calendar.inline {
+    position: relative !important;
+    top: 0 !important;
+    height: auto !important;
+}
+
+#section-doctorscalendar .dc-layout,
+#section-doctorscalendar .dc-block-panel {
+    position: relative;
+    z-index: 0;
+}
+
+#section-doctorscalendar .dc-range {
+    display: block !important;
+    position: relative;
+    z-index: 1;
+    clear: both;
+}
+
+#section-doctorscalendar .dc-range>summary {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+#section-doctorscalendar .dc-range-actions {
+    display: flex !important;
+}
+
+#section-doctorscalendar .dc-range-btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Block multiple days / Mark past days as closed are always open, so no pointer cursor */
+#section-doctorscalendar .dc-range>summary {
+    cursor: default !important;
+}
+
+/* ---- Smaller screens ---- */
+@media (max-width: 1000px) {
+    #section-doctorscalendar .dc-block-panel {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+}
+
+@media (max-width: 700px) {
+    #section-doctorscalendar .doctor-cal-panel .dayContainer {
+        gap: 4px !important;
+    }
+
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 54px !important;
+        padding: 6px 7px !important;
+        font-size: 14px !important;
+    }
+
+    #section-doctorscalendar .doctor-cal-panel .dc-day-tag {
+        display: none;
+    }
+
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day>span[style*="border-radius:50%"] {
+        top: 6px !important;
+        right: 6px !important;
+        width: 8px !important;
+        height: 8px !important;
     }
 }

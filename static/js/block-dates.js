@@ -825,6 +825,18 @@
                         dot.style.background = info.full_day ? '#ef4444' : '#f59e0b';
                         dayElem.style.position = 'relative';
                         dayElem.appendChild(dot);
+
+                        /* Big-calendar layout: a short text tag inside the cell
+                           and a tint class, so the status reads at a glance.
+                           Purely visual; the dot above is unchanged. */
+                        const nSlots = Array.isArray(info.blocked_times) ? info.blocked_times.length : 0;
+                        const tag = document.createElement('span');
+                        tag.className = 'dc-day-tag';
+                        tag.textContent = info.full_day
+                            ? 'Closed'
+                            : (nSlots ? nSlots + ' slot' + (nSlots === 1 ? '' : 's') + ' blocked' : 'Partly blocked');
+                        dayElem.appendChild(tag);
+                        dayElem.classList.add(info.full_day ? 'dc-day-full' : 'dc-day-partial');
                     },
                     onReady: function (selectedDates, dateStr, fp) {
                         buildMonthDropdown(fp);

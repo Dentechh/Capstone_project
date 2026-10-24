@@ -1,4 +1,4 @@
-        // --- Financial Chart (Income Trend) ---
+// --- Financial Chart (Income Trend) ---
         let incomeChartInstance = null; // Store chart instance to destroy/update it
 
         // Shared state for whatever period is currently on screen -- read by
@@ -722,7 +722,10 @@ let procChartRequestId = 0;
                 if (financialReportState.asOfLabel) {
                     pdf.setFontSize(8);
                     pdf.setTextColor(120, 120, 120);
-                    pdf.text(`Outstanding Balance and Unpaid Procedures cover all unpaid items as of ${financialReportState.asOfLabel}, not only the selected period.`, margin, y + 14);
+                    const cardsNote = financialReportState.period === 'overall'
+                        ? `Outstanding Balance and Unpaid Procedures cover all unpaid items as of ${financialReportState.asOfLabel}.`
+                        : 'Outstanding Balance and Unpaid Procedures count balances that started in the selected period.';
+                    pdf.text(cardsNote, margin, y + 14);
                 }
                 y += 22;
 
@@ -755,12 +758,14 @@ let procChartRequestId = 0;
         }
 
         // --- Unpaid Procedures table (Financial Reports) ---
-        // Own filters; deliberately independent of the Today/Weekly/... buttons,
-        // which only drive the three cards and the Income Trend chart. The server
+        // Own filters (date range, procedure, patient name); deliberately
+        // independent of the Today/Weekly/... buttons, which only drive the
+        // three cards and the Income Trend chart. The server
         // sends every unpaid procedure once and filtering happens here, so
         // changing a filter costs no request and no Firestore read.
         let unpaidRows = [];
         let unpaidRange = 'all';
+        let unpaidProcedureFilter = 'all'; // 'all' or a lower-cased procedure name
 
         const UNPAID_RANGE_LABELS = {
             all: 'All',
@@ -818,11 +823,51 @@ let procChartRequestId = 0;
             return d >= start && d <= today;
         }
 
+        // Procedure name used for the filter: trimmed and lower-cased, so
+        // "Orthodontic Braces" matches whatever the tooth / plan label says.
+        function unpaidProcKey(row) {
+            return String(row.procedure || '').trim().toLowerCase();
+        }
+
+        // Fills the procedure dropdown from the rows actually in the table
+        // (with how many rows each has), so there is nothing to maintain by
+        // hand. Keeps the current choice if it still exists, else resets.
+        function populateUnpaidProcedureOptions() {
+            const sel = document.getElementById('unpaidProcedureSelect');
+            if (!sel) return;
+            const byKey = new Map();
+            unpaidRows.forEach(r => {
+                const key = unpaidProcKey(r);
+                if (!key) return;
+                const entry = byKey.get(key);
+                if (entry) entry.count += 1;
+                else byKey.set(key, { label: String(r.procedure).trim(), count: 1 });
+            });
+            if (unpaidProcedureFilter !== 'all' && !byKey.has(unpaidProcedureFilter)) {
+                unpaidProcedureFilter = 'all';
+            }
+            const options = ['<option value="all">All procedures</option>'];
+            Array.from(byKey.entries())
+                .sort((a, b) => a[1].label.localeCompare(b[1].label))
+                .forEach(([key, entry]) => {
+                    options.push('<option value="' + unpaidEsc(key) + '">' +
+                        unpaidEsc(entry.label) + ' (' + entry.count + ')</option>');
+                });
+            sel.innerHTML = options.join('');
+            sel.value = unpaidProcedureFilter;
+        }
+
+        function setUnpaidProcedure(value) {
+            unpaidProcedureFilter = value || 'all';
+            renderUnpaidTable();
+        }
+
         function getUnpaidFiltered() {
             const searchEl = document.getElementById('unpaidSearch');
             const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
             return unpaidRows.filter(r =>
                 unpaidInRange(r, unpaidRange) &&
+                (unpaidProcedureFilter === 'all' || unpaidProcKey(r) === unpaidProcedureFilter) &&
                 (!q || String(r.patient_name || '').toLowerCase().includes(q))
             );
         }
@@ -874,6 +919,7 @@ let procChartRequestId = 0;
                 .then(data => {
                     if (data.success) {
                         unpaidRows = data.rows || [];
+                        populateUnpaidProcedureOptions();
                         renderUnpaidTable();
                     } else {
                         body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
@@ -936,7 +982,13 @@ let procChartRequestId = 0;
 
             const searchEl = document.getElementById('unpaidSearch');
             const q = searchEl ? searchEl.value.trim() : '';
-            const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) + (q ? '  ·  Search: "' + q + '"' : '');
+            const procSel = document.getElementById('unpaidProcedureSelect');
+            const procLabel = (unpaidProcedureFilter !== 'all' && procSel && procSel.selectedIndex > -1)
+                ? procSel.options[procSel.selectedIndex].text.replace(/\s*\(\d+\)$/, '')
+                : '';
+            const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) +
+                (procLabel ? '  ·  Procedure: ' + procLabel : '') +
+                (q ? '  ·  Search: "' + q + '"' : '');
 
             /* Repeated at the top of every page the table spills onto, so a
                continued table is still readable without the bands. */
@@ -1080,5 +1132,3 @@ let procChartRequestId = 0;
                 return _fetch.call(this, input, opts);
             };
         })();
-
-
