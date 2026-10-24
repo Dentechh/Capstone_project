@@ -94,6 +94,10 @@
             <button class="notification-btn" id="notificationBtn" title="Notifications" aria-label="Notifications">
                 <span class="material-symbols-rounded" aria-hidden="true">notifications</span>
             </button>
+            <button class="notification-btn" id="msgBtn" type="button" title="Messages" aria-label="Messages">
+                <span class="material-symbols-rounded" aria-hidden="true">chat</span>
+                <span id="msgBadge" class="cm-badge" hidden></span>
+            </button>
 
             <div class="profile-nav">
                 <div class="user-info-brief">
@@ -130,3 +134,8 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='css/clinic-notices.css') }}?v=3">
 <script src="{{ url_for('static', filename='js/clinic-notices.js') }}?v=3" defer></script>
+
+{% if name and name != "Guest" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}?v=1">
+<script src="{{ url_for('static', filename='js/patient_chat.js') }}?v=1" defer></script>
+{% endif %}

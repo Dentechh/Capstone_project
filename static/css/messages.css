@@ -1,0 +1,62 @@
+/* Capizonda messaging - patient panel + admin inbox */
+:root{--cm-blue:#0d4fb3;--cm-blue-d:#0a3c8a;--cm-bg:#fff;--cm-soft:#eef4fc;--cm-line:#dbe4f0;--cm-text:#1b2a41;--cm-mute:#6b7a90;--cm-me:#0d4fb3;--cm-them:#e9eff8}
+body.dark-mode,body.dark,[data-theme="dark"]{--cm-bg:#16202e;--cm-soft:#1d2a3c;--cm-line:#2b3a50;--cm-text:#e6edf7;--cm-mute:#93a3ba;--cm-them:#243247}
+
+.cm-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#e53935;color:#fff;font:700 11px/18px system-ui,sans-serif;text-align:center}
+.cm-badge[hidden]{display:none}
+#msgBtn{position:relative}
+
+/* patient dropdown chat window */
+.cm-panel{position:fixed;top:78px;right:24px;width:370px;height:500px;max-height:calc(100vh - 100px);background:var(--cm-bg);color:var(--cm-text);border:1px solid var(--cm-line);border-radius:16px;box-shadow:0 18px 50px rgba(10,40,90,.25);display:none;flex-direction:column;overflow:hidden;z-index:9999;font-family:inherit}
+.cm-panel.open{display:flex}
+.cm-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,var(--cm-blue),var(--cm-blue-d));color:#fff}
+.cm-head .cm-av{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:700}
+.cm-head b{display:block;font-size:14px}.cm-head small{opacity:.85;font-size:11px}
+.cm-head .cm-x{margin-left:auto;background:none;border:0;color:#fff;font-size:22px;cursor:pointer;line-height:1}
+
+.cm-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:6px;background:var(--cm-soft)}
+.cm-day{align-self:center;font-size:11px;color:var(--cm-mute);margin:8px 0 2px}
+.cm-row{display:flex;flex-direction:column;max-width:78%}
+.cm-row.me{align-self:flex-end;align-items:flex-end}.cm-row.them{align-self:flex-start;align-items:flex-start}
+.cm-bubble{padding:8px 12px;border-radius:16px;font-size:14px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.cm-row.me .cm-bubble{background:var(--cm-me);color:#fff;border-bottom-right-radius:4px}
+.cm-row.them .cm-bubble{background:var(--cm-them);color:var(--cm-text);border-bottom-left-radius:4px}
+.cm-time{font-size:10px;color:var(--cm-mute);margin:2px 4px 0}
+.cm-empty{margin:auto;text-align:center;color:var(--cm-mute);font-size:13px;padding:20px}
+
+.cm-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--cm-line);background:var(--cm-bg)}
+.cm-form textarea{flex:1;resize:none;border:1px solid var(--cm-line);background:var(--cm-soft);color:var(--cm-text);border-radius:18px;padding:9px 14px;font:inherit;font-size:14px;max-height:90px;outline:none}
+.cm-form textarea:focus{border-color:var(--cm-blue)}
+.cm-form button{border:0;background:var(--cm-blue);color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:grid;place-items:center;align-self:flex-end}
+.cm-form button:disabled{opacity:.5;cursor:default}
+.cm-note{font-size:11px;color:var(--cm-mute);text-align:center;padding:0 10px 8px;background:var(--cm-bg)}
+
+/* admin two-pane inbox */
+.cm-admin{display:flex;height:calc(100vh - 150px);min-height:420px;background:var(--cm-bg);color:var(--cm-text);border:1px solid var(--cm-line);border-radius:16px;overflow:hidden}
+.cm-list{width:320px;border-right:1px solid var(--cm-line);display:flex;flex-direction:column}
+.cm-list .cm-search{margin:12px;padding:9px 14px;border:1px solid var(--cm-line);background:var(--cm-soft);color:var(--cm-text);border-radius:20px;outline:none;font:inherit;font-size:14px}
+.cm-convs{overflow-y:auto;flex:1}
+.cm-conv{display:flex;gap:10px;align-items:center;padding:10px 14px;cursor:pointer;border-left:3px solid transparent}
+.cm-conv:hover{background:var(--cm-soft)}.cm-conv.active{background:var(--cm-soft);border-left-color:var(--cm-blue)}
+.cm-conv .cm-av{flex:none;width:42px;height:42px;border-radius:50%;background:var(--cm-blue);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.cm-conv .cm-meta{min-width:0;flex:1}
+.cm-conv .cm-top{display:flex;justify-content:space-between;gap:6px}
+.cm-conv .cm-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-conv .cm-when{font-size:11px;color:var(--cm-mute);flex:none}
+.cm-conv .cm-prev{font-size:13px;color:var(--cm-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-conv.unread .cm-prev,.cm-conv.unread .cm-name{font-weight:700;color:var(--cm-text)}
+.cm-conv .cm-dot{flex:none;min-width:20px;height:20px;border-radius:10px;background:#e53935;color:#fff;font:700 11px/20px system-ui;text-align:center;padding:0 6px}
+.cm-pane{flex:1;display:flex;flex-direction:column;min-width:0}
+.cm-pane .cm-head{background:var(--cm-bg);color:var(--cm-text);border-bottom:1px solid var(--cm-line)}
+.cm-pane .cm-head .cm-av{background:var(--cm-blue);color:#fff}
+.cm-none{margin:auto;color:var(--cm-mute)}
+.cm-back{display:none;background:none;border:0;font-size:20px;color:var(--cm-text);cursor:pointer}
+
+@media (max-width:700px){
+    .cm-panel{inset:0;width:auto;height:auto;max-height:none;border-radius:0}
+    .cm-list{width:100%}.cm-pane{display:none}
+    .cm-admin.chat-open .cm-list{display:none}.cm-admin.chat-open .cm-pane{display:flex}
+    .cm-back{display:block}
+}
+
+.cm-badge-inline{position:static;margin-left:auto}

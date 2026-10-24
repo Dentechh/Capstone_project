@@ -10,6 +10,7 @@ import threading
 import uuid
 from datetime import UTC, datetime, timedelta, timezone
 from email.message import EmailMessage
+from messaging import MessagingMixin
 
 import bleach
 import firebase_admin
@@ -182,7 +183,7 @@ class BaseFlaskApp:
         return self._app.render_template(template, **kwargs)
 
 
-class DentalClinicApp(BaseFlaskApp):
+class DentalClinicApp(BaseFlaskApp, MessagingMixin):
     """
     4 Pillars of OOP:
     1. Encapsulation - State and behavior in one class
@@ -203,6 +204,7 @@ class DentalClinicApp(BaseFlaskApp):
         self._setup_error_handlers()
         self._setup_csrf()
         self._setup_security_headers()
+        self._setup_activity_log()
         self._register_routes()
         self.csrf.exempt(self.paymongo_webhook)
         self.PATIENTS_PAGE_SIZE = 25
@@ -2383,6 +2385,288 @@ class DentalClinicApp(BaseFlaskApp):
                 response.set_data(strip_comments(response.get_data(as_text=True)))
             return response
 
+
+    # ------------------------------------------------------------------
+    # ACTIVITY LOG
+    #
+    # A read-only record of what the admin / dentist did. One small entry per
+    # successful admin action, written by a hook, so none of the existing
+    # endpoints are touched. Entries are grouped one document per day
+    # (ActivityLog/<YYYY-MM-DD>, an "entries" array): reading a day is ONE
+    # Firestore read however many things happened, and no composite index is
+    # needed. Each day document carries an expire_at timestamp so a Firestore
+    # TTL policy on that field can delete old days by itself.
+    # Nothing here can block or break an action: every step swallows errors.
+    # ------------------------------------------------------------------
+    ACTIVITY_RETENTION_DAYS = 365
+
+    # path -> (category, default label). Only POST (and the logout link) are logged.
+    ACTIVITY_ROUTES = {
+        "/admin/update_patient": ("patients", "Updated patient information"),
+        "/admin/delete_patient": ("patients", "Deleted a patient"),
+        "/admin/toggle_user_block": ("patients", "Changed account access"),
+        "/admin/merge_patients": ("patients", "Merged patient records"),
+        "/save_dental_record": ("patients", "Saved a dental record"),
+        "/admin/assign_dentist": ("appointments", "Assigned a dentist"),
+        "/approve": ("appointments", "Responded to an appointment"),
+        "/admin/create_appointment": ("appointments", "Created an appointment"),
+        "/admin/reschedule_appointment": ("appointments", "Rescheduled an appointment"),
+        "/admin/update_treatment_record": ("billing", "Edited a treatment record"),
+        "/admin/delete_treatment_record": ("billing", "Deleted a treatment record"),
+        "/admin/record_payment": ("billing", "Recorded a payment"),
+        "/admin/mark_plan_paid": ("billing", "Marked a plan as paid"),
+        "/admin/payment_settings": ("billing", "Updated payment settings"),
+        "/admin/billing_cleanup/apply": ("billing", "Applied billing cleanup"),
+        "/admin/block_slot": ("calendar", "Blocked time slots"),
+        "/admin/unblock_slot": ("calendar", "Unblocked a day"),
+        "/admin/block_range": ("calendar", "Blocked multiple days"),
+        "/admin/unblock_range": ("calendar", "Unblocked multiple days"),
+        "/admin/mark_past_closed": ("calendar", "Marked past days as closed"),
+        "/admin_login": ("security", "Signed in"),
+        "/logoutadmin": ("security", "Signed out"),
+    }
+    # Routes where naming the affected patient is worth one extra document read.
+    ACTIVITY_NAME_ROUTES = {
+        "/admin/update_patient", "/admin/delete_patient", "/admin/toggle_user_block",
+        "/admin/merge_patients", "/save_dental_record", "/admin/assign_dentist",
+        "/approve", "/admin/create_appointment", "/admin/reschedule_appointment",
+        "/admin/update_treatment_record", "/admin/delete_treatment_record",
+        "/admin/record_payment", "/admin/mark_plan_paid",
+    }
+
+    def _setup_activity_log(self):
+        from flask import g
+
+        self.Activity_Log = "ActivityLog"
+
+        def actor_from_session():
+            return {
+                "name": str(session.get("admin_name", "") or "")[:80],
+                "email": str(session.get("admin_email", "") or "")[:120],
+                "uid": str(session.get("admin_uid", "") or "")[:80],
+            }
+
+        @self.app.before_request
+        def activity_before():
+            try:
+                path = request.path
+                if path not in self.ACTIVITY_ROUTES or not session.get("admin_logged_in"):
+                    return
+                if path == "/logoutadmin":
+                    # The session is cleared by the route itself, so log it now.
+                    self._activity_record(actor_from_session(), path, "", "", "")
+                    return
+                if request.method != "POST" or path == "/admin_login":
+                    return
+                g.activity_actor = actor_from_session()
+                g.activity_target = (
+                    self._activity_target_name(request.form)
+                    if path in self.ACTIVITY_NAME_ROUTES else ""
+                )
+            except Exception as e:
+                print("ACTIVITY LOG (before) skipped:", e)
+
+        @self.app.after_request
+        def activity_after(response):
+            try:
+                path = request.path
+                if (
+                    request.method == "POST"
+                    and path in self.ACTIVITY_ROUTES
+                    and path != "/logoutadmin"
+                    and response.status_code < 400
+                ):
+                    if path == "/admin_login":
+                        actor = actor_from_session() if session.get("admin_logged_in") else None
+                    else:
+                        actor = getattr(g, "activity_actor", None)
+                    if actor and actor.get("uid") is not None:
+                        js = response.get_json(silent=True) if response.is_json else None
+                        failed = isinstance(js, dict) and js.get("success") is False
+                        if not failed:
+                            self._activity_record(
+                                actor, path, getattr(g, "activity_target", ""), "", "", js
+                            )
+            except Exception as e:
+                print("ACTIVITY LOG (after) skipped:", e)
+            return response
+
+    def _activity_target_name(self, form):
+        """Name of the patient an action is about (best effort, max one read)."""
+        try:
+            def pick(*keys):
+                for k in keys:
+                    v = (form.get(k) or "").strip()
+                    if v:
+                        return v
+                return ""
+
+            first = pick("first_name", "First_Name", "FirstName")
+            last = pick("last_name", "Last_Name", "LastName")
+            if first or last:
+                return f"{first} {last}".strip()
+
+            uid = pick("uid", "user_id")
+            if uid:
+                doc = self.db.collection(self.Customer_Account).document(uid).get()
+                if doc.exists:
+                    d = doc.to_dict() or {}
+                    name = d.get("name") or f"{d.get('first_name', '')} {d.get('last_name', '')}"
+                    return str(name).strip()
+
+            pid = pick("patient_id", "target_patient_id")
+            if pid:
+                doc = self.db.collection(self.Doc_Patients).document(pid).get()
+                if doc.exists:
+                    d = doc.to_dict() or {}
+                    return f"{d.get('first_name', '')} {d.get('last_name', '')}".strip()
+        except Exception as e:
+            print("ACTIVITY LOG name lookup skipped:", e)
+        return ""
+
+    def _activity_describe(self, path, form, js):
+        """(action label, short detail) for one request."""
+        category, action = self.ACTIVITY_ROUTES[path]
+        detail = ""
+
+        def f(key):
+            return (form.get(key) or "").strip()
+
+        def peso(value):
+            return "\u20b1{:,.2f}".format(self.safe_float(value))
+
+        reason = f("reason")
+        if path == "/admin/record_payment":
+            detail = f"{peso(f('amount'))} via {f('method') or 'Cash'}"
+        elif path == "/admin/mark_plan_paid":
+            detail = f"Paid in full via {f('method') or 'Cash'}"
+        elif path == "/admin/toggle_user_block":
+            blocked = f("disabled").lower() == "true"
+            action = "Blocked a patient account" if blocked else "Unblocked a patient account"
+        elif path == "/approve":
+            accepted = f("action").lower() == "accept"
+            action = "Accepted an appointment" if accepted else "Declined an appointment"
+            if accepted and f("dentist_name"):
+                detail = f"Dentist: {f('dentist_name')}"
+        elif path == "/admin/assign_dentist":
+            detail = f"Dentist: {f('dentist_name')}" if f("dentist_name") else ""
+        elif path == "/admin/reschedule_appointment":
+            detail = f"New schedule: {f('new_date')} {f('new_time')}".strip()
+        elif path == "/admin/create_appointment":
+            detail = f"Dentist: {f('dentist_name')}" if f("dentist_name") else ""
+        elif path == "/admin/update_treatment_record":
+            bits = [f("procedure")]
+            if f("tooth"):
+                bits[0] = f"{bits[0]} (tooth {f('tooth')})".strip()
+            bits.append(f"value {peso(f('value'))}, paid {peso(f('paid'))}")
+            detail = " \u00b7 ".join(b for b in bits if b)
+        elif path == "/admin/block_slot":
+            if f("full_day") == "true":
+                action = "Blocked a whole day"
+                detail = f("date")
+            else:
+                times = form.getlist("blocked_times[]")
+                detail = f"{f('date')}: {', '.join(times)}" if times else f("date")
+        elif path == "/admin/unblock_slot":
+            detail = f("date")
+        elif path in ("/admin/block_range", "/admin/unblock_range", "/admin/mark_past_closed"):
+            detail = f"{f('start_date')} to {f('end_date')}"
+        if category == "calendar" and reason:
+            detail = f"{detail} \u00b7 Reason: {reason}" if detail else f"Reason: {reason}"
+        return action, detail[:240]
+
+    def _activity_record(self, actor, path, target, _unused1="", _unused2="", js=None):
+        """Build one entry and write it in the background."""
+        try:
+            category = self.ACTIVITY_ROUTES[path][0]
+            if path in ("/admin_login", "/logoutadmin"):
+                action, detail = self.ACTIVITY_ROUTES[path][1], ""
+            else:
+                action, detail = self._activity_describe(path, request.form, js)
+            now = datetime.now(UTC)
+            entry = {
+                "id": uuid.uuid4().hex[:12],
+                "ts": now.isoformat(),
+                "day": now.astimezone(PH_TZ).strftime("%Y-%m-%d"),
+                "category": category,
+                "action": action,
+                "detail": detail,
+                "target": str(target or "")[:120],
+                "actor_name": actor.get("name", ""),
+                "actor_email": actor.get("email", ""),
+                "actor_uid": actor.get("uid", ""),
+            }
+            threading.Thread(target=self._activity_write, args=(entry,), daemon=True).start()
+        except Exception as e:
+            print("ACTIVITY LOG record skipped:", e)
+
+    def _activity_write(self, entry):
+        try:
+            day = entry["day"]
+            expire = datetime.now(UTC) + timedelta(days=self.ACTIVITY_RETENTION_DAYS + 1)
+            self.db.collection(self.Activity_Log).document(day).set(
+                {"day": day, "expire_at": expire, "entries": firestore.ArrayUnion([entry])},
+                merge=True,
+            )
+        except Exception as e:
+            print("ACTIVITY LOG write failed:", e)
+
+    def admin_activity_log(self):
+        """
+        Admin only. Entries for a window of days ending at ?end= (default today),
+        ?days= long (default 14, max 62). Newest first. One Firestore read per
+        day in the window (a missing day still costs one), no index needed.
+        """
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            today = datetime.now(PH_TZ).date()
+            end_raw = request.args.get("end", "").strip()
+            try:
+                end = datetime.strptime(end_raw, "%Y-%m-%d").date() if end_raw else today
+            except ValueError:
+                end = today
+            end = min(end, today)
+            try:
+                days = int(request.args.get("days", "14"))
+            except ValueError:
+                days = 14
+            days = max(1, min(days, 62))
+
+            oldest = today - timedelta(days=self.ACTIVITY_RETENTION_DAYS)
+            start = max(end - timedelta(days=days - 1), oldest)
+
+            entries = []
+            if start <= end:
+                col = self.db.collection(self.Activity_Log)
+                refs = [
+                    col.document((start + timedelta(days=i)).strftime("%Y-%m-%d"))
+                    for i in range((end - start).days + 1)
+                ]
+                keys = ("id", "ts", "category", "action", "detail", "target",
+                        "actor_name", "actor_email")
+                for snap in self.db.get_all(refs):
+                    if not snap.exists:
+                        continue
+                    for e in (snap.to_dict() or {}).get("entries", []):
+                        if isinstance(e, dict):
+                            entries.append({k: e.get(k, "") for k in keys})
+            entries.sort(key=lambda e: e.get("ts", ""), reverse=True)
+
+            next_end = start - timedelta(days=1)
+            has_more = next_end >= oldest
+            return jsonify({
+                "success": True,
+                "entries": entries,
+                "range_start": start.strftime("%Y-%m-%d"),
+                "range_end": end.strftime("%Y-%m-%d"),
+                "next_end": next_end.strftime("%Y-%m-%d") if has_more else None,
+                "has_more": has_more,
+                "retention_days": self.ACTIVITY_RETENTION_DAYS,
+            })
+        except Exception as e:
+            print("ACTIVITY LOG READ ERROR:", e)
+            return jsonify({"success": False, "message": "Could not load the activity log."}), 500
 
     def require_firebase(self):
         """Checks if Firebase is initialized before running a database operation."""
@@ -10760,6 +11044,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/unblock_range", methods=["POST"])(self.admin_unblock_range)
         self.app.route("/admin/mark_past_closed", methods=["POST"])(self.admin_mark_past_closed)
         self.app.route("/admin/closure_summary")(self.admin_closure_summary)
+        self.app.route("/admin/activity_log")(self.admin_activity_log)
         self.app.route("/get_clinic_notices")(self.get_clinic_notices)
         self.app.route("/get_schedule_notifications")(self.get_schedule_notifications)
         self.app.route("/admin/day_schedule")(self.admin_day_schedule)
@@ -10793,6 +11078,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/aggregates/compare")(self.admin_aggregates_compare)
         self.app.route("/admin/aggregates/switch")(self.admin_aggregates_switch)
         self.app.route("/cron/send-reminders", methods=["GET"])(self.cron_send_reminders)
+        self._register_message_routes()
 
 
 

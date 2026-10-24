@@ -20,6 +20,8 @@ function showSection(sectionId) {
                 'patientdashboard': 'Patient Dashboard',
                 'mypatients': 'My Patients',
                 'usermanagement': 'User Management',
+                'activitylog': 'Activity Log',
+                'messages': 'Messages',
             };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
 
@@ -32,6 +34,17 @@ function showSection(sectionId) {
             // from its cache, so this is cheap.
             if (sectionId === 'financialreports' && typeof loadUnpaidProcedures === 'function') {
                 loadUnpaidProcedures();
+            }
+
+            // Messages inbox: poll only while its tab is the one showing.
+            if (window.AdminMessages) {
+                if (sectionId === 'messages') AdminMessages.start(); else AdminMessages.stop();
+            }
+
+            // Activity Log: pick up anything done since it was last opened
+            // (only if it has been a minute; the function decides).
+            if (sectionId === 'activitylog' && typeof activityLogOpened === 'function') {
+                activityLogOpened();
             }
 
             // Patient Dashboard tab clicked directly (not via opening a patient):

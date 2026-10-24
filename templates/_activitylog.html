@@ -1,0 +1,93 @@
+<div id="section-activitylog" class="content-section">
+    <div class="income-trend-card activity-card" id="activityLogCard">
+        <div class="income-trend-header" style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+            <div>
+                <h3>Activity Log</h3>
+                <p>What the admin and dentist did, newest first. Entries can't be edited or deleted.</p>
+            </div>
+            <button type="button" id="activity-download-btn" class="financial-download-btn"
+                onclick="downloadActivityLogPDF()">
+                <span class="material-symbols-rounded" aria-hidden="true">download</span>
+                <span>Download PDF</span>
+            </button>
+        </div>
+
+        <div class="unpaid-toolbar">
+            <div class="period-btn-group" id="activityCategoryGroup" role="group" aria-label="Filter by type of activity">
+                <button type="button" class="unpaid-filter-btn active" data-cat="all" onclick="setActivityCategory('all')">
+                    <span class="material-symbols-rounded" aria-hidden="true">format_list_bulleted</span>
+                    <span>All</span>
+                </button>
+                <button type="button" class="unpaid-filter-btn" data-cat="patients" onclick="setActivityCategory('patients')">
+                    <span class="material-symbols-rounded" aria-hidden="true">groups</span>
+                    <span>Patients</span>
+                </button>
+                <button type="button" class="unpaid-filter-btn" data-cat="billing" onclick="setActivityCategory('billing')">
+                    <span class="material-symbols-rounded" aria-hidden="true">payments</span>
+                    <span>Billing</span>
+                </button>
+                <button type="button" class="unpaid-filter-btn" data-cat="appointments" onclick="setActivityCategory('appointments')">
+                    <span class="material-symbols-rounded" aria-hidden="true">event</span>
+                    <span>Appointments</span>
+                </button>
+                <button type="button" class="unpaid-filter-btn" data-cat="calendar" onclick="setActivityCategory('calendar')">
+                    <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                    <span>Calendar</span>
+                </button>
+                <button type="button" class="unpaid-filter-btn" data-cat="security" onclick="setActivityCategory('security')">
+                    <span class="material-symbols-rounded" aria-hidden="true">login</span>
+                    <span>Sign-ins</span>
+                </button>
+            </div>
+            <div class="unpaid-toolbar-right" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto;">
+                <select id="activityAdminSelect" class="unpaid-search" style="width:auto; min-width:170px; cursor:pointer;"
+                    aria-label="Filter by staff member" onchange="setActivityAdmin(this.value)">
+                    <option value="all">All staff</option>
+                </select>
+                <input type="text" id="activitySearch" class="unpaid-search" placeholder="Search patient or details..."
+                    aria-label="Search the activity log" oninput="renderActivityLog()">
+            </div>
+        </div>
+
+        <div class="activity-range">
+            <label for="activityFrom">From</label>
+            <input type="date" id="activityFrom" class="unpaid-search activity-date">
+            <label for="activityTo">To</label>
+            <input type="date" id="activityTo" class="unpaid-search activity-date">
+            <button type="button" class="unpaid-filter-btn" onclick="applyActivityRange()">
+                <span class="material-symbols-rounded" aria-hidden="true">search</span>
+                <span>Show</span>
+            </button>
+            <button type="button" class="unpaid-filter-btn" onclick="resetActivityRange()">
+                <span class="material-symbols-rounded" aria-hidden="true">restart_alt</span>
+                <span>Last 14 days</span>
+            </button>
+        </div>
+
+        <div class="unpaid-table-wrap">
+            <table class="unpaid-table activity-table" id="activityTable">
+                <thead>
+                    <tr>
+                        <th>When</th>
+                        <th>Staff</th>
+                        <th>Action</th>
+                        <th>Patient</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="activityTableBody">
+                    <tr><td colspan="5" class="unpaid-empty">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="activity-foot">
+            <span id="activityStatus" class="activity-status" aria-live="polite"></span>
+            <button type="button" id="activityMoreBtn" class="unpaid-filter-btn" style="display:none;"
+                onclick="loadActivityLog(false)">
+                <span class="material-symbols-rounded" aria-hidden="true">history</span>
+                <span>Load earlier days</span>
+            </button>
+        </div>
+    </div>
+</div>
