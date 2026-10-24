@@ -13,8 +13,10 @@ Timestamps are ISO strings (same style as the rest of main.py), so
 Clients poll with a cursor ("after"/"since"), so each poll only reads
 what's new -- cheap on Firestore reads.
 """
+import threading
 import time
-from datetime import UTC, datetime
+import uuid
+from datetime import UTC, datetime, timedelta, timezone
 
 import bleach
 from flask import jsonify, request, session
@@ -23,6 +25,9 @@ MSG_MAX_LEN = 1000
 MSG_PAGE = 100          # messages returned on first load of a thread
 MSG_LIST_LIMIT = 60     # conversations returned on first load of the inbox
 _msg_last_sent = {}     # uid -> [timestamps], tiny in-memory flood guard
+_msg_log_seen = {}      # (admin uid, patient uid) -> last time a reply was logged
+MSG_LOG_EVERY = 3600    # log replies to the same patient at most once an hour
+_PH = timezone(timedelta(hours=8))
 
 
 def _now_iso():
@@ -87,10 +92,33 @@ class MessagingMixin:
         }
         if patient_name:
             fields["patient_name"] = patient_name
-        unread_field = "unread_admin" if sender == "patient" else "unread_patient"
-        fields[unread_field] = fb_firestore_increment(1)
+        if sender == "patient":
+            fields["unread_admin"] = fb_firestore_increment(1)
+        else:
+            fields["unread_patient"] = fb_firestore_increment(1)
+            fields["unread_admin"] = 0      # replying means the dentist has read it
         conv.set(fields, merge=True)
         return now
+
+    def _msg_log(self, action, patient_name, detail=""):
+        """Add one line to the admin Activity Log (never includes message text)."""
+        try:
+            now = datetime.now(UTC)
+            entry = {
+                "id": uuid.uuid4().hex[:12],
+                "ts": now.isoformat(),
+                "day": now.astimezone(_PH).strftime("%Y-%m-%d"),
+                "category": "patients",
+                "action": action,
+                "detail": detail[:240],
+                "target": str(patient_name or "")[:120],
+                "actor_name": str(session.get("admin_name", "") or "")[:80],
+                "actor_email": str(session.get("admin_email", "") or "")[:120],
+                "actor_uid": str(session.get("admin_uid", "") or "")[:80],
+            }
+            threading.Thread(target=self._activity_write, args=(entry,), daemon=True).start()
+        except Exception as e:
+            print("MSG ACTIVITY LOG skipped:", e)
 
     # ---------- patient side ----------
     def msg_patient_send(self):
@@ -103,6 +131,12 @@ class MessagingMixin:
         if not self._msg_rate_ok("p:" + uid):
             return jsonify({"success": False, "message": "You're sending too fast. Please wait a moment."}), 429
         try:
+            # Accounts the admin blocked (Customer_Account.disabled) can't message,
+            # even if their session is still alive. One read, only when sending.
+            acct = self.db.collection(self.Customer_Account).document(uid).get()
+            if acct.exists and (acct.to_dict() or {}).get("disabled"):
+                return jsonify({"success": False,
+                                "message": "Your account can't send messages. Please contact the clinic."}), 403
             self._msg_store(uid, session.get("name", "Patient"), "patient", text)
             return jsonify({"success": True})
         except Exception as e:
@@ -117,7 +151,9 @@ class MessagingMixin:
         try:
             after = request.args.get("after", "").strip()
             msgs = self._msg_load(uid, after)
-            if request.args.get("mark_read") == "1":
+            # Write only if the dentist's messages came back in this batch;
+            # an empty poll costs a read but never a write.
+            if request.args.get("mark_read") == "1" and any(m["sender"] != "patient" for m in msgs):
                 self.db.collection(self.Conversations).document(uid).set(
                     {"unread_patient": 0}, merge=True)
             return jsonify({"messages": msgs})
@@ -168,12 +204,7 @@ class MessagingMixin:
                     "last_message_at": c.get("last_message_at", ""),
                     "unread": int(c.get("unread_admin", 0) or 0),
                 })
-            try:
-                unread_total = (self.db.collection(self.Conversations)
-                                .where("unread_admin", ">", 0).count().get()[0][0].value)
-            except Exception:
-                unread_total = None
-            return jsonify({"conversations": out, "unread_total": unread_total})
+            return jsonify({"conversations": out})
         except Exception as e:
             print("MSG ADMIN LIST ERROR:", e)
             return jsonify({"error": "Something went wrong."}), 500
@@ -184,10 +215,17 @@ class MessagingMixin:
         try:
             after = request.args.get("after", "").strip()
             msgs = self._msg_load(uid, after)
-            if request.args.get("mark_read") == "1":
+            if request.args.get("mark_read") == "1" and any(m["sender"] != "admin" for m in msgs):
                 self.db.collection(self.Conversations).document(uid).set(
                     {"unread_admin": 0}, merge=True)
-            return jsonify({"messages": msgs})
+            out = {"messages": msgs}
+            if not after:
+                # Only when the thread is first opened (one extra read): is this
+                # patient's account blocked, and does an account exist to block?
+                acct = self.db.collection(self.Customer_Account).document(uid).get()
+                out["can_block"] = bool(acct.exists)
+                out["blocked"] = bool(acct.exists and (acct.to_dict() or {}).get("disabled"))
+            return jsonify(out)
         except Exception as e:
             print("MSG ADMIN THREAD ERROR:", e)
             return jsonify({"error": "Something went wrong."}), 500
@@ -207,13 +245,59 @@ class MessagingMixin:
                 return jsonify({"success": False, "message": "Conversation not found."}), 404
             self._msg_store(uid, "", "admin", text,
                             staff_name=str(session.get("admin_name", ""))[:80])
-            # Opening/answering a thread means the dentist has seen it.
-            self.db.collection(self.Conversations).document(uid).set(
-                {"unread_admin": 0}, merge=True)
+            key = (str(session.get("admin_uid", "")), uid)
+            if time.time() - _msg_log_seen.get(key, 0) > MSG_LOG_EVERY:
+                _msg_log_seen[key] = time.time()
+                self._msg_log("Replied to a patient message",
+                              (conv.to_dict() or {}).get("patient_name", "Patient"))
             return jsonify({"success": True})
         except Exception as e:
             print("MSG ADMIN SEND ERROR:", e)
             return jsonify({"success": False, "message": "Could not send. Please try again."}), 500
+
+    def msg_admin_mark(self):
+        """Admin: mark a conversation unread (unread=1) or read (unread=0)."""
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        uid = bleach.clean((request.form.get("uid") or "").strip())
+        if not uid:
+            return jsonify({"success": False, "message": "Missing patient."}), 400
+        want_unread = request.form.get("unread") == "1"
+        try:
+            # update() (not set) so a deleted conversation is never recreated empty
+            self.db.collection(self.Conversations).document(uid).update(
+                {"unread_admin": 1 if want_unread else 0})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("MSG ADMIN MARK ERROR:", e)
+            return jsonify({"success": False, "message": "Could not update. Please try again."}), 500
+
+    def msg_admin_delete(self):
+        """Admin: permanently delete one patient's whole conversation."""
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        uid = bleach.clean((request.form.get("uid") or "").strip())
+        if not uid:
+            return jsonify({"success": False, "message": "Missing patient."}), 400
+        try:
+            conv = self.db.collection(self.Conversations).document(uid)
+            snap = conv.get()
+            patient_name = (snap.to_dict() or {}).get("patient_name", "Patient") if snap.exists else "Patient"
+            msgs = conv.collection("messages")
+            while True:                      # Firestore batches hold up to 500 writes
+                docs = list(msgs.limit(400).stream())
+                if not docs:
+                    break
+                batch = self.db.batch()
+                for d in docs:
+                    batch.delete(d.reference)
+                batch.commit()
+            conv.delete()
+            self._msg_log("Deleted a message conversation", patient_name)
+            return jsonify({"success": True})
+        except Exception as e:
+            print("MSG ADMIN DELETE ERROR:", e)
+            return jsonify({"success": False, "message": "Could not delete. Please try again."}), 500
 
     # ---------- route registration ----------
     def _register_message_routes(self):
@@ -224,6 +308,8 @@ class MessagingMixin:
         r("/admin/messages/conversations")(self.msg_admin_conversations)
         r("/admin/messages/thread/<uid>")(self.msg_admin_thread)
         r("/admin/messages/send", methods=["POST"])(self.msg_admin_send)
+        r("/admin/messages/delete", methods=["POST"])(self.msg_admin_delete)
+        r("/admin/messages/mark", methods=["POST"])(self.msg_admin_mark)
 
 
 def fb_firestore_increment(n):

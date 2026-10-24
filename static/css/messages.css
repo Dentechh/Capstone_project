@@ -60,3 +60,14 @@ body.dark-mode,body.dark,[data-theme="dark"]{--cm-bg:#16202e;--cm-soft:#1d2a3c;-
 }
 
 .cm-badge-inline{position:static;margin-left:auto}
+
+/* iOS zooms into inputs under 16px; keep chat boxes at 16px on phones */
+@media (max-width:700px){.cm-form textarea,.cm-list .cm-search{font-size:16px}}
+.cm-del{margin-left:auto;background:none;border:0;cursor:pointer;color:var(--cm-mute);display:grid;place-items:center;padding:6px;border-radius:8px}
+.cm-del:hover{color:#e53935;background:var(--cm-soft)}
+.cm-del .material-symbols-rounded{font-size:22px}
+
+.cm-tools{margin-left:auto;display:flex;gap:2px}
+.cm-tools .cm-del{margin-left:0}
+.cm-conv .cm-dot{cursor:pointer}
+.cm-del[hidden]{display:none}
