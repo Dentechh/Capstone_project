@@ -11,6 +11,7 @@ import uuid
 from datetime import UTC, datetime, timedelta, timezone
 from email.message import EmailMessage
 from messaging import MessagingMixin
+from patient_backup import BackupMixin
 
 import bleach
 import firebase_admin
@@ -183,7 +184,7 @@ class BaseFlaskApp:
         return self._app.render_template(template, **kwargs)
 
 
-class DentalClinicApp(BaseFlaskApp, MessagingMixin):
+class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     """
     4 Pillars of OOP:
     1. Encapsulation - State and behavior in one class
@@ -2406,6 +2407,9 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin):
         "/admin/delete_patient": ("patients", "Deleted a patient"),
         "/admin/toggle_user_block": ("patients", "Changed account access"),
         "/admin/merge_patients": ("patients", "Merged patient records"),
+        "/admin/backup/export": ("patients", "Downloaded a patient data backup"),
+        "/admin/backup/import": ("patients", "Restored a patient data backup"),
+        "/admin/backup/report": ("patients", "Downloaded a patient records document"),
         "/save_dental_record": ("patients", "Saved a dental record"),
         "/admin/assign_dentist": ("appointments", "Assigned a dentist"),
         "/approve": ("appointments", "Responded to an appointment"),
@@ -2571,6 +2575,10 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin):
             detail = f("date")
         elif path in ("/admin/block_range", "/admin/unblock_range", "/admin/mark_past_closed"):
             detail = f"{f('start_date')} to {f('end_date')}"
+        elif path == "/admin/backup/report":
+            detail = "Excel" if f("format").lower() == "xlsx" else "Word"
+        elif path == "/admin/backup/import":
+            detail = str((js or {}).get("detail", "")) if isinstance(js, dict) else ""
         if category == "calendar" and reason:
             detail = f"{detail} \u00b7 Reason: {reason}" if detail else f"Reason: {reason}"
         return action, detail[:240]
@@ -11079,6 +11087,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/aggregates/switch")(self.admin_aggregates_switch)
         self.app.route("/cron/send-reminders", methods=["GET"])(self.cron_send_reminders)
         self._register_message_routes()
+        self._register_backup_routes()
 
 
 

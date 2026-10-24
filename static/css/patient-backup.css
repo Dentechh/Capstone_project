@@ -1,0 +1,47 @@
+/* Backup & Restore popup (My Patients) */
+.bk-modal { align-items: center; justify-content: center; }
+.bk-card {
+    position: relative; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    background: #fff; color: #1f2937; border-radius: 16px; padding: 28px 26px 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .25); font-family: 'Kumbh Sans', sans-serif;
+}
+.bk-close {
+    position: absolute; top: 12px; right: 14px; width: 36px; height: 36px; border: 0;
+    border-radius: 50%; background: #eef3fb; color: #0b4aa2; font-size: 22px; line-height: 1; cursor: pointer;
+}
+.bk-close:hover { background: #dce7f8; }
+.bk-card h2 { margin: 0 0 4px; color: #0b4aa2; font-size: 1.4rem; }
+.bk-sub { margin: 0 0 18px; font-size: .92rem; opacity: .8; line-height: 1.5; }
+
+.bk-section { border: 1px solid #e1ebfa; background: #f4f8ff; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.bk-section h3 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.bk-section p { margin: 0 0 12px; font-size: .88rem; line-height: 1.5; opacity: .85; }
+.bk-check { display: flex; align-items: center; gap: 8px; font-size: .88rem; margin-bottom: 12px; cursor: pointer; }
+
+.bk-btn {
+    border: 0; border-radius: 10px; padding: 10px 18px; font: inherit; font-weight: 700; cursor: pointer;
+    background: #0b4aa2; color: #fff;
+}
+.bk-btn:hover:not(:disabled) { background: #083a82; }
+.bk-btn:disabled { opacity: .55; cursor: not-allowed; }
+.bk-btn--ghost { background: #eef3fb; color: #0b4aa2; }
+.bk-btn--ghost:hover:not(:disabled) { background: #dce7f8; }
+.bk-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.bk-file { display: block; width: 100%; margin-bottom: 10px; font-size: .88rem; }
+
+.bk-summary { margin: 4px 0 12px; padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #e1ebfa; font-size: .88rem; line-height: 1.6; }
+.bk-summary[hidden] { display: none; }
+.bk-summary strong { color: #0b4aa2; }
+.bk-summary .bk-meta { opacity: .7; font-size: .82rem; margin-bottom: 6px; }
+.bk-status { min-height: 1.2em; margin: 8px 0 0; font-size: .88rem; font-weight: 600; }
+.bk-status.is-error { color: #b91c1c; }
+.bk-status.is-ok { color: #15803d; }
+.bk-warn { margin: 6px 0 0; font-size: .8rem; line-height: 1.5; opacity: .75; }
+
+body.dark-mode .bk-card { background: #1b2433; color: #e5eaf3; }
+body.dark-mode .bk-card h2, body.dark-mode .bk-summary strong { color: #7fb0ff; }
+body.dark-mode .bk-close, body.dark-mode .bk-btn--ghost { background: #2a3650; color: #cfe0ff; }
+body.dark-mode .bk-section { background: #232e44; border-color: #2f3d5a; }
+body.dark-mode .bk-summary { background: #1b2433; border-color: #2f3d5a; }
+body.dark-mode .bk-status.is-error { color: #fca5a5; }
+body.dark-mode .bk-status.is-ok { color: #86efac; }

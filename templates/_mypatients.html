@@ -33,6 +33,11 @@
                             <span class="material-symbols-rounded filter-btn__dir"
                                 aria-hidden="true">arrow_downward</span>
                         </button>
+                        <button type="button" id="backupOpenBtn" class="btn-action filter-btn"
+                            title="Back up or restore all patient records" onclick="openBackupModal()">
+                            <span class="material-symbols-rounded" aria-hidden="true">cloud_sync</span>
+                            <span class="filter-btn__label">Backup</span>
+                        </button>
                     </div>
                 </div>
                 <div id="myPatientsCursor" data-cursor="{{ my_patients_next_cursor or '' }}" style="display:none;">
@@ -100,5 +105,46 @@
                 </div>
             </section>
         </div>
+
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-backup.css') }}?v=1">
+
+        <div id="backupModal" class="modal bk-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
+            <div class="bk-card">
+                <button type="button" class="bk-close" aria-label="Close" onclick="closeBackupModal()">&times;</button>
+                <h2 id="bkTitle">Backup &amp; Restore</h2>
+                <p class="bk-sub">Keep a safe copy of every patient record and all of their transactions, or bring a saved copy back.</p>
+                <input type="hidden" id="bkCsrf" value="{{ csrf_token() }}">
+
+                <div class="bk-section">
+                    <h3><span class="material-symbols-rounded" aria-hidden="true">download</span>Download a backup</h3>
+                    <p>Saves all patients, treatment records, payments and appointments into one file on this computer.</p>
+                    <label class="bk-check"><input type="checkbox" id="bkCharts" checked> Include dental chart images (bigger file)</label>
+                    <button type="button" class="bk-btn" id="bkDownloadBtn">Download backup</button>
+                </div>
+
+                <div class="bk-section">
+                    <h3><span class="material-symbols-rounded" aria-hidden="true">upload</span>Restore from a backup</h3>
+                    <p>Choose a backup file to see what it contains first. Nothing is changed until you press Restore, and existing records are never overwritten.</p>
+                    <input type="file" id="bkFile" class="bk-file" accept=".json,application/json">
+                    <div class="bk-summary" id="bkSummary" hidden></div>
+                    <button type="button" class="bk-btn" id="bkRestoreBtn" disabled>Restore</button>
+                </div>
+
+                <div class="bk-section">
+                    <h3><span class="material-symbols-rounded" aria-hidden="true">description</span>Download a readable copy</h3>
+                    <p>A neat copy of all patients, treatments and payments for reading and printing. It cannot be used to restore.</p>
+                    <div class="bk-row">
+                        <button type="button" class="bk-btn bk-btn--ghost" id="bkXlsxBtn">Excel (.xlsx)</button>
+                        <button type="button" class="bk-btn bk-btn--ghost" id="bkDocxBtn">Word (.docx)</button>
+                    </div>
+                </div>
+
+                <p class="bk-status" id="bkStatus" role="status" aria-live="polite"></p>
+                <p class="bk-warn">Backup files contain confidential patient information. Store them somewhere safe and never share them. Patient login passwords are not part of a backup, so a patient who was deleted will need to register again.</p>
+            </div>
+        </div>
+
+        <script src="{{ url_for('static', filename='js/patient-backup.js') }}?v=1"></script>
 
         <script src="{{ url_for('static', filename='js/mypatients-list.js') }}?v=3"></script>
