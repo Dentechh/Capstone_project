@@ -59,6 +59,12 @@
         });
     }
 
+    var ROLE_LABELS = { developer: 'Developer', dentist: 'Dentist', admin: 'Admin' };
+
+    function roleOf(e) {
+        return ROLE_LABELS[e.actor_role] ? e.actor_role : 'admin';
+    }
+
     function staffName(e) {
         return e.actor_name || e.actor_email || 'Unknown';
     }
@@ -138,7 +144,9 @@
                 }
                 var tr = el('tr');
                 tr.appendChild(el('td', 'act-time', manilaTime(e.ts)));
-                tr.appendChild(el('td', 'act-staff', staffName(e)));
+                var tdS = el('td', 'act-staff', staffName(e));
+                tdS.appendChild(el('span', 'role-badge role-' + roleOf(e), ROLE_LABELS[roleOf(e)]));
+                tr.appendChild(tdS);
                 var tdA = el('td');
                 tdA.appendChild(el('span', 'act-badge cat-' + e.category, CATEGORY_LABELS[e.category] || e.category));
                 tdA.appendChild(document.createTextNode(e.action));
@@ -330,7 +338,7 @@
             var when = manilaDay(e.ts) + ' ' + manilaTime(e.ts);
             var cells = [
                 when,
-                staffName(e),
+                staffName(e) + ' (' + ROLE_LABELS[roleOf(e)] + ')',
                 (CATEGORY_LABELS[e.category] || e.category) + ': ' + e.action,
                 e.target || '-',
                 e.detail || ''

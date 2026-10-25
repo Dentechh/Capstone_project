@@ -241,19 +241,59 @@ class MessagingMixin:
             return jsonify({"success": False, "message": "Slow down a little."}), 429
         try:
             conv = self.db.collection(self.Conversations).document(uid).get()
-            if not conv.exists:
-                return jsonify({"success": False, "message": "Conversation not found."}), 404
-            self._msg_store(uid, "", "admin", text,
-                            staff_name=str(session.get("admin_name", ""))[:80])
             key = (str(session.get("admin_uid", "")), uid)
-            if time.time() - _msg_log_seen.get(key, 0) > MSG_LOG_EVERY:
-                _msg_log_seen[key] = time.time()
-                self._msg_log("Replied to a patient message",
-                              (conv.to_dict() or {}).get("patient_name", "Patient"))
+            if conv.exists:
+                self._msg_store(uid, "", "admin", text,
+                                staff_name=str(session.get("admin_name", ""))[:80])
+                if time.time() - _msg_log_seen.get(key, 0) > MSG_LOG_EVERY:
+                    _msg_log_seen[key] = time.time()
+                    self._msg_log("Replied to a patient message",
+                                  (conv.to_dict() or {}).get("patient_name", "Patient"))
+                return jsonify({"success": True})
+
+            # No conversation yet: the dentist is starting one ("new" must be set,
+            # and the account must be a real, unblocked patient account).
+            if request.form.get("new") != "1":
+                return jsonify({"success": False, "message": "Conversation not found."}), 404
+            acct = self.db.collection(self.Customer_Account).document(uid).get()
+            if not acct.exists:
+                return jsonify({"success": False, "message": "Patient account not found."}), 404
+            a = acct.to_dict() or {}
+            if a.get("disabled"):
+                return jsonify({"success": False, "message": "This account is blocked."}), 403
+            name = (f"{a.get('firstname', '')} {a.get('lastname', '')}".strip()
+                    or a.get("name") or "Patient")
+            self._msg_store(uid, name, "admin", text,
+                            staff_name=str(session.get("admin_name", ""))[:80])
+            _msg_log_seen[key] = time.time()
+            self._msg_log("Started a conversation with a patient", name)
             return jsonify({"success": True})
         except Exception as e:
             print("MSG ADMIN SEND ERROR:", e)
             return jsonify({"success": False, "message": "Could not send. Please try again."}), 500
+
+    def msg_admin_patients(self):
+        """Admin: find a patient account to start a new conversation with.
+        Uses the same cached account list as User Management (no extra reads)."""
+        if not session.get("admin_logged_in"):
+            return jsonify({"error": "Unauthorized"}), 403
+        try:
+            q = (request.args.get("q") or "").strip().lower()[:60]
+            out = []
+            for uid, d in self._get_manageable_accounts_cached():
+                if d.get("provider") not in ("google", "password") or d.get("disabled"):
+                    continue
+                name = (f"{d.get('firstname', '')} {d.get('lastname', '')}".strip()
+                        or d.get("name") or "")
+                email = d.get("email") or ""
+                if q and q not in name.lower() and q not in email.lower():
+                    continue
+                out.append({"uid": uid, "name": name or email or "Patient", "email": email})
+            out.sort(key=lambda r: r["name"].lower())
+            return jsonify({"patients": out[:15]})
+        except Exception as e:
+            print("MSG ADMIN PATIENTS ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
 
     def msg_admin_mark(self):
         """Admin: mark a conversation unread (unread=1) or read (unread=0)."""
@@ -310,6 +350,7 @@ class MessagingMixin:
         r("/admin/messages/send", methods=["POST"])(self.msg_admin_send)
         r("/admin/messages/delete", methods=["POST"])(self.msg_admin_delete)
         r("/admin/messages/mark", methods=["POST"])(self.msg_admin_mark)
+        r("/admin/messages/patients")(self.msg_admin_patients)
 
 
 def fb_firestore_increment(n):

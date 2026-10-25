@@ -322,6 +322,12 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             print("⚠️  GOOGLE_CLIENT_ID is missing; Google login will be disabled until it's set in .env")
             
         self.ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
+        # Optional role lists (same format as ADMIN_EMAILS). Anyone listed here can
+        # sign in to the admin panel; the role only changes how they are labelled
+        # in the Activity Log. If an email is in several lists: developer wins,
+        # then dentist, then admin.
+        self.DEVELOPER_EMAILS = {e.strip().lower() for e in os.getenv("DEVELOPER_EMAILS", "").split(",") if e.strip()}
+        self.DENTIST_EMAILS = {e.strip().lower() for e in os.getenv("DENTIST_EMAILS", "").split(",") if e.strip()}
 
         # In-memory cache to cut Firestore reads on hot admin endpoints.
         # See cache_store.py for how it works and its single-process caveat.
@@ -2438,6 +2444,15 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         "/admin/record_payment", "/admin/mark_plan_paid",
     }
 
+    def role_for_email(self, email):
+        """'developer', 'dentist' or 'admin' for a signed-in staff email."""
+        email = str(email or "").strip().lower()
+        if email in self.DEVELOPER_EMAILS:
+            return "developer"
+        if email in self.DENTIST_EMAILS:
+            return "dentist"
+        return "admin"
+
     def _setup_activity_log(self):
         from flask import g
 
@@ -2448,6 +2463,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 "name": str(session.get("admin_name", "") or "")[:80],
                 "email": str(session.get("admin_email", "") or "")[:120],
                 "uid": str(session.get("admin_uid", "") or "")[:80],
+                # sessions that started before this change have no stored role
+                "role": session.get("admin_role") or self.role_for_email(session.get("admin_email")),
             }
 
         @self.app.before_request
@@ -2603,6 +2620,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 "actor_name": actor.get("name", ""),
                 "actor_email": actor.get("email", ""),
                 "actor_uid": actor.get("uid", ""),
+                "actor_role": actor.get("role", "") or "admin",
             }
             threading.Thread(target=self._activity_write, args=(entry,), daemon=True).start()
         except Exception as e:
@@ -2652,13 +2670,16 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     for i in range((end - start).days + 1)
                 ]
                 keys = ("id", "ts", "category", "action", "detail", "target",
-                        "actor_name", "actor_email")
+                        "actor_name", "actor_email", "actor_role")
                 for snap in self.db.get_all(refs):
                     if not snap.exists:
                         continue
                     for e in (snap.to_dict() or {}).get("entries", []):
                         if isinstance(e, dict):
-                            entries.append({k: e.get(k, "") for k in keys})
+                            row = {k: e.get(k, "") for k in keys}
+                            if not row["actor_role"]:
+                                row["actor_role"] = self.role_for_email(row["actor_email"])
+                            entries.append(row)
             entries.sort(key=lambda e: e.get("ts", ""), reverse=True)
 
             next_end = start - timedelta(days=1)
@@ -5830,8 +5851,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     
     def _fetch_manageable_accounts_page(self, cursor=None):
         """
-        User Management page: real (non-walk-in) accounts, newest-created
-        first. Queries Customer_Account directly instead of deriving from
+        User Management page: real (non-walk-in) accounts, alphabetical
+        (A-Z by name). Queries Customer_Account directly instead of deriving from
         a full Patients scan — this also fixes a pre-existing bug where
         real accounts with no linked Patients doc never appeared here.
 
@@ -5850,18 +5871,25 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             if data.get("provider") in ("google", "password")
         ]
 
-        # Sort newest-first by created_at (accounts missing created_at go last)
-        docs.sort(
-            key=lambda d: d[1].get("created_at", "") or "",
-            reverse=True
-        )
+        # Sort A-Z by full name (case-insensitive). The account id breaks ties,
+        # so two people with the same name always keep a stable order and
+        # "Load More" never skips or repeats anyone.
+        def _name_sort_key(d):
+            data = d[1]
+            full = (
+                f"{data.get('firstname') or ''} {data.get('lastname') or ''}".strip()
+                or data.get("name") or ""
+            )
+            return (full.lower(), d[0])
 
-        # Manual cursor: skip everything newer than the cursor value
-        if cursor:
-            docs = [
-                d for d in docs
-                if (d[1].get("created_at", "") or "") < cursor
-            ]
+        docs.sort(key=_name_sort_key)
+
+        # Manual cursor: "<name>|<uid>" of the last row already sent.
+        # Skip everything up to and including it.
+        if cursor and "|" in cursor:
+            cur_name, cur_uid = cursor.rsplit("|", 1)
+            cur_key = (cur_name, cur_uid)
+            docs = [d for d in docs if _name_sort_key(d) > cur_key]
 
         has_more = len(docs) > self.PATIENTS_PAGE_SIZE
         docs = docs[:self.PATIENTS_PAGE_SIZE]
@@ -5928,7 +5956,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         next_cursor = None
         if has_more and docs:
-            next_cursor = docs[-1][1].get("created_at", "") or ""
+            last_name, last_uid = _name_sort_key(docs[-1])
+            next_cursor = f"{last_name}|{last_uid}"
 
         return rows, next_cursor
 
@@ -7414,17 +7443,19 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     flash("Unable to get email from Google account.", "error")
                     return redirect(url_for("adminLogin"))
                 
-                if not google_account.get("email_verified") or email.lower() not in self.ADMIN_EMAILS:
+                allowed = self.ADMIN_EMAILS | self.DEVELOPER_EMAILS | self.DENTIST_EMAILS
+                if not google_account.get("email_verified") or email.lower() not in allowed:
                     flash("This account is not authorized.", "error")
                     return redirect(url_for("adminLogin"))
                 
                 
+                role = self.role_for_email(email)
                 self.db.collection("Admin").document(uid).set({
                     "uid": uid,
                     "email": email,
                     "name": name,
                     "provider": "google",
-                    "role": "admin",
+                    "role": role,
                     "last_login": datetime.now(UTC).isoformat()
                 }, merge=True)
                 
@@ -7433,9 +7464,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 session['admin_email'] = email
                 session['admin_name'] = name
                 session['admin_uid'] = uid
+                session['admin_role'] = role
                 session['admin_last_activity'] = datetime.now(UTC).isoformat()
                 
-                session['admin_welcome_toast'] = f"Welcome back, Dr. {name}!"
+                greeting = {"developer": "Developer", "dentist": "Dr."}.get(role, "Admin")
+                session['admin_welcome_toast'] = f"Welcome back, {greeting} {name}!"
                 return redirect(url_for("adminDashboard"))
                 
             except ValueError as e:
