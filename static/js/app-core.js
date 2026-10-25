@@ -23,7 +23,22 @@ function showSection(sectionId) {
                 'activitylog': 'Activity Log',
                 'messages': 'Messages',
             };
+            const titleIcons = {
+                'dashboard': 'dashboard',
+                'financialreports': 'payments',
+                'doctorscalendar': 'calendar_month',
+                'appointments': 'event_available',
+                'WeeklyClients': 'groups',
+                'records': 'database',
+                'patientdashboard': 'person',
+                'mypatients': 'people',
+                'usermanagement': 'manage_accounts',
+                'activitylog': 'history',
+                'messages': 'chat',
+            };
             document.getElementById('page-title').innerText = titles[sectionId] || 'Admin Panel';
+            const titleBadgeIcon = document.querySelector('.page-title-badge .material-symbols-rounded');
+            if (titleBadgeIcon) titleBadgeIcon.textContent = titleIcons[sectionId] || 'admin_panel_settings';
 
             // Lazy-load the four big lists the first time their tab is opened,
             // so opening the dashboard itself doesn't read them from Firestore.
@@ -62,12 +77,20 @@ function showSection(sectionId) {
         const LAZY_SECTIONS = {
             appointments: ['appointmentsLoadMoreBtn', 'appointmentsCursor', '#appointmentsTable tbody'],
             WeeklyClients: ['weeklyClientsLoadMoreBtn', 'weeklyClientsCursor', '#weeklyClientsGrid'],
-            mypatients: ['myPatientsLoadMoreBtn', 'myPatientsCursor', '#myPatientsTable tbody'],
             usermanagement: ['userMgmtLoadMoreBtn', 'userMgmtCursor', '#userManagementTable tbody']
         };
         window._lazyLoaded = window._lazyLoaded || {};
 
         function loadSectionOnce(sectionId) {
+            if (sectionId === 'mypatients') {
+                if (window._lazyLoaded.mypatients) return;
+                const container = document.querySelector('#myPatientsTable tbody');
+                if (!container) return;
+                window._lazyLoaded.mypatients = true;
+                container.innerHTML = '';
+                if (typeof loadMyPatientsPage === 'function') loadMyPatientsPage(1);
+                return;
+            }
             const cfg = LAZY_SECTIONS[sectionId];
             if (!cfg || window._lazyLoaded[sectionId]) return;
             const btn = document.getElementById(cfg[0]);
@@ -488,8 +511,8 @@ function showSection(sectionId) {
             sortBtn.setAttribute('data-sort', isAsc ? 'asc' : 'desc');
             setFilterSortLabel(sortBtn, isAsc ? 'A-Z' : 'Z-A');
             rows.sort(function (a, b) {
-                var aName = a.querySelector('td') ? a.querySelector('td').textContent.toLowerCase() : '';
-                var bName = b.querySelector('td') ? b.querySelector('td').textContent.toLowerCase() : '';
+                var aName = a.querySelector('td[data-cell="name"]') ? a.querySelector('td[data-cell="name"]').textContent.toLowerCase() : '';
+                var bName = b.querySelector('td[data-cell="name"]') ? b.querySelector('td[data-cell="name"]').textContent.toLowerCase() : '';
                 if (aName < bName) return isAsc ? -1 : 1;
                 if (aName > bName) return isAsc ? 1 : -1;
                 return 0;
@@ -497,6 +520,7 @@ function showSection(sectionId) {
             rows.forEach(function (row) {
                 tbody.appendChild(row);
             });
+            if (typeof renumberMyPatients === 'function') renumberMyPatients();
         }
 
         function sortMyPatientsByDate() {
@@ -521,6 +545,7 @@ function showSection(sectionId) {
             rows.forEach(function (row) {
                 tbody.appendChild(row);
             });
+            if (typeof renumberMyPatients === 'function') renumberMyPatients();
         }
 
         function filterWeeklyClients() {

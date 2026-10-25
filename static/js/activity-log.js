@@ -99,22 +99,126 @@
     }
 
     function fillAdminSelect() {
-        var sel = $('activityAdminSelect');
-        if (!sel) return;
+        var menu = $('activityAdminMenu');
+        if (!menu) return;
         var names = {};
-        state.entries.forEach(function (e) { names[staffName(e)] = true; });
+        var roles = {};
+        state.entries.forEach(function (e) {
+            var n = staffName(e);
+            names[n] = true;
+            roles[n] = roleOf(e);
+        });
         var list = Object.keys(names).sort();
-        sel.textContent = '';
-        var all = el('option', '', 'All staff');
-        all.value = 'all';
-        sel.appendChild(all);
+        menu.textContent = '';
+        appendAdminOption(menu, 'all', 'All staff', 'admin');
         list.forEach(function (n) {
-            var o = el('option', '', n);
-            o.value = n;
-            sel.appendChild(o);
+            appendAdminOption(menu, n, n + ' (' + (ROLE_LABELS[roles[n]] || roles[n]) + ')', roles[n]);
         });
         if (state.admin !== 'all' && list.indexOf(state.admin) === -1) state.admin = 'all';
-        sel.value = state.admin;
+        updateAdminLabel();
+        highlightAdminOption();
+    }
+
+    function appendAdminOption(menu, val, text, role) {
+        var b = el('button', 'activity-select__option', text);
+        b.type = 'button';
+        b.setAttribute('role', 'option');
+        b.setAttribute('data-value', val);
+        b.setAttribute('data-role', role || 'admin');
+        b.onclick = function () {
+            setActivityAdmin(val);
+            closeActivityAdminMenu();
+        };
+        menu.appendChild(b);
+    }
+
+    function updateAdminLabel() {
+        var label = $('activityAdminLabel');
+        if (!label) return;
+        label.textContent = state.admin === 'all' ? 'All staff' : state.admin;
+    }
+
+    function highlightAdminOption() {
+        var menu = $('activityAdminMenu');
+        if (!menu) return;
+        Array.prototype.forEach.call(menu.querySelectorAll('.activity-select__option'), function (b) {
+            var v = b.getAttribute('data-value');
+            b.classList.toggle('is-selected', v === state.admin);
+            b.setAttribute('aria-selected', v === state.admin ? 'true' : 'false');
+        });
+    }
+
+    function positionMenu(menu, btn) {
+        if (!menu || !btn) return;
+        var rect = btn.getBoundingClientRect();
+        menu.style.position = 'fixed';
+        menu.style.top = (rect.bottom + 6) + 'px';
+        menu.style.left = rect.left + 'px';
+        menu.style.width = rect.width + 'px';
+        menu.style.right = 'auto';
+    }
+
+    function toggleActivityAdminMenu() {
+        var menu = $('activityAdminMenu');
+        var btn = $('activityAdminBtn');
+        if (!menu || !btn) return;
+        var open = menu.hasAttribute('hidden');
+        if (open) {
+            closeActivityRangeMenu();
+            positionMenu(menu, btn);
+            menu.removeAttribute('hidden');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            menu.setAttribute('hidden', '');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function closeActivityAdminMenu() {
+        var menu = $('activityAdminMenu');
+        var btn = $('activityAdminBtn');
+        if (menu) menu.setAttribute('hidden', '');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    }
+
+    function setActivityRangeLabel(text) {
+        var label = $('activityRangeLabel');
+        if (label) label.textContent = text;
+    }
+
+    function highlightRangeOption() {
+        var menu = $('activityRangeMenu');
+        var preset = $('activityRangePreset');
+        if (!menu || !preset) return;
+        var val = preset.value;
+        Array.prototype.forEach.call(menu.querySelectorAll('.activity-select__option'), function (b) {
+            var v = b.getAttribute('data-value');
+            b.classList.toggle('is-selected', v === val);
+            b.setAttribute('aria-selected', v === val ? 'true' : 'false');
+        });
+    }
+
+    function toggleActivityRangeMenu() {
+        var menu = $('activityRangeMenu');
+        var btn = $('activityRangeBtn');
+        if (!menu || !btn) return;
+        var open = menu.hasAttribute('hidden');
+        if (open) {
+            closeActivityAdminMenu();
+            positionMenu(menu, btn);
+            menu.removeAttribute('hidden');
+            btn.setAttribute('aria-expanded', 'true');
+        } else {
+            menu.setAttribute('hidden', '');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function closeActivityRangeMenu() {
+        var menu = $('activityRangeMenu');
+        var btn = $('activityRangeBtn');
+        if (menu) menu.setAttribute('hidden', '');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
     }
 
     function renderActivityLog() {
@@ -246,6 +350,8 @@
 
     function setActivityAdmin(name) {
         state.admin = name || 'all';
+        updateAdminLabel();
+        highlightAdminOption();
         renderActivityLog();
     }
 
@@ -375,17 +481,103 @@
         loadActivityLog(true);
     }
 
+    function todayYMD() {
+        return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' });
+    }
+
+    function addDaysYMD(ymd, n) {
+        var p = ymd.split('-');
+        var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2] + n));
+        return d.toISOString().slice(0, 10);
+    }
+
+    function applyActivityPreset(val) {
+        var from = $('activityFrom');
+        var to = $('activityTo');
+        var preset = $('activityRangePreset');
+        if (!from || !to) return;
+        val = val || (preset ? preset.value : '14');
+        if (val === 'custom') {
+            setActivityRangeLabel('Custom');
+            return;
+        }
+        var labels = { '7': 'Last 7 days', '14': 'Last 14 days', '30': 'Last 30 days', '60': 'Last 60 days', '90': 'Last 90 days', 'month': 'This month' };
+        setActivityRangeLabel(labels[val] || val);
+        var t = todayYMD();
+        if (val === 'month') {
+            var p = t.split('-');
+            from.value = p[0] + '-' + p[1] + '-01';
+            to.value = t;
+        } else {
+            var n = parseInt(val, 10);
+            if (isNaN(n) || n < 1) n = 14;
+            from.value = addDaysYMD(t, -(n - 1));
+            to.value = t;
+        }
+        if (preset) preset.value = val;
+        highlightRangeOption();
+        applyActivityRange();
+    }
+
+    function onActivityDateChange() {
+        var preset = $('activityRangePreset');
+        if (preset) preset.value = 'custom';
+        setActivityRangeLabel('Custom');
+        highlightRangeOption();
+    }
+
+    function resetActivityRange() {
+        if ($('activityFrom')) $('activityFrom').value = '';
+        if ($('activityTo')) $('activityTo').value = '';
+        var preset = $('activityRangePreset');
+        if (preset) preset.value = '14';
+        setActivityRangeLabel('Last 14 days');
+        highlightRangeOption();
+        load(true, undefined, 14);
+    }
+    function initActivityDatePickers() {
+        if (typeof flatpickr !== 'function') return;
+        ['activityFrom', 'activityTo'].forEach(function (id) {
+            var input = $(id);
+            if (!input || input._flatpickr) return;
+            flatpickr(input, {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+                clickOpens: true,
+                disableMobile: true,
+                onChange: function () { onActivityDateChange(); }
+            });
+        });
+    }
+
     window.loadActivityLog = loadActivityLog;
     window.activityLogOpened = activityLogOpened;
     window.renderActivityLog = renderActivityLog;
     window.setActivityCategory = setActivityCategory;
     window.setActivityAdmin = setActivityAdmin;
     window.applyActivityRange = applyActivityRange;
+    window.applyActivityPreset = applyActivityPreset;
     window.resetActivityRange = resetActivityRange;
+    window.toggleActivityAdminMenu = toggleActivityAdminMenu;
+    window.closeActivityAdminMenu = closeActivityAdminMenu;
+    window.toggleActivityRangeMenu = toggleActivityRangeMenu;
+    window.closeActivityRangeMenu = closeActivityRangeMenu;
+    window.onActivityDateChange = onActivityDateChange;
     window.downloadActivityLogPDF = downloadActivityLogPDF;
 
     // First load when the card is really on screen (the section starts hidden).
     document.addEventListener('DOMContentLoaded', function () {
+        initActivityDatePickers();
+        document.addEventListener('click', function (e) {
+            var adminWrap = $('activityAdminWrap');
+            var rangeWrap = $('activityRangeWrap');
+            if (adminWrap && !adminWrap.contains(e.target)) closeActivityAdminMenu();
+            if (rangeWrap && !rangeWrap.contains(e.target)) closeActivityRangeMenu();
+        });
+        window.addEventListener('scroll', function () {
+            closeActivityAdminMenu();
+            closeActivityRangeMenu();
+        }, true);
         var card = $('activityLogCard');
         if (!card) return;
         var start = function () { if (!state.loaded && !state.loading) loadActivityLog(true); };

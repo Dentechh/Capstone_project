@@ -1,22 +1,32 @@
         <header class="top-header">
             <div class="header-title-group">
-                <h2 id="page-title">Dashboard Overview</h2>
+                <div class="page-title-row">
+                    <span class="page-title-badge" aria-hidden="true">
+                        <span class="material-symbols-rounded">dashboard</span>
+                    </span>
+                    <h2 id="page-title">Dashboard Overview</h2>
+                </div>
                 <div id="datetime-display" class="dt-chips">
-                    <span class="dt-chip">
-                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="3" y="4.5" width="18" height="16.5" rx="3"></rect>
-                            <path d="M3 10h18M8 2.5v4M16 2.5v4"></path>
-                        </svg>
+                    <span class="dt-chip dt-chip--date">
+                        <span class="dt-chip__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4.5" width="18" height="16.5" rx="3"></rect>
+                                <path d="M3 10h18M8 2.5v4M16 2.5v4"></path>
+                            </svg>
+                        </span>
                         <span id="dt-date">Loading...</span>
                     </span>
-                    <span class="dt-chip">
-                        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <path d="M12 7v5l3 2"></path>
-                        </svg>
+                    <span class="dt-chip dt-chip--time">
+                        <span class="dt-chip__icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M12 7v5l3 2"></path>
+                            </svg>
+                        </span>
                         <span id="dt-time">--:--:-- --</span>
+                        <span class="dt-live-dot" aria-hidden="true"></span>
                     </span>
                 </div>
             </div>

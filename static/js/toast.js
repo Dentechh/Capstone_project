@@ -3,7 +3,7 @@
 
             function classifyToast(message) {
                 var m = String(message == null ? '' : message).trim();
-                if (/successfully/i.test(m) || m === 'Blocked slot saved.') return 'success';
+                if (/successfully/i.test(m) || m === 'Blocked slot saved.' || /^payment recorded\.?$/i.test(m) || /^dentist assigned\.?$/i.test(m)) return 'success';
                 if (/fail|error|not found|unauthorized|invalid|unavailable|missing|could not/i.test(m)) return 'error';
                 if (/^please\b/i.test(m) || /select/i.test(m) || /do not match/i.test(m)) return 'warning';
                 return 'error';

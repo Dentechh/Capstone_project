@@ -2,10 +2,10 @@
             /* My Patients: left-align the Name column (header + cells) so names
                line up in a clean vertical edge. The other columns stay centred.
                The #id selector outranks the shared .appointment-table rules. */
-            #myPatientsTable thead th:first-child,
+            #myPatientsTable thead th:nth-child(2),
             #myPatientsTable tbody td[data-cell="name"] {
                 text-align: left;
-                padding-left: 24px;
+                padding-left: 4px;
             }
         </style>
 
@@ -40,11 +40,12 @@
                         </button>
                     </div>
                 </div>
-                <div id="myPatientsCursor" data-cursor="{{ my_patients_next_cursor or '' }}" style="display:none;">
-                </div>
-                <table class="appointment-table" id="myPatientsTable">
+                <div id="myPatientsCursor" data-cursor="" style="display:none;"></div>
+                <div class="appointment-table-wrap">
+                    <table class="appointment-table" id="myPatientsTable">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Name</th>
                             <th>Age</th>
                             <th>Birthday</th>
@@ -57,6 +58,7 @@
                     <tbody>
                         {% for appointment in my_patients %}
                         <tr data-recent-appointment="{{ appointment.get('most_recent_appointment', '') }}">
+                            <td data-cell="num"></td>
                             <td data-cell="name">{{ appointment.display_name or appointment.full_name or appointment.FirstName or '' }}</td>
                             <td data-cell="age">{{ appointment.age if appointment.get('age') is not none else '-' }}</td>
                             <td data-cell="birthday">{{ appointment.get('birthday') or '-' }}</td>
@@ -67,7 +69,7 @@
                                 <div class="mp-actions">
                                     <button type="button" class="btn-action accept mp-info-btn"
                                         title="Treatment information" aria-label="Treatment information"
-                                        onclick="openCheckInfoModal('{{ appointment.patient_id }}', this.closest('tr').querySelector('td').textContent.trim())">
+                                        onclick="openCheckInfoModal('{{ appointment.patient_id }}', this.closest('tr').querySelector('td[data-cell=&quot;name&quot;]').textContent.trim())">
                                         <span class="material-symbols-rounded" aria-hidden="true">info</span>
                                     </button>
 
@@ -97,11 +99,19 @@
                         {% endfor %}
                     </tbody>
                 </table>
-                <div style="text-align:center; margin-top:16px;">
-                    <button type="button" id="myPatientsLoadMoreBtn" class="btn-action filter-btn" {% if not
-                        my_patients_next_cursor %}style="display:none;" {% endif %}>
-                        Load More
-                    </button>
+</div>
+                <div class="mypatients-pagination" id="myPatientsPagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+                    <button type="button" id="myPatientsPrevBtn" class="btn-action filter-btn">Prev</button>
+                    <span id="myPatientsPageNumbers" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
+                    <button type="button" id="myPatientsNextBtn" class="btn-action filter-btn">Next</button>
+                    <label style="margin-left:12px; display:flex; align-items:center; gap:6px;">
+                        <span>Per page</span>
+                        <select id="myPatientsPageSize" class="search-input" style="width:auto;">
+                            <option value="20">20</option>
+                            <option value="30" selected>30</option>
+                        </select>
+                    </label>
+                    <span id="myPatientsPageInfo" style="margin-left:8px;"></span>
                 </div>
             </section>
         </div>
@@ -147,4 +157,4 @@
 
         <script src="{{ url_for('static', filename='js/patient-backup.js') }}?v=1"></script>
 
-        <script src="{{ url_for('static', filename='js/mypatients-list.js') }}?v=3"></script>
+        <script src="{{ url_for('static', filename='js/mypatients-list.js') }}?v=5"></script>

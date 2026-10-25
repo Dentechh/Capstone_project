@@ -839,6 +839,8 @@ body.dark-mode #section-doctorscalendar .doctor-cal-panel .flatpickr-day.flatpic
     position: relative !important;
     top: 0 !important;
     height: auto !important;
+    max-height: none !important;
+    overflow: hidden !important;
 }
 
 #section-doctorscalendar .dc-layout,

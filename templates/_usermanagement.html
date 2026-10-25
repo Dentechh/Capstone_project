@@ -27,7 +27,8 @@
                 </div>
                 <div id="userMgmtCursor" data-cursor="{{ manageable_accounts_next_cursor or '' }}"
                     style="display:none;"></div>
-                <table class="appointment-table" id="userManagementTable">
+                <div class="appointment-table-wrap">
+<table class="appointment-table" id="userManagementTable">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -95,6 +96,7 @@
                             {% endfor %}
                     </tbody>
                 </table>
+</div>
                 <div style="text-align:center; margin-top:16px;">
                     <button type="button" id="userMgmtLoadMoreBtn" class="btn-action filter-btn" {% if not
                         manageable_accounts_next_cursor %}style="display:none;" {% endif %}>

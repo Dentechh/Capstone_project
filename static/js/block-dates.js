@@ -198,7 +198,7 @@
                         ? '<span class="dc-chip blocked" style="margin-left:0">' +
                           (isRange ? 'Full day &middot; ' + g.items.length + ' days' : 'Full day') + '</span>'
                         : '<span class="dc-chip partial" style="margin-left:0">' +
-                        esc((i.blocked_times || []).map(timeLabel).join(', ')) + '</span>';
+                        (isRange ? 'Partial day &middot; ' + g.items.length + ' days' : 'Partial day') + '</span>';
                     const notes =
                         (i.reason ? '<span class="dc-sub">' + esc(i.reason) + '</span>' : '') +
                         (i.patient_message ? '<span class="dc-sub">Patients see: ' + esc(i.patient_message) + '</span>' : '');
@@ -451,7 +451,7 @@
                 list.innerHTML = breakdown + rows.map(e => {
                     const chip = e.full_day
                         ? '<span class="dc-chip blocked" style="margin-left:0">Closed' + (e.upcoming ? ' &middot; upcoming' : '') + '</span>'
-                        : '<span class="dc-chip partial" style="margin-left:0">' + esc(e.blocked_times.map(timeLabel).join(', ')) + '</span>';
+                        : '<span class="dc-chip partial" style="margin-left:0">Partial day</span>';
                     const reasonHtml = e.reason
                         ? esc(e.reason)
                         : '<span class="dc-muted">No reason recorded</span>';

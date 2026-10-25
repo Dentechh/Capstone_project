@@ -9,7 +9,30 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/service.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Kumbh+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+<!-- Prevent icon FOUC: hide material-symbols until the web font loads -->
+<style>
+    .material-symbols-rounded { visibility: hidden !important; }
+    html.fonts-loaded .material-symbols-rounded { visibility: visible !important; }
+</style>
+<script>
+    (function () {
+        function reveal() {
+            document.documentElement.classList.add('fonts-loaded');
+        }
+        function wait() {
+            if (document.fonts && typeof document.fonts.load === 'function') {
+                document.fonts.load('1em "Material Symbols Rounded"').then(reveal).catch(reveal);
+            } else if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(reveal).catch(reveal);
+            } else {
+                reveal();
+            }
+        }
+        wait();
+        setTimeout(reveal, 4000);
+    })();
+</script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
 </head>

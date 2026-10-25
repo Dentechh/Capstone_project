@@ -127,6 +127,29 @@ const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="
                 document.getElementById('editSex').value = sex || '';
                 document.getElementById('editCivilStatus').value = civilStatus || '';
 
+                const isDark = document.body.classList.contains('dark-mode');
+                const epModal = document.getElementById('editPatientModal');
+                if (epModal) {
+                    if (isDark) epModal.classList.add('ep-dark');
+                    else epModal.classList.remove('ep-dark');
+                }
+                ['editSex', 'editCivilStatus', 'editBirthday'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (isDark) {
+                        if (id === 'editSex' || id === 'editCivilStatus') {
+                            el.style.background = '#131a26 url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M7 10l5 5 5-5%27 fill=%27none%27 stroke=%27%2394a3b8%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E") no-repeat right 13px center / 18px 18px';
+                        } else {
+                            el.style.backgroundColor = '#131a26';
+                        }
+                        el.style.borderColor = '#33415a';
+                        el.style.color = '#e0e0e0';
+                    } else {
+                        el.style.backgroundColor = '';
+                        el.style.borderColor = '';
+                        el.style.color = '';
+                    }
+                });
                 const birthdayField = document.getElementById('editBirthday');
                 if (birthdayField) {
                     // A birthday can't be in the future; keeps the picker honest.

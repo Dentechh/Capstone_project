@@ -132,10 +132,13 @@
     </nav>
 </header>
 
-<link rel="stylesheet" href="{{ url_for('static', filename='css/clinic-notices.css') }}?v=3">
-<script src="{{ url_for('static', filename='js/clinic-notices.js') }}?v=3" defer></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/clinic-notices.css') }}?v=6">
+<script src="{{ url_for('static', filename='js/clinic-notices.js') }}?v=6" defer></script>
 
 {% if name and name != "Guest" %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}?v=1">
-<script src="{{ url_for('static', filename='js/patient_chat.js') }}?v=1" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}?v=6">
+<script src="{{ url_for('static', filename='js/patient_chat.js') }}?v=6" defer></script>
 {% endif %}

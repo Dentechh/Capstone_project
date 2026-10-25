@@ -6,6 +6,7 @@ function buildMyPatientRow(p) {
                 const sexDisplay = p.sex || '-';
                 const civilStatusDisplay = p.civil_status || '-';
                 tr.innerHTML = `
+            <td data-cell="num"></td>
             <td data-cell="name">${p.display_name || p.full_name || ''}</td>
             <td data-cell="age">${ageDisplay}</td>
             <td data-cell="birthday">${birthYearDisplay}</td>
@@ -16,7 +17,7 @@ function buildMyPatientRow(p) {
         <td>
             <div class="mp-actions">
                 <button type="button" class="btn-action accept mp-info-btn" title="Treatment information" aria-label="Treatment information"
-                    onclick="openCheckInfoModal('${p.patient_id}', this.closest('tr').querySelector('td').textContent.trim())"><span class="material-symbols-rounded" aria-hidden="true">info</span></button>
+                                        onclick="openCheckInfoModal('${p.patient_id}', this.closest('tr').querySelector('td[data-cell=\\'name\\']').textContent.trim())"><span class="material-symbols-rounded" aria-hidden="true">info</span></button>
                 <button type="button" class="btn-action edit-patient-btn" title="Edit patient" aria-label="Edit patient"
                     data-uid="${p.uid}" data-patient-id="${p.patient_id}"
                     data-firstname="${p.first_name}" data-middlename="${p.middle_name}"
@@ -57,6 +58,7 @@ function buildMyPatientRow(p) {
                     existingBtn.setAttribute('data-contact', fields.ContactNumber || '');
                     existingBtn.setAttribute('data-sex', fields.Sex || '');
                     tbody.insertBefore(row, tbody.firstChild);
+                    if (typeof renumberMyPatients === 'function') renumberMyPatients();
                     return;
                 }
 
@@ -64,24 +66,10 @@ function buildMyPatientRow(p) {
                 window._lazyLoaded = window._lazyLoaded || {};
                 window._lazyLoaded.mypatients = true;
 
-                fetch('/admin/my_patients_page')
-                    .then(res => res.json())
-                    .then(result => {
-                        if (!result.success) return;
-                        tbody.innerHTML = '';
-                        result.rows.forEach(function (p) { tbody.appendChild(buildMyPatientRow(p)); });
-
-                        // Keep Load More working after a refresh.
-                        const cur = document.getElementById('myPatientsCursor');
-                        const btn = document.getElementById('myPatientsLoadMoreBtn');
-                        if (cur) cur.setAttribute('data-cursor', result.next_cursor || '');
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.textContent = 'Load More';
-                            btn.style.display = result.next_cursor ? '' : 'none';
-                        }
-                    })
-                    .catch(function (err) { console.error('Refresh my patients error:', err); });
+                if (typeof loadMyPatientsPage === 'function') {
+                    loadMyPatientsPage(1);
+                }
+                return;
             }
 
                 /* accepted_at is stored as a UTC ISO string, so it needs the browser to do the
@@ -297,52 +285,121 @@ function buildMyPatientRow(p) {
                 return card;
             }
 
-            document.addEventListener('DOMContentLoaded', function () {
-                const loadMoreBtn = document.getElementById('myPatientsLoadMoreBtn');
-                const cursorHolder = document.getElementById('myPatientsCursor');
+            window.myPatientsState = window.myPatientsState || { page: 1, pageSize: 30, total: 0, totalPages: 1 };
+
+            function renumberMyPatients() {
                 const tbody = document.querySelector('#myPatientsTable tbody');
-                const sortBtn = document.getElementById('sortMyPatientsBtn');
+                if (!tbody) return;
+                const state = window.myPatientsState;
+                Array.from(tbody.querySelectorAll('tr')).forEach(function (tr, i) {
+                    const cell = tr.querySelector('td[data-cell="num"]');
+                    if (cell) cell.textContent = (state.page - 1) * state.pageSize + i + 1;
+                });
+            }
 
-                if (!loadMoreBtn || !cursorHolder || !tbody) return;
+            function renderMyPatientsPagination() {
+                const state = window.myPatientsState;
+                const numbers = document.getElementById('myPatientsPageNumbers');
+                const info = document.getElementById('myPatientsPageInfo');
+                const prevBtn = document.getElementById('myPatientsPrevBtn');
+                const nextBtn = document.getElementById('myPatientsNextBtn');
+                if (prevBtn) prevBtn.disabled = state.page <= 1;
+                if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
+                if (info) info.textContent = 'Page ' + state.page + ' of ' + state.totalPages + ' (' + state.total + ' patients)';
+                if (!numbers) return;
+                numbers.innerHTML = '';
+                const total = state.totalPages;
+                const current = state.page;
+                const pages = [];
+                if (total <= 7) {
+                    for (let i = 1; i <= total; i++) pages.push(i);
+                } else {
+                    pages.push(1);
+                    if (current > 3) pages.push('...');
+                    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+                    if (current < total - 2) pages.push('...');
+                    pages.push(total);
+                }
+                pages.forEach(function (p) {
+                    if (p === '...') {
+                        const span = document.createElement('span');
+                        span.textContent = '…';
+                        numbers.appendChild(span);
+                        return;
+                    }
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn-action filter-btn';
+                    btn.textContent = p;
+                    if (p === current) btn.disabled = true;
+                    btn.addEventListener('click', function () { loadMyPatientsPage(p); });
+                    numbers.appendChild(btn);
+                });
+            }
 
-                loadMoreBtn.addEventListener('click', function () {
-                    const cursor = cursorHolder.getAttribute('data-cursor') || '';
-                    const isFirstPage = (cursor === '');
-                    loadMoreBtn.disabled = true;
-                    loadMoreBtn.textContent = 'Loading...';
+            function loadMyPatientsPage(page, pageSize) {
+                const state = window.myPatientsState;
+                if (pageSize) {
+                    const parsed = parseInt(pageSize, 10);
+                    if (parsed === 20 || parsed === 30) state.pageSize = parsed;
+                    else if (!isNaN(parsed) && parsed > 0) state.pageSize = parsed;
+                }
+                if (page) state.page = parseInt(page, 10) || state.page;
+                if (state.page < 1) state.page = 1;
 
-                    fetch('/admin/my_patients_page?cursor=' + encodeURIComponent(cursor))
-                        .then(res => res.json())
-                        .then(result => {
-                            if (!result.success) {
-                                showToast(result.message || 'Failed to load more patients.');
-                                return;
-                            }
+                const tbody = document.querySelector('#myPatientsTable tbody');
+                if (!tbody) return;
+                const sel = document.getElementById('myPatientsPageSize');
+                if (sel) sel.value = state.pageSize;
 
-                            result.rows.forEach(function (p) {
-                                tbody.appendChild(buildMyPatientRow(p));
-                            });
-
-                            if (isFirstPage && typeof sortMyPatients === 'function') {
-                                sortMyPatients(true);
-                            } else if (sortBtn && sortBtn.getAttribute('data-sort') === 'asc' && typeof sortMyPatients === 'function') {
-                                sortMyPatients(true);
-                            }
-
-                            if (result.next_cursor) {
-                                cursorHolder.setAttribute('data-cursor', result.next_cursor);
-                                loadMoreBtn.disabled = false;
-                                loadMoreBtn.textContent = 'Load More';
-                            } else {
-                                loadMoreBtn.style.display = 'none';
-                            }
-                        })
-                        .catch(function (err) {
-                            console.error('Load more patients error:', err);
-                            showToast('Failed to load more patients. Please try again.');
-                            loadMoreBtn.disabled = false;
-                            loadMoreBtn.textContent = 'Load More';
+                fetch('/admin/my_patients_page?page=' + encodeURIComponent(state.page) + '&page_size=' + encodeURIComponent(state.pageSize))
+                    .then(function (res) { return res.json(); })
+                    .then(function (result) {
+                        if (!result.success) {
+                            showToast(result.message || 'Failed to load patients.');
+                            return;
+                        }
+                        tbody.innerHTML = '';
+                        (result.rows || []).forEach(function (p) {
+                            tbody.appendChild(buildMyPatientRow(p));
                         });
+
+                        state.page = result.page || state.page;
+                        state.pageSize = result.page_size || state.pageSize;
+                        state.total = (typeof result.total === 'number') ? result.total : state.total;
+                        state.totalPages = result.total_pages || state.totalPages;
+                        if (state.totalPages < 1) state.totalPages = 1;
+                        if (state.page > state.totalPages) state.page = state.totalPages;
+
+                        const sortBtn = document.getElementById('sortMyPatientsBtn');
+                        if (state.page === 1 && typeof sortMyPatients === 'function') {
+                            sortMyPatients(true);
+                        } else if (sortBtn && sortBtn.getAttribute('data-sort') === 'asc' && typeof sortMyPatients === 'function') {
+                            sortMyPatients(true);
+                        }
+                        renumberMyPatients();
+                        renderMyPatientsPagination();
+                        if (sel) sel.value = state.pageSize;
+                    })
+                    .catch(function (err) {
+                        console.error('Load patients error:', err);
+                        showToast('Failed to load patients. Please try again.');
+                    });
+            }
+            window.loadMyPatientsPage = loadMyPatientsPage;
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const prevBtn = document.getElementById('myPatientsPrevBtn');
+                const nextBtn = document.getElementById('myPatientsNextBtn');
+                const sizeSel = document.getElementById('myPatientsPageSize');
+                if (prevBtn) prevBtn.addEventListener('click', function () {
+                    if (window.myPatientsState.page > 1) loadMyPatientsPage(window.myPatientsState.page - 1);
+                });
+                if (nextBtn) nextBtn.addEventListener('click', function () {
+                    if (window.myPatientsState.page < window.myPatientsState.totalPages) loadMyPatientsPage(window.myPatientsState.page + 1);
+                });
+                if (sizeSel) sizeSel.addEventListener('change', function () {
+                    loadMyPatientsPage(1, sizeSel.value);
                 });
             });
 
@@ -355,7 +412,7 @@ function buildMyPatientRow(p) {
             var tbody = table.querySelector('tbody');
             var rows = tbody.querySelectorAll('tr');
             rows.forEach(function (row) {
-                var nameCell = row.querySelector('td');
+                var nameCell = row.querySelector('td[data-cell="name"]');
                 if (nameCell) {
                     var textValue = nameCell.textContent || nameCell.innerText;
                     var upper = textValue.toUpperCase();

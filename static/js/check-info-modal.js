@@ -105,7 +105,7 @@ let currentCheckInfoPatientId = "";
                 const sub = document.createElement("tr");
                 sub.id = id;
                 sub.className = "ci-sub";
-                sub.innerHTML = '<td colspan="12">' + html + "</td>";
+                sub.innerHTML = '<td colspan="13">' + html + "</td>";
                 // Keep payment panel above the history panel.
                 const hist = document.getElementById("ci-hist-" + index);
                 if (id.indexOf("ci-pay-") === 0 && hist) hist.before(sub); else row.after(sub);
@@ -175,7 +175,7 @@ let currentCheckInfoPatientId = "";
                         { method: "POST", body: formData });
                     const result = await response.json();
                     if (result.success) {
-                        showToast(result.message || "Payment recorded.");
+                        showToast(result.message || "Payment recorded.", 'success');
                         // Re-fetch so every row, the payment history and the
                         // summary card come from the server's numbers.
                         await openCheckInfoModal(currentCheckInfoPatientId);
@@ -530,8 +530,10 @@ let currentCheckInfoPatientId = "";
             <td data-label="Status">${statusCell}</td>
             <td data-label="Next Appointment">${item.next_appointment || "-"}</td>
             <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
-            <td data-label="" class="ci-actions">
+            <td data-label="Payments" class="ci-actions">
                 ${payBtn}${histBtn}
+            </td>
+            <td data-label="Manage" class="ci-actions">
                 <button type="button" class="btn-action ci-btn--edit ci-ico" title="Edit record" aria-label="Edit record" onclick="enterEditMode(${index})"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
                 <button type="button" class="btn-action ci-btn--delete ci-delete-btn ci-ico" title="Delete record" aria-label="Delete record" onclick="deleteTreatmentRecord(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
             </td>
@@ -558,6 +560,8 @@ let currentCheckInfoPatientId = "";
                 const statusCellEdit = followUp
                     ? '<span class="ci-badge ci-badge--follow">Follow-up</span>'
                     : statusBadge(item.status);
+                const payBtn = "";
+                const histBtn = "";
                 row.innerHTML = `
         <td data-label="Assigned Dentist">
             <input type="text" class="ci-dentist" value="${escAttr(item.dentist)}">
@@ -572,7 +576,10 @@ let currentCheckInfoPatientId = "";
         <td data-label="Status">${statusCellEdit}</td>
         <td data-label="Next Appointment"><input type="date" class="ci-next-appt" value="${escAttr(item.next_appointment)}"></td>
         <td data-label=""><button type="button" class="btn-action ci-btn--view ci-ico" title="View chart" aria-label="View chart" onclick="openChartViewModal(${index})"><span class="material-symbols-rounded" aria-hidden="true">image</span></button></td>
-        <td data-label="" class="ci-actions">
+        <td data-label="Payments" class="ci-actions">
+            ${payBtn}${histBtn}
+        </td>
+        <td data-label="Manage" class="ci-actions">
             <button type="button" class="btn-action accept ci-btn--save ci-ico" title="Save changes" aria-label="Save changes" onclick="saveTreatmentEdit(${index})"><span class="material-symbols-rounded" aria-hidden="true">check</span></button>
             <button type="button" class="btn-action ci-btn--cancel ci-ico" title="Discard changes" aria-label="Discard changes" onclick="renderCheckInfoTable()"><span class="material-symbols-rounded" aria-hidden="true">close</span></button>
             <button type="button" class="btn-action ci-btn--delete ci-delete-btn ci-ico" title="Delete record" aria-label="Delete record" onclick="deleteTreatmentRecord(${index})"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>

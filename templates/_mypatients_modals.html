@@ -1,6 +1,95 @@
 <style>
-    /* Birthday picker: the shared .ep-field rules only cover text/email/select,
-       so a native date input fell back to the browser default look. */
+/* Birthday picker: the shared .ep-field rules only cover text/email/select,
+        so a native date input fell back to the browser default look. */
+    .ep-modal .ep-field input[type="date"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        box-sizing: border-box;
+        height: 42px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 14px;
+        color: inherit;
+        background-color: #fff;
+        border: 1px solid #c9d6ea;
+        border-radius: 10px;
+        outline: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .ep-modal .ep-field input[type="date"]:focus {
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, .15);
+    }
+    .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: .65;
+        padding: 4px;
+        border-radius: 6px;
+    }
+    .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+        background: rgba(13, 71, 161, .08);
+    }
+    .ep-modal .ep-field input[readonly] {
+        cursor: default;
+        background-color: #f4f7fc;
+    }
+
+    /* Dark mode: Edit Patient modal selects and date input */
+    body.dark-mode #editPatientModal .adm-select > select,
+    body.dark-mode #editPatientModal .ep-field select,
+    body.dark-mode #editPatientModal .ep-field input[type="date"],
+    body.dark-mode #editPatientModal .ep-field input[type="text"],
+    body.dark-mode #editPatientModal .ep-field input[type="email"] {
+        background-color: #131a26 !important;
+        border-color: #33415a !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode #editPatientModal .adm-select > select {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 13px center !important;
+        background-size: 18px 18px !important;
+    }
+    body.dark-mode #editPatientModal .adm-select > select option {
+        background: #131a26 !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode #editPatientModal .ep-field input[type="date"] {
+        color-scheme: dark !important;
+    }
+    body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.8 !important;
+    }
+
+    body.dark-mode #editPatientModal .ep-field select,
+    body.dark-mode #editPatientModal .ep-field input[type="date"],
+    body.dark-mode #editPatientModal .ep-field input[type="text"],
+    body.dark-mode #editPatientModal .ep-field input[type="email"] {
+        background-color: #131a26 !important;
+        border-color: #33415a !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode #editPatientModal .adm-select > select {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 13px center !important;
+        background-size: 18px 18px !important;
+    }
+    body.dark-mode #editPatientModal .adm-select > select option {
+        background: #131a26 !important;
+        color: #e0e0e0 !important;
+    }
+    body.dark-mode #editPatientModal .ep-field input[type="date"] {
+        color-scheme: dark !important;
+    }
+    body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+        filter: invert(1) !important;
+        opacity: 0.8 !important;
+    }
+
     .ep-modal .ep-field input[type="date"] {
         -webkit-appearance: none;
         appearance: none;
@@ -119,8 +208,8 @@
                                 </div>
                                 <div class="ep-field">
                                     <label for="editSex">Sex</label>
-                                    <select id="editSex" name="sex">
-                                        <option value="">-- Not set --</option>
+<select id="editSex" name="sex">
+                                    <option value="">-- Not set --</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                     </select>
@@ -175,7 +264,7 @@
             </div>
         </div>
 
-        <script src="{{ url_for('static', filename='js/patient-edit-confirm-modals.js') }}?v=2"></script>
+        <script src="{{ url_for('static', filename='js/patient-edit-confirm-modals.js') }}?v=3"></script>
 
         <div id="checkInfoModal" class="modal" style="display:none;">
             <div class="modal-content">
@@ -279,7 +368,8 @@
                                 <th>Status</th>
                                 <th>Next Appointment</th>
                                 <th>Chart</th>
-                                <th>Action</th>
+                                <th>Payments</th>
+                                <th>Manage</th>
                             </tr>
                         </thead>
                         <tbody id="checkInfoBody">
@@ -328,7 +418,7 @@
             </div>
         </div>
 
-        <script src="{{ url_for('static', filename='js/check-info-modal.js') }}?v=14"></script>
+        <script src="{{ url_for('static', filename='js/check-info-modal.js') }}?v=17"></script>
 
 
         <script src="{{ url_for('static', filename='js/patient-profile-modal.js') }}?v=1"></script>

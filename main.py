@@ -398,7 +398,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             cached = self.cache.get("manageable_accounts_all")
             if cached is not None:
                 return cached
-            query = self.db.collection(self.Customer_Account).where("provider", "in", ["google", "password"])
+            query = self.db.collection(self.Customer_Account).where(filter=FieldFilter("provider", "in", ["google", "password"]))
             docs = [(doc.id, doc.to_dict()) for doc in query.stream()]
             self.cache.set("manageable_accounts_all", docs, ttl_seconds=self.CACHE_TTL_SECONDS)
             return docs
@@ -1015,7 +1015,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             # still needs the Python-side normalize+compare below.
             approve_docs = list(
                 self.db.collection_group("Approve")
-                .where("appointment_date", "==", appointment_date)
+                .where(filter=FieldFilter("appointment_date", "==", appointment_date))
                 .stream()
             )
         except Exception as e:
@@ -1092,11 +1092,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         candidate_docs = {}
 
         if last_name:
-            for doc in patients_ref.where("last_name_normalized", "==", last_name).stream():
+            for doc in patients_ref.where(filter=FieldFilter("last_name_normalized", "==", last_name)).stream():
                 candidate_docs[doc.id] = doc
 
         if first_name:
-            for doc in patients_ref.where("first_name_normalized", "==", first_name).stream():
+            for doc in patients_ref.where(filter=FieldFilter("first_name_normalized", "==", first_name)).stream():
                 candidate_docs[doc.id] = doc
 
         best_match = None
@@ -3650,7 +3650,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             return ''
         if 'profile_pic' in session:
             return session.get('profile_pic') or ''
-        user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+        user_query = self.db.collection(self.Customer_Account).where(filter=FieldFilter("email", "==", email)).get()
         profile_pic = ''
         if user_query:
             profile_pic = user_query[0].to_dict().get('profile_pic', '') or ''
@@ -3983,7 +3983,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 self.merge_patient_accounts(old_account_uid, uid)
 
             # Clean up any other duplicate Patients docs already linked to this uid
-            duplicate_query = self.db.collection(self.Doc_Patients).where("account_uid", "==", uid).stream()
+            duplicate_query = self.db.collection(self.Doc_Patients).where(filter=FieldFilter("account_uid", "==", uid)).stream()
             for dup_doc in duplicate_query:
                 if dup_doc.id != patient_id:
                     print(f"🗑️ Deleting duplicate patient record: {dup_doc.id}")
@@ -5727,13 +5727,13 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         user_data = {}
     
         if email:
-            user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+            user_query = self.db.collection(self.Customer_Account).where(filter=FieldFilter("email", "==", email)).get()
             
             if user_query:
                 user_data = user_query[0].to_dict()
                 user_data['id'] = user_query[0].id
             else:
-                user_query = self.db.collection(self.Customer_Account).where("email", "==", email).get()
+                user_query = self.db.collection(self.Customer_Account).where(filter=FieldFilter("email", "==", email)).get()
                 if user_query:
                     user_data = user_query[0].to_dict()
                     user_data['id'] = user_query[0].id
@@ -5745,27 +5745,60 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     
     
     
-    def _fetch_my_patients_page(self, cursor=None):
+    def _fetch_my_patients_page(self, page=1, page_size=None):
         """
         Returns one page of 'My Patients' rows (accounts with has_history=True),
-        newest-approved-first, without ever scanning the full Customer_Account
-        collection. patient_id is looked up per-row, but that's bounded by
-        page size (max PATIENTS_PAGE_SIZE extra reads), not total patient count.
+        newest-approved-first, with page-based pagination (page numbers).
         """
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+        if page < 1:
+            page = 1
+        page_size = page_size or 30
+        try:
+            page_size = int(page_size)
+        except (TypeError, ValueError):
+            page_size = 30
+        if page_size not in (20, 30):
+            # allow a couple of sensible sizes, default to 30 otherwise
+            if page_size < 1:
+                page_size = 30
+            if page_size > 100:
+                page_size = 100
+
+        # total count (cheap aggregation)
+        try:
+            total = (
+                self.db.collection(self.Customer_Account)
+                .where(filter=FieldFilter("has_history", "==", True))
+                .count().get()[0][0].value
+            )
+        except Exception as e:
+            print(f"MY PATIENTS COUNT FALLBACK: {e}")
+            total = sum(
+                1 for _, d in self._get_manageable_accounts_cached()
+                if d.get("has_history")
+            )
+
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        if page > total_pages:
+            page = total_pages
+
+        offset = (page - 1) * page_size
+
         query = (
             self.db.collection(self.Customer_Account)
-            .where("has_history", "==", True)
+            .where(filter=FieldFilter("has_history", "==", True))
             .order_by("last_approved_at", direction="DESCENDING")
+            .offset(offset)
+            .limit(page_size)
         )
-
-        if cursor:
-            query = query.start_after({"last_approved_at": cursor})
-
-        query = query.limit(self.PATIENTS_PAGE_SIZE + 1)
         docs = list(query.stream())
 
-        has_more = len(docs) > self.PATIENTS_PAGE_SIZE
-        docs = docs[:self.PATIENTS_PAGE_SIZE]
+        has_more = offset + len(docs) < total
+        # keep docs as-is (page_size)
 
         # Was: one Firestore query per row to find its linked patient_id.
         # Now: one cached lookup map shared across the whole page.
@@ -5829,23 +5862,25 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 "most_recent_appointment": account_data.get("last_approved_at", ""),
             })
 
-        next_cursor = None
-        if has_more and docs:
-            next_cursor = docs[-1].to_dict().get("last_approved_at", "")
-
-        return rows, next_cursor
+        return rows, total, page, page_size, total_pages
 
     def admin_my_patients_page(self):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
 
-        cursor = request.args.get("cursor", "").strip() or None
-        rows, next_cursor = self._fetch_my_patients_page(cursor=cursor)
+        page = request.args.get("page", "1")
+        page_size = request.args.get("page_size", "30")
+        rows, total, page, page_size, total_pages = self._fetch_my_patients_page(
+            page=page, page_size=page_size
+        )
 
         return jsonify({
             "success": True,
             "rows": rows,
-            "next_cursor": next_cursor
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages
         })
     
     
@@ -6274,7 +6309,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         try:
             total_patients = (
                 self.db.collection(self.Customer_Account)
-                .where("has_history", "==", True)
+                .where(filter=FieldFilter("has_history", "==", True))
                 .count().get()[0][0].value
             )
         except Exception as e:
@@ -6319,7 +6354,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             for level in urgency_counts:
                 urgency_counts[level] = (
                     self.db.collection_group("appointments")
-                    .where("UrgencyLevel", "==", level)
+                    .where(filter=FieldFilter("UrgencyLevel", "==", level))
                     .count().get()[0][0].value
                 )
         except Exception as e:
@@ -7299,9 +7334,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             self.db
             .collection(self.Doc_Patients)
             .where(
-                "account_uid",
-                "==",
-                uid
+                filter=FieldFilter("account_uid", "==", uid)
             )
             .limit(1)
             .stream()
@@ -7503,7 +7536,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
             # Find account using UID
             accounts = self.db.collection("Customer_Account").where(
-                "uid", "==", uid
+                filter=FieldFilter("uid", "==", uid)
             ).limit(1).stream()
 
             account_doc = None
@@ -8574,9 +8607,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     user_ref
                     .collection("Approve")
                     .where(
-                        "Patient_unq_id",
-                        "==",
-                        patient_unq_id
+                        filter=FieldFilter("Patient_unq_id", "==", patient_unq_id)
                     )
                     .stream()
                 )

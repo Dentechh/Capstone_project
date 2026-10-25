@@ -1,0 +1,1927 @@
+/* ==========================================================================
+   ADMIN RESPONSIVE OVERRIDES
+   Covers: My Patients, Activity Log, Doctors Calendar, Messages.
+   Breakpoints include common phones, iPad portrait/landscape, and large tablets.
+   ========================================================================== */
+
+/* ---------- Horizontal scroll wrappers for admin tables ---------- */
+.appointment-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e3e8ee;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    padding-right: 16px;
+}
+
+.appointment-table-wrap .appointment-table {
+    table-layout: auto;
+    width: max-content;
+    min-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .appointment-table-wrap .appointment-table {
+        min-width: 640px;
+    }
+}
+
+@media (max-width: 480px) {
+    .appointment-table-wrap .appointment-table {
+        min-width: 560px;
+    }
+}
+
+@media (max-width: 768px) {
+    #section-mypatients .content-panel,
+    #section-activitylog .content-panel,
+    #section-doctorscalendar .content-panel,
+    #section-messages .content-panel {
+        padding-left: 8px;
+        padding-right: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 1024px) {
+    #section-mypatients .content-panel,
+    #section-activitylog .content-panel,
+    #section-doctorscalendar .content-panel,
+    #section-messages .content-panel {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+/* ---------- My Patients ---------- */
+@media (max-width: 1024px) {
+    #section-mypatients .filter-bar {
+        gap: 8px;
+    }
+    #section-mypatients .filter-search-wrap {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+    #section-mypatients .filter-group {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    #section-mypatients .appointment-table {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    #section-mypatients .mp-actions .btn-action {
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
+    }
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    #section-mypatients .filter-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    #section-mypatients .filter-search-wrap {
+        min-width: 0;
+    }
+}
+
+/* iPad portrait */
+@media (min-width: 768px) and (max-width: 834px) and (orientation: portrait) {
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td {
+        padding: 9px 11px;
+        font-size: 12.5px;
+    }
+    #section-mypatients .filter-search {
+        min-width: 250px;
+    }
+}
+
+/* iPad landscape */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td {
+        padding: 10px 13px;
+        font-size: 13px;
+    }
+    #section-mypatients .filter-group {
+        gap: 10px;
+    }
+}
+
+/* ---------- Activity Log ---------- */
+@media (max-width: 1024px) {
+    #section-activitylog .unpaid-toolbar {
+        gap: 10px;
+    }
+    #section-activitylog .unpaid-toolbar-right {
+        width: 100%;
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+    #section-activitylog .activity-date {
+        min-width: 175px;
+        flex: 1 1 140px;
+    }
+    #section-activitylog .activity-category-group,
+    #section-activitylog #activityCategoryGroup {
+        gap: 6px;
+    }
+}
+
+@media (max-width: 768px) {
+    #section-activitylog .activity-range {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    #section-activitylog .activity-date {
+        width: 100%;
+        min-width: 0;
+    }
+    #section-activitylog .unpaid-table-wrap {
+        max-height: 60vh;
+        min-height: 220px;
+    }
+    #section-activitylog .unpaid-table th,
+    #section-activitylog .unpaid-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    #section-activitylog .unpaid-filter-btn {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    #section-activitylog .unpaid-search {
+        min-width: 0;
+        width: 100%;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 834px) and (orientation: portrait) {
+    #section-activitylog .activity-range {
+        gap: 8px;
+    }
+    #section-activitylog .activity-date {
+        min-width: 150px;
+        flex: 1 1 120px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    #section-activitylog .unpaid-table-wrap {
+        max-height: calc(100vh - 420px);
+    }
+}
+
+/* ---------- Doctors Calendar ---------- */
+@media (max-width: 1024px) {
+    #section-doctorscalendar .dc-layout {
+        gap: 18px;
+    }
+    #section-doctorscalendar .dc-block-panel {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    #section-doctorscalendar .dc-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #section-doctorscalendar .dc-extras {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 48px !important;
+        padding: 4px 6px !important;
+        font-size: 13px !important;
+    }
+    #section-doctorscalendar .dc-range-dates {
+        grid-template-columns: 1fr;
+    }
+    #section-doctorscalendar .dc-range-actions {
+        flex-direction: column;
+    }
+    #section-doctorscalendar .dc-range-btn {
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    #section-doctorscalendar .dc-chart-wrap {
+        height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    #section-doctorscalendar .dc-stat-num {
+        font-size: 20px;
+    }
+    #section-doctorscalendar .dc-stat-label {
+        font-size: 11px;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 42px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 834px) and (orientation: portrait) {
+    #section-doctorscalendar .dc-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 50px !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    #section-doctorscalendar .dc-stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    #section-doctorscalendar .dc-extras {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ---------- Messages ---------- */
+@media (max-width: 1024px) {
+    .cm-admin {
+        height: calc(100vh - 120px);
+        min-height: 360px;
+    }
+    .cm-list {
+        width: 260px;
+    }
+    .cm-conv {
+        padding: 8px 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .cm-admin {
+        height: calc(100vh - 100px);
+        min-height: 320px;
+        border-radius: 12px;
+    }
+    .cm-list {
+        width: 100%;
+    }
+    .cm-pane .cm-head {
+        padding: 10px 12px;
+    }
+    .cm-bubble {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cm-panel {
+        inset: 0;
+        width: auto;
+        height: auto;
+        max-height: none;
+        border-radius: 0;
+    }
+    .cm-row {
+        max-width: 88%;
+    }
+    .cm-form textarea {
+        font-size: 16px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 834px) and (orientation: portrait) {
+    .cm-admin {
+        height: calc(100vh - 110px);
+    }
+    .cm-list {
+        width: 240px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    .cm-admin {
+        height: calc(100vh - 130px);
+    }
+    .cm-list {
+        width: 300px;
+    }
+}
+
+/* Small phones */
+@media (max-width: 390px) {
+    #section-mypatients .appointment-table th,
+    #section-mypatients .appointment-table td,
+    #section-activitylog .unpaid-table th,
+    #section-activitylog .unpaid-table td {
+        padding: 6px 8px;
+        font-size: 11.5px;
+    }
+    .cm-bubble {
+        font-size: 12.5px;
+        padding: 7px 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    #section-mypatients .filter-btn,
+    #section-activitylog .unpaid-filter-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    .cm-form button {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* ---------- Wider columns for readability ---------- */
+#section-mypatients .appointment-table th,
+#section-mypatients .appointment-table td,
+#section-usermanagement .appointment-table th,
+#section-usermanagement .appointment-table td,
+#section-appointments .appointment-table th,
+#section-appointments .appointment-table td {
+    padding: 14px 18px;
+    font-size: 14px;
+}
+#section-mypatients .appointment-table th,
+#section-usermanagement .appointment-table th,
+#section-appointments .appointment-table th {
+    white-space: nowrap;
+}
+#section-mypatients .appointment-table td,
+#section-usermanagement .appointment-table td,
+#section-appointments .appointment-table td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#section-mypatients .appointment-table th:nth-child(1),
+#section-mypatients .appointment-table td:nth-child(1) { min-width: 190px; }
+#section-mypatients .appointment-table th:nth-child(2),
+#section-mypatients .appointment-table td:nth-child(2) { min-width: 90px; }
+#section-mypatients .appointment-table th:nth-child(3),
+#section-mypatients .appointment-table td:nth-child(3) { min-width: 150px; }
+#section-mypatients .appointment-table th:nth-child(4),
+#section-mypatients .appointment-table td:nth-child(4) { min-width: 100px; }
+#section-mypatients .appointment-table th:nth-child(5),
+#section-mypatients .appointment-table td:nth-child(5) { min-width: 175px; }
+#section-mypatients .appointment-table th:nth-child(6),
+#section-mypatients .appointment-table td:nth-child(6) { min-width: 175px; }
+#section-mypatients .appointment-table th:nth-child(7),
+#section-mypatients .appointment-table td:nth-child(7) { min-width: 210px; }
+
+#section-usermanagement .appointment-table th:nth-child(1),
+#section-usermanagement .appointment-table td:nth-child(1) { min-width: 250px; }
+#section-usermanagement .appointment-table th:nth-child(2),
+#section-usermanagement .appointment-table td:nth-child(2) { min-width: 190px; }
+#section-usermanagement .appointment-table th:nth-child(3),
+#section-usermanagement .appointment-table td:nth-child(3) { min-width: 250px; }
+#section-usermanagement .appointment-table th:nth-child(4),
+#section-usermanagement .appointment-table td:nth-child(4) { min-width: 175px; }
+#section-usermanagement .appointment-table th:nth-child(5),
+#section-usermanagement .appointment-table td:nth-child(5) { min-width: 150px; }
+
+#section-appointments .appointment-table th:nth-child(1),
+#section-appointments .appointment-table td:nth-child(1) { min-width: 250px; }
+#section-appointments .appointment-table th:nth-child(15),
+#section-appointments .appointment-table td:nth-child(15) { min-width: 150px; }
+#section-appointments .appointment-table th:nth-child(16),
+#section-appointments .appointment-table td:nth-child(16) { min-width: 250px; }
+#section-appointments .appointment-table th:nth-child(17),
+#section-appointments .appointment-table td:nth-child(17) { min-width: 190px; }
+#section-appointments .appointment-table th:nth-child(18),
+#section-appointments .appointment-table td:nth-child(18) { min-width: 180px; }
+#section-appointments .appointment-table th:nth-child(19),
+#section-appointments .appointment-table td:nth-child(19) { min-width: 175px; }
+#section-appointments .appointment-table th:nth-child(20),
+#section-appointments .appointment-table td:nth-child(20) { min-width: 165px; }
+
+
+/* ---------- iPad Pro 13" wider columns ---------- */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    #section-mypatients .appointment-table th, #section-mypatients .appointment-table td,
+    #section-usermanagement .appointment-table th, #section-usermanagement .appointment-table td,
+    #section-appointments .appointment-table th, #section-appointments .appointment-table td {
+        padding: 16px 20px;
+        font-size: 15px;
+    }
+    #section-mypatients .appointment-table th:nth-child(1), #section-mypatients .appointment-table td:nth-child(1) { min-width: 220px; }
+    #section-mypatients .appointment-table th:nth-child(3), #section-mypatients .appointment-table td:nth-child(3) { min-width: 150px; }
+    #section-mypatients .appointment-table th:nth-child(6), #section-mypatients .appointment-table td:nth-child(6) { min-width: 190px; }
+    #section-mypatients .appointment-table th:nth-child(7), #section-mypatients .appointment-table td:nth-child(7) { min-width: 230px; }
+    #section-usermanagement .appointment-table th:nth-child(3), #section-usermanagement .appointment-table td:nth-child(3) { min-width: 280px; }
+    #section-appointments .appointment-table th:nth-child(1), #section-appointments .appointment-table td:nth-child(1) { min-width: 220px; }
+    #section-appointments .appointment-table th:nth-child(16), #section-appointments .appointment-table td:nth-child(16) { min-width: 190px; }
+    #section-appointments .appointment-table th:nth-child(18), #section-appointments .appointment-table td:nth-child(18) { min-width: 210px; }
+}
+
+
+/* ---------- iPad Pro portrait: My Patients & User Management ---------- */
+@media (min-width: 1024px) and (orientation: portrait) {
+    #section-mypatients .appointment-table th, #section-mypatients .appointment-table td,
+    #section-usermanagement .appointment-table th, #section-usermanagement .appointment-table td {
+        padding: 16px 20px;
+        font-size: 15px;
+    }
+    #section-mypatients .appointment-table th:nth-child(1), #section-mypatients .appointment-table td:nth-child(1) { min-width: 230px; }
+    #section-mypatients .appointment-table th:nth-child(2), #section-mypatients .appointment-table td:nth-child(2) { min-width: 90px; }
+    #section-mypatients .appointment-table th:nth-child(3), #section-mypatients .appointment-table td:nth-child(3) { min-width: 160px; }
+    #section-mypatients .appointment-table th:nth-child(4), #section-mypatients .appointment-table td:nth-child(4) { min-width: 100px; }
+    #section-mypatients .appointment-table th:nth-child(5), #section-mypatients .appointment-table td:nth-child(5) { min-width: 150px; }
+    #section-mypatients .appointment-table th:nth-child(6), #section-mypatients .appointment-table td:nth-child(6) { min-width: 190px; }
+    #section-mypatients .appointment-table th:nth-child(7), #section-mypatients .appointment-table td:nth-child(7) { min-width: 230px; }
+    #section-usermanagement .appointment-table th:nth-child(1), #section-usermanagement .appointment-table td:nth-child(1) { min-width: 220px; }
+    #section-usermanagement .appointment-table th:nth-child(2), #section-usermanagement .appointment-table td:nth-child(2) { min-width: 180px; }
+    #section-usermanagement .appointment-table th:nth-child(3), #section-usermanagement .appointment-table td:nth-child(3) { min-width: 280px; }
+    #section-usermanagement .appointment-table th:nth-child(4), #section-usermanagement .appointment-table td:nth-child(4) { min-width: 140px; }
+    #section-usermanagement .appointment-table th:nth-child(5), #section-usermanagement .appointment-table td:nth-child(5) { min-width: 160px; }
+}
+
+
+/* ---------- Doctors calendar buttons (match Save Block / Unblock This Day) ---------- */
+#section-doctorscalendar .dc-range-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+#section-doctorscalendar .dc-range-actions .dc-range-btn,
+#section-doctorscalendar #pastMarkBtn {
+    flex: 1 1 180px;
+    min-width: 140px;
+    width: auto;
+}
+
+@media (max-width: 480px) {
+    #section-doctorscalendar .dc-range-actions {
+        flex-direction: column;
+    }
+    #section-doctorscalendar .dc-range-actions .dc-range-btn,
+    #section-doctorscalendar #pastMarkBtn {
+        width: 100%;
+        flex: 1 1 auto;
+    }
+}
+
+@media (min-width: 1024px) and (orientation: portrait) {
+    #section-doctorscalendar .dc-range-actions .dc-range-btn,
+    #section-doctorscalendar #pastMarkBtn {
+        flex: 1 1 220px;
+        min-width: 180px;
+    }
+}
+
+
+/* ---------- iPad Mini: stack range buttons for tap targets ---------- */
+@media (max-width: 820px) {
+    #section-doctorscalendar .dc-range-actions {
+        flex-direction: column;
+    }
+    #section-doctorscalendar .dc-range-actions .dc-range-btn,
+    #section-doctorscalendar #pastMarkBtn {
+        width: 100%;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
+
+
+/* ---------- Doctors calendar day sizing for tablets ---------- */
+@media (max-width: 820px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 56px !important;
+        padding: 4px 5px !important;
+        font-size: 12px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-days {
+        padding: 8px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .dayContainer {
+        gap: 4px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        font-size: 17px !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: clamp(84px, 10vh, 120px) !important;
+        font-size: 14px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-days {
+        padding: 16px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .dayContainer {
+        gap: 10px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-months {
+        padding: 20px 18px 16px !important;
+    }
+}
+
+
+/* ---------- Doctors calendar: show all days (iPad Pro) ---------- */
+#section-doctorscalendar .doctor-cal-panel .flatpickr-calendar.inline,
+#section-doctorscalendar .doctor-cal-panel .flatpickr-innerContainer {
+    max-height: none !important;
+    overflow: hidden !important;
+    height: auto !important;
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-calendar.inline {
+        max-height: none !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-days {
+        overflow: hidden !important;
+    }
+}
+
+
+/* ---------- Upcoming blocked days buttons (iPad Mini / Pro 13) ---------- */
+#section-doctorscalendar .dc-row {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+}
+
+#section-doctorscalendar .dc-main {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+#section-doctorscalendar .dc-actions {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+#section-doctorscalendar .dc-mini-btn {
+    min-height: 36px;
+    padding: 8px 14px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+    #section-doctorscalendar .dc-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    #section-doctorscalendar .dc-date {
+        flex: 0 0 auto;
+    }
+    #section-doctorscalendar .dc-main {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+    #section-doctorscalendar .dc-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    #section-doctorscalendar .dc-mini-btn {
+        flex: 1 1 100px;
+        min-width: 90px;
+    }
+}
+
+@media (min-width: 821px) and (max-width: 1366px) {
+    #section-doctorscalendar .dc-row {
+        flex-wrap: wrap;
+    }
+    #section-doctorscalendar .dc-actions {
+        flex: 0 0 auto;
+        max-width: 100%;
+    }
+    #section-doctorscalendar .dc-mini-btn {
+        min-height: 40px;
+        padding: 9px 16px;
+        font-size: 13.5px;
+    }
+}
+/* ---------- Sidebar small screen: ensure all navs visible ---------- */
+@media (max-width: 768px) {
+    .sidebar {
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 12px 10px !important;
+    }
+    .sidebar-nav {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        overflow-y: auto !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+    }
+    .nav-item {
+        padding: 8px 10px !important;
+        font-size: 14px !important;
+        gap: 8px !important;
+    }
+    .nav-item__icon {
+        font-size: 18px !important;
+    }
+    .sidebar-header {
+        margin-bottom: 12px !important;
+    }
+    .sidebar-brand {
+        margin-bottom: 12px !important;
+    }
+    .sidebar-brand__name {
+        font-size: 16px !important;
+    }
+    .sidebar-brand__sub,
+    .sidebar-brand__badge {
+        font-size: 11px !important;
+    }
+}
+/* ---------- Patient dashboard: use Open Dental Chart modal on tablets ---------- */
+@media (max-width: 1024px) {
+    #section-patientdashboard #open-chart-btn {
+        display: inline-flex !important;
+    }
+    #section-patientdashboard.active-section #section-chart {
+        display: none !important;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+    #section-patientdashboard #open-chart-btn {
+        display: inline-flex !important;
+    }
+    #section-patientdashboard.active-section #section-chart {
+        display: none !important;
+    }
+}
+/* ---------- Patient dashboard: portrait tablets (iPad Pro 13 portrait) ---------- */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: portrait) {
+    #section-patientdashboard #open-chart-btn {
+        display: inline-flex !important;
+    }
+    #section-patientdashboard.active-section #section-chart {
+        display: none !important;
+    }
+}
+/* ---------- Patient dashboard: large landscape tablets ---------- */
+@media (min-width: 1367px) and (max-width: 1440px) and (orientation: landscape) {
+    #section-patientdashboard #open-chart-btn {
+        display: inline-flex !important;
+    }
+    #section-patientdashboard.active-section #section-chart {
+        display: none !important;
+    }
+}
+/* ---------- Doctors calendar: iPhone SE header fix ---------- */
+@media (max-width: 375px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-months {
+        padding: 10px 6px 8px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month {
+        width: 80% !important;
+        left: 10% !important;
+        font-size: 13px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        font-size: 15px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        width: 4ch !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-prev-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-next-month {
+        padding: 6px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-weekday {
+        font-size: 10px !important;
+        padding: 4px 0 !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-day {
+        height: 40px !important;
+        padding: 3px 4px !important;
+        font-size: 11px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-days {
+        padding: 6px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .dayContainer {
+        gap: 3px !important;
+    }
+}
+/* ---------- Doctors calendar: month/year text fit ---------- */
+@media (max-width: 480px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-months {
+        padding: 8px 4px 6px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month {
+        width: 70% !important;
+        left: 15% !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year,
+    #section-doctorscalendar .doctor-cal-panel .adm-month-dd {
+        font-size: 14px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        width: 4ch !important;
+        padding: 0 !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-prev-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-next-month {
+        padding: 4px !important;
+    }
+}
+
+@media (max-width: 375px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month,
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year,
+    #section-doctorscalendar .doctor-cal-panel .adm-month-dd {
+        font-size: 13px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        width: 4.5ch !important;
+    }
+}
+/* ---------- Doctors calendar: iPhone SE year cut fix ---------- */
+@media (max-width: 375px) {
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month {
+        width: 62% !important;
+        left: 19% !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month .cur-month {
+        font-size: 12px !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .flatpickr-current-month input.cur-year {
+        font-size: 12px !important;
+        width: 4.5ch !important;
+        min-width: 4.5ch !important;
+        max-width: 4.5ch !important;
+    }
+    #section-doctorscalendar .doctor-cal-panel .adm-month-dd {
+        font-size: 12px !important;
+    }
+}
+/* ---------- Sidebar: wider + wrap labels on Surface Pro 10 ---------- */
+@media (min-width: 769px) and (max-width: 1440px) {
+    .sidebar {
+        width: 300px !important;
+    }
+    .sidebar .nav-item__label {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        word-break: break-word !important;
+    }
+    .nav-item {
+        align-items: flex-start !important;
+    }
+}
+@media (min-width: 769px) and (max-width: 1440px) {
+    .main-content {
+        margin-left: 300px !important;
+    }
+    .main-content::before {
+        left: 300px !important;
+    }
+}
+
+
+/* ---------- Treatment Information modal: scrollable table (My Patients style) ---------- */
+#checkInfoModal .ci-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    border: 1px solid #e3e8ee;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    padding-right: 16px;
+}
+
+#checkInfoModal .treatment-table {
+    table-layout: auto;
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Action buttons in the modal */
+#checkInfoModal .ci-action-btns,
+#checkInfoModal .treatment-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+}
+#checkInfoModal .ci-btn--view,
+#checkInfoModal .ci-btn--edit,
+#checkInfoModal .ci-btn--save,
+#checkInfoModal .ci-btn--cancel,
+#checkInfoModal .ci-btn--delete {
+    min-width: 60px;
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+/* Responsive: modal padding and table min-width */
+@media (max-width: 1024px) {
+    #checkInfoModal .modal-content {
+        max-width: 95vw;
+        margin: 8px auto;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 8px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 768px) {
+    #checkInfoModal .modal-content {
+        max-width: 98vw;
+        margin: 4px auto;
+        max-height: calc(100vh - 16px);
+    }
+    #checkInfoModal .ci-head {
+        padding: 14px 16px 10px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 16px;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 4px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 800px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 50px;
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    #checkInfoModal .modal-content {
+        max-width: 96vw;
+        margin: 8px auto;
+        border-radius: 12px;
+        max-height: calc(100vh - 16px);
+        height: auto;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 2px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 700px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 44px;
+        padding: 4px 6px;
+        font-size: 10.5px;
+    }
+}
+
+/* Landscape phones */
+@media (max-width: 599px) and (orientation: landscape) {
+    #checkInfoModal .modal-content {
+        max-height: 90vh;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 750px;
+    }
+}
+
+/* Dark mode scroll container */
+body.dark-mode #checkInfoModal .ci-table-scroll {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+
+/* ---------- Treatment Information modal: comprehensive responsive (770-1580px) ---------- */
+@media (min-width: 1400px) and (max-width: 1580px) {
+    #checkInfoModal .modal-content {
+        max-width: 90vw;
+        margin: 12px auto;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 12px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 1000px;
+    }
+    #checkInfoModal .ci-head {
+        padding: 18px 24px 14px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 20px;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    #checkInfoModal .modal-content {
+        max-width: 92vw;
+        margin: 10px auto;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 10px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 950px;
+    }
+    #checkInfoModal .ci-head {
+        padding: 16px 20px 12px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 18px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 56px;
+        padding: 5px 9px;
+        font-size: 11.5px;
+    }
+}
+
+@media (min-width: 1024px) and (max-width: 1199px) {
+    #checkInfoModal .modal-content {
+        max-width: 94vw;
+        margin: 8px auto;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 8px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 900px;
+    }
+    #checkInfoModal .ci-head {
+        padding: 14px 18px 10px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 17px;
+    }
+    #checkInfoModal .ci-sub {
+        font-size: 12px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 52px;
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+}
+
+/* iPad Mini (768-820px) */
+@media (min-width: 768px) and (max-width: 820px) {
+    #checkInfoModal .modal-content {
+        max-width: 96vw;
+        margin: 6px auto;
+        max-height: calc(100vh - 12px);
+        border-radius: 12px;
+    }
+    #checkInfoModal .ci-head {
+        padding: 12px 14px 8px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 16px;
+    }
+    #checkInfoModal .ci-sub {
+        font-size: 11.5px;
+    }
+    #checkInfoModal .ci-stats {
+        width: 100%;
+    }
+    #checkInfoModal .ci-appt {
+        width: 100%;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 4px;
+        border-radius: 8px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 780px;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 8px 6px;
+        font-size: 10px;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 8px 6px;
+        font-size: 11.5px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 48px;
+        padding: 4px 6px;
+        font-size: 10.5px;
+    }
+}
+
+/* iPad Mini portrait / small tablet (700-767px) */
+@media (min-width: 700px) and (max-width: 767px) {
+    #checkInfoModal .modal-content {
+        max-width: 98vw;
+        margin: 4px auto;
+        max-height: calc(100vh - 8px);
+        border-radius: 10px;
+    }
+    #checkInfoModal .ci-head {
+        padding: 10px 12px 6px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 15px;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 2px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 740px;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 7px 5px;
+        font-size: 9.5px;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 7px 5px;
+        font-size: 11px;
+    }
+}
+
+/* Phone (<=699px) */
+@media (max-width: 699px) {
+    #checkInfoModal .modal-content {
+        max-width: 96vw;
+        margin: 8px auto;
+        border-radius: 12px;
+        max-height: calc(100vh - 16px);
+        height: auto;
+    }
+    #checkInfoModal .ci-head {
+        padding: 10px 12px 6px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 15px;
+    }
+    #checkInfoModal .ci-sub {
+        font-size: 11px;
+    }
+    #checkInfoModal .ci-stats {
+        width: 100%;
+    }
+    #checkInfoModal .ci-appt {
+        width: 100%;
+    }
+    #checkInfoModal .ci-appt-items {
+        flex-direction: column;
+        gap: 4px;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 2px;
+        border-radius: 6px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 680px;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 6px 4px;
+        font-size: 9px;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 6px 4px;
+        font-size: 10.5px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 40px;
+        padding: 4px 5px;
+        font-size: 10px;
+    }
+    #checkInfoModal .ci-action-btns {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* Landscape phones */
+@media (max-width: 820px) and (orientation: landscape) {
+    #checkInfoModal .modal-content {
+        max-height: 92vh;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 700px;
+    }
+}
+
+/* Dark mode scroll container */
+body.dark-mode #checkInfoModal .ci-table-scroll {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+
+/* ---------- Treatment Info modal: force scrollable table (override card-stacking) ---------- */
+#checkInfoModal .ci-table-scroll {
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    border: 1px solid #e3e8ee !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+    padding-right: 16px !important;
+    display: block !important;
+    flex: none !important;
+    min-height: auto !important;
+}
+
+#checkInfoModal .treatment-table {
+    display: table !important;
+    table-layout: auto !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+}
+
+#checkInfoModal .treatment-table thead {
+    display: table-header-group !important;
+}
+
+#checkInfoModal .treatment-table tbody {
+    display: table-row-group !important;
+}
+
+#checkInfoModal .treatment-table tr {
+    display: table-row !important;
+}
+
+#checkInfoModal .treatment-table th,
+#checkInfoModal .treatment-table td {
+    display: table-cell !important;
+    width: auto !important;
+}
+
+/* Responsive min-widths */
+@media (max-width: 1024px) {
+    #checkInfoModal .treatment-table {
+        min-width: 850px !important;
+    }
+}
+@media (max-width: 768px) {
+    #checkInfoModal .treatment-table {
+        min-width: 750px !important;
+    }
+    #checkInfoModal .modal-content {
+        max-width: 98vw !important;
+        margin: 4px auto !important;
+        max-height: calc(100vh - 8px) !important;
+        max-height: calc(100dvh - 8px) !important;
+        border-radius: 8px !important;
+    }
+    #checkInfoModal .ci-head {
+        padding: 12px 14px 8px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 16px !important;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 4px !important;
+        border-radius: 8px !important;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 7px 5px !important;
+        font-size: 9.5px !important;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 7px 5px !important;
+        font-size: 11px !important;
+    }
+}
+@media (max-width: 480px) {
+    #checkInfoModal .treatment-table {
+        min-width: 680px !important;
+    }
+    #checkInfoModal .modal-content {
+        max-width: 96vw !important;
+        margin: 8px auto !important;
+        border-radius: 12px !important;
+        max-height: calc(100vh - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
+        height: auto !important;
+    }
+    #checkInfoModal .ci-head {
+        padding: 10px 12px 6px !important;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 15px !important;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 2px !important;
+        border-radius: 6px !important;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 6px 4px !important;
+        font-size: 9px !important;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 6px 4px !important;
+        font-size: 10.5px !important;
+    }
+}
+
+/* Dark mode */
+body.dark-mode #checkInfoModal .ci-table-scroll {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+
+/* ---------- Treatment Info modal: responsive close button ---------- */
+#checkInfoModal .modal-x {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+#checkInfoModal .modal-x svg {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 768px) {
+    #checkInfoModal .modal-x {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+    #checkInfoModal .modal-x svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    #checkInfoModal .modal-x {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+    }
+    #checkInfoModal .modal-x svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* Landscape phones */
+@media (max-width: 820px) and (orientation: landscape) {
+    #checkInfoModal .modal-x {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+    }
+    #checkInfoModal .modal-x svg {
+        width: 15px;
+        height: 15px;
+    }
+}
+
+/* Dark mode */
+body.dark-mode #checkInfoModal .modal-x {
+    background: #2d2d2d;
+    border-color: #444;
+    color: #e0e0e0;
+}
+
+
+/* ---------- Treatment Info modal: phone close button fix (760-300px) ---------- */
+@media (max-width: 760px) {
+    #checkInfoModal .ci-head {
+        position: relative;
+        padding: 12px 44px 10px 12px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+    #checkInfoModal .ci-head .modal-x {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        order: 0;
+        margin: 0;
+        z-index: 5;
+    }
+    #checkInfoModal .ci-head-text {
+        flex: 1 1 100%;
+        min-width: 0;
+        padding-right: 0;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 15px;
+        line-height: 1.3;
+        margin: 0;
+        padding-right: 0;
+    }
+    #checkInfoModal .ci-sub {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+    #checkInfoModal .ci-appt {
+        flex: 1 1 100%;
+        order: 3;
+        margin-top: 8px;
+    }
+    #checkInfoModal .ci-stats {
+        width: 100%;
+        margin-top: 6px;
+    }
+    #checkInfoModal .ci-stats-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    #checkInfoModal .ci-stat-item {
+        flex: 1 1 30%;
+        min-width: 0;
+    }
+    #checkInfoModal .ci-table-scroll {
+        padding-right: 2px;
+        border-radius: 6px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 640px;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 6px 4px;
+        font-size: 9px;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 6px 4px;
+        font-size: 10.5px;
+    }
+    #checkInfoModal .ci-btn--view,
+    #checkInfoModal .ci-btn--edit,
+    #checkInfoModal .ci-btn--save,
+    #checkInfoModal .ci-btn--cancel,
+    #checkInfoModal .ci-btn--delete {
+        min-width: 38px;
+        padding: 4px 5px;
+        font-size: 10px;
+    }
+    #checkInfoModal .ci-action-btns {
+        flex-direction: column;
+        gap: 3px;
+        align-items: stretch;
+    }
+    #checkInfoModal .modal-content {
+        max-width: 96vw;
+        margin: 8px auto;
+        border-radius: 12px;
+        max-height: calc(100vh - 16px);
+        max-height: calc(100dvh - 16px);
+        height: auto;
+    }
+}
+
+/* Very small phones (<=360px) */
+@media (max-width: 360px) {
+    #checkInfoModal .ci-head {
+        padding: 10px 40px 8px 10px;
+    }
+    #checkInfoModal .ci-head h2 {
+        font-size: 14px;
+    }
+    #checkInfoModal .ci-head .modal-x {
+        top: 8px;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+    }
+    #checkInfoModal .ci-head .modal-x svg {
+        width: 13px;
+        height: 13px;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 600px;
+    }
+    #checkInfoModal .treatment-table th {
+        padding: 5px 3px;
+        font-size: 8.5px;
+    }
+    #checkInfoModal .treatment-table td {
+        padding: 5px 3px;
+        font-size: 10px;
+    }
+}
+
+/* Landscape phones */
+@media (max-width: 760px) and (orientation: landscape) {
+    #checkInfoModal .modal-content {
+        max-height: 95vh;
+    }
+    #checkInfoModal .treatment-table {
+        min-width: 650px;
+    }
+}
+
+
+/* ---------- Treatment Info modal: row spacing & readability ---------- */
+#checkInfoModal .treatment-table tbody tr {
+    min-height: 44px;
+}
+#checkInfoModal .treatment-table th {
+    line-height: 1.3;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#checkInfoModal .treatment-table td {
+    line-height: 1.4;
+    vertical-align: middle;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+#checkInfoModal .treatment-table .ci-sub td {
+    line-height: 1.5;
+    padding: 14px 18px;
+}
+#checkInfoModal .treatment-table .ci-sub {
+    border-bottom: 1px solid #e2e8f0;
+}
+#checkInfoModal .treatment-table tbody tr:hover td {
+    background: rgba(13, 71, 161, 0.03);
+}
+
+/* Phone: more breathing room */
+@media (max-width: 768px) {
+    #checkInfoModal .treatment-table tbody tr {
+        min-height: 40px;
+    }
+    #checkInfoModal .treatment-table td {
+        line-height: 1.35;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+    #checkInfoModal .treatment-table .ci-sub td {
+        padding: 10px 12px;
+        line-height: 1.4;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 480px) {
+    #checkInfoModal .treatment-table tbody tr {
+        min-height: 36px;
+    }
+    #checkInfoModal .treatment-table td {
+        line-height: 1.3;
+        padding-top: 6px;
+        padding-bottom: 6px;
+    }
+    #checkInfoModal .treatment-table .ci-sub td {
+        padding: 8px 10px;
+    }
+}
+
+/* Dark mode */
+body.dark-mode #checkInfoModal .treatment-table .ci-sub td {
+    background: rgba(30, 41, 59, 0.6);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+body.dark-mode #checkInfoModal .treatment-table tbody tr:hover td {
+    background: rgba(59, 130, 246, 0.06);
+}
+
+
+/* ---------- Treatment Info modal: remove row labels (header already labels columns) ---------- */
+#checkInfoModal .treatment-table td::before {
+    content: none !important;
+    display: none !important;
+}
+#checkInfoModal .treatment-table td::before {
+    content: '' !important;
+}
+
+
+/* ---------- Treatment Info modal: new Payments + Manage columns ---------- */
+#checkInfoModal .treatment-table td:nth-child(12),
+#checkInfoModal .treatment-table td:nth-child(13) {
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+#checkInfoModal .treatment-table th:nth-child(12),
+#checkInfoModal .treatment-table th:nth-child(13) {
+    text-align: center;
+}
+#checkInfoModal .treatment-table th:nth-child(12),
+#checkInfoModal .treatment-table td:nth-child(12) {
+    min-width: 90px;
+}
+#checkInfoModal .treatment-table th:nth-child(13),
+#checkInfoModal .treatment-table td:nth-child(13) {
+    min-width: 110px;
+}
+
+/* Responsive: scale down new columns */
+@media (max-width: 1024px) {
+    #checkInfoModal .treatment-table th:nth-child(12),
+    #checkInfoModal .treatment-table td:nth-child(12) {
+        min-width: 80px;
+    }
+    #checkInfoModal .treatment-table th:nth-child(13),
+    #checkInfoModal .treatment-table td:nth-child(13) {
+        min-width: 90px;
+    }
+}
+@media (max-width: 768px) {
+    #checkInfoModal .treatment-table th:nth-child(12),
+    #checkInfoModal .treatment-table td:nth-child(12) {
+        min-width: 70px;
+    }
+    #checkInfoModal .treatment-table th:nth-child(13),
+    #checkInfoModal .treatment-table td:nth-child(13) {
+        min-width: 80px;
+    }
+}
+@media (max-width: 480px) {
+    #checkInfoModal .treatment-table th:nth-child(12),
+    #checkInfoModal .treatment-table td:nth-child(12) {
+        min-width: 60px;
+    }
+    #checkInfoModal .treatment-table th:nth-child(13),
+    #checkInfoModal .treatment-table td:nth-child(13) {
+        min-width: 70px;
+    }
+}
+
+
+/* ---------- Treatment Info modal: Payments column button spacing ---------- */
+#checkInfoModal .ci-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+}
+#checkInfoModal .ci-actions .btn-action {
+    margin: 2px;
+}
+#checkInfoModal .ci-actions .btn-action.ci-ico {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+#checkInfoModal .ci-actions .btn-action.ci-ico:hover {
+    transform: translateY(-1px);
+}
+
+/* ---------- Record Payment panel: dark mode ---------- */
+body.dark-mode #checkInfoModal .ci-pay-panel {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.dark-mode #checkInfoModal .ci-pay-field {
+    color: #cbd5e1;
+}
+body.dark-mode #checkInfoModal .ci-pay-field input,
+body.dark-mode #checkInfoModal .ci-pay-field select {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-color: #334155;
+}
+body.dark-mode #checkInfoModal .ci-pay-field input:focus,
+body.dark-mode #checkInfoModal .ci-pay-field select:focus {
+    border-color: #64b5f6;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.15);
+}
+body.dark-mode #checkInfoModal .ci-pay-label {
+    color: #cbd5e1;
+}
+
+/* ---------- Payment History panel: dark mode ---------- */
+body.dark-mode #checkInfoModal .ci-hist-panel {
+    background: #1e293b;
+    border-color: #334155;
+}
+body.dark-mode #checkInfoModal .ci-hist-title {
+    color: #e2e8f0;
+}
+body.dark-mode #checkInfoModal .ci-hist {
+    border-color: #334155;
+    background: #0f172a;
+}
+body.dark-mode #checkInfoModal .ci-hist th {
+    background: #1e293b;
+    color: #94a3b8;
+    border-bottom-color: #334155;
+}
+body.dark-mode #checkInfoModal .ci-hist td {
+    color: #e2e8f0;
+    border-bottom-color: #1e293b;
+}
+body.dark-mode #checkInfoModal .ci-hist tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ---------- Responsive: payment/history panels ---------- */
+@media (max-width: 768px) {
+    #checkInfoModal .ci-pay-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+    #checkInfoModal .ci-pay-fields {
+        flex-direction: column;
+        gap: 8px;
+    }
+    #checkInfoModal .ci-pay-field {
+        white-space: normal;
+    }
+    #checkInfoModal .ci-pay-field input,
+    #checkInfoModal .ci-pay-field select {
+        width: 100% !important;
+    }
+    #checkInfoModal .ci-pay-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    #checkInfoModal .ci-pay-actions .btn-action {
+        width: 100%;
+        justify-content: center;
+    }
+    #checkInfoModal .ci-hist {
+        max-width: 100%;
+        font-size: 12px;
+    }
+    #checkInfoModal .ci-hist th,
+    #checkInfoModal .ci-hist td {
+        padding: 6px 8px;
+    }
+}
+@media (max-width: 480px) {
+    #checkInfoModal .ci-pay-panel {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+    #checkInfoModal .ci-pay-fields {
+        gap: 6px;
+    }
+    #checkInfoModal .ci-pay-field input,
+    #checkInfoModal .ci-pay-field select {
+        height: 34px;
+        font-size: 12px;
+    }
+    #checkInfoModal .ci-hist {
+        font-size: 11.5px;
+    }
+    #checkInfoModal .ci-hist th,
+    #checkInfoModal .ci-hist td {
+        padding: 5px 6px;
+    }
+}
+
+
+/* ---------- Dark mode: Record Payment & Payment History buttons (consistent, minimalist) ---------- */
+body.dark-mode #checkInfoModal .ci-pay-actions .btn-action,
+body.dark-mode #checkInfoModal .ci-actions .btn-action,
+body.dark-mode #checkInfoModal .ci-hist-panel .btn-action {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+body.dark-mode #checkInfoModal .ci-pay-actions .btn-action:hover,
+body.dark-mode #checkInfoModal .ci-actions .btn-action:hover,
+body.dark-mode #checkInfoModal .ci-hist-panel .btn-action:hover {
+    background: #334155;
+    border-color: #64b5f6;
+    color: #ffffff;
+}
+body.dark-mode #checkInfoModal .ci-pay-actions .btn-action:active,
+body.dark-mode #checkInfoModal .ci-actions .btn-action:active,
+body.dark-mode #checkInfoModal .ci-hist-panel .btn-action:active {
+    background: #0f172a;
+    border-color: #64b5f6;
+}
+body.dark-mode #checkInfoModal .ci-pay-actions .btn-action:disabled,
+body.dark-mode #checkInfoModal .ci-actions .btn-action:disabled,
+body.dark-mode #checkInfoModal .ci-hist-panel .btn-action:disabled {
+    background: #111827;
+    border-color: #1f2937;
+    color: #4b5563;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+body.dark-mode #checkInfoModal .ci-pay-actions .ci-pay-spinner {
+    border-color: #334155;
+    border-top-color: #64b5f6;
+}
+body.dark-mode #checkInfoModal .ci-actions .btn-action.ci-ico:hover {
+    transform: translateY(-1px);
+}
+
+/* ---------- Edit Patient modal: dark mode date input + button hover improvements ---------- */
+
+/* Dark mode: birthday (date) input */
+body.dark-mode .ep-modal .ep-field input[type="date"] {
+    background: #131a26;
+    border-color: #33415a;
+    color: #e0e0e0;
+    color-scheme: dark;
+}
+body.dark-mode .ep-modal .ep-field input[type="date"]:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+}
+body.dark-mode .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+/* Dark mode: sex & civil status select (reinforce) */
+body.dark-mode .ep-modal .ep-field select {
+    background: #131a26;
+    border-color: #33415a;
+    color: #e0e0e0;
+}
+body.dark-mode .ep-modal .ep-field select option {
+    background: #131a26;
+    color: #e0e0e0;
+}
+
+/* Light mode: improved button hover */
+.ep-cancel:hover:not(:disabled) {
+    background: #e2e8f0;
+    border-color: #64748b;
+    color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+#editPatientModal .ep-save:hover:not(:disabled) {
+    background-color: #0a3a8a;
+    border-color: #0a3a8a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 71, 161, 0.35);
+}
+.ep-cancel:active:not(:disabled),
+#editPatientModal .ep-save:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Dark mode: improved button hover */
+body.dark-mode .ep-cancel:hover:not(:disabled) {
+    background: #334155;
+    border-color: #94a3b8;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+body.dark-mode .ep-save:hover:not(:disabled),
+body.dark-mode #editPatientModal .ep-save:hover:not(:disabled) {
+    background-color: #1e40af;
+    border-color: #1e40af;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+}
+body.dark-mode .ep-cancel:active:not(:disabled),
+body.dark-mode #editPatientModal .ep-save:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Ensure smooth transitions on buttons */
+.ep-cancel,
+#editPatientModal .ep-save {
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+                color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+EOF
+/* ---------- Edit Patient modal: force dark mode on select & date (override conflicts) ---------- */
+body.dark-mode .ep-modal .ep-field select,
+body.dark-mode .ep-modal .ep-field input[type="date"],
+body.dark-mode .ep-modal .ep-field input[type="text"],
+body.dark-mode .ep-modal .ep-field input[type="email"] {
+    background: #131a26 !important;
+    border-color: #33415a !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode .ep-modal .ep-field select option {
+    background: #131a26 !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode .ep-modal .ep-field input[type="date"] {
+    color-scheme: dark !important;
+}
+body.dark-mode .ep-modal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    opacity: 0.8 !important;
+}
+
+/* ---------- Edit Patient modal: dark mode for .adm-select (Sex, Civil Status) ---------- */
+body.dark-mode #editPatientModal .adm-select > select {
+    background: #131a26 url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 13px center / 18px 18px !important;
+    border-color: #33415a !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode #editPatientModal .adm-select > select:hover {
+    border-color: #64b5f6 !important;
+}
+body.dark-mode #editPatientModal .adm-select.is-open > select {
+    border-color: #64b5f6 !important;
+    box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2) !important;
+}
+body.dark-mode #editPatientModal .adm-select > select option {
+    background: #131a26 !important;
+    color: #e0e0e0 !important;
+}
+body.dark-mode #editPatientModal .adm-select > select option:checked {
+    background: #1e3a8a !important;
+    color: #dbeafe !important;
+}
+
+/* Birthday date input (dark mode) - reinforce */
+body.dark-mode #editPatientModal .ep-field input[type="date"] {
+    background: #131a26 !important;
+    border-color: #33415a !important;
+    color: #e0e0e0 !important;
+    color-scheme: dark !important;
+}
+body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) !important;
+    opacity: 0.8 !important;
+}
+

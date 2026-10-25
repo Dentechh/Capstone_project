@@ -8,7 +8,8 @@
                 </div>
                 <div id="appointmentsCursor" data-cursor="{{ appointment_list_next_cursor or '' }}"
                     style="display:none;"></div>
-                <table class="appointment-table" id="appointmentsTable">
+                <div class="appointment-table-wrap">
+<table class="appointment-table" id="appointmentsTable">
                     <thead>
                         <tr>
                             <th>Patient Name</th>
@@ -106,6 +107,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+</div>
                 <div style="text-align:center; margin-top:16px;">
                     <button type="button" id="appointmentsLoadMoreBtn" class="btn-action filter-btn" {% if not
                         appointment_list_next_cursor %}style="display:none;" {% endif %}>

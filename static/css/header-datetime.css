@@ -1,51 +1,150 @@
-        /* Header date + live clock: two frosted chips */
-        #datetime-display.dt-chips {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0 0;
-        }
+/* Header date + live clock: frosted glass chips with a cool hover sheen */
+#datetime-display.dt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0 0;
+}
 
-        #datetime-display .dt-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 7px 14px;
-            border-radius: 999px;
-            background: rgba(15, 23, 42, 0.42);
-            border: 1px solid rgba(255, 255, 255, 0.28);
-            -webkit-backdrop-filter: blur(10px);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 600;
-            line-height: 1;
-            letter-spacing: 0.2px;
-            text-shadow: none;
-            white-space: nowrap;
-        }
+#datetime-display .dt-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px 9px 12px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.06));
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
 
-        #datetime-display .dt-chip svg {
-            flex-shrink: 0;
-            color: #93c5fd;
-        }
+/* sheen sweep on hover */
+#datetime-display .dt-chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.22) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+}
 
-        /* fixed-width digits so the seconds don't make the chip jitter */
-        #datetime-display #dt-time {
-            font-variant-numeric: tabular-nums;
-            min-width: 8.6ch;
-        }
+#datetime-display .dt-chip:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.30),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
 
-        body.dark-mode #datetime-display .dt-chip {
-            background: rgba(15, 23, 42, 0.62);
-            border-color: rgba(148, 163, 184, 0.30);
-        }
+#datetime-display .dt-chip:hover::before {
+    transform: translateX(100%);
+}
 
-        @media (max-width: 600px) {
-            #datetime-display .dt-chip {
-                font-size: 13px;
-                padding: 6px 12px;
-            }
-        }
+/* icon badge */
+#datetime-display .dt-chip__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: #0d47a1;
+    border: 1px solid #0a3b7d;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(13, 71, 161, 0.25);
+    flex: 0 0 auto;
+}
+
+#datetime-display .dt-chip__icon svg {
+    width: 15px;
+    height: 15px;
+    color: #ffffff;
+}
+
+/* legacy svg directly in chip */
+#datetime-display .dt-chip > svg {
+    flex-shrink: 0;
+    color: #93c5fd;
+    filter: drop-shadow(0 0 4px rgba(147, 197, 253, 0.6));
+}
+
+#datetime-display .dt-chip__label {
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.72);
+    margin-right: 2px;
+}
+
+#datetime-display #dt-date {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+#datetime-display #dt-time {
+    font-variant-numeric: tabular-nums;
+    min-width: 8.6ch;
+    font-weight: 700;
+    font-size: 15px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+/* live pulse dot */
+.dt-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+    animation: dtPulse 1.8s infinite;
+    margin-left: 2px;
+}
+
+@keyframes dtPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+    70%  { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+body.dark-mode #datetime-display .dt-chip {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.5));
+    border-color: rgba(148, 163, 184, 0.38);
+}
+
+body.dark-mode #datetime-display .dt-chip__icon {
+    background: #7dd3fc;
+    border-color: #38bdf8;
+    color: #0b1220;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode #datetime-display .dt-chip__icon svg {
+    color: #0b1220;
+}
+
+@media (max-width: 600px) {
+    #datetime-display .dt-chip {
+        font-size: 12px;
+        padding: 7px 12px;
+    }
+    #datetime-display .dt-chip__label {
+        display: none;
+    }
+    #datetime-display .dt-chip__icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+    }
+}

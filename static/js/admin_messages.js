@@ -13,7 +13,7 @@
       '<div class="cm-list">' +
         '<div class="cm-searchrow"><input class="cm-search" placeholder="Search conversations..."><button class="cm-new" type="button" title="New message" aria-label="New message"><span class="material-symbols-rounded" aria-hidden="true">edit_square</span></button></div>' +
         '<div class="cm-convs"></div>' +
-        '<div class="cm-picker" hidden><div class="cm-pickhead"><b>New message</b><button class="cm-pickx" type="button" aria-label="Close">&times;</button></div>' +
+        '<div class="cm-picker" hidden><div class="cm-pickhead"><b>New message</b><button class="cm-pickx" type="button" aria-label="Close"><span class="material-symbols-rounded" aria-hidden="true">close</span></button></div>' +
         '<input class="cm-pickq" placeholder="Search patient by name or email..."><div class="cm-pickres"></div></div>' +
       '</div>' +
       '<div class="cm-pane"><div class="cm-none">Select a patient to read their messages</div></div>' +
@@ -77,20 +77,49 @@
     });
   }
 
+  function attachScroll() {
+    var scrollBtn = pane.querySelector('.cm-scroll-btn');
+    var box = pane.querySelector('.cm-msgs');
+    if (box && scrollBtn) {
+      box.addEventListener('scroll', function () {
+        var nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+        scrollBtn.classList.toggle('show', !nearBottom && box.scrollHeight > box.clientHeight);
+      });
+      scrollBtn.addEventListener('click', function () { box.scrollTop = box.scrollHeight; });
+    }
+    var emojiBtn = pane.querySelector('.cm-emoji-btn');
+    var emojiPicker = pane.querySelector('.cm-emoji-picker');
+    var ta = pane.querySelector('textarea');
+    if (emojiPicker && emojiBtn && ta) {
+      var EMOJIS = ['😀','😁','😂','🤣','😊','😍','😘','😜','😎','🤔','👍','👎','👏','🙏','❤️','💙','💚','💛','🔥','✨','🎉','😭','😅','😇','🤝','😬','😴','🤯','💯','✅','❌','⭐','🌟','🦷','💬'];
+      EMOJIS.forEach(function (e) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = e;
+        b.addEventListener('click', function () { ta.value += e; ta.focus(); ta.dispatchEvent(new Event('input')); });
+        emojiPicker.appendChild(b);
+      });
+      emojiBtn.addEventListener('click', function (ev) { ev.stopPropagation(); emojiPicker.classList.toggle('open'); });
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.cm-emoji-picker') && !e.target.closest('.cm-emoji-btn')) emojiPicker.classList.remove('open');
+      });
+    }
+  }
+
   function openThread(uid, extra) {
     delay = FAST; active = uid; cursor = ''; shown = {};
     var c = convs[uid] || {name: (extra && extra.name) || 'Patient'}; c.unread = 0;
     wrap.classList.add('chat-open'); renderList();
     pane.innerHTML =
-      '<div class="cm-head"><button class="cm-back" aria-label="Back">&larr;</button><div class="cm-av">' + esc(initials(c.name)) + '</div><div><b>' + esc(c.name) + '</b><small class="cm-sub">Patient</small></div>' +
+      '<div class="cm-head"><button class="cm-back" aria-label="Back"><span class="material-symbols-rounded" aria-hidden="true">arrow_back</span></button><div class="cm-av">' + esc(initials(c.name)) + '</div><div><b>' + esc(c.name) + '</b><small class="cm-sub">Patient</small></div>' +
       '<div class="cm-tools">' +
       '<button class="cm-del cm-unread" type="button" title="Mark as unread" aria-label="Mark as unread"><span class="material-symbols-rounded" aria-hidden="true">mark_email_unread</span></button>' +
       '<button class="cm-del cm-blk" type="button" title="Block account" aria-label="Block account" hidden><span class="material-symbols-rounded" aria-hidden="true">block</span></button>' +
       '<button class="cm-del cm-rm" type="button" title="Delete conversation" aria-label="Delete conversation"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>' +
       '</div></div>' +
-      '<div class="cm-msgs"></div>' +
-      '<form class="cm-form"><textarea rows="1" maxlength="1000" placeholder="Reply to ' + esc(c.name) + '..."></textarea>' +
-      '<button type="submit" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>';
+      '<div class="cm-msgs"><div class="cm-empty">No messages yet. Say hello!</div><button class="cm-scroll-btn" type="button" aria-label="Scroll to bottom">↓</button></div>' +
+      '<div class="cm-emoji-picker"></div>' +
+      '<form class="cm-form"><button type="button" class="cm-emoji-btn" aria-label="Emoji" title="Emoji">😊</button><textarea rows="1" maxlength="1000" placeholder="Reply to ' + esc(c.name) + '..."></textarea>' +
+      '<button type="submit" aria-label="Send"><span class="material-symbols-rounded" aria-hidden="true">send</span></button></form>';
+    attachScroll();
     var form = pane.querySelector('form'), ta = pane.querySelector('textarea');
     var brandNew = !convs[uid];
     if (brandNew) { pane.querySelector('.cm-unread').hidden = true; pane.querySelector('.cm-rm').hidden = true; }
@@ -161,6 +190,8 @@
         if (!d || !d.messages || uid !== active) return 0;
         if (typeof d.blocked === 'boolean') applyBlock(d.blocked, d.can_block);
         var box = pane.querySelector('.cm-msgs'); if (!box) return 0;
+        var emptyEl = box.querySelector('.cm-empty');
+        if (emptyEl && d.messages.length) emptyEl.remove();
         var fresh = 0;
         var near = first || box.scrollHeight - box.scrollTop - box.clientHeight < 80;
         d.messages.forEach(function (m) {
@@ -169,11 +200,25 @@
           if (box.dataset.day !== day) { var dd = document.createElement('div'); dd.className = 'cm-day'; dd.textContent = day; box.appendChild(dd); box.dataset.day = day; }
           var row = document.createElement('div'); row.className = 'cm-row ' + (m.sender === 'admin' ? 'me' : 'them');
           var b = document.createElement('div'); b.className = 'cm-bubble'; b.textContent = m.text;
+          var copy = document.createElement('button'); copy.className = 'cm-copy'; copy.type = 'button'; copy.setAttribute('aria-label', 'Copy message');
+          copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>';
+          copy.addEventListener('click', function () {
+            if (navigator.clipboard) navigator.clipboard.writeText(m.text).then(function () {
+              copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">check</span>';
+              setTimeout(function () { copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>'; }, 1200);
+            });
+          });
+          b.appendChild(copy);
           var t = document.createElement('div'); t.className = 'cm-time';
           t.textContent = new Date(m.created_at).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}) + (m.sender === 'admin' && m.staff_name ? ' · ' + m.staff_name : '');
           row.appendChild(b); row.appendChild(t); box.appendChild(row); cursor = m.created_at;
         });
         if (near) box.scrollTop = box.scrollHeight;
+        var scrollBtn = pane.querySelector('.cm-scroll-btn');
+        if (scrollBtn && box) {
+          var nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+          scrollBtn.classList.toggle('show', !nearBottom && box.scrollHeight > box.clientHeight);
+        }
         return fresh;
       });
   }
