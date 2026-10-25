@@ -277,20 +277,23 @@ const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="
                     }
 
                     const delBtn = e.target.closest('.delete-patient-btn');
-                    if (delBtn) {
+                    // User Management rows share this class but delete the LOGIN,
+                    // not the patient records, so they must not run this handler.
+                    if (delBtn && !delBtn.closest('#userManagementTable')) {
                         const uid = delBtn.getAttribute('data-uid');
                         const patientId = delBtn.getAttribute('data-patient-id');
                         const name = delBtn.getAttribute('data-name') || 'this patient';
 
                         const confirmed = await showConfirm(
-                            'This removes the account along with its booking history and '
-                            + 'treatment records.',
+                            'This deletes the patient\'s records: appointments, treatments '
+                            + 'and payments. If they have a login account, it is kept and '
+                            + 'they can still sign in.',
                             {
                                 danger: true,
-                                title: 'Delete this patient?',
-                                confirmLabel: 'Delete patient',
+                                title: 'Delete patient records?',
+                                confirmLabel: 'Delete records',
                                 icon: 'trash',
-                                note: 'This cannot be undone.',
+                                note: 'The records cannot be recovered after this.',
                                 details: [
                                     ['Patient', name],
                                     ['Patient ID', patientId || '—']

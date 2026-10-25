@@ -106,4 +106,106 @@
             </section>
         </div>
 
+        <input type="hidden" id="umCsrf" value="{{ csrf_token() }}">
+
+        <style>
+            /* Delete-account confirmation. Deleting here removes the LOGIN only;
+               patient records are deleted from My Patients. */
+            .um-del { position: fixed; inset: 0; z-index: 10050; display: flex;
+                align-items: center; justify-content: center; padding: 16px;
+                background: rgba(15, 23, 42, 0.55); }
+            .um-del[hidden] { display: none; }
+            .um-del__card { width: 100%; max-width: 440px; background: #fff; color: #1e293b;
+                border-radius: 16px; padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); }
+            .um-del__card h3 { margin: 0 0 10px; font-size: 1.2rem; }
+            .um-del__card p { margin: 0 0 20px; line-height: 1.55; font-size: 0.95rem; color: #475569; }
+            .um-del__actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+            .um-del__btn { border: 1px solid #cbd5e1; background: #fff; color: #1e293b;
+                padding: 10px 18px; border-radius: 10px; font-weight: 600; cursor: pointer; font-family: inherit; }
+            .um-del__btn--danger { background: #e53935; border-color: #e53935; color: #fff; }
+            .um-del__btn:disabled { opacity: 0.6; cursor: default; }
+            body.dark-mode .um-del__card { background: #1e1e1e; color: #e6e6e6; }
+            body.dark-mode .um-del__card p { color: #b0b6c0; }
+            body.dark-mode .um-del__btn { background: #2a2a2a; border-color: #3a3a3a; color: #e6e6e6; }
+            body.dark-mode .um-del__btn--danger { background: #e53935; border-color: #e53935; color: #fff; }
+        </style>
+
+        <div id="umDeleteModal" class="um-del" hidden role="dialog" aria-modal="true" aria-labelledby="umDelTitle">
+            <div class="um-del__card">
+                <h3 id="umDelTitle">Delete account?</h3>
+                <p id="umDelText"></p>
+                <div class="um-del__actions">
+                    <button type="button" class="um-del__btn" id="umDelCancel">Cancel</button>
+                    <button type="button" class="um-del__btn um-del__btn--danger" id="umDelConfirm">Delete account</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            /* Delete in User Management removes the login only. Runs in the capture
+               phase so the old delete-patient handler (which wiped records) never fires
+               for this table. */
+            (function () {
+                if (window.__umDeleteBound) return;
+                window.__umDeleteBound = true;
+                var pending = null;
+                function el(id) { return document.getElementById(id); }
+                function say(msg) {
+                    if (typeof showToast === "function") showToast(msg); else alert(msg);
+                }
+                function closeModal() {
+                    var m = el("umDeleteModal");
+                    if (m) m.hidden = true;
+                    pending = null;
+                }
+                window.addEventListener("click", function (ev) {
+                    var t = ev.target;
+                    if (!t || !t.closest) return;
+
+                    var del = t.closest("#userManagementTable .delete-patient-btn");
+                    if (del) {
+                        ev.preventDefault();
+                        ev.stopImmediatePropagation();
+                        var name = del.getAttribute("data-name") || "this account";
+                        var pid = (del.getAttribute("data-patient-id") || "").trim();
+                        var hasPatient = pid && pid !== "None" && pid !== "undefined" && pid !== "null";
+                        pending = { uid: del.getAttribute("data-uid"), row: del.closest("tr") };
+                        el("umDelText").textContent = hasPatient
+                            ? "The login for " + name + " will be removed. Their patient records (appointments, treatments and payments) stay in My Patients, and are reconnected if they sign in again. To stop someone from signing in at all, use Block instead."
+                            : "Delete the account of " + name + "? It is removed from this list and a password login stops working. They can still sign in with Google again, which creates a new account. To keep them out, use Block instead.";
+                        el("umDelConfirm").disabled = false;
+                        el("umDelConfirm").textContent = "Delete account";
+                        el("umDeleteModal").hidden = false;
+                        return;
+                    }
+
+                    if (t.id === "umDelCancel" || t.id === "umDeleteModal") {
+                        closeModal();
+                        return;
+                    }
+
+                    if (t.id === "umDelConfirm" && pending) {
+                        var btn = t, job = pending;
+                        btn.disabled = true;
+                        btn.textContent = "Deleting...";
+                        var token = el("umCsrf").value;
+                        var fd = new FormData();
+                        fd.append("uid", job.uid);
+                        fd.append("csrf_token", token);
+                        fetch("/admin/delete_account", { method: "POST", body: fd, headers: { "X-CSRFToken": token } })
+                            .then(function (r) { return r.json(); })
+                            .then(function (res) {
+                                if (res.success && job.row) job.row.remove();
+                                say(res.message || (res.success ? "Account deleted." : "Failed to delete the account."));
+                            })
+                            .catch(function () { say("Failed to delete the account. Please try again."); })
+                            .then(closeModal);
+                    }
+                }, true);
+                document.addEventListener("keydown", function (ev) {
+                    if (ev.key === "Escape") closeModal();
+                });
+            })();
+        </script>
+
         <script src="{{ url_for('static', filename='js/usermanagement-list.js') }}?v=1"></script>

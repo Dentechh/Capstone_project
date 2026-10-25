@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/location.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dentech-credit.css') }}?v=1">
 </head>
 <body>
 
@@ -266,12 +267,57 @@
         <div class="footer-copy">
             &copy; 2026 Capizonda Dental Clinic. All Rights Reserved.
         </div>
+        <div class="footer-credit">
+            <button type="button" class="dentech-credit-btn" id="dentechCreditBtn">Developed by <strong>DENTECH</strong></button>
+        </div>
         <div class="footer-legal">
             <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
             <a href="{{ url_for('terms_of_service') }}">Terms of Service</a>
         </div>
     </div>
 </footer>
+
+<!-- Developed by DENTECH: team overview modal -->
+<div class="dentech-modal" id="dentechModal" role="dialog" aria-modal="true" aria-labelledby="dentechTitle" aria-hidden="true">
+    <div class="dentech-modal__card">
+        <button type="button" class="dentech-modal__close" aria-label="Close">&times;</button>
+
+        <div class="dentech-modal__head">
+            <h2 id="dentechTitle">DENTECH</h2>
+            <p>DENTECH is a team of three students behind this website and appointment system for Capizonda Dental Clinic, built as our capstone project. We brought online booking, patient records, treatment history and clinic reports into one simple platform, so patients can book with ease and the clinic can spend more time on what matters most: caring for every smile.</p>
+        </div>
+
+        <h3 class="dentech-modal__sub">Meet the Team</h3>
+        <div class="dentech-team">
+            <div class="dentech-member">
+                <div class="dentech-member__avatar">FR</div>
+                <h4>Felix Adrian P. Roa</h4>
+                <span>Project Lead / Full-Stack &amp; Backend Developer</span>
+            </div>
+            <div class="dentech-member">
+                <div class="dentech-member__avatar">JV</div>
+                <h4>Jericho Jainga Villanueva</h4>
+                <span>Frontend Developer</span>
+            </div>
+            <div class="dentech-member">
+                <div class="dentech-member__avatar">AS</div>
+                <h4>Andrew Salibio</h4>
+                <span>Documenter</span>
+            </div>
+        </div>
+
+        <h3 class="dentech-modal__sub">Built With</h3>
+        <ul class="dentech-stack">
+            <li>Flask (Python)</li>
+            <li>Firebase / Firestore</li>
+            <li>HTML &amp; CSS</li>
+            <li>JavaScript</li>
+        </ul>
+
+        <p class="dentech-modal__foot">&copy; 2026 DENTECH. Capstone Project.</p>
+    </div>
+</div>
+
 
     <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -967,6 +1013,8 @@ signupForm.addEventListener("submit", async (e) => {
     form.appendChild(csrf);
 }
     </script>
+
+<script src="{{ url_for('static', filename='js/dentech-credit.js') }}?v=1" defer></script>
 
 </body>
 </html>

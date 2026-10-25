@@ -206,6 +206,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         self._setup_csrf()
         self._setup_security_headers()
         self._setup_activity_log()
+        self._setup_removed_login_guard()
         self._register_routes()
         self.csrf.exempt(self.paymongo_webhook)
         self.PATIENTS_PAGE_SIZE = 25
@@ -405,6 +406,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
     def _invalidate_accounts_cache(self):
         self.cache.invalidate("manageable_accounts_all")
+        self.cache.invalidate("removed_login_uids")
         self.cache.invalidate("unpaid_account_names")
 
     def _get_patients_cached(self):
@@ -2411,6 +2413,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     ACTIVITY_ROUTES = {
         "/admin/update_patient": ("patients", "Updated patient information"),
         "/admin/delete_patient": ("patients", "Deleted a patient"),
+        "/admin/delete_account": ("patients", "Deleted a login account"),
         "/admin/toggle_user_block": ("patients", "Changed account access"),
         "/admin/merge_patients": ("patients", "Merged patient records"),
         "/admin/backup/export": ("patients", "Downloaded a patient data backup"),
@@ -2437,7 +2440,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     }
     # Routes where naming the affected patient is worth one extra document read.
     ACTIVITY_NAME_ROUTES = {
-        "/admin/update_patient", "/admin/delete_patient", "/admin/toggle_user_block",
+        "/admin/update_patient", "/admin/delete_patient", "/admin/delete_account",
+        "/admin/toggle_user_block",
         "/admin/merge_patients", "/save_dental_record", "/admin/assign_dentist",
         "/approve", "/admin/create_appointment", "/admin/reschedule_appointment",
         "/admin/update_treatment_record", "/admin/delete_treatment_record",
@@ -2452,6 +2456,48 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         if email in self.DENTIST_EMAILS:
             return "dentist"
         return "admin"
+
+    def _removed_login_map(self):
+        """uid -> when its login was deleted in User Management (kept records only).
+        A tiny query (just the removed accounts), cached for a few seconds."""
+        cached = self.cache.get("removed_login_uids")
+        if cached is not None:
+            return cached
+        mapping = {}
+        try:
+            query = self.db.collection(self.Customer_Account).where(
+                filter=FieldFilter("login_removed", "==", True)
+            )
+            for doc in query.stream():
+                mapping[doc.id] = str((doc.to_dict() or {}).get("login_removed_at") or "9999")
+        except Exception as e:
+            print("REMOVED LOGIN LIST skipped:", e)
+            return {}
+        self.cache.set("removed_login_uids", mapping, ttl_seconds=20)
+        return mapping
+
+    def _setup_removed_login_guard(self):
+        """Sign out a patient whose login was deleted while they were still
+        signed in. Anyone who signed in AFTER the deletion is left alone."""
+
+        @self.app.before_request
+        def removed_login_guard():
+            try:
+                uid = session.get("uid")
+                if not uid or request.path.startswith("/static"):
+                    return
+                removed_at = self._removed_login_map().get(uid)
+                if not removed_at or removed_at <= str(session.get("signed_in_at") or ""):
+                    return
+                for k in ("uid", "email", "name", "profile_pic", "pending_patient_match", "signed_in_at"):
+                    session.pop(k, None)
+                message = "You were signed out because your login was removed by the clinic. You can sign in again anytime."
+                if request.method == "GET" and "text/html" in request.headers.get("Accept", ""):
+                    flash(message, "error")
+                    return redirect(url_for("index"))
+                return jsonify({"success": False, "signed_out": True, "message": message}), 401
+            except Exception as e:
+                print("REMOVED LOGIN GUARD skipped:", e)
 
     def _setup_activity_log(self):
         from flask import g
@@ -3758,7 +3804,14 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         session["name"] = user_data.get("firstname", "")
         session["email"] = email
         session["uid"] = uid
+        session["signed_in_at"] = datetime.now(UTC).isoformat()
         session.pop("profile_pic", None)  # never carry a previous login's picture over
+
+        # Email is verified at this point. If their login was deleted in
+        # User Management, reconnect them to the patient records kept.
+        self._welcome_back_account(uid, email)
+        user_doc = self.db.collection(self.Customer_Account).document(uid).get()
+        user_data = user_doc.to_dict() if user_doc.exists else user_data
         
         # Set last_active immediately on login for real-time presence
         try:
@@ -3804,6 +3857,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 )
 
             session['uid'] = uid
+            session['signed_in_at'] = datetime.now(UTC).isoformat()
             session['email'] = google_account["email"]
             session['name'] = google_account.get("name", "User")
             session.pop('profile_pic', None)  # never carry a previous login's picture over
@@ -3826,6 +3880,13 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 update_data["created_at"] = datetime.now(UTC).isoformat()
 
             account_ref.set(update_data, merge=True)
+
+            # If their login was deleted in User Management, reconnect them
+            # to the patient records that were kept.
+            self._welcome_back_account(
+                uid,
+                session['email'] if google_account.get("email_verified") else ""
+            )
             
             # --- NEW: Try to get identity from appointments first ---
             identity = self.get_identity_from_appointments(session['uid'])
@@ -5904,6 +5965,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         docs = [
             (account_uid, data) for account_uid, data in all_docs
             if data.get("provider") in ("google", "password")
+            and not data.get("login_removed")
         ]
 
         # Sort A-Z by full name (case-insensitive). The account id breaks ties,
@@ -6759,13 +6821,21 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
     def delete_patient(self):
         """
-        Permanently delete a patient's account and canonical patient
-        record from the admin "My Patients" table.
+        My Patients delete: removes the patient's RECORDS only.
 
-        Also clears out known subcollections under the account
-        (appointments, Approve, Done_procedure) since Firestore does
-        not delete subcollections automatically when a parent
-        document is deleted.
+        The patient's appointments, accepted appointments and treatment /
+        payment records are deleted, and so is the canonical Patients
+        document. The patient's LOGIN account is kept, so they can still
+        sign in and book again; it simply stops being listed in My Patients.
+        (Deleting the login itself is done from User Management.)
+
+        Exceptions, where there is no login worth keeping, so the whole
+        account document goes too:
+          - a walk-in placeholder account ("walkin_*"), and
+          - an account whose login was already deleted from User Management.
+
+        Firestore does not delete subcollections when a parent document is
+        deleted, so they are cleared explicitly.
         """
 
         if not session.get('admin_logged_in'):
@@ -6789,10 +6859,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 self.Customer_Account
             ).document(uid)
 
-            if account_ref.get().exists:
+            account_snap = account_ref.get()
 
-                # Clean up known subcollections first, since deleting
-                # a document does not delete its subcollections.
+            if account_snap.exists:
+                account_data = account_snap.to_dict() or {}
+
                 for sub_name in (
                     self.Appointment_cliets,
                     "Approve",
@@ -6804,25 +6875,18 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                         if sub_name == "Done_procedure":
                             self._agg_remove_done_doc(sub_doc)
 
-                account_ref.delete()
+                if uid.startswith("walkin_") or account_data.get("login_removed"):
+                    account_ref.delete()
+                else:
+                    # Keep the login, but it no longer has any patient history
+                    # (this is what puts a person in "My Patients").
+                    account_ref.update({
+                        "has_history": False,
+                        "last_approved_at": ""
+                    })
+
                 self._invalidate_accounts_cache()
                 self._invalidate_financial_cache()
-
-            # Also remove the Firebase Authentication record so the
-            # login credential doesn't outlive the patient's data.
-            # Without this, the account could still sign in even
-            # though none of their data exists anymore.
-            auth_warning = None
-            try:
-                auth.delete_user(uid)
-            except auth.UserNotFoundError:
-                pass  # Already gone from Auth - nothing to do.
-            except Exception as auth_err:
-                print("AUTH DELETE ERROR:", auth_err)
-                auth_warning = (
-                    "Patient data was deleted, but the login account "
-                    "could not be removed."
-                )
 
             if patient_id:
 
@@ -6836,7 +6900,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
             return jsonify({
                 "success": True,
-                "message": auth_warning or "Patient deleted successfully"
+                "message": "Patient records deleted. Their login account was kept."
             })
 
         except Exception as e:
@@ -6847,7 +6911,169 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 "success": False,
                 "message": "Something went wrong. Please try again."
             }), 500
-            
+
+    def delete_account(self):
+        """
+        User Management delete: removes the LOGIN only, never patient records.
+
+        - The sign-in is removed (Firebase Auth user, for email/password
+          accounts) and the account disappears from User Management.
+        - If the account has anything to keep (a linked Patients record, or
+          appointments / treatment / payment records), the account document
+          and its records are KEPT, just flagged login_removed. The patient
+          stays in My Patients. Records are deleted there, never here.
+        - If there is nothing to keep (a plain visitor), the account is
+          deleted completely.
+        - When the same person signs in again, _welcome_back_account()
+          reconnects them to the kept records automatically.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        uid = request.form.get("uid", "").strip()
+        if not uid:
+            return jsonify({"success": False, "message": "Account UID is required"}), 400
+        if uid.startswith("walkin_"):
+            return jsonify({
+                "success": False,
+                "message": "Walk-in patients are removed from My Patients."
+            }), 400
+
+        try:
+            account_ref = self.db.collection(self.Customer_Account).document(uid)
+            snap = account_ref.get()
+            data = (snap.to_dict() or {}) if snap.exists else {}
+
+            keeps_records = False
+            if snap.exists:
+                linked = (
+                    self.db.collection(self.Doc_Patients)
+                    .where(filter=FieldFilter("account_uid", "==", uid))
+                    .limit(1)
+                    .stream()
+                )
+                keeps_records = any(True for _ in linked)
+                if not keeps_records:
+                    for sub_name in (self.Appointment_cliets, "Approve", "Done_procedure"):
+                        if any(True for _ in account_ref.collection(sub_name).limit(1).stream()):
+                            keeps_records = True
+                            break
+
+            if snap.exists:
+                if keeps_records:
+                    now_iso = datetime.now(UTC).isoformat()
+                    account_ref.set({
+                        "login_removed": True,
+                        "login_removed_at": now_iso,
+                        "removed_email": str(data.get("email") or "").strip().lower(),
+                        "last_logout": now_iso,
+                    }, merge=True)
+                else:
+                    account_ref.delete()
+
+            # Remove the sign-in itself. Google accounts are not stored in
+            # Firebase Auth here, so "not found" is expected and fine.
+            auth_warning = None
+            try:
+                auth.delete_user(uid)
+            except auth.UserNotFoundError:
+                pass
+            except Exception as auth_err:
+                print("AUTH DELETE ERROR:", auth_err)
+                auth_warning = (
+                    "Account removed from the list, but the login could "
+                    "not be fully removed."
+                )
+
+            self._invalidate_accounts_cache()
+            self._invalidate_patients_cache()
+
+            if auth_warning:
+                message = auth_warning
+            elif keeps_records:
+                message = "Account deleted. Patient records were kept in My Patients."
+            else:
+                message = "Account deleted."
+            return jsonify({
+                "success": True,
+                "message": message,
+                "records_kept": keeps_records
+            })
+
+        except Exception as e:
+            print("DELETE ACCOUNT ERROR:", e)
+            return jsonify({
+                "success": False,
+                "message": "Something went wrong. Please try again."
+            }), 500
+
+    def _welcome_back_account(self, uid, verified_email=""):
+        """
+        Called when someone signs in. If their login had been deleted from
+        User Management, bring them back to the records that were kept.
+
+        1. Same account id (Google sign-in always has the same id): just
+           clear the login_removed flag; every record is still attached.
+        2. A different id (an email/password account that was deleted and
+           registered again): move the kept records onto the new account
+           and repoint the patient record. Only done for a VERIFIED email,
+           so nobody can claim someone else's records by typing their address.
+        Never raises.
+        """
+        try:
+            ref = self.db.collection(self.Customer_Account).document(uid)
+            snap = ref.get()
+            if snap.exists and (snap.to_dict() or {}).get("login_removed"):
+                ref.update({
+                    "login_removed": firestore.DELETE_FIELD,
+                    "login_removed_at": firestore.DELETE_FIELD,
+                    "removed_email": firestore.DELETE_FIELD,
+                })
+                self._invalidate_accounts_cache()
+
+            email_l = str(verified_email or "").strip().lower()
+            if not email_l or not snap.exists:
+                return
+
+            old_docs = (
+                self.db.collection(self.Customer_Account)
+                .where(filter=FieldFilter("removed_email", "==", email_l))
+                .stream()
+            )
+            for old in old_docs:
+                old_uid = old.id
+                old_data = old.to_dict() or {}
+                if old_uid == uid or not old_data.get("login_removed"):
+                    continue
+
+                # Carry identity details over into blank fields of the new account.
+                new_data = (ref.get().to_dict() or {})
+                fill = {
+                    k: old_data[k]
+                    for k in ("firstname", "middlename", "lastname", "birthday",
+                              "contact_number", "sex", "CivilStatus")
+                    if old_data.get(k) and not new_data.get(k)
+                }
+                if fill:
+                    ref.update(fill)
+
+                self.merge_patient_accounts(old_uid, uid)
+
+                for p in (
+                    self.db.collection(self.Doc_Patients)
+                    .where(filter=FieldFilter("account_uid", "==", old_uid))
+                    .stream()
+                ):
+                    p.reference.update({"account_uid": uid})
+
+                print(f"Reconnected kept records from {old_uid} to {uid}")
+
+            self._invalidate_patients_cache()
+            self._invalidate_accounts_cache()
+            self._invalidate_financial_cache()
+        except Exception as e:
+            print("WELCOME BACK ACCOUNT ERROR:", e)
+
     def update_treatment_record(self):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
@@ -11124,6 +11350,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)
         self.app.route("/admin/update_patient", methods=["POST"])(self.update_patient)
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
+        self.app.route("/admin/delete_account", methods=["POST"])(self.delete_account)
         self.app.route("/admin/toggle_user_block", methods=["POST"])(self.toggle_user_block)
         self.app.route("/admin/update_treatment_record", methods=["POST"])(self.update_treatment_record)
         self.app.route("/admin/open_plans/<patient_id>")(self.open_plans)

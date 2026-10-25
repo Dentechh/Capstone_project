@@ -7122,3 +7122,204 @@ body.dark-mode .cta-box .cta-sub {
         height: 35px;
     }
 }
+
+/* ==========================================================================
+   TABLET NAVIGATION FIX (768px - 1100px)
+   The full nav bar (logo + 4 links + icons + profile) is too wide for tablets,
+   so the right side spilled off-screen. Tablets now use the same hamburger
+   menu as phones. Keep this block at the END of the file so it wins.
+   ========================================================================== */
+@media (min-width: 768px) and (max-width: 1100px) {
+    html, body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .navbar {
+        padding: 10px 3%;
+        flex-wrap: nowrap;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .logo-container { flex-shrink: 0; }
+
+    .nav-actions {
+        gap: 8px;
+        min-width: 0;
+        flex-shrink: 1;
+    }
+
+    .hamburger { display: flex; }
+
+    /* Menu panel opens under the header, like on phones */
+    .nav-links {
+        display: none;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        width: auto;
+        background: linear-gradient(180deg, #e3f0ff 0%, #ffffff 100%);
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px 12px;
+        gap: 6px;
+        box-shadow: 0 12px 32px rgba(13, 71, 161, 0.22);
+        border: 1px solid rgba(13, 71, 161, 0.12);
+        border-radius: 16px;
+        z-index: 1000;
+        transform-origin: top center;
+    }
+
+    .nav-links.active {
+        display: flex;
+        animation: navMenuSlide 0.28s ease-out;
+    }
+
+    .nav-links li {
+        margin: 0;
+        width: 100%;
+        text-align: left;
+    }
+
+    .nav-links a {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 14px;
+        padding: 15px 24px;
+        font-size: 16px;
+        border-radius: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-left: 3px solid transparent;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .nav-links a .nav-item__icon {
+        width: 24px;
+        font-size: 22px;
+        line-height: 1;
+        flex-shrink: 0;
+        text-align: center;
+        color: var(--navy);
+    }
+
+    .nav-links .dropbtn::after { margin-left: auto; }
+
+    .nav-links a:hover {
+        background: rgba(13, 71, 161, 0.10);
+        border-left-color: var(--navy);
+    }
+
+    .nav-links a.active {
+        background: rgba(13, 71, 161, 0.18);
+        border-left-color: var(--navy);
+    }
+
+    /* Login / Register live inside the menu, like on phones */
+    .auth-buttons { display: none !important; }
+    .auth-nav-item-mobile { display: block; }
+
+    .auth-nav-item-mobile:not(:last-child) {
+        margin-top: 10px;
+        padding-top: 12px;
+        border-top: 1px solid rgba(13, 71, 161, 0.14);
+    }
+
+    .auth-nav-item-mobile a {
+        justify-content: center;
+        padding: 14px 18px;
+        font-size: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-top: 6px;
+    }
+
+    .auth-nav-item-mobile:not(:last-child) a {
+        border: 1.5px solid rgba(13, 71, 161, 0.35);
+        background: rgba(13, 71, 161, 0.06);
+        color: var(--navy);
+    }
+
+    .auth-nav-item-mobile:last-child a {
+        background: var(--grad-gold);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 14px rgba(13, 71, 161, 0.3);
+    }
+
+    /* Services submenu opens inside the panel instead of floating */
+    .dropdown-content {
+        position: static;
+        transform: none;
+        width: 100%;
+        min-width: 0;
+        margin-top: 0;
+        box-shadow: none;
+        border-top: 3px solid var(--navy);
+        border-radius: 10px;
+        padding: 0 4px;
+        max-height: 0;
+    }
+
+    .dropdown-content.show {
+        transform: none;
+        max-height: 640px;
+        margin-top: 8px;
+        padding: 4px;
+    }
+
+    .dropdown-content a {
+        padding: 12px 22px;
+        border-bottom: 1px solid rgba(13, 71, 161, 0.08);
+        color: var(--navy) !important;
+        background-color: transparent;
+    }
+
+    /* Profile stays on one line: name + avatar */
+    .profile-nav {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 0 0 0 12px;
+        width: auto;
+        border-top: none;
+    }
+
+    .user-info-brief span { font-size: 14px; }
+    .user-info-brief small { font-size: 9px; }
+    .profile-img { width: 36px; height: 36px; }
+
+    /* Dark mode for the menu panel */
+    body.dark-mode .nav-links {
+        background: linear-gradient(180deg, #0f172a 0%, #16203a 100%);
+        border-color: rgba(100, 181, 246, 0.18);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+    }
+
+    body.dark-mode .nav-links a { color: #e0e0e0; }
+    body.dark-mode .nav-links a .nav-item__icon { color: #90caf9; }
+    body.dark-mode .nav-links a:hover {
+        background: rgba(100, 181, 246, 0.10);
+        border-left-color: #64b5f6;
+    }
+    body.dark-mode .nav-links a.active {
+        background: rgba(100, 181, 246, 0.18);
+        border-left-color: #64b5f6;
+    }
+    body.dark-mode .dropdown-content { border-top-color: #64b5f6; }
+    body.dark-mode .dropdown-content a { color: #e0e0e0 !important; }
+    body.dark-mode .auth-nav-item-mobile:not(:last-child) {
+        border-top-color: rgba(255, 255, 255, 0.12);
+    }
+    body.dark-mode .auth-nav-item-mobile:not(:last-child) a {
+        border-color: rgba(100, 181, 246, 0.35);
+        background: rgba(100, 181, 246, 0.06);
+        color: #90caf9;
+    }
+}
