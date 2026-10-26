@@ -1,4 +1,269 @@
-// --- Financial Chart (Income Trend) ---
+let bracesFinancialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let bracesFinancialChartRequestId = 0;
+
+function loadBracesFinancialChart(period) {
+    if (period !== bracesFinancialNav.period) {
+        bracesFinancialNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
+            minYear: bracesFinancialNav.minYear, maxYear: bracesFinancialNav.maxYear, maxMonth: bracesFinancialNav.maxMonth };
+    }
+
+    document.querySelectorAll('.braces-period-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === period) btn.classList.add('active');
+    });
+
+    const query = new URLSearchParams({ period: period, scope: 'braces' });
+    if (period === 'weekly') query.set('week', bracesFinancialNav.week);
+    if (period === 'monthly' && bracesFinancialNav.month) query.set('month', bracesFinancialNav.month);
+    if (period === 'yearly' && bracesFinancialNav.year) query.set('year', bracesFinancialNav.year);
+
+    const requestId = ++bracesFinancialChartRequestId;
+
+    fetch(`/admin/financial_chart_data?${query.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (requestId !== bracesFinancialChartRequestId) return;
+            if (data.success) {
+                updateBracesIncomeChart(data.labels, data.data, data.chart_type);
+                updateBracesFinancialCards(data.total_income, data.total_outstanding, data.unpaid_procedures);
+
+                bracesFinancialNav.week = data.week || 0;
+                bracesFinancialNav.month = data.month || null;
+                bracesFinancialNav.year = data.year || null;
+                bracesFinancialNav.canPrev = !!data.can_prev;
+                bracesFinancialNav.canNext = !!data.can_next;
+                bracesFinancialNav.minYear = data.min_year;
+                bracesFinancialNav.maxYear = data.max_year;
+                bracesFinancialNav.maxMonth = data.max_month;
+                renderBracesFinancialNav(period, data.range_label);
+            }
+        })
+        .catch(err => console.error('Failed to load braces financial chart:', err));
+}
+
+function renderBracesFinancialNav(period, rangeLabel) {
+    const nav = document.getElementById('bracesFinancialNav');
+    if (!nav) return;
+    const hasPicker = period === 'weekly' || period === 'monthly' || period === 'yearly';
+    nav.style.display = hasPicker ? 'flex' : 'none';
+    if (!hasPicker) return;
+    document.getElementById('bracesFinNavLabel').textContent = rangeLabel || '';
+    document.getElementById('bracesFinNavPrev').disabled = !bracesFinancialNav.canPrev;
+    document.getElementById('bracesFinNavNext').disabled = !bracesFinancialNav.canNext;
+
+    const label = document.getElementById('bracesFinNavLabel');
+    const monthSel = document.getElementById('bracesFinMonthSel');
+    const yearSel = document.getElementById('bracesFinYearSel');
+    const showYear = period === 'monthly' || period === 'yearly';
+    const showMonth = period === 'monthly';
+    label.style.display = (showYear || showMonth) ? 'none' : '';
+    setFinNavVisible(monthSel, showMonth);
+    setFinNavVisible(yearSel, showYear);
+
+    if (showYear && bracesFinancialNav.minYear != null) {
+        const selYear = period === 'monthly'
+            ? Number((bracesFinancialNav.month || '').split('-')[0])
+            : bracesFinancialNav.year;
+        yearSel.innerHTML = '';
+        for (let y = bracesFinancialNav.maxYear; y >= bracesFinancialNav.minYear; y--) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === selYear) opt.selected = true;
+            yearSel.appendChild(opt);
+        }
+    }
+    if (showMonth) {
+        const parts = (bracesFinancialNav.month || '').split('-');
+        const selYear = Number(parts[0]);
+        const selMonth = Number(parts[1]);
+        monthSel.innerHTML = '';
+        FIN_MONTH_NAMES.forEach(function (name, idx) {
+            const opt = document.createElement('option');
+            opt.value = idx + 1;
+            opt.textContent = name;
+            if (selYear === bracesFinancialNav.maxYear && idx + 1 > bracesFinancialNav.maxMonth) opt.disabled = true;
+            if (idx + 1 === selMonth) opt.selected = true;
+            monthSel.appendChild(opt);
+        });
+    }
+}
+
+function bracesFinancialNavPick() {
+    const n = bracesFinancialNav;
+    const yearSel = document.getElementById('bracesFinYearSel');
+    const monthSel = document.getElementById('bracesFinMonthSel');
+    if (n.period === 'yearly') {
+        n.year = Number(yearSel.value);
+    } else if (n.period === 'monthly') {
+        const y = Number(yearSel.value);
+        let m = Number(monthSel.value);
+        if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
+        n.month = y + '-' + String(m).padStart(2, '0');
+    } else {
+        return;
+    }
+    loadBracesFinancialChart(n.period);
+}
+
+function bracesFinancialNavStep(dir) {
+    const n = bracesFinancialNav;
+    if ((dir < 0 && !n.canPrev) || (dir > 0 && !n.canNext)) return;
+
+    if (n.period === 'weekly') {
+        n.week = Math.max(0, n.week - dir);
+    } else if (n.period === 'monthly' && n.month) {
+        const parts = n.month.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + dir, 1);
+        n.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    } else if (n.period === 'yearly' && n.year) {
+        n.year = n.year + dir;
+    } else {
+        return;
+    }
+    loadBracesFinancialChart(n.period);
+}
+
+function updateBracesFinancialCards(totalIncome, totalOutstanding, unpaidProcedures) {
+    const incomeEl = document.getElementById('bracesTotalIncome');
+    const outstandingEl = document.getElementById('bracesTotalOutstanding');
+    const unpaidEl = document.getElementById('bracesUnpaidProcedures');
+
+    if (incomeEl && typeof totalIncome === 'number') {
+        incomeEl.textContent = '₱' + totalIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (outstandingEl && typeof totalOutstanding === 'number') {
+        outstandingEl.textContent = '₱' + totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    if (unpaidEl && typeof unpaidProcedures === 'number') {
+        unpaidEl.textContent = unpaidProcedures;
+    }
+}
+
+let bracesIncomeChartInstance = null;
+function updateBracesIncomeChart(labels, dataValues, chartType) {
+    const canvas = document.getElementById('bracesIncomeChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    if (bracesIncomeChartInstance) {
+        bracesIncomeChartInstance.destroy();
+    }
+
+    const isDark = document.body.classList.contains('dark-mode');
+    const lineColor = '#42A5F6';
+    const axisColor = isDark ? '#cbd5e1' : '#475569';
+    const gridColor = isDark ? 'rgba(255,255,255,0.10)' : 'rgba(15,23,42,0.07)';
+    const isBar = chartType === 'bar';
+
+    function pesoTick(value) {
+        const abs = Math.abs(value);
+        if (abs >= 1000000) return '₱' + (value / 1000000).toFixed(abs >= 10000000 ? 0 : 1) + 'M';
+        if (abs >= 1000) return '₱' + Math.round(value / 1000) + 'K';
+        return '₱' + value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+    function pesoFull(value) {
+        const n = Number(value) || 0;
+        return '₱' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    const tooltipStyle = {
+        backgroundColor: isDark ? '#0b1220' : '#1e293b',
+        titleColor: '#ffffff',
+        bodyColor: '#e2e8f0',
+        borderColor: 'rgba(255,255,255,0.14)',
+        borderWidth: 1,
+        padding: 12,
+        cornerRadius: 10,
+        displayColors: true,
+        boxPadding: 6,
+        titleFont: { family: 'Kumbh Sans', size: 13, weight: '700' },
+        bodyFont: { family: 'Kumbh Sans', size: 12 }
+    };
+
+    bracesIncomeChartInstance = new Chart(ctx, {
+        type: isBar ? 'bar' : 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Braces Revenue',
+                data: dataValues,
+                borderColor: lineColor,
+                backgroundColor: function (c) {
+                    const chart = c.chart;
+                    const area = chart.chartArea;
+                    if (!area) return isDark ? 'rgba(66,165,246,0.28)' : 'rgba(66,165,246,0.16)';
+                    const g = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+                    if (isBar) {
+                        g.addColorStop(0, 'rgba(66,165,246,0.95)');
+                        g.addColorStop(1, 'rgba(66,165,246,0.45)');
+                    } else {
+                        g.addColorStop(0, 'rgba(66,165,246,0.38)');
+                        g.addColorStop(1, 'rgba(66,165,246,0.02)');
+                    }
+                    return g;
+                },
+                fill: true,
+                tension: 0.4,
+                cubicInterpolationMode: 'monotone',
+                borderRadius: isBar ? 8 : 0,
+                borderSkipped: false,
+                borderWidth: isBar ? 0 : 2.5,
+                maxBarThickness: 56,
+                pointRadius: labels.length > 20 ? 0 : 4,
+                pointHoverRadius: 7,
+                pointBackgroundColor: isDark ? '#0f172a' : '#ffffff',
+                pointBorderColor: lineColor,
+                pointBorderWidth: 2,
+                pointHoverBorderWidth: 3,
+                pointHoverBackgroundColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: axisColor,
+                        font: { family: 'Kumbh Sans', size: 12 },
+                        callback: pesoTick,
+                        maxTicksLimit: 6
+                    },
+                    grid: {
+                        color: gridColor,
+                        drawTicks: false,
+                        borderDash: [4, 4],
+                        lineWidth: 0
+                    },
+                    border: { display: false }
+                },
+                x: {
+                    ticks: {
+                        color: axisColor,
+                        font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                        maxRotation: 0,
+                        autoSkipPadding: 12
+                    },
+                    grid: { display: false },
+                    border: { color: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.12)' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: Object.assign({}, tooltipStyle, {
+                    callbacks: {
+                        title: function (items) { return items[0].label; },
+                        label: function (item) { return pesoFull(item.raw); }
+                    }
+                })
+            },
+            animation: { duration: 1200, easing: 'easeOutQuart' }
+        }
+    });
+}
         let incomeChartInstance = null; // Store chart instance to destroy/update it
 
         // Shared state for whatever period is currently on screen -- read by
@@ -624,6 +889,8 @@ let procChartRequestId = 0;
         // Initialize charts on load
         document.addEventListener('DOMContentLoaded', () => {
             loadFinancialChart('weekly'); // Default for income
+            loadBracesFinancialChart('weekly'); // Default for braces income
+            loadDashboardStats('today'); // Default for dashboard stats
             loadProcedureCharts('overall'); // Default for procedures (shows all time)
         });
 
@@ -1132,3 +1399,133 @@ let procChartRequestId = 0;
                 return _fetch.call(this, input, opts);
             };
         })();
+// --- Dashboard stats period (Accepted / Pending / Total patients) ---
+let dashboardNav = { period: 'overall', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let dashboardStatsRequestId = 0;
+
+function loadDashboardStats(period) {
+    if (period !== dashboardNav.period) {
+        dashboardNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
+            minYear: dashboardNav.minYear, maxYear: dashboardNav.maxYear, maxMonth: dashboardNav.maxMonth };
+    }
+
+    document.querySelectorAll('.dashboard-period-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.period === period) btn.classList.add('active');
+    });
+
+    const query = new URLSearchParams({ period: period });
+    if (period === 'weekly') query.set('week', dashboardNav.week);
+    if (period === 'monthly' && dashboardNav.month) query.set('month', dashboardNav.month);
+    if (period === 'yearly' && dashboardNav.year) query.set('year', dashboardNav.year);
+
+    const requestId = ++dashboardStatsRequestId;
+
+    fetch(`/admin/dashboard_stats?${query.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (requestId !== dashboardStatsRequestId) return;
+            if (data.success) {
+                const approvedEl = document.getElementById('dashApprovedCount');
+                const pendingEl = document.getElementById('dashPendingCount');
+                const totalEl = document.getElementById('dashTotalPatients');
+                if (approvedEl) { approvedEl.setAttribute('data-target', data.approved_count); approvedEl.textContent = data.approved_count; }
+                if (pendingEl) { pendingEl.setAttribute('data-target', data.pending_count); pendingEl.textContent = data.pending_count; }
+                if (totalEl) { totalEl.setAttribute('data-target', data.total_patients); totalEl.textContent = data.total_patients; }
+
+                dashboardNav.week = data.week || 0;
+                dashboardNav.month = data.month || null;
+                dashboardNav.year = data.year || null;
+                dashboardNav.canPrev = !!data.can_prev;
+                dashboardNav.canNext = !!data.can_next;
+                dashboardNav.minYear = data.min_year;
+                dashboardNav.maxYear = data.max_year;
+                dashboardNav.maxMonth = data.max_month;
+                renderDashboardNav(period, data.range_label);
+            }
+        })
+        .catch(err => console.error('Failed to load dashboard stats:', err));
+}
+
+function renderDashboardNav(period, rangeLabel) {
+    const nav = document.getElementById('dashboardNav');
+    if (!nav) return;
+    const hasPicker = period === 'weekly' || period === 'monthly' || period === 'yearly';
+    nav.style.display = hasPicker ? 'flex' : 'none';
+    if (!hasPicker) return;
+    document.getElementById('dashboardNavLabel').textContent = rangeLabel || '';
+    document.getElementById('dashboardNavPrev').disabled = !dashboardNav.canPrev;
+    document.getElementById('dashboardNavNext').disabled = !dashboardNav.canNext;
+
+    const label = document.getElementById('dashboardNavLabel');
+    const monthSel = document.getElementById('dashboardMonthSel');
+    const yearSel = document.getElementById('dashboardYearSel');
+    const showYear = period === 'monthly' || period === 'yearly';
+    const showMonth = period === 'monthly';
+    label.style.display = (showYear || showMonth) ? 'none' : '';
+    setFinNavVisible(monthSel, showMonth);
+    setFinNavVisible(yearSel, showYear);
+
+    if (showYear && dashboardNav.minYear != null) {
+        const selYear = period === 'monthly'
+            ? Number((dashboardNav.month || '').split('-')[0])
+            : dashboardNav.year;
+        yearSel.innerHTML = '';
+        for (let y = dashboardNav.maxYear; y >= dashboardNav.minYear; y--) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === selYear) opt.selected = true;
+            yearSel.appendChild(opt);
+        }
+    }
+    if (showMonth) {
+        const parts = (dashboardNav.month || '').split('-');
+        const selYear = Number(parts[0]);
+        const selMonth = Number(parts[1]);
+        monthSel.innerHTML = '';
+        FIN_MONTH_NAMES.forEach(function (name, idx) {
+            const opt = document.createElement('option');
+            opt.value = idx + 1;
+            opt.textContent = name;
+            if (selYear === dashboardNav.maxYear && idx + 1 > dashboardNav.maxMonth) opt.disabled = true;
+            if (idx + 1 === selMonth) opt.selected = true;
+            monthSel.appendChild(opt);
+        });
+    }
+}
+
+function dashboardNavPick() {
+    const n = dashboardNav;
+    const yearSel = document.getElementById('dashboardYearSel');
+    const monthSel = document.getElementById('dashboardMonthSel');
+    if (n.period === 'yearly') {
+        n.year = Number(yearSel.value);
+    } else if (n.period === 'monthly') {
+        const y = Number(yearSel.value);
+        let m = Number(monthSel.value);
+        if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
+        n.month = y + '-' + String(m).padStart(2, '0');
+    } else {
+        return;
+    }
+    loadDashboardStats(n.period);
+}
+
+function dashboardNavStep(dir) {
+    const n = dashboardNav;
+    if ((dir < 0 && !n.canPrev) || (dir > 0 && !n.canNext)) return;
+
+    if (n.period === 'weekly') {
+        n.week = Math.max(0, n.week - dir);
+    } else if (n.period === 'monthly' && n.month) {
+        const parts = n.month.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1 + dir, 1);
+        n.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    } else if (n.period === 'yearly' && n.year) {
+        n.year = n.year + dir;
+    } else {
+        return;
+    }
+    loadDashboardStats(n.period);
+}

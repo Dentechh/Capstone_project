@@ -6424,6 +6424,166 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             approve_list_next_cursor="",
         )
 
+    def admin_dashboard_stats(self):
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        period = request.args.get("period", "overall").strip().lower()
+        if period not in ("today", "weekly", "monthly", "yearly", "overall"):
+            period = "overall"
+        today = datetime.now(PH_TZ).date()
+
+        def int_arg(name, default):
+            try:
+                return int(request.args.get(name, default))
+            except (TypeError, ValueError):
+                return default
+
+        first_year = today.year - 4
+
+        if period == "today":
+            start_date = today
+            end_date = today
+            num_days = 1
+            range_label = f"{today:%B} {today.day}, {today.year}"
+            extra = {}
+        elif period == "monthly":
+            raw_month = request.args.get("month", "").strip()
+            try:
+                y, m = int(raw_month[:4]), int(raw_month[5:7])
+                datetime(y, m, 1)
+            except (TypeError, ValueError):
+                y, m = today.year, today.month
+            cur = (today.year, today.month)
+            lowest = (first_year, 1)
+            y, m = max(lowest, min((y, m), cur))
+            start_date = today.replace(year=y, month=m, day=1)
+            next_first = (today.replace(year=y + 1, month=1, day=1) if m == 12
+                          else today.replace(year=y, month=m + 1, day=1))
+            end_date = min(next_first - timedelta(days=1), today)
+            num_days = (end_date - start_date).days + 1
+            range_label = f"{start_date:%B} {y}"
+            extra = {
+                "month": f"{y}-{m:02d}",
+                "can_prev": (y, m) > lowest,
+                "can_next": (y, m) < cur,
+            }
+        elif period == "yearly":
+            min_year = first_year
+            year = max(min_year, min(int_arg("year", today.year), today.year))
+            start_date = today.replace(year=year, month=1, day=1)
+            end_date = today.replace(year=year, month=12, day=31)
+            if year == today.year:
+                end_date = min(end_date, today)
+            range_label = str(year)
+            extra = {
+                "year": year,
+                "can_prev": year > min_year,
+                "can_next": year < today.year,
+            }
+        elif period == "weekly":
+            max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
+            week = min(max(0, int_arg("week", 0)), max_week)
+            end_date = today - timedelta(days=7 * week)
+            start_date = end_date - timedelta(days=6)
+            range_label = (f"{start_date:%b} {start_date.day} to {end_date:%b} {end_date.day}, {end_date.year}"
+                           if start_date.year == end_date.year else
+                           f"{start_date:%b} {start_date.day}, {start_date.year} to {end_date:%b} {end_date.day}, {end_date.year}")
+            extra = {
+                "week": week,
+                "can_prev": week < max_week,
+                "can_next": week > 0,
+            }
+        else:
+            period = "overall"
+            start_date = None
+            end_date = None
+            range_label = "All time"
+            extra = {}
+
+        def in_range(dt_str):
+            if start_date is None:
+                return True
+            if not dt_str:
+                return False
+            try:
+                d = datetime.fromisoformat(str(dt_str).strip().replace("Z", "+00:00")).date()
+            except Exception:
+                # appointment_date stored as "YYYY-MM-DD HH:MM"
+                try:
+                    d = datetime.fromisoformat(str(dt_str).strip()[:10]).date()
+                except Exception:
+                    return False
+            return start_date <= d <= end_date
+
+        # total patients
+        total_patients = 0
+        try:
+            for _, d in self._get_manageable_accounts_cached():
+                if not d.get("has_history"):
+                    continue
+                if period != "overall" and not in_range(d.get("created_at") or d.get("last_approved_at")):
+                    continue
+                total_patients += 1
+        except Exception as e:
+            print("DASHBOARD STATS TOTAL PATIENTS ERROR:", e)
+
+        # pending requests + urgency
+        pending_count = 0
+        urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
+        try:
+            for doc in self.db.collection_group("appointments").stream():
+                data = doc.to_dict() or {}
+                if period != "overall" and not in_range(data.get("created_at") or data.get("appointment_date")):
+                    continue
+                pending_count += 1
+                level = data.get("UrgencyLevel", "Normal")
+                if level in urgency_counts:
+                    urgency_counts[level] += 1
+        except Exception as e:
+            print("DASHBOARD STATS PENDING ERROR:", e)
+
+        # accepted patients
+        approved_uids = set()
+        try:
+            for doc in self.db.collection_group("Approve").stream():
+                data = doc.to_dict() or {}
+                if period != "overall" and not in_range(data.get("accepted_at") or data.get("appointment_date")):
+                    continue
+                try:
+                    uid = doc.reference.parent.parent.id
+                except Exception:
+                    uid = ""
+                if uid:
+                    approved_uids.add(uid)
+            done_uids = {
+                str(d.get("_account_uid") or "")
+                for d in self._get_done_procedures_cached()
+                if d.get("_account_uid")
+            }
+            approved_count = len(approved_uids - done_uids)
+        except Exception as e:
+            print("DASHBOARD STATS ACCEPTED ERROR:", e)
+            approved_count = len(approved_uids)
+
+        payload = {
+            "success": True,
+            "period": period,
+            "approved_count": approved_count,
+            "pending_count": pending_count,
+            "total_patients": total_patients,
+            "urgency_counts": urgency_counts,
+            "range_label": range_label,
+        }
+        payload.update(extra)
+        payload.update({
+            "can_prev": extra.get("can_prev", False),
+            "can_next": extra.get("can_next", False),
+            "min_year": first_year,
+            "max_year": today.year,
+            "max_month": today.month,
+        })
+        return jsonify(payload)
     def search_patients(self):
         if not session.get('admin_logged_in'):
             return jsonify([]), 403
@@ -6926,6 +7086,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "balance": round(updated_value - updated_paid, 2),
             "next_appointment": bleach.clean(request.form.get("next_appointment", existing.get("next_appointment", ""))),
             "medicine": bleach.clean(request.form.get("medicine", existing.get("medicine", ""))),
+            "medicine_qty": bleach.clean(request.form.get("medicine_qty", existing.get("medicine_qty", ""))),
+            "notes": bleach.clean(request.form.get("notes", existing.get("notes", ""))),
             "status": existing.get("status", "") if is_follow_up else ("Paid" if new_balance <= 0 else "Not Paid")
         }
         new_row = dict(existing)      # keeps plan_id / payments / plan_ref
@@ -9119,19 +9281,15 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
         return jsonify({"success": True, "message": "Patients merged successfully"})
 
-    def _financial_alltime_stats(self):
+    def _financial_alltime_stats(self, docs=None, proc_filter=None):
         """
         One pass over the cached Done_procedure scan (no extra Firestore
-        reads) for the numbers that do NOT depend on the selected period:
+        reads) for the numbers that do NOT depend on the selected period.
 
-        - outstanding / unpaid_count: everything with balance > 0, the same
-          rule the Unpaid Procedures table uses, so the cards match it.
-        - total_paid: every paid amount ever recorded (the "Overall" total).
-        - paid_by_year / earliest: dated procedures only, used for the
-          one-bar-per-year Overall view and to stop the picker from walking
-          back into years with no data. Dates before 2000 or after today
-          are treated as typos and ignored here (they still count in
-          total_paid).
+        docs: optional iterable of Done_procedure-style documents; defaults to
+        the cached scan. proc_filter: optional substring (lower-cased) that the
+        procedure name must contain; None means "all procedures". Used by the
+        braces-only view so it can reuse this helper without a separate scan.
         """
         today = datetime.now(PH_TZ).date()
         total_paid = 0.0
@@ -9140,12 +9298,22 @@ backup. Groups marked "check" may be separate treatments that just share a price
         earliest = None
         paid_by_year = {}
 
-        for data in self._get_done_procedures_cached():
+        if docs is None:
+            docs = self._get_done_procedures_cached()
+
+        def _proc_ok(name):
+            if proc_filter is None:
+                return True
+            return proc_filter in str(name or "").strip().lower()
+
+        for data in docs:
             procs = data.get("procedures", [])
             if not isinstance(procs, list):
                 continue
             for p in procs:
                 if not isinstance(p, dict):
+                    continue
+                if not _proc_ok(p.get("procedure")):
                     continue
                 paid = self.safe_float(p.get("paid", 0))
                 balance = self.safe_float(p.get("balance", 0))
@@ -9175,12 +9343,14 @@ backup. Groups marked "check" may be separate treatments that just share a price
             "paid_by_year": paid_by_year,
         }
 
-    def _financial_period_unpaid(self, done_docs, start_date, end_date):
+    def _financial_period_unpaid(self, done_docs, start_date, end_date, proc_filter=None):
         """
         Outstanding balance and unpaid-procedure count for rows whose date
         (the date the balance started) falls between start_date and end_date,
         both included. Reads the same cached scan the income chart uses, so
         no extra Firestore reads. Undated rows only count in Overall.
+        proc_filter: optional lower-cased substring the procedure name must
+        contain; None means all procedures.
         """
         outstanding = 0.0
         count = 0
@@ -9190,6 +9360,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 continue
             for p in procs:
                 if not isinstance(p, dict):
+                    continue
+                if proc_filter is not None and proc_filter not in str(p.get("procedure", "")).strip().lower():
                     continue
                 balance = self.safe_float(p.get("balance", 0))
                 if not balance > 0:
@@ -9226,7 +9398,12 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
         # Phase 3: when the aggregate switch is on (and the aggregates have
         # been built) answer from the daily aggregates instead of the scan.
-        if self._agg_enabled() and self._agg_ready():
+        # Braces-only views bypass the aggregates (they filter by procedure,
+        # which the aggregate income scan does not carry) and use the cached
+        # scan instead -- same data, just not the pre-aggregated fast path.
+        scope = request.args.get("scope", "all").strip().lower()
+        braces_only = scope == "braces"
+        if self._agg_enabled() and self._agg_ready() and not braces_only:
             return self._agg_admin_financial_chart_data()
 
         period = request.args.get("period", "weekly").strip().lower()
@@ -9241,11 +9418,26 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 return default
 
         try:
-            stats = self._financial_alltime_stats()
+            if braces_only:
+                stats = self._financial_alltime_stats(proc_filter="braces")
+            else:
+                stats = self._financial_alltime_stats()
             done_docs = self._get_done_procedures_cached()
         except Exception as e:
             print("FINANCIAL CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+        # For the braces-only view, drop every non-braces procedure up front
+        # so the rest of this function (income totals, period unpaid, pickers)
+        # needs no further filtering.
+        if braces_only:
+            filtered = []
+            for data in done_docs:
+                procs = [p for p in (data.get("procedures") or [])
+                         if isinstance(p, dict) and "braces" in str(p.get("procedure", "")).strip().lower()]
+                if procs:
+                    filtered.append(dict(data, procedures=procs))
+            done_docs = filtered
 
         earliest = stats["earliest"]
         # Earliest year the pickers/dropdowns offer: at least the last 5 years
@@ -9426,7 +9618,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
         window_end = start_date + timedelta(days=num_days - 1)
         extra.update(self._financial_period_unpaid(done_docs, start_date, window_end))
         window_end = start_date + timedelta(days=num_days - 1)
-        extra.update(self._agg_period_unpaid(self._agg_load_all(), start_date, window_end))
+        if not braces_only:
+            extra.update(self._agg_period_unpaid(self._agg_load_all(), start_date, window_end))
         return respond(labels, values, total_income, range_label, **extra)
 
     def admin_unpaid_procedures(self):
@@ -11091,6 +11284,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/approve", methods=["POST"])(self.approve)
         self.app.route("/patient-profile")(self.p_profile)
         self.app.route("/admin_dashboard")(self.adminDashboard)
+        self.app.route("/admin/dashboard_stats")(self.admin_dashboard_stats)
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
         self.app.route("/admin/approved_page")(self.admin_approved_page)

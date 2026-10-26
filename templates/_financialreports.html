@@ -139,6 +139,118 @@
                 </p>
             </div>
 
+            <div class="income-trend-card" style="margin-top:16px;">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Orthodontic Braces Income</h3>
+                        <p>Braces revenue and outstanding balance, tracked on their own.</p>
+                    </div>
+                </div>
+
+                <div class="financial-period-toolbar" style="margin-bottom:12px;">
+                    <div class="period-btn-group" role="group" aria-label="Braces report period">
+                        <button type="button" class="period-btn braces-period-btn" data-period="today"
+                            onclick="loadBracesFinancialChart('today')">
+                            <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                            <span>Today</span>
+                        </button>
+                        <button type="button" class="period-btn braces-period-btn active" data-period="weekly"
+                            onclick="loadBracesFinancialChart('weekly')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_view_week</span>
+                            <span>Weekly</span>
+                        </button>
+                        <button type="button" class="period-btn braces-period-btn" data-period="monthly"
+                            onclick="loadBracesFinancialChart('monthly')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                            <span>Monthly</span>
+                        </button>
+                        <button type="button" class="period-btn braces-period-btn" data-period="yearly"
+                            onclick="loadBracesFinancialChart('yearly')">
+                            <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                            <span>Yearly</span>
+                        </button>
+                        <button type="button" class="period-btn braces-period-btn" data-period="overall"
+                            onclick="loadBracesFinancialChart('overall')">
+                            <span class="material-symbols-rounded" aria-hidden="true">all_inclusive</span>
+                            <span>Overall</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="financial-nav" id="bracesFinancialNav" style="display:none;">
+                    <button type="button" class="fin-nav-btn" id="bracesFinNavPrev" aria-label="Previous period"
+                        onclick="bracesFinancialNavStep(-1)">
+                        <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+                    </button>
+                    <span class="fin-nav-label" id="bracesFinNavLabel" aria-live="polite"></span>
+                    <select class="fin-nav-select" id="bracesFinMonthSel" aria-label="Choose month" style="display:none;"
+                        onchange="bracesFinancialNavPick()"></select>
+                    <select class="fin-nav-select" id="bracesFinYearSel" aria-label="Choose year" style="display:none;"
+                        onchange="bracesFinancialNavPick()"></select>
+                    <button type="button" class="fin-nav-btn" id="bracesFinNavNext" aria-label="Next period"
+                        onclick="bracesFinancialNavStep(1)">
+                        <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+                    </button>
+                </div>
+
+                <div class="metric-cards" style="margin-bottom:16px;">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 21V3h6.5a4.5 4.5 0 0 1 0 9H7" />
+                                <line x1="4" y1="6" x2="16" y2="6" />
+                                <line x1="4" y1="9" x2="16" y2="9" />
+                            </svg>
+                        </div>
+                        <div class="metric-data">
+                            <h3 id="bracesTotalIncome">?0.00</h3>
+                            <p>Braces Income Collected</p>
+                        </div>
+                        <div class="metric-bg-icon" aria-hidden="true">
+                            <span class="material-symbols-rounded">payments</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="12" />
+                                <line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                        </div>
+                        <div class="metric-data">
+                            <h3 id="bracesTotalOutstanding">?0.00</h3>
+                            <p>Braces Outstanding Balance</p>
+                        </div>
+                        <div class="metric-bg-icon" aria-hidden="true">
+                            <span class="material-symbols-rounded">payments</span>
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 8v13H3V8" />
+                                <path d="M1 3h22v5H1z" />
+                                <path d="M10 12h4" />
+                            </svg>
+                        </div>
+                        <div class="metric-data">
+                            <h3 id="bracesUnpaidProcedures">0</h3>
+                            <p>Braces Unpaid Procedures</p>
+                        </div>
+                        <div class="metric-bg-icon" aria-hidden="true">
+                            <span class="material-symbols-rounded">receipt_long</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="income-chart-wrapper" style="height:320px;">
+                    <canvas id="bracesIncomeChart"></canvas>
+                </div>
+            </div>
+
             <div class="income-trend-card unpaid-card" id="unpaidCard">
                 <div class="income-trend-header">
                     <div>

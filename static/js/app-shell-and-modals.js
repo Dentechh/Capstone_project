@@ -1993,6 +1993,9 @@ function updateDateTime() {
                     // The panel is body-level and flips, so the page scroll container
                     // can never clip it.
                     { el: document.getElementById('financialNav'), scroller: '.content-section', allowFlip: true },
+{ el: document.getElementById('bracesFinancialNav'), scroller: '.content-section', allowFlip: true },
+{ el: document.getElementById('dashboardNav'), scroller: '.content-section', allowFlip: true },
+{ el: document.getElementById('procNav'), scroller: '.content-section', allowFlip: true },
                     // Doctors Calendar closure summary Month / Year stepper:
                     // same control, same treatment.
                     { el: document.getElementById('closureMonthPicker'), scroller: '.content-section', allowFlip: true }

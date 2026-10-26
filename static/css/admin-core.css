@@ -1087,6 +1087,297 @@
             linear-gradient(#262626, #262626);
     }
 
+    /* The stepper's <select>s are wrapped in the shared .adm-select listbox.
+       That wrapper is width:100% with a vertical margin for the tall modal
+       forms; inside this single-line row it must shrink to the control instead. */
+    #bracesFinancialNav .adm-select {
+        width: auto;
+        margin: 0;
+    }
+
+    /* Select chip copied from the admin's dropdown design (#newApptModal
+       .adm-form-side select): tinted navy field with a chevron tile. Rules are
+       id-scoped because appointment-modal.css sets a global
+       "body.dark-mode .adm-select>select" that would otherwise outrank a plain
+       .fin-nav-select class rule and repaint this row's chrome. */
+    #bracesFinancialNav .fin-nav-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        min-width: 148px;
+        height: 38px;
+        padding: 0 42px 0 14px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f8ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#f1f8ff, #f1f8ff);
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 8px center, 0 0;
+        background-size: 24px 24px, 100% 100%;
+        color: #0d47a1;
+        box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease,
+            background-color 0.25s ease;
+    }
+
+    #bracesFinancialNav .fin-nav-select:hover {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    #bracesFinancialNav .fin-nav-select:focus-visible {
+        outline: none;
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    /* The open listbox state, which the enhancement drives off the wrapper. */
+    #bracesFinancialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    body.dark-mode #bracesFinancialNav .fin-nav-select {
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+    }
+
+    body.dark-mode #bracesFinancialNav .fin-nav-select:hover,
+    body.dark-mode #bracesFinancialNav .fin-nav-select:focus-visible {
+        border-color: #64b5f6;
+        background-color: #262626;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    body.dark-mode #bracesFinancialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #64b5f6;
+        background-color: #262626;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    /* The stepper's <select>s are wrapped in the shared .adm-select listbox.
+       That wrapper is width:100% with a vertical margin for the tall modal
+       forms; inside this single-line row it must shrink to the control instead. */
+    #dashboardNav .adm-select {
+        width: auto;
+        margin: 0;
+    }
+
+    /* Select chip copied from the admin's dropdown design (#newApptModal
+       .adm-form-side select): tinted navy field with a chevron tile. Rules are
+       id-scoped because appointment-modal.css sets a global
+       "body.dark-mode .adm-select>select" that would otherwise outrank a plain
+       .fin-nav-select class rule and repaint this row's chrome. */
+    #dashboardNav .fin-nav-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        min-width: 148px;
+        height: 38px;
+        padding: 0 42px 0 14px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f8ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#f1f8ff, #f1f8ff);
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 8px center, 0 0;
+        background-size: 24px 24px, 100% 100%;
+        color: #0d47a1;
+        box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease,
+            background-color 0.25s ease;
+    }
+
+    #dashboardNav .fin-nav-select:hover {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    #dashboardNav .fin-nav-select:focus-visible {
+        outline: none;
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    /* The open listbox state, which the enhancement drives off the wrapper. */
+    #dashboardNav .adm-select.is-open>.fin-nav-select {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    body.dark-mode #dashboardNav .fin-nav-select {
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+    }
+
+    body.dark-mode #dashboardNav .fin-nav-select:hover,
+    body.dark-mode #dashboardNav .fin-nav-select:focus-visible {
+        border-color: #64b5f6;
+        background-color: #262626;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    body.dark-mode #dashboardNav .adm-select.is-open>.fin-nav-select {
+        border-color: #64b5f6;
+        background-color: #262626;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    /* The stepper's <select>s are wrapped in the shared .adm-select listbox.
+       That wrapper is width:100% with a vertical margin for the tall modal
+       forms; inside this single-line row it must shrink to the control instead. */
+    #bracesFinancialNav .adm-select {
+        width: auto;
+        margin: 0;
+    }
+
+    /* Select chip copied from the admin's dropdown design (#newApptModal
+       .adm-form-side select): tinted navy field with a chevron tile. Rules are
+       id-scoped because appointment-modal.css sets a global
+       "body.dark-mode .adm-select>select" that would otherwise outrank a plain
+       .fin-nav-select class rule and repaint this row's chrome. */
+    #bracesFinancialNav .fin-nav-select {
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        min-width: 148px;
+        height: 38px;
+        padding: 0 42px 0 14px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f8ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#f1f8ff, #f1f8ff);
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 8px center, 0 0;
+        background-size: 24px 24px, 100% 100%;
+        color: #0d47a1;
+        box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease,
+            background-color 0.25s ease;
+    }
+
+    #bracesFinancialNav .fin-nav-select:hover {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23bfdbfe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    #bracesFinancialNav .fin-nav-select:focus-visible {
+        outline: none;
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    /* The open listbox state, which the enhancement drives off the wrapper. */
+    #bracesFinancialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #0d47a1;
+        background-color: #e8f2ff;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%230d47a1'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#e8f2ff, #e8f2ff);
+    }
+
+    body.dark-mode #bracesFinancialNav .fin-nav-select {
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+    }
+
+    body.dark-mode #bracesFinancialNav .fin-nav-select:hover,
+    body.dark-mode #bracesFinancialNav .fin-nav-select:focus-visible {
+        border-color: #64b5f6;
+        background-color: #262626;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
+    body.dark-mode #bracesFinancialNav .adm-select.is-open>.fin-nav-select {
+        border-color: #64b5f6;
+        background-color: #262626;
+        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
+    }
+
     body.dark-mode .fin-nav-btn,
     body.dark-mode .fin-nav-label {
         background: #131a26;
@@ -1237,26 +1528,32 @@
     }
 
     body.dark-mode #procNav .proc-nav-select {
-        background-color: #262626;
-        border-color: #33415a;
-        color: #dbeafe;
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
     }
 
-    body.dark-mode #procNav .proc-nav-select:hover {
-        border-color: #64b5f6;
-        background-color: #1e3a8a;
-        color: #dbeafe;
-    }
-
+    body.dark-mode #procNav .proc-nav-select:hover,
     body.dark-mode #procNav .proc-nav-select:focus-visible {
         border-color: #64b5f6;
-        box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-color: #262626;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
     }
 
     body.dark-mode #procNav .adm-select.is-open>.proc-nav-select {
         border-color: #64b5f6;
         background-color: #262626;
         box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%2364b5f6'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230b1220' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#262626, #262626);
     }
 
     .status-badge {
@@ -1429,7 +1726,7 @@
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
-        justify-content: center;
+        justify-content: flex-start;
         margin-bottom: 20px;
     }
 
@@ -2964,3 +3261,44 @@
             font-size: 12.5px;
         }
     }
+
+    .td-records__table thead th {
+        padding: 10px 12px;
+        white-space: normal;
+        word-break: break-word;
+        vertical-align: bottom;
+    }
+    .td-records__table thead th:nth-child(6),
+    .td-records__table thead th:nth-child(7) {
+        min-width: 96px;
+        padding-right: 24px;
+    }
+    .td-medicine-cell {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+
+    .medicine-field { position: relative; display: flex; align-items: center; gap: 4px; }
+    .medicine-field .td-medicine { flex: 1 1 auto; min-width: 90px; }
+    .medicine-field__toggle { background: transparent; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; padding: 2px 4px; }
+    .medicine-menu { position: absolute; top: 100%; left: 0; z-index: 50; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); padding: 4px; min-width: 160px; }
+    .medicine-option { display: block; width: 100%; text-align: left; background: none; border: none; padding: 6px 10px; cursor: pointer; border-radius: 4px; }
+    .medicine-option:hover { background: #e8f2ff; }
+    body.dark-mode .medicine-menu { background: #1e1e1e; border-color: #33415a; }
+    body.dark-mode .medicine-option { color: #e0e0e0; }
+    body.dark-mode .medicine-option:hover { background: #1e3a8a; }
+    .medicine-qty-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.45); }
+    .medicine-qty-card { background: #fff; border-radius: 12px; padding: 20px; min-width: 260px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    body.dark-mode .medicine-qty-card { background: #1e1e1e; color: #e0e0e0; }
+    .medicine-qty-title { margin: 0 0 8px; }
+    .medicine-qty-label { margin: 0 0 10px; font-weight: 600; }
+    .medicine-qty-input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+    .medicine-qty-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+    .medicine-qty-btn { padding: 8px 14px; border-radius: 8px; border: none; cursor: pointer; }
+    .medicine-qty-btn--cancel { background: #eee; }
+    .medicine-qty-btn--confirm { background: #0d47a1; color: #fff; }
+

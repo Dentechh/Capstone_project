@@ -261,7 +261,7 @@
                                         </td>
                                     </tr>
                                 </tbody>
-                            </table>
+                    </table>
                         </div>
                     </div>
                 </div>
@@ -421,10 +421,11 @@
                             <col style="width:90px;"> <!-- Date -->
                             <col style="width:60px;"> <!-- Tooth# -->
                             <col style="width:120px;"> <!-- Procedure -->
+                            <col style="width:120px;"> <!-- Notes -->
                             <col style="width:85px;"> <!-- Plan: new charge or follow-up -->
                             <col style="width:105px;"> <!-- Dentist/s -->
-                            <col style="width:80px;"> <!-- Value of Work -->
-                            <col style="width:80px;"> <!-- Amount Paid -->
+                            <col style="width:95px;"> <!-- Value of Work -->
+                            <col style="width:95px;"> <!-- Amount Paid -->
                             <col style="width:75px;"> <!-- Balance -->
                             <col style="width:115px;"> <!-- Next Appointment -->
                             <col style="width:105px;"> <!-- Medicine -->
@@ -436,6 +437,7 @@
                                 <th>Date</th>
                                 <th>Tooth#</th>
                                 <th>Procedure</th>
+                                <th>Notes</th>
                                 <th>Plan</th>
                                 <th>Dentist/s</th>
                                 <th>Value of Work</th>
@@ -479,9 +481,10 @@
                                         <option value="Periapical Xray">Periapical Xray</option>
                                         <option value="Orthodontic Braces">Orthodontic Braces</option>
                                         <option value="Other">Other</option>
-                                    </select>
-                                </td>
-                                <td class="td-plan-cell">
+                                     </select>
+                                 </td>
+                                 <td><input type="text" class="td-notes" placeholder="Notes"></td>
+                                 <td class="td-plan-cell">
                                     <select class="td-plan" aria-label="New charge or follow-up of an existing plan">
                                         <option value="__new__">New charge</option>
                                     </select>
@@ -505,17 +508,22 @@
                                 <td><input type="number" class="td-paid" placeholder="0.00" step="0.01" required /></td>
                                 <td><input type="text" class="td-balance" placeholder="Balance" readonly /></td>
                                 <td><input type="text" class="td-next-appt adm-date-native" placeholder="Select date &amp; time" autocomplete="off" /></td>
-                                <td>
-                                    <select class="td-medicine">
-                                        <option value="Select Medicine">Select Medicine</option>
-                                        <option value="None">None</option>
-                                        <option value="Mefenamic Acid">Mefenamic Acid</option>
-                                        <option value="Tranexamic Acid">Tranexamic Acid</option>
-                                        <option value="Amoxicillin">Amoxicillin</option>
-                                        <option value="Co- amoxiclav">Co- amoxiclav</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </td>
+                                 <td class="td-medicine-cell">
+                                     <div class="medicine-field">
+                                         <input type="text" class="td-medicine" placeholder="Medicines">
+                                         <button type="button" class="medicine-field__toggle" tabindex="-1"
+                                             aria-hidden="true" title="Show medicines">
+                                             <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
+                                         </button>
+                                         <div class="medicine-menu" style="display:none;">
+                                             <button type="button" class="medicine-option" data-medicine="None">None</button>
+                                             <button type="button" class="medicine-option" data-medicine="Mefenamic Acid">Mefenamic Acid</button>
+                                             <button type="button" class="medicine-option" data-medicine="Tranexamic Acid">Tranexamic Acid</button>
+                                             <button type="button" class="medicine-option" data-medicine="Amoxicillin">Amoxicillin</button>
+                                             <button type="button" class="medicine-option" data-medicine="Co- amoxiclav">Co- amoxiclav</button>
+                                         </div>
+                                     </div>
+                                 </td>
                                 <td>
                                     <select class="td-method" aria-label="Paid via">
                                         <option value="Cash" selected>Cash</option>
@@ -540,5 +548,17 @@
             </div>
 
         </div>
+
+            <div id="medicine-qty-modal" class="medicine-qty-modal" style="display:none;" role="dialog" aria-modal="true">
+                <div class="medicine-qty-card">
+                    <h4 class="medicine-qty-title">Quantity</h4>
+                    <p class="medicine-qty-label" id="medicine-qty-label"></p>
+                    <input type="number" id="medicine-qty-input" class="medicine-qty-input" min="1" value="1">
+                    <div class="medicine-qty-actions">
+                        <button type="button" id="medicine-qty-cancel" class="medicine-qty-btn medicine-qty-btn--cancel">Cancel</button>
+                        <button type="button" id="medicine-qty-confirm" class="medicine-qty-btn medicine-qty-btn--confirm">Add</button>
+                    </div>
+                </div>
+            </div>
 
         <script src="{{ url_for('static', filename='js/treatment-totals.js') }}?v=2"></script>

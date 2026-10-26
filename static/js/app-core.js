@@ -718,6 +718,8 @@ function showSection(sectionId) {
             });
         })();
 
+        var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
+
         // The placeholder row that ships in the markup needs the same
         // listboxes and date pickers before any patient is opened.
         refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
@@ -934,7 +936,9 @@ function showSection(sectionId) {
                     balance: tr.querySelector('.td-balance') ? tr.querySelector('.td-balance').value.trim() : '',
                     nextAppt: tr.querySelector('.td-next-appt') ? tr.querySelector('.td-next-appt').value.trim() : '',
                     planRef: tr.querySelector('.td-plan') ? tr.querySelector('.td-plan').value : '',
-                    method: tr.querySelector('.td-method') ? tr.querySelector('.td-method').value : ''
+                    method: tr.querySelector('.td-method') ? tr.querySelector('.td-method').value : '',
+                    medicine: tr.querySelector('.td-medicine') ? tr.querySelector('.td-medicine').value.trim() : '',
+                    notes: tr.querySelector('.td-notes') ? tr.querySelector('.td-notes').value.trim() : ''
                 });
             });
             var storage = JSON.parse(localStorage.getItem('td_notes') || '{}');
@@ -973,6 +977,8 @@ function showSection(sectionId) {
          * Both helpers are idempotent, so this is safe to call after every
          * rebuild of the tbody and after Add Row appends a row.
          */
+        var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
+
         function refreshTreatmentControls(tbody) {
             if (!tbody) return;
 
@@ -984,6 +990,7 @@ function showSection(sectionId) {
 
             tbody.querySelectorAll('tr').forEach(tdApplyToothMode);
             initTreatmentDatePickers(tbody);
+            tdInitMedicineCells(tbody);
         }
 
         /**
@@ -1220,6 +1227,8 @@ function showSection(sectionId) {
                 '</select>' +
                 '</td>' +
 
+                '<td><input type="text" class="td-notes" value="' + escHtml(data.notes || '') + '" placeholder="Notes"></td>' +
+
                 /* New charge, or a follow-up of the patient's open plan for this
                    procedure. Options are filled by refreshPlanCell(). */
                 '<td class="td-plan-cell"><select class="td-plan" aria-label="New charge or follow-up of an existing plan">' +
@@ -1252,17 +1261,18 @@ function showSection(sectionId) {
 
                 '<td><input type="text" class="td-next-appt adm-date-native" value="' + escHtml(data.nextAppt || '') + '" placeholder="Select date &amp; time" autocomplete="off"></td>' +
 
-                '<td>' +
-                '<select class="td-medicine">' +
-                '<option value="">Select Medicine</option>' +
-                '<option value="None"' + (data.medicine === "None" ? " selected" : "") + '>None</option>' +
-                '<option value="Mefenamic Acid"' + (data.medicine === "Mefenamic Acid" ? " selected" : "") + '>Mefenamic Acid</option>' +
-                '<option value="Tranexamic Acid"' + (data.medicine === "Tranexamic Acid" ? " selected" : "") + '>Tranexamic Acid</option>' +
-                '<option value="Amoxicillin"' + (data.medicine === "Amoxicillin" ? " selected" : "") + '>Amoxicillin</option>' +
-                '<option value="Co- amoxiclav"' + (data.medicine === "Co- amoxiclav" ? " selected" : "") + '>Co- amoxiclav</option>' +
-                '<option value="Other"' + (data.medicine === "Other" ? " selected" : "") + '>Other</option>' +
-                '</select>' +
-                '</td>' +
+                '<td class="td-medicine-cell">' +
+                '<div class="medicine-field">' +
+                '<input type="text" class="td-medicine" value="' + escHtml(data.medicine || '') + '" placeholder="Medicines">' +
+                '<button type="button" class="medicine-field__toggle" tabindex="-1" aria-hidden="true" title="Show medicines">' +
+                '<span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span></button>' +
+                '<div class="medicine-menu" style="display:none;">' +
+                '<button type="button" class="medicine-option" data-medicine="None">None</button>' +
+                '<button type="button" class="medicine-option" data-medicine="Mefenamic Acid">Mefenamic Acid</button>' +
+                '<button type="button" class="medicine-option" data-medicine="Tranexamic Acid">Tranexamic Acid</button>' +
+                '<button type="button" class="medicine-option" data-medicine="Amoxicillin">Amoxicillin</button>' +
+                '<button type="button" class="medicine-option" data-medicine="Co- amoxiclav">Co- amoxiclav</button>' +
+                '</div></div></td>' +
 
                 /* Status is now worked out by the server from value and payments,
                    so this column asks how today's payment was made instead. */
@@ -1300,12 +1310,173 @@ function showSection(sectionId) {
                 balance: '',
                 nextAppt: '',
                 medicine: '',
+                medicineQty: '',
                 status: 'Not Paid'
             });
             // Give the new row the same listboxes and date pickers as the
             // rows already on screen.
             refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
         }
+
+        var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
+
+        function tdMedicineSelectHtml(selected) {
+            var html = '<select class="td-medicine-kind" aria-label="Medicine">';
+            html += '<option value="">Select medicine</option>';
+            TD_MEDICINE_OPTIONS.forEach(function (m) {
+                html += '<option value="' + escHtml(m) + '"' + (selected === m ? ' selected' : '') + '>' + escHtml(m) + '</option>';
+            });
+            html += '<option value="Other">Other (manual)</option>';
+            html += '</select>';
+            return html;
+        }
+
+        function tdUpdateMedicineValue(cell) {
+            if (!cell) return;
+            var hidden = cell.querySelector('.td-medicine');
+            if (!hidden) return;
+            var vals = [];
+            cell.querySelectorAll('.td-medicine-kind').forEach(function (sel) {
+                var v = (sel.value || '').trim();
+                if (v && v !== 'None') vals.push(v === 'Other' ? '' : v);
+            });
+            var other = (cell.querySelector('.td-medicine-other') || {}).value || '';
+            if (other.trim()) vals.push(other.trim());
+            hidden.value = vals.filter(Boolean).join(', ');
+        }
+
+        function tdRenderMedicineSelects(cell, count, selectedVals) {
+            var list = cell.querySelector('.td-medicine-list');
+            if (!list) return;
+            list.innerHTML = '';
+            var n = parseInt(count, 10) || 0;
+            for (var i = 0; i < n; i++) {
+                var sel = document.createElement('div');
+                sel.className = 'td-medicine-kind-wrap';
+                sel.innerHTML = tdMedicineSelectHtml(selectedVals && selectedVals[i] ? selectedVals[i] : '');
+                list.appendChild(sel);
+            }
+            tdUpdateMedicineValue(cell);
+        }
+
+        function tdInitMedicineCell(cell, initial) {
+            if (!cell) return;
+            var countSel = cell.querySelector('.td-medicine-count');
+            var otherInput = cell.querySelector('.td-medicine-other');
+            var meds = (initial || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+            // separate known vs custom
+            var known = [];
+            var custom = [];
+            meds.forEach(function (m) {
+                if (TD_MEDICINE_OPTIONS.indexOf(m) !== -1) known.push(m);
+                else custom.push(m);
+            });
+            var count = known.length || (meds.length ? meds.length : 1);
+            if (count < 1) count = 0;
+            if (count > 4) count = 4;
+            if (countSel) countSel.value = String(count);
+            tdRenderMedicineSelects(cell, count, known);
+            if (otherInput) otherInput.value = custom.join(', ');
+            tdUpdateMedicineValue(cell);
+        }
+
+        function tdInitMedicineCells(scope) {
+            var root = scope || document;
+            root.querySelectorAll('.td-medicine-cell').forEach(function (cell) {
+                var hidden = cell.querySelector('.td-medicine');
+                tdInitMedicineCell(cell, hidden ? hidden.value : '');
+            });
+        }
+
+        // Delegated handlers for medicine cell interactions.
+        document.addEventListener('change', function (e) {
+            var cell = e.target && e.target.closest ? e.target.closest('.td-medicine-cell') : null;
+            if (!cell) return;
+            if (e.target.classList.contains('td-medicine-count')) {
+                var n = parseInt(e.target.value, 10) || 0;
+                tdRenderMedicineSelects(cell, n, []);
+            }
+            tdUpdateMedicineValue(cell);
+        });
+        document.addEventListener('input', function (e) {
+            var cell = e.target && e.target.closest ? e.target.closest('.td-medicine-cell') : null;
+            if (!cell) return;
+            tdUpdateMedicineValue(cell);
+        });
+
+        // Medicine dropdown + quantity modal.
+        (function wireMedicineField() {
+            var pendingMedicine = null;
+            var pendingInput = null;
+
+            document.addEventListener('click', function (e) {
+                // toggle menu
+                var toggle = e.target && e.target.closest ? e.target.closest('.medicine-field__toggle') : null;
+                if (toggle) {
+                    var field = toggle.closest('.medicine-field');
+                    var menu = field ? field.querySelector('.medicine-menu') : null;
+                    if (menu) {
+                        var open = menu.style.display !== 'none';
+                        // close all menus first
+                        document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
+                        menu.style.display = open ? 'none' : 'block';
+                    }
+                    return;
+                }
+                // option selected
+                var opt = e.target && e.target.closest ? e.target.closest('.medicine-option') : null;
+                if (opt) {
+                    var field2 = opt.closest('.medicine-field');
+                    var input = field2 ? field2.querySelector('.td-medicine') : null;
+                    document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
+                    pendingMedicine = opt.getAttribute('data-medicine');
+                    pendingInput = input;
+                    if (pendingMedicine && pendingMedicine !== 'None') {
+                        var label = document.getElementById('medicine-qty-label');
+                        if (label) label.textContent = pendingMedicine;
+                        var modal = document.getElementById('medicine-qty-modal');
+                        var qtyInput = document.getElementById('medicine-qty-input');
+                        if (qtyInput) qtyInput.value = '1';
+                        if (modal) modal.style.display = 'flex';
+                        if (qtyInput) qtyInput.focus();
+                    } else if (pendingMedicine === 'None') {
+                        if (input) input.value = input.value.trim() ? input.value.trim() + ', None' : 'None';
+                    }
+                    return;
+                }
+                // close menus on outside click
+                if (!e.target.closest('.medicine-field')) {
+                    document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
+                }
+            });
+
+            var confirmBtn = document.getElementById('medicine-qty-confirm');
+            var cancelBtn = document.getElementById('medicine-qty-cancel');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function () {
+                    var qtyInput = document.getElementById('medicine-qty-input');
+                    var qty = qtyInput ? (qtyInput.value || '').trim() : '';
+                    if (pendingInput && pendingMedicine) {
+                        var entry = pendingMedicine + (qty ? ' (x' + qty + ')' : '');
+                        pendingInput.value = pendingInput.value.trim()
+                            ? pendingInput.value.trim() + ', ' + entry
+                            : entry;
+                    }
+                    var modal = document.getElementById('medicine-qty-modal');
+                    if (modal) modal.style.display = 'none';
+                    pendingMedicine = null;
+                    pendingInput = null;
+                });
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function () {
+                    var modal = document.getElementById('medicine-qty-modal');
+                    if (modal) modal.style.display = 'none';
+                    pendingMedicine = null;
+                    pendingInput = null;
+                });
+            }
+        })();
 
         function escHtml(s) {
             var d = document.createElement('div');
