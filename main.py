@@ -6674,13 +6674,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 if uid:
                     approved_uids.add(uid)
 
-            done_uids = {
-                str(d.get("_account_uid") or "")
-                for d in self._get_done_procedures_cached()
-                if d.get("_account_uid")
-            }
-
-            approved_count = len(approved_uids - done_uids)
+            approved_count = len(approved_uids)
         except Exception as e:
             print(f"ACCEPTED COUNT FALLBACK: {e}")
             approved_count = self.db.collection_group("Approve").count().get()[0][0].value
@@ -6908,12 +6902,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     uid = ""
                 if uid:
                     approved_uids.add(uid)
-            done_uids = {
-                str(d.get("_account_uid") or "")
-                for d in self._get_done_procedures_cached()
-                if d.get("_account_uid")
-            }
-            approved_count = len(approved_uids - done_uids)
+            approved_count = len(approved_uids)
         except Exception as e:
             print("DASHBOARD STATS ACCEPTED ERROR:", e)
             approved_count = len(approved_uids)

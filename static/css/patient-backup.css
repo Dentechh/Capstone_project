@@ -156,6 +156,3 @@ body.dark-mode .bk-summary strong { color: #7fb0ff; }
 body.dark-mode .bk-status.is-error { color: #fca5a5; }
 body.dark-mode .bk-status.is-ok { color: #86efac; }
 body.dark-mode .bk-warn { background: #2a2410; border-color: #78350f; color: #fde68a; }
-'@
-Set-Content -Path "static/css/patient-backup.css" -Value $css
-echo done

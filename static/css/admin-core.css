@@ -2007,7 +2007,6 @@
         /* The table already scrolls sideways inside .td-records__scroll, so the
            delete cell stays a normal cell rather than stacking. */
         .td-records .td-row-actions { text-align: left; }
-            text-align: center;
         .td-records .td-row-actions { text-align: left; }
     }
 

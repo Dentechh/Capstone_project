@@ -237,7 +237,7 @@ body.dark-mode .notif-action-btn:hover { background: #1e3a8a; color: #64b5f6; bo
 body.dark-mode .notif-action-btn--danger:hover { background: #3b1a1a; color: #f87171; border-color: #f87171; }
 
 /* Dark mode for notif-panel (ensure) */
-body.dark-mode .notif-panel { background: #1e1e1e; color: #e6e6e6; border-color: #33415a; }
+body.dark-mode .notif-panel { 
     background: #1e1e1e;
     color: #e6e6e6;
     border-color: #33415a;

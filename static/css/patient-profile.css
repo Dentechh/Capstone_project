@@ -775,9 +775,7 @@ body.dark-mode .po-row span:first-child { color: #94a3b8; opacity: 1; }
 body.dark-mode .po-row strong { color: #e2e8f0; }
 body.dark-mode .po-note { color: #cbd5e1; opacity: 0.9; }
 body.dark-mode .po-details { color: #e2e8f0; }
-    color: #000;
-    border-color: #64b5f6;
-}
+
 
 .po-note {
     margin: 18px 0 0;
