@@ -424,10 +424,10 @@
                             <col style="width:120px;"> <!-- Notes -->
                             <col style="width:85px;"> <!-- Plan: new charge or follow-up -->
                             <col style="width:105px;"> <!-- Dentist/s -->
-                            <col style="width:95px;"> <!-- Value of Work -->
+                            <col style="width:120px;"> <!-- Value of Work -->
                             <col style="width:95px;"> <!-- Amount Paid -->
                             <col style="width:75px;"> <!-- Balance -->
-                            <col style="width:115px;"> <!-- Next Appointment -->
+                            <col style="width:150px;"> <!-- Next Appointment -->
                             <col style="width:105px;"> <!-- Medicine -->
                             <col style="width:70px;"> <!-- Paid via -->
                             <col style="width:50px;"> <!-- Row actions -->
@@ -515,12 +515,22 @@
                                              aria-hidden="true" title="Show medicines">
                                              <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
                                          </button>
-                                         <div class="medicine-menu" style="display:none;">
-                                             <button type="button" class="medicine-option" data-medicine="None">None</button>
-                                             <button type="button" class="medicine-option" data-medicine="Mefenamic Acid">Mefenamic Acid</button>
-                                             <button type="button" class="medicine-option" data-medicine="Tranexamic Acid">Tranexamic Acid</button>
-                                             <button type="button" class="medicine-option" data-medicine="Amoxicillin">Amoxicillin</button>
-                                             <button type="button" class="medicine-option" data-medicine="Co- amoxiclav">Co- amoxiclav</button>
+                                         <div class="dentist-menu medicine-menu" style="display:none;">
+                                             <button type="button" class="dentist-menu__option medicine-option" data-medicine="None">
+                                                 <span class="dentist-menu__name">None</span>
+                                             </button>
+                                             <button type="button" class="dentist-menu__option medicine-option" data-medicine="Mefenamic Acid">
+                                                 <span class="dentist-menu__name">Mefenamic Acid</span>
+                                             </button>
+                                             <button type="button" class="dentist-menu__option medicine-option" data-medicine="Tranexamic Acid">
+                                                 <span class="dentist-menu__name">Tranexamic Acid</span>
+                                             </button>
+                                             <button type="button" class="dentist-menu__option medicine-option" data-medicine="Amoxicillin">
+                                                 <span class="dentist-menu__name">Amoxicillin</span>
+                                             </button>
+                                             <button type="button" class="dentist-menu__option medicine-option" data-medicine="Co- amoxiclav">
+                                                 <span class="dentist-menu__name">Co- amoxiclav</span>
+                                             </button>
                                          </div>
                                      </div>
                                  </td>
@@ -549,14 +559,15 @@
 
         </div>
 
-            <div id="medicine-qty-modal" class="medicine-qty-modal" style="display:none;" role="dialog" aria-modal="true">
-                <div class="medicine-qty-card">
-                    <h4 class="medicine-qty-title">Quantity</h4>
-                    <p class="medicine-qty-label" id="medicine-qty-label"></p>
-                    <input type="number" id="medicine-qty-input" class="medicine-qty-input" min="1" value="1">
-                    <div class="medicine-qty-actions">
-                        <button type="button" id="medicine-qty-cancel" class="medicine-qty-btn medicine-qty-btn--cancel">Cancel</button>
-                        <button type="button" id="medicine-qty-confirm" class="medicine-qty-btn medicine-qty-btn--confirm">Add</button>
+            <div id="medicine-qty-modal" class="modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="mqTitle">
+                <div class="modal-content" aria-labelledby="mqTitle">
+                    <button type="button" class="modal-x" id="medicine-qty-close" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    <h2 id="mqTitle">Quantity</h2>
+                    <p id="medicine-qty-label"></p>
+                    <input type="number" id="medicine-qty-input" min="1" value="1">
+                    <div class="mq-actions">
+                        <button type="button" id="medicine-qty-cancel" class="mq-btn mq-btn-ghost"><span class="material-symbols-rounded mq-btn__icon" aria-hidden="true">close</span><span class="mq-btn__label">Cancel</span></button>
+                        <button type="button" id="medicine-qty-confirm" class="mq-btn mq-btn-primary"><span class="material-symbols-rounded mq-btn__icon" aria-hidden="true">add</span><span class="mq-btn__label">Add</span></button>
                     </div>
                 </div>
             </div>

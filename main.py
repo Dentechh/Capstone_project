@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 import hashlib
 import hmac
 import os
@@ -1434,10 +1434,81 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         try:
             today = datetime.now(PH_TZ).strftime("%Y-%m-%d")
             upcoming = [e for e in self._load_blocked_slots() if e["date"] >= today]
-            return jsonify(group_blocked_days(upcoming))
+            notices = group_blocked_days(upcoming)
+
+            uid = session.get('uid')
+            archived_filter = request.args.get('archived', '0') == '1'
+
+            if uid:
+                archived_ids = set(self._get_archived_clinic_notices(uid))
+                if archived_filter:
+                    notices = [n for n in notices if n.get("id") in archived_ids]
+                else:
+                    notices = [n for n in notices if n.get("id") not in archived_ids]
+            else:
+                if archived_filter:
+                    notices = []
+
+            return jsonify(notices)
         except Exception as e:
             print("GET CLINIC NOTICES ERROR:", e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    def _account_doc_ref(self, uid):
+        if self.db.collection("google_create_account").document(uid).get().exists:
+            return self.db.collection("google_create_account").document(uid)
+        if self.db.collection(self.Customer_Account).document(uid).get().exists:
+            return self.db.collection(self.Customer_Account).document(uid)
+        return None
+
+    def _get_archived_clinic_notices(self, uid):
+        ref = self._account_doc_ref(uid)
+        if ref is None:
+            return []
+        try:
+            return list(ref.get().to_dict().get("archived_clinic_notices", []) or [])
+        except Exception:
+            return []
+
+    def archive_clinic_notice(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        data = request.get_json(silent=True) or {}
+        nid = data.get("id") or request.form.get("id")
+        if not nid:
+            return jsonify({"error": "Missing id"}), 400
+        ref = self._account_doc_ref(uid)
+        if ref is None:
+            return jsonify({"error": "Not found"}), 404
+        try:
+            ids = self._get_archived_clinic_notices(uid)
+            if nid not in ids:
+                ids.append(nid)
+            ref.update({"archived_clinic_notices": ids})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("ARCHIVE CLINIC NOTICE ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
+
+    def unarchive_clinic_notice(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        data = request.get_json(silent=True) or {}
+        nid = data.get("id") or request.form.get("id")
+        if not nid:
+            return jsonify({"error": "Missing id"}), 400
+        ref = self._account_doc_ref(uid)
+        if ref is None:
+            return jsonify({"error": "Not found"}), 404
+        try:
+            ids = [x for x in self._get_archived_clinic_notices(uid) if x != nid]
+            ref.update({"archived_clinic_notices": ids})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("UNARCHIVE CLINIC NOTICE ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
 
     def _record_schedule_notification(
         self, uid, notif_type, main_collection=None, service="",
@@ -1467,6 +1538,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     "previous_appointment_date": previous_appointment_date,
                     "dentist_name": dentist_name,
                     "created_at": datetime.now(UTC).isoformat(),
+                    "read": False,
+                    "archived": False,
                 })
         except Exception as e:
             print("SCHEDULE NOTIFICATION WRITE ERROR:", e)
@@ -1476,6 +1549,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         uid = session.get('uid')
         if not uid:
             return jsonify({"error": "Not logged in"}), 401
+
+        archived_filter = request.args.get('archived', '0') == '1'
 
         try:
             main_collection = None
@@ -1497,7 +1572,10 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
             out = []
             for d in docs:
-                data = d.to_dict()
+                data = d.to_dict() or {}
+                is_archived = bool(data.get("archived", False))
+                if archived_filter != is_archived:
+                    continue
                 out.append({
                     "id": d.id,
                     "type": data.get("type", ""),
@@ -1506,12 +1584,95 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     "previous_appointment_date": data.get("previous_appointment_date", ""),
                     "dentist_name": data.get("dentist_name", ""),
                     "created_at": data.get("created_at", ""),
+                    "read": data.get("read", True),
+                    "archived": is_archived,
                 })
             return jsonify(out)
         except Exception as e:
             print("GET SCHEDULE NOTIFICATIONS ERROR:", e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
 
+    def _schedule_collection(self, uid):
+        if self.db.collection("google_create_account").document(uid).get().exists:
+            return self.db.collection("google_create_account").document(uid).collection("schedule_notifications")
+        if self.db.collection(self.Customer_Account).document(uid).get().exists:
+            return self.db.collection(self.Customer_Account).document(uid).collection("schedule_notifications")
+        return None
+
+    def mark_schedule_notifications_read(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        col = self._schedule_collection(uid)
+        if col is None:
+            return jsonify({"success": True})
+        ids = (request.get_json(silent=True) or {}).get("ids")
+        try:
+            if ids:
+                for nid in ids:
+                    col.document(nid).update({"read": True})
+            else:
+                for d in col.stream():
+                    if not (d.to_dict() or {}).get("read", False):
+                        d.reference.update({"read": True})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("MARK SCHEDULE NOTIFICATIONS READ ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
+
+    def archive_schedule_notification(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        data = request.get_json(silent=True) or {}
+        nid = data.get("id") or request.form.get("id")
+        if not nid:
+            return jsonify({"error": "Missing id"}), 400
+        col = self._schedule_collection(uid)
+        if col is None:
+            return jsonify({"error": "Not found"}), 404
+        try:
+            col.document(nid).update({"archived": True, "read": True})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("ARCHIVE SCHEDULE NOTIFICATION ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
+
+    def unarchive_schedule_notification(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        data = request.get_json(silent=True) or {}
+        nid = data.get("id") or request.form.get("id")
+        if not nid:
+            return jsonify({"error": "Missing id"}), 400
+        col = self._schedule_collection(uid)
+        if col is None:
+            return jsonify({"error": "Not found"}), 404
+        try:
+            col.document(nid).update({"archived": False})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("UNARCHIVE SCHEDULE NOTIFICATION ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
+
+    def delete_schedule_notification(self):
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"error": "Not logged in"}), 401
+        data = request.get_json(silent=True) or {}
+        nid = data.get("id") or request.form.get("id")
+        if not nid:
+            return jsonify({"error": "Missing id"}), 400
+        col = self._schedule_collection(uid)
+        if col is None:
+            return jsonify({"error": "Not found"}), 404
+        try:
+            col.document(nid).delete()
+            return jsonify({"success": True})
+        except Exception as e:
+            print("DELETE SCHEDULE NOTIFICATION ERROR:", e)
+            return jsonify({"error": "Something went wrong."}), 500
 
     def admin_block_slot(self):
         if not session.get('admin_logged_in'):
@@ -6058,6 +6219,122 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         return rows, next_cursor
 
+    def _fetch_user_management_page(self, page=1, page_size=None):
+        """Page-based variant of user management: same data/sort as
+        _fetch_manageable_accounts_page, but sliced by page number so the
+        UI can render numbered pagination like My Patients."""
+        try:
+            page = int(page)
+        except (TypeError, ValueError):
+            page = 1
+        if page < 1:
+            page = 1
+        page_size = page_size or self.PATIENTS_PAGE_SIZE
+        try:
+            page_size = int(page_size)
+        except (TypeError, ValueError):
+            page_size = self.PATIENTS_PAGE_SIZE
+        if page_size < 1:
+            page_size = self.PATIENTS_PAGE_SIZE
+        if page_size > 100:
+            page_size = 100
+
+        all_docs = self._get_manageable_accounts_cached()
+        docs = [
+            (account_uid, data) for account_uid, data in all_docs
+            if data.get("provider") in ("google", "password")
+            and not data.get("login_removed")
+        ]
+
+        def _name_sort_key(d):
+            data = d[1]
+            full = (
+                f"{data.get('firstname') or ''} {data.get('lastname') or ''}".strip()
+                or data.get("name") or ""
+            )
+            return (full.lower(), d[0])
+
+        docs.sort(key=_name_sort_key)
+
+        total = len(docs)
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        if page > total_pages:
+            page = total_pages
+        offset = (page - 1) * page_size
+        page_docs = docs[offset:offset + page_size]
+
+        account_to_patient = self._get_account_to_patient_map()
+        identity_cache = {}
+        now = datetime.now(UTC)
+        ONLINE_THRESHOLD_SECONDS = 30
+
+        rows = []
+        for account_uid, account_data in page_docs:
+            patient_id = account_to_patient.get(account_uid, "")
+
+            first = account_data.get("firstname") or ""
+            last = account_data.get("lastname") or ""
+
+            contact_number, sex, civil_status = self._resolve_account_identity(
+                account_uid, account_data, identity_cache
+            )
+
+            last_active_str = account_data.get("last_active")
+            last_logout_str = account_data.get("last_logout")
+            is_online = False
+            if last_active_str:
+                try:
+                    last_active = datetime.fromisoformat(last_active_str.replace("Z", "+00:00"))
+                    if (now - last_active).total_seconds() <= ONLINE_THRESHOLD_SECONDS:
+                        if not last_logout_str:
+                            is_online = True
+                        else:
+                            last_logout = datetime.fromisoformat(last_logout_str.replace("Z", "+00:00"))
+                            if last_active > last_logout:
+                                is_online = True
+                except Exception:
+                    pass
+
+            rows.append({
+                "patient_id": patient_id,
+                "uid": account_uid,
+                "first_name": first,
+                "middle_name": account_data.get("middlename", ""),
+                "last_name": last,
+                "display_name": self.format_patient_display_name(
+                    first, account_data.get("middlename", ""), last
+                ) or account_data.get("name") or "",
+                "contact_number": contact_number,
+                "email": account_data.get("email", ""),
+                "sex": sex,
+                "CivilStatus": civil_status,
+                "disabled": bool(account_data.get("disabled", False)),
+                "is_online": is_online,
+            })
+
+        return {
+            "success": True,
+            "rows": rows,
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
+        }
+
+    def admin_user_management_page(self):
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            page = int(request.args.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = int(request.args.get("page_size", self.PATIENTS_PAGE_SIZE))
+        except (TypeError, ValueError):
+            page_size = self.PATIENTS_PAGE_SIZE
+        result = self._fetch_user_management_page(page=page, page_size=page_size)
+        return jsonify(result)
+
     def admin_manageable_accounts_page(self):
         if not session.get('admin_logged_in'):
             return jsonify({"success": False, "message": "Unauthorized"}), 403
@@ -6580,13 +6857,26 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         # total patients
         total_patients = 0
+        patients_list = []
+        patient_name_by_uid = {}
         try:
-            for _, d in self._get_manageable_accounts_cached():
+            for patient_id, pdata in self._get_patients_cached():
+                account_uid = str(pdata.get("account_uid") or "").strip()
+                if account_uid:
+                    first = str(pdata.get("first_name", "")).strip()
+                    middle = str(pdata.get("middle_name", "")).strip()
+                    last = str(pdata.get("last_name", "")).strip()
+                    full_name = " ".join(part for part in [first, middle, last] if part) or "Unnamed Patient"
+                    patient_name_by_uid[account_uid] = full_name
+            for uid, d in self._get_manageable_accounts_cached():
                 if not d.get("has_history"):
                     continue
                 if period != "overall" and not in_range(d.get("created_at") or d.get("last_approved_at")):
                     continue
                 total_patients += 1
+                account_uid = str(uid).strip()
+                patients_list.append(patient_name_by_uid.get(account_uid, "Unnamed Patient"))
+            patients_list.sort(key=lambda n: n.lower())
         except Exception as e:
             print("DASHBOARD STATS TOTAL PATIENTS ERROR:", e)
 
@@ -6635,6 +6925,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "pending_count": pending_count,
             "total_patients": total_patients,
             "urgency_counts": urgency_counts,
+            "patients": patients_list,
             "range_label": range_label,
         }
         payload.update(extra)
@@ -11517,6 +11808,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/assign_dentist", methods=["POST"])(self.admin_assign_dentist)
         self.app.route("/admin/patient_avatar", methods=["POST"])(self.admin_patient_avatar)
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
+        self.app.route("/admin/user_management_page")(self.admin_user_management_page)
         self.app.route("/api/heartbeat", methods=["POST"])(self.heartbeat)
         self.app.route("/get_patient/<uid>")(self.get_patient)
         self.app.route("/admin_login", methods=["GET", "POST"])(self.adminLogin)
@@ -11538,7 +11830,13 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/closure_summary")(self.admin_closure_summary)
         self.app.route("/admin/activity_log")(self.admin_activity_log)
         self.app.route("/get_clinic_notices")(self.get_clinic_notices)
+        self.app.route("/archive_clinic_notice", methods=["POST"])(self.archive_clinic_notice)
+        self.app.route("/unarchive_clinic_notice", methods=["POST"])(self.unarchive_clinic_notice)
         self.app.route("/get_schedule_notifications")(self.get_schedule_notifications)
+        self.app.route("/mark_schedule_notifications_read", methods=["POST"])(self.mark_schedule_notifications_read)
+        self.app.route("/archive_schedule_notification", methods=["POST"])(self.archive_schedule_notification)
+        self.app.route("/unarchive_schedule_notification", methods=["POST"])(self.unarchive_schedule_notification)
+        self.app.route("/delete_schedule_notification", methods=["POST"])(self.delete_schedule_notification)
         self.app.route("/admin/day_schedule")(self.admin_day_schedule)
         self.app.route("/admin/reschedule_appointment", methods=["POST"])(self.admin_reschedule_appointment)
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)

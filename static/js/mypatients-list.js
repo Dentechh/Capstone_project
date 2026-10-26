@@ -303,8 +303,14 @@ function buildMyPatientRow(p) {
                 const info = document.getElementById('myPatientsPageInfo');
                 const prevBtn = document.getElementById('myPatientsPrevBtn');
                 const nextBtn = document.getElementById('myPatientsNextBtn');
-                if (prevBtn) prevBtn.disabled = state.page <= 1;
-                if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
+                if (prevBtn) {
+                    prevBtn.disabled = state.page <= 1;
+                    prevBtn.style.display = state.page <= 1 ? 'none' : '';
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = state.page >= state.totalPages;
+                    nextBtn.style.display = state.page >= state.totalPages ? 'none' : '';
+                }
                 if (info) info.textContent = 'Page ' + state.page + ' of ' + state.totalPages + ' (' + state.total + ' patients)';
                 if (!numbers) return;
                 numbers.innerHTML = '';

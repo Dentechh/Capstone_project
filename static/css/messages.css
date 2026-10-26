@@ -33,8 +33,20 @@ body.dark-mode,body.dark,[data-theme="dark"]{
 .cm-badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 6px;border-radius:10px;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;font:700 11px/19px system-ui,sans-serif;text-align:center;box-shadow:0 2px 6px rgba(239,68,68,.45);animation:cm-pulse 2s ease-in-out infinite}
 .cm-badge[hidden]{display:none}
 @keyframes cm-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-#msgBtn{position:relative;transition:transform .15s ease}
-#msgBtn:hover{transform:translateY(-1px)}
+#msgBtn{
+  position:relative;transition:transform .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background:linear-gradient(135deg, rgba(13,71,161,0.10), rgba(13,71,161,0.04));
+  border:1px solid rgba(13,71,161,0.18);
+  border-radius:50%;
+  width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);
+  box-shadow:0 4px 14px rgba(13,71,161,0.12), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+#msgBtn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(13,71,161,0.2), inset 0 1px 0 rgba(255,255,255,0.5)}
+#msgBtn:active{transform:scale(0.92)}
+#msgBtn .material-symbols-rounded{font-size:22px;transition:transform .4s cubic-bezier(0.34,1.56,0.64,1)}
+#msgBtn:hover .material-symbols-rounded{transform:rotate(8deg) scale(1.05)}
 
 /* ---------- patient dropdown chat window ---------- */
 .cm-panel{
@@ -63,12 +75,16 @@ body.dark-mode,body.dark,[data-theme="dark"]{
 }
 .cm-head .cm-status{width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;position:absolute;bottom:2px;right:2px}
 .cm-head b{display:block;font-size:15px;position:relative;z-index:1}
-.cm-head small{opacity:.9;font-size:11.5px;display:block;position:relative;z-index:1}
+.cm-head .cm-av .material-symbols-rounded{
+  font-size:22px;line-height:1;font-variation-settings:'FILL' 1;
+}
 .cm-head .cm-x{
   margin-left:auto;background:rgba(255,255,255,.15);border:0;color:#fff;
-  width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:20px;line-height:1;
+  width:40px;height:40px;border-radius:50%;cursor:pointer;
   display:grid;place-items:center;transition:background .15s,transform .15s;position:relative;z-index:1;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.2);
 }
+.cm-head .cm-x svg{width:18px;height:18px;}
 .cm-head .cm-x:hover{background:rgba(255,255,255,.3);transform:rotate(90deg)}
 
 .cm-msgs{
@@ -131,7 +147,9 @@ body.dark-mode,body.dark,[data-theme="dark"]{
   color:var(--cm-blue);border-radius:10px;cursor:pointer;font-size:18px;
   display:grid;place-items:center;transition:transform .15s,background .15s,border-color .15s;flex:none;
 }
-.cm-form .cm-emoji-btn:hover{transform:scale(1.06);background:var(--cm-bg);border-color:var(--cm-blue)}
+.cm-form .cm-emoji-btn .material-symbols-rounded{
+  font-size:20px;line-height:1;
+}
 .cm-emoji-picker{
   position:absolute;bottom:62px;left:12px;right:12px;
   background:var(--cm-bg);border:1px solid var(--cm-line);border-radius:var(--cm-radius-sm);
@@ -308,7 +326,6 @@ body.dark-mode,body.dark,[data-theme="dark"]{
 }
 @media (max-width:900px){
   .cm-admin{height:calc(100vh - 110px);min-height:360px}
-  .cm-list{width:230px}
   .cm-pane .cm-head{padding:10px 12px;gap:8px}
   .cm-pane .cm-head .cm-av{width:36px;height:36px;font-size:13px}
   .cm-pane .cm-head b{font-size:14px}
@@ -323,7 +340,6 @@ body.dark-mode,body.dark,[data-theme="dark"]{
 }
 @media (max-width:1024px){
   .cm-admin{height:calc(100vh - 120px);min-height:380px}
-  .cm-list{width:270px}
 }
 @media (max-width:768px){
   .cm-admin{height:calc(100vh - 100px);min-height:340px;border-radius:14px}

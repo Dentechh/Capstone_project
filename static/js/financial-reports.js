@@ -1100,8 +1100,9 @@ let procChartRequestId = 0;
         // (with how many rows each has), so there is nothing to maintain by
         // hand. Keeps the current choice if it still exists, else resets.
         function populateUnpaidProcedureOptions() {
-            const sel = document.getElementById('unpaidProcedureSelect');
-            if (!sel) return;
+            const panel = document.getElementById('unpaidProcedurePanel');
+            const label = document.getElementById('unpaidProcedureLabel');
+            if (!panel) return;
             const byKey = new Map();
             unpaidRows.forEach(r => {
                 const key = unpaidProcKey(r);
@@ -1113,21 +1114,73 @@ let procChartRequestId = 0;
             if (unpaidProcedureFilter !== 'all' && !byKey.has(unpaidProcedureFilter)) {
                 unpaidProcedureFilter = 'all';
             }
-            const options = ['<option value="all">All procedures</option>'];
+            const items = [];
+            items.push('<button type="button" class="unpaid-proc-option' + (unpaidProcedureFilter === 'all' ? ' is-selected' : '') + '" data-value="all" role="option" aria-selected="' + (unpaidProcedureFilter === 'all') + '">All procedures</button>');
             Array.from(byKey.entries())
                 .sort((a, b) => a[1].label.localeCompare(b[1].label))
                 .forEach(([key, entry]) => {
-                    options.push('<option value="' + unpaidEsc(key) + '">' +
-                        unpaidEsc(entry.label) + ' (' + entry.count + ')</option>');
+                    items.push('<button type="button" class="unpaid-proc-option' + (unpaidProcedureFilter === key ? ' is-selected' : '') + '" data-value="' + unpaidEsc(key) + '" role="option" aria-selected="' + (unpaidProcedureFilter === key) + '">' +
+                        unpaidEsc(entry.label) + ' (' + entry.count + ')</button>');
                 });
-            sel.innerHTML = options.join('');
-            sel.value = unpaidProcedureFilter;
+            panel.innerHTML = items.join('');
+            panel.querySelectorAll('.unpaid-proc-option').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    setUnpaidProcedure(btn.getAttribute('data-value'));
+                    closeUnpaidProcedureDropdown();
+                });
+            });
+            // update label
+            if (label) {
+                if (unpaidProcedureFilter === 'all') label.textContent = 'All procedures';
+                else {
+                    const found = Array.from(byKey.entries()).find(([k]) => k === unpaidProcedureFilter);
+                    label.textContent = found ? found[1].label + ' (' + found[1].count + ')' : 'All procedures';
+                }
+            }
         }
 
         function setUnpaidProcedure(value) {
             unpaidProcedureFilter = value || 'all';
+            // update label
+            const label = document.getElementById('unpaidProcedureLabel');
+            const panel = document.getElementById('unpaidProcedurePanel');
+            if (label && panel) {
+                const sel = panel.querySelector('.unpaid-proc-option.is-selected');
+                // recompute label
+                if (unpaidProcedureFilter === 'all') label.textContent = 'All procedures';
+                else {
+                    const btn = panel.querySelector('.unpaid-proc-option[data-value="' + unpaidProcedureFilter.replace(/"/g, '\\"') + '"]');
+                    if (btn) label.textContent = btn.textContent;
+                }
+            }
+            // update selected class
+            if (panel) {
+                panel.querySelectorAll('.unpaid-proc-option').forEach(b => {
+                    const isSel = b.getAttribute('data-value') === unpaidProcedureFilter;
+                    b.classList.toggle('is-selected', isSel);
+                    b.setAttribute('aria-selected', isSel);
+                });
+            }
             renderUnpaidTable();
         }
+
+        function toggleUnpaidProcedureDropdown() {
+            const dd = document.getElementById('unpaidProcedureDropdown');
+            const trigger = document.getElementById('unpaidProcedureTrigger');
+            if (!dd || !trigger) return;
+            const open = dd.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', open);
+        }
+        function closeUnpaidProcedureDropdown() {
+            const dd = document.getElementById('unpaidProcedureDropdown');
+            const trigger = document.getElementById('unpaidProcedureTrigger');
+            if (dd) dd.classList.remove('is-open');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+        document.addEventListener('click', function (e) {
+            const dd = document.getElementById('unpaidProcedureDropdown');
+            if (dd && !dd.contains(e.target)) closeUnpaidProcedureDropdown();
+        });
 
         function getUnpaidFiltered() {
             const searchEl = document.getElementById('unpaidSearch');
@@ -1404,6 +1457,10 @@ let dashboardNav = { period: 'overall', week: 0, month: null, year: null, canPre
 let dashboardStatsRequestId = 0;
 
 function loadDashboardStats(period) {
+    const patientsBody = document.getElementById('dashboardPatientsBody');
+    if (patientsBody) patientsBody.innerHTML =
+        '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>Loading patients...</p></div>';
+
     if (period !== dashboardNav.period) {
         dashboardNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
             minYear: dashboardNav.minYear, maxYear: dashboardNav.maxYear, maxMonth: dashboardNav.maxMonth };
@@ -1432,6 +1489,29 @@ function loadDashboardStats(period) {
                 if (approvedEl) { approvedEl.setAttribute('data-target', data.approved_count); approvedEl.textContent = data.approved_count; }
                 if (pendingEl) { pendingEl.setAttribute('data-target', data.pending_count); pendingEl.textContent = data.pending_count; }
                 if (totalEl) { totalEl.setAttribute('data-target', data.total_patients); totalEl.textContent = data.total_patients; }
+
+                const patientsBody = document.getElementById('dashboardPatientsBody');
+                if (patientsBody) {
+                    patientsBody.innerHTML = '';
+                    const patients = Array.isArray(data.patients) ? data.patients : [];
+                    const hint = document.getElementById('dashboardPatientsHint');
+                    if (hint) hint.textContent = patients.length
+                        ? (patients.length + ' patient' + (patients.length === 1 ? '' : 's') + ' for the selected period')
+                        : 'No patients for the selected period';
+                    if (patients.length === 0) {
+                        patientsBody.innerHTML = '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>No patients for this period.</p><span class="recent-empty__hint">Try a different period.</span></div>';
+                    } else {
+                        patients.forEach(function (name) {
+                            const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
+                            const item = document.createElement('div');
+                            item.className = 'recent-item';
+                            item.innerHTML =
+                                '<span class="recent-avatar" aria-hidden="true">' + initial + '</span>' +
+                                '<span class="recent-info"><strong>' + (name || 'Unnamed Patient') + '</strong></span>';
+                            patientsBody.appendChild(item);
+                        });
+                    }
+                }
 
                 dashboardNav.week = data.week || 0;
                 dashboardNav.month = data.month || null;

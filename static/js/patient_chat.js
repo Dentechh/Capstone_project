@@ -15,12 +15,12 @@
     var panel = document.createElement('div');
     panel.className = 'cm-panel';
     panel.innerHTML =
-        '<div class="cm-head"><div class="cm-av">🦷</div><div><b>Dr. Capizonda</b><small>Capizonda Dental Clinic</small></div>' +
-        '<button class="cm-x" aria-label="Close">&times;</button></div>' +
+        '<div class="cm-head"><div class="cm-av"><span class="material-symbols-rounded" aria-hidden="true">dentistry</span></div><div><b>Dr. Capizonda</b><small>Capizonda Dental Clinic</small></div>' +
+        '<button class="cm-x" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>' +
         '<div class="cm-msgs"><div class="cm-empty">Say hello! Send a message and the dentist will reply here.</div><button class="cm-scroll-btn" type="button" aria-label="Scroll to bottom">↓</button></div>' +
         '<div class="cm-note">Not for emergencies. Please call the clinic for urgent concerns.</div>' +
         '<div class="cm-emoji-picker"></div>' +
-        '<form class="cm-form"><button type="button" class="cm-emoji-btn" aria-label="Emoji" title="Emoji">😊</button><textarea rows="1" maxlength="1000" placeholder="Type a message..."></textarea>' +
+        '<form class="cm-form"><button type="button" class="cm-emoji-btn" aria-label="Emoji" title="Emoji"><span class="material-symbols-rounded" aria-hidden="true">sentiment_satisfied</span></button><textarea rows="1" maxlength="1000" placeholder="Type a message..."></textarea>' +
         '<button type="submit" aria-label="Send"><span class="material-symbols-rounded" aria-hidden="true">send</span></button></form>';
     document.body.appendChild(panel);
 

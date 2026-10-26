@@ -1266,12 +1266,12 @@ function showSection(sectionId) {
                 '<input type="text" class="td-medicine" value="' + escHtml(data.medicine || '') + '" placeholder="Medicines">' +
                 '<button type="button" class="medicine-field__toggle" tabindex="-1" aria-hidden="true" title="Show medicines">' +
                 '<span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span></button>' +
-                '<div class="medicine-menu" style="display:none;">' +
-                '<button type="button" class="medicine-option" data-medicine="None">None</button>' +
-                '<button type="button" class="medicine-option" data-medicine="Mefenamic Acid">Mefenamic Acid</button>' +
-                '<button type="button" class="medicine-option" data-medicine="Tranexamic Acid">Tranexamic Acid</button>' +
-                '<button type="button" class="medicine-option" data-medicine="Amoxicillin">Amoxicillin</button>' +
-                '<button type="button" class="medicine-option" data-medicine="Co- amoxiclav">Co- amoxiclav</button>' +
+                '<div class="dentist-menu medicine-menu" style="display:none;">' +
+                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="None"><span class="dentist-menu__name">None</span></button>' +
+                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Mefenamic Acid"><span class="dentist-menu__name">Mefenamic Acid</span></button>' +
+                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Tranexamic Acid"><span class="dentist-menu__name">Tranexamic Acid</span></button>' +
+                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Amoxicillin"><span class="dentist-menu__name">Amoxicillin</span></button>' +
+                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Co- amoxiclav"><span class="dentist-menu__name">Co- amoxiclav</span></button>' +
                 '</div></div></td>' +
 
                 /* Status is now worked out by the server from value and payments,
@@ -1403,80 +1403,6 @@ function showSection(sectionId) {
             if (!cell) return;
             tdUpdateMedicineValue(cell);
         });
-
-        // Medicine dropdown + quantity modal.
-        (function wireMedicineField() {
-            var pendingMedicine = null;
-            var pendingInput = null;
-
-            document.addEventListener('click', function (e) {
-                // toggle menu
-                var toggle = e.target && e.target.closest ? e.target.closest('.medicine-field__toggle') : null;
-                if (toggle) {
-                    var field = toggle.closest('.medicine-field');
-                    var menu = field ? field.querySelector('.medicine-menu') : null;
-                    if (menu) {
-                        var open = menu.style.display !== 'none';
-                        // close all menus first
-                        document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
-                        menu.style.display = open ? 'none' : 'block';
-                    }
-                    return;
-                }
-                // option selected
-                var opt = e.target && e.target.closest ? e.target.closest('.medicine-option') : null;
-                if (opt) {
-                    var field2 = opt.closest('.medicine-field');
-                    var input = field2 ? field2.querySelector('.td-medicine') : null;
-                    document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
-                    pendingMedicine = opt.getAttribute('data-medicine');
-                    pendingInput = input;
-                    if (pendingMedicine && pendingMedicine !== 'None') {
-                        var label = document.getElementById('medicine-qty-label');
-                        if (label) label.textContent = pendingMedicine;
-                        var modal = document.getElementById('medicine-qty-modal');
-                        var qtyInput = document.getElementById('medicine-qty-input');
-                        if (qtyInput) qtyInput.value = '1';
-                        if (modal) modal.style.display = 'flex';
-                        if (qtyInput) qtyInput.focus();
-                    } else if (pendingMedicine === 'None') {
-                        if (input) input.value = input.value.trim() ? input.value.trim() + ', None' : 'None';
-                    }
-                    return;
-                }
-                // close menus on outside click
-                if (!e.target.closest('.medicine-field')) {
-                    document.querySelectorAll('.medicine-menu').forEach(function (m) { m.style.display = 'none'; });
-                }
-            });
-
-            var confirmBtn = document.getElementById('medicine-qty-confirm');
-            var cancelBtn = document.getElementById('medicine-qty-cancel');
-            if (confirmBtn) {
-                confirmBtn.addEventListener('click', function () {
-                    var qtyInput = document.getElementById('medicine-qty-input');
-                    var qty = qtyInput ? (qtyInput.value || '').trim() : '';
-                    if (pendingInput && pendingMedicine) {
-                        var entry = pendingMedicine + (qty ? ' (x' + qty + ')' : '');
-                        pendingInput.value = pendingInput.value.trim()
-                            ? pendingInput.value.trim() + ', ' + entry
-                            : entry;
-                    }
-                    var modal = document.getElementById('medicine-qty-modal');
-                    if (modal) modal.style.display = 'none';
-                    pendingMedicine = null;
-                    pendingInput = null;
-                });
-            }
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', function () {
-                    var modal = document.getElementById('medicine-qty-modal');
-                    if (modal) modal.style.display = 'none';
-                    pendingMedicine = null;
-                    pendingInput = null;
-                });
-            }
-        })();
 
         function escHtml(s) {
             var d = document.createElement('div');
@@ -1802,3 +1728,133 @@ function showSection(sectionId) {
                 rebuildDashboardCharts();
             }
         });
+
+// Medicine dropdown + quantity modal.
+        (function wireMedicineField() {
+            var pendingMedicine = null;
+            var pendingInput = null;
+            var activeField = null;
+            var activeInput = null;
+
+            document.addEventListener('click', function (e) {
+                // toggle menu
+                var toggle = e.target && e.target.closest ? e.target.closest('.medicine-field__toggle') : null;
+                if (toggle) {
+                    var field = toggle.closest('.medicine-field');
+                    var menu = field ? field.querySelector('.medicine-menu') : null;
+                    if (menu) {
+                        var isActive = (activeField === field);
+                        // close all menus first
+                        document.querySelectorAll('.medicine-menu').forEach(function (m) {
+                            m.style.display = 'none';
+                            // move back from body if previously portaled by old code
+                            if (m.parentNode === document.body && m._originParent) {
+                                m._originParent.appendChild(m);
+                                m._originParent = null;
+                            }
+                        });
+                        activeField = null;
+                        activeInput = null;
+                        if (!isActive) {
+                            activeField = field;
+                            activeInput = field ? field.querySelector('.td-medicine') : null;
+                            // portal to body to escape table cell clipping, but use absolute
+                            // (not fixed) so the menu scrolls naturally with the page instead of
+                            // staying pinned to the viewport
+                            if (!menu._originParent) menu._originParent = menu.parentNode;
+                            var rect = toggle.getBoundingClientRect();
+                            var inputEl = field ? field.querySelector('.td-medicine') : null;
+                            var inputRect = inputEl ? inputEl.getBoundingClientRect() : rect;
+                            document.body.appendChild(menu);
+                            menu.style.position = 'absolute';
+                            menu.style.top = (inputRect.top + window.scrollY) + 'px';
+                            menu.style.left = (inputRect.left + window.scrollX) + 'px';
+                            menu.style.zIndex = '1000';
+                            menu.style.display = 'block';
+                        }
+                    }
+                    return;
+                }
+                // option selected
+                var opt = e.target && e.target.closest ? e.target.closest('.medicine-option') : null;
+                if (opt) {
+                    var field2 = activeField;
+                    var input = activeInput;
+                    document.querySelectorAll('.medicine-menu').forEach(function (m) {
+                        m.style.display = 'none';
+                        if (m.parentNode === document.body && m._originParent) {
+                            m._originParent.appendChild(m);
+                            m.style.position = '';
+                            m.style.top = '';
+                            m.style.left = '';
+                        }
+                    });
+                    activeField = null;
+                    activeInput = null;
+                    pendingMedicine = opt.getAttribute('data-medicine');
+                    pendingInput = input;
+                    if (pendingMedicine && pendingMedicine !== 'None') {
+                        var label = document.getElementById('medicine-qty-label');
+                        if (label) label.textContent = pendingMedicine;
+                        var modal = document.getElementById('medicine-qty-modal');
+                        var qtyInput = document.getElementById('medicine-qty-input');
+                        if (qtyInput) qtyInput.value = '1';
+                        if (modal) modal.style.display = 'flex';
+                        if (qtyInput) qtyInput.focus();
+                    } else if (pendingMedicine === 'None') {
+                        if (input) input.value = input.value.trim() ? input.value.trim() + ', None' : 'None';
+                    }
+                    return;
+                }
+                // close menus on outside click
+                if (!e.target.closest('.medicine-field') && !e.target.closest('.medicine-menu')) {
+                    document.querySelectorAll('.medicine-menu').forEach(function (m) {
+                        m.style.display = 'none';
+                        if (m.parentNode === document.body && m._originParent) {
+                            m._originParent.appendChild(m);
+                            m.style.position = '';
+                            m.style.top = '';
+                            m.style.left = '';
+                        }
+                    });
+                activeField = null;
+                activeInput = null;
+            }
+            });
+
+            var confirmBtn = document.getElementById('medicine-qty-confirm');
+            var cancelBtn = document.getElementById('medicine-qty-cancel');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function () {
+                    var qtyInput = document.getElementById('medicine-qty-input');
+                    var qty = qtyInput ? (qtyInput.value || '').trim() : '';
+                    if (pendingInput && pendingMedicine) {
+                        var entry = pendingMedicine + (qty ? ' (x' + qty + ')' : '');
+                        pendingInput.value = pendingInput.value.trim()
+                            ? pendingInput.value.trim() + ', ' + entry
+                            : entry;
+                    }
+                    var modal = document.getElementById('medicine-qty-modal');
+                    if (modal) modal.style.display = 'none';
+                    pendingMedicine = null;
+                    pendingInput = null;
+                });
+            }
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function () {
+                    var modal = document.getElementById('medicine-qty-modal');
+                    if (modal) modal.style.display = 'none';
+                    pendingMedicine = null;
+                    pendingInput = null;
+                });
+            }
+            var closeBtn = document.getElementById('medicine-qty-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function () {
+                    var modal = document.getElementById('medicine-qty-modal');
+                    if (modal) modal.style.display = 'none';
+                    pendingMedicine = null;
+                    pendingInput = null;
+                });
+            }
+        })();

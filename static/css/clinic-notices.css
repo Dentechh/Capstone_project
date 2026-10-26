@@ -173,8 +173,71 @@
     overflow-wrap: anywhere;
 }
 
-/* Dark mode */
-body.dark-mode .notif-panel {
+/* Section head row (title + archive toggle) */
+.notif-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 18px 8px;
+    border-bottom: 1px solid #eef2f7;
+}
+.notif-section-head .notif-head {
+    padding: 0;
+    border-bottom: none;
+    flex: 1;
+}
+.notif-toggle {
+    font: 600 11px/1 'Kumbh Sans', sans-serif;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #0d47a1;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+}
+.notif-toggle:hover {
+    background: #eaf2fc;
+    border-color: #0d47a1;
+}
+
+/* Per-item action buttons (archive / restore / delete) */
+.notif-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+}
+.notif-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.notif-action-btn .material-symbols-rounded { font-size: 16px; line-height: 1; }
+.notif-action-btn:hover { background: #eef4fb; color: #0d47a1; border-color: #93c5fd; transform: translateY(-1px); }
+.notif-action-btn--danger:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
+
+body.dark-mode .notif-section-head { border-bottom-color: #2d2d2d; }
+body.dark-mode .notif-toggle { background: #131a26; border-color: #33415a; color: #64b5f6; }
+body.dark-mode .notif-toggle:hover { background: #1e3a8a; border-color: #64b5f6; }
+body.dark-mode .notif-action-btn { background: #131a26; border-color: #33415a; color: #94a3b8; }
+body.dark-mode .notif-action-btn:hover { background: #1e3a8a; color: #64b5f6; border-color: #64b5f6; }
+body.dark-mode .notif-action-btn--danger:hover { background: #3b1a1a; color: #f87171; border-color: #f87171; }
+
+/* Dark mode for notif-panel (ensure) */
+body.dark-mode .notif-panel { background: #1e1e1e; color: #e6e6e6; border-color: #33415a; }
     background: #1e1e1e;
     color: #e6e6e6;
     border-color: #33415a;

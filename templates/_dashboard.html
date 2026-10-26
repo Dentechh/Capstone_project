@@ -111,6 +111,22 @@
                 </a>
             </div>
 
+            <!-- Patients This Period -->
+            <div class="recent-activity" id="dashboardPatientsCard">
+                <div class="recent-header">
+                    <div class="recent-header__text">
+                        <h3>Patients This Period</h3>
+                        <p id="dashboardPatientsHint">Full names of patients for the selected period</p>
+                    </div>
+                </div>
+                <div class="recent-list" id="dashboardPatientsBody">
+                    <div class="recent-empty">
+                        <span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span>
+                        <p>Loading patients...</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Urgency breakdown. Two cards, so the grid is two columns: it was
                  repeat(3, 1fr) with only two children, which left a visibly empty
                  third cell under the stat cards.

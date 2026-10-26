@@ -2,6 +2,14 @@
     PATIENT PROFILE SPECIFIC
     ========================= */
 
+.profile-back-row {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 0 12px 0;
+    display: flex;
+    justify-content: flex-start;
+}
+
 .btn-back {
     display: inline-flex;
     align-items: center;
@@ -9,24 +17,25 @@
     flex: 0 0 auto;
     width: max-content;
     white-space: nowrap;
-    margin: 0 100% 0 0; /* 100% right margin forces its own row without stretching */
-    padding: 10px 18px 10px 13px;
+    margin: 0; /* spacing handled by .profile-back-row */
+    padding: 4px 10px 4px 8px;
     background: #f8fafc;
     color: var(--navy);
     border: 1px solid rgba(13, 71, 161, 0.30);
     border-radius: 10px;
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 600;
     line-height: 1;
     letter-spacing: 0.01em;
     text-decoration: none;
-    cursor: pointer;
+    min-height: 0;
+    height: auto;
     transition: background-color 0.18s ease, border-color 0.18s ease,
                 color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
 }
 
 .btn-back__icon {
-    font-size: 19px;
+    font-size: 15px;
     line-height: 1;
     transition: transform 0.18s ease;
 }
@@ -69,7 +78,7 @@ body.dark-mode .btn-back:hover {
 
 .profile-card {
     background: #ffffff;
-    border: 1px solid rgba(13, 71, 161, 0.18);
+    border: 1px solid rgba(13, 71, 161, 0.25);
     border-radius: 20px;
     padding: 40px;
     width: 100%;
@@ -78,8 +87,10 @@ body.dark-mode .btn-back:hover {
     flex-wrap: wrap;
     column-gap: 40px;
     row-gap: 24px;
-    box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08);
+    box-shadow: 0 4px 16px rgba(13, 71, 161, 0.12);
     margin-bottom: 30px;
+    user-select: none;
+    cursor: default;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
@@ -133,9 +144,11 @@ body.dark-mode .profile-card:hover {
     gap: 4px;
     min-width: 0;
     padding: 10px 14px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
     border-radius: 10px;
+    user-select: none;
+    cursor: default;
 }
 
 .info-item label {
@@ -145,7 +158,7 @@ body.dark-mode .profile-card:hover {
     line-height: 1.2;
     letter-spacing: 0.8px;
     text-transform: uppercase;
-    color: #64748b;
+    color: #475569;
     opacity: 1;
 }
 
@@ -153,7 +166,7 @@ body.dark-mode .profile-card:hover {
     font-size: 14.5px;
     font-weight: 600;
     line-height: 1.35;
-    color: #1a1a1a;
+    color: #0f172a;
     text-align: left;
     overflow-wrap: break-word;
 }
@@ -755,8 +768,13 @@ body.dark-mode .po-qr {
     color: #fff;
     border-color: #0d47a1;
 }
-body.dark-mode .po-copy:hover {
-    background: #64b5f6;
+body.dark-mode .po-amount { color: #cbd5e1; }
+body.dark-mode .po-amount strong { color: #f1f5f9; }
+body.dark-mode .po-row { border-bottom-color: rgba(255, 255, 255, 0.12); }
+body.dark-mode .po-row span:first-child { color: #94a3b8; opacity: 1; }
+body.dark-mode .po-row strong { color: #e2e8f0; }
+body.dark-mode .po-note { color: #cbd5e1; opacity: 0.9; }
+body.dark-mode .po-details { color: #e2e8f0; }
     color: #000;
     border-color: #64b5f6;
 }
@@ -1441,8 +1459,60 @@ body.dark-mode .modal-overlay {
 }
 
 /* =========================
-   MOBILE RESPONSIVENESS
+   TABLET / NARROW (<=900px)
    ========================= */
+@media (max-width: 900px) {
+    .container {
+        padding: 40px 5%;
+    }
+
+    .profile-card {
+        flex-direction: column;
+        row-gap: 20px;
+        padding: 30px 24px;
+        max-width: 100%;
+    }
+
+    .profile-left {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .profile-right {
+        text-align: left;
+        width: 100%;
+    }
+
+    .profile-right h2 {
+        font-size: 1.8rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .info-item {
+        padding: 9px 12px;
+    }
+
+    .btn-edit-trigger {
+        width: 100%;
+        max-width: 220px;
+    }
+
+    .nav-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 15px;
+        padding: 0 4px;
+    }
+}
+
+/* =========================
+    MOBILE RESPONSIVENESS
+    ========================= */
 
 @media (max-width: 768px) {
     .container {
@@ -1458,7 +1528,7 @@ body.dark-mode .modal-overlay {
 
     .btn-back {
         padding: 9px 15px 9px 11px;
-        font-size: 13px;
+    font-size: 12px;
     }
 
     .profile-left {

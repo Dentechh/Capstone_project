@@ -10,7 +10,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    border: 1px solid #e3e8ee;
+    border: none;
     border-radius: 10px;
     margin-bottom: 8px;
     padding-right: 16px;
@@ -38,7 +38,9 @@
     #section-mypatients .content-panel,
     #section-activitylog .content-panel,
     #section-doctorscalendar .content-panel,
-    #section-messages .content-panel {
+    #section-messages .content-panel,
+    #section-records .content-panel,
+    #section-dashboard .content-panel {
         padding-left: 8px;
         padding-right: 8px;
         overflow-x: auto;
@@ -50,7 +52,9 @@
     #section-mypatients .content-panel,
     #section-activitylog .content-panel,
     #section-doctorscalendar .content-panel,
-    #section-messages .content-panel {
+    #section-messages .content-panel,
+    #section-records .content-panel,
+    #section-dashboard .content-panel {
         padding-left: 12px;
         padding-right: 12px;
     }
@@ -269,7 +273,19 @@
         min-height: 360px;
     }
     .cm-list {
-        width: 260px;
+        width: 100%;
+    }
+    .cm-pane {
+        display: none;
+    }
+    .cm-admin.chat-open .cm-list {
+        display: none;
+    }
+    .cm-admin.chat-open .cm-pane {
+        display: flex;
+    }
+    .cm-back {
+        display: grid;
     }
     .cm-conv {
         padding: 8px 10px;
@@ -314,7 +330,19 @@
         height: calc(100vh - 110px);
     }
     .cm-list {
-        width: 240px;
+        width: 100%;
+    }
+    .cm-pane {
+        display: none;
+    }
+    .cm-admin.chat-open .cm-list {
+        display: none;
+    }
+    .cm-admin.chat-open .cm-pane {
+        display: flex;
+    }
+    .cm-back {
+        display: grid;
     }
 }
 
@@ -1999,6 +2027,26 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
        page sideways (page gets wider as the window is stretched). */
     #section-patientdashboard .td-records .td-records__scroll {
         position: relative;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Make the table fill the scroll box and scroll sideways on tablets so the
+       fixed TH column labels never collide or overlap each other. */
+    #section-patientdashboard .td-records .td-records__table {
+        table-layout: fixed;
+        width: max-content;
+        min-width: 100%;
+    }
+
+    /* Keep every header cell label on one readable line inside its fixed width
+       instead of wrapping and colliding with neighbours. */
+    #section-patientdashboard .td-records .td-records__table thead th {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 0;
     }
 
     /* The old 900px / 800px minimum belongs to the retired layout; the
@@ -2028,6 +2076,73 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
         padding-left: 34px !important;
         padding-right: 8px;
         text-overflow: ellipsis;
+    }
+}
+
+/* Tablets (portrait, approx 770px–1000px): the Treatment Records header wraps
+   so the title, sub paragraph and action buttons don't collide. */
+@media (min-width: 769px) and (max-width: 1000px) {
+    #section-patientdashboard .td-records__head {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+
+    #section-patientdashboard .td-records__head-text {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    #section-patientdashboard .td-records__sub {
+        margin-top: 6px;
+        margin-bottom: 0;
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+
+    #section-patientdashboard .td-records__actions {
+        margin-left: 0;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* Tablets (portrait, approx 770px–1070px): stack the Sex / Age stats under
+   the identity instead of pushing them to the far right, which caused bad
+   placement and overlap on narrow screens. */
+@media (min-width: 769px) and (max-width: 1070px) {
+    #section-patientdashboard .pd-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    #section-patientdashboard .pd-header__identity {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    #section-patientdashboard .pd-header__stats {
+        margin-left: 0;
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    #section-patientdashboard .pd-stat {
+        flex: 1 1 120px;
+        min-width: 0;
+        padding: 8px 14px;
+    }
+
+    #section-patientdashboard .pd-header__name {
+        font-size: 20px;
+    }
+
+    #section-patientdashboard .pd-avatar {
+        width: 56px;
+        height: 56px;
     }
 }
 

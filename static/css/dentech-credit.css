@@ -31,16 +31,24 @@
 
 .dentech-modal__card {
     position: relative; width: 100%; max-width: 760px; max-height: 90vh; overflow-y: auto;
-    background: #fff; color: #1f2937; border-radius: 16px;
-    padding: 32px 28px 28px; box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
+    background: #ffffff; color: #1f2937; border-radius: 20px;
+    padding: 32px 28px 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     font-family: 'Kumbh Sans', sans-serif;
+    border: 1px solid rgba(13, 71, 161, 0.12);
 }
 .dentech-modal__close {
-    position: absolute; top: 12px; right: 14px; width: 36px; height: 36px;
-    border: 0; border-radius: 50%; background: #eef3fb; color: #0b4aa2;
+    position: absolute; top: 16px; right: 16px; width: 40px; height: 40px;
+    border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 50%;
+    background: #f5f5f5; color: var(--navy);
     font-size: 22px; line-height: 1; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease; flex-shrink: 0;
 }
-.dentech-modal__close:hover { background: #dce7f8; }
+.dentech-modal__close:hover {
+    background: var(--navy); color: #ffffff; border-color: var(--navy);
+    transform: rotate(90deg);
+}
+.dentech-modal__close:active { transform: rotate(90deg) scale(0.92); }
 
 .dentech-modal__head { text-align: center; margin-bottom: 20px; }
 .dentech-modal__head h2 { margin: 0 0 6px; color: #0b4aa2; font-size: 1.6rem; letter-spacing: .5px; }
@@ -72,10 +80,62 @@
 .dentech-stack { padding: 0; margin: 0; }
 .dentech-modal__foot { margin: 22px 0 0; text-align: center; font-size: .8rem; opacity: .65; }
 
-/* dark mode (matches your body.dark-mode toggle) */
-body.dark-mode .dentech-modal__card { background: #1b2433; color: #e5eaf3; }
+/* ===== Design improvements (consistent with site) ===== */
+.dentech-modal__card {
+    border-radius: 20px;
+    border: 1px solid rgba(13, 71, 161, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.dentech-modal__close {
+    width: 40px; height: 40px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f5f5f5; color: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.25s ease;
+}
+.dentech-modal__close:hover {
+    background: var(--navy); color: #ffffff; border-color: var(--navy);
+    transform: rotate(90deg);
+}
+.dentech-modal__close:active { transform: rotate(90deg) scale(0.92); }
+.dentech-modal__close svg { width: 20px; height: 20px; }
+
+.dentech-modal__head h2 { color: var(--navy); }
+.dentech-modal__sub { color: #475467; }
+
+.dentech-member {
+    border-radius: 16px; background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.12);
+    box-shadow: 0 2px 10px rgba(13, 71, 161, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.dentech-member:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(13, 71, 161, 0.16);
+    border-color: var(--navy);
+}
+.dentech-member__avatar {
+    background: linear-gradient(135deg, #0d47a1, #1565c0);
+    box-shadow: 0 4px 12px rgba(13, 71, 161, 0.25);
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    color: #ffffff;
+}
+.dentech-member h4 { color: var(--navy); }
+.dentech-stack li {
+    background: linear-gradient(135deg, #eef3fb, #e3ecfa);
+    border: 1px solid rgba(13, 71, 161, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.dentech-stack li:hover { transform: translateY(-1px); box-shadow: 0 4px 8px rgba(13, 71, 161, 0.15); }
+
+/* dark mode */
+body.dark-mode .dentech-modal__card { background: #1b2433; color: #e5eaf3; border-color: #2f3d5a; }
 body.dark-mode .dentech-modal__head h2,
 body.dark-mode .dentech-modal__sub { color: #7fb0ff; }
-body.dark-mode .dentech-modal__close { background: #2a3650; color: #cfe0ff; }
+body.dark-mode .dentech-modal__close { background: #2a3650; color: #cfe0ff; border-color: #3a4a6a; }
+body.dark-mode .dentech-modal__close:hover { background: #64b5f6; color: #0b1220; border-color: #64b5f6; }
 body.dark-mode .dentech-member { background: #232e44; border-color: #2f3d5a; }
-body.dark-mode .dentech-stack li { background: #2a3650; color: #cfe0ff; }
+body.dark-mode .dentech-member:hover { border-color: #64b5f6; }
+body.dark-mode .dentech-member h4 { color: #64b5f6; }
+body.dark-mode .dentech-member__avatar { background: linear-gradient(135deg, #1565c0, #0d47a1); border-color: rgba(255,255,255,0.15); }
+body.dark-mode .dentech-stack li { background: #2a3650; color: #cfe0ff; border-color: #3a4a6a; }

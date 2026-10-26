@@ -267,36 +267,68 @@ body.dark-mode .nav-links a.active {
 
 /* Notification button */
 .notification-btn {
-    background: none;
-    border: none;
+    background: linear-gradient(135deg, rgba(13, 71, 161, 0.10), rgba(13, 71, 161, 0.04));
+    border: 1px solid rgba(13, 71, 161, 0.18);
     cursor: pointer;
     padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    transition: background 0.3s ease, transform 0.3s ease;
+    transition: background 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease, border-color 0.3s ease;
     width: 40px;
     height: 40px;
     color: var(--navy);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.12), inset 0 1px 0 rgba(255,255,255,0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.notification-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
 
 .notification-btn:hover {
-    background: rgba(13, 71, 161, 0.1);
-    transform: scale(1.1);
+    background: linear-gradient(135deg, rgba(13, 71, 161, 0.18), rgba(13, 71, 161, 0.08));
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(13, 71, 161, 0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+    border-color: rgba(13, 71, 161, 0.4);
 }
 
+.notification-btn:hover::before { opacity: 1; }
+
 .notification-btn:active {
-    transform: scale(0.95);
+    transform: scale(0.92);
 }
 
 .notification-btn .material-symbols-rounded {
-    font-size: 24px;
+    font-size: 22px;
     line-height: 1;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+.notification-btn:hover .material-symbols-rounded { transform: rotate(8deg) scale(1.05); }
 
 body.dark-mode .notification-btn {
     color: #64b5f6;
+    background: linear-gradient(135deg, rgba(100,181,246,0.18), rgba(100,181,246,0.06));
+    border-color: rgba(100,181,246,0.3);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+body.dark-mode .notification-btn:hover {
+    background: linear-gradient(135deg, rgba(100,181,246,0.28), rgba(100,181,246,0.12));
+    border-color: rgba(100,181,246,0.5);
 }
 
 body.dark-mode .notification-btn:hover {
@@ -1317,96 +1349,71 @@ body.dark-mode .btn-login {
 
          /* Theme Toggle Button */
          .theme-toggle {
-             background: none;
-             border: none;
+             background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+             border: 1px solid rgba(255,255,255,0.22);
              cursor: pointer;
              padding: 8px;
              display: flex;
              align-items: center;
              justify-content: center;
              border-radius: 50%;
-             transition: background 0.3s ease, transform 0.3s ease;
+             transition: background 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                         box-shadow 0.3s ease, border-color 0.3s ease;
              width: 40px;
              height: 40px;
+             backdrop-filter: blur(6px);
+             -webkit-backdrop-filter: blur(6px);
+             box-shadow: 0 4px 14px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.25);
+             position: relative;
+             overflow: hidden;
+         }
+
+         .theme-toggle::before {
+             content: '';
+             position: absolute;
+             inset: 0;
+             border-radius: 50%;
+             background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 60%);
+             opacity: 0;
+             transition: opacity 0.3s ease;
+             pointer-events: none;
          }
 
          .theme-toggle:hover {
-             background: rgba(255,255,255,0.1);
-             transform: scale(1.1);
+             background: linear-gradient(135deg, rgba(255,255,255,0.28), rgba(255,255,255,0.12));
+             transform: scale(1.08) rotate(8deg);
+             box-shadow: 0 6px 20px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.35);
+             border-color: rgba(255,255,255,0.4);
          }
 
+         .theme-toggle:hover::before { opacity: 1; }
+
          .theme-toggle:active {
-             transform: scale(0.95);
+             transform: scale(0.92) rotate(0deg);
          }
 
          .theme-icon {
-             width: 24px;
-             height: 24px;
-             transition: transform 0.3s ease, opacity 0.3s ease;
+             width: 22px;
+             height: 22px;
+             transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+             filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
          }
 
-         .sun-icon {
-             color: #ff9800;
-         }
+         .sun-icon { color: #ff9800; }
+         .moon-icon { color: #bb86fc; }
 
-         .moon-icon {
-             color: #bb86fc;
+         body.dark-mode .theme-toggle {
+             background: linear-gradient(135deg, rgba(100,181,246,0.22), rgba(100,181,246,0.08));
+             border-color: rgba(100,181,246,0.35);
          }
 
          
 
-         /* Theme Toggle Button */
-         .theme-toggle {
-             background: none;
-             border: none;
-             cursor: pointer;
-             padding: 8px;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             border-radius: 50%;
-             transition: background 0.3s;
-             width: 40px;
-             height: 40px;
-         }
-
-         .theme-toggle:hover {
-             background: rgba(255,255,255,0.1);
-         }
-
-         body.dark-mode .theme-toggle:hover {
-             background: rgba(255,255,255,0.1);
-         }
-
-         .theme-icon {
-             width: 24px;
-             height: 24px;
-             transition: transform 0.3s;
-         }
-
-         .sun-icon {
-             color: #ff9800;
-         }
-
-         .moon-icon {
-             color: #bb86fc;
-         }
-
-         body.dark-mode .sun-icon {
-             display: block;
-         }
-
-         body.dark-mode .moon-icon {
-             display: none;
-         }
-
-         body:not(.dark-mode) .sun-icon {
-             display: none;
-         }
-
-         body:not(.dark-mode) .moon-icon {
-             display: block;
-         }
+         /* Theme Toggle visibility (styling defined in first block above) */
+         body.dark-mode .sun-icon { display: block; }
+         body.dark-mode .moon-icon { display: none; }
+         body:not(.dark-mode) .sun-icon { display: none; }
+         body:not(.dark-mode) .moon-icon { display: block; }
          body {
              margin: 0;
              padding: 0;
@@ -5310,7 +5317,7 @@ body.dark-mode .auth-card .footer-text a {
     }
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1240px) {
     .hero-content {
         flex-wrap: wrap; /* Allow wrap on smaller screens */
         justify-content: center;
@@ -5321,6 +5328,12 @@ body.dark-mode .auth-card .footer-text a {
         margin-bottom: 50px;
         text-align: center;
         width: 100%;
+    }
+    
+    .crop-container {
+        margin: 0 auto 20px;
+        width: min(180px, 40vw);
+        height: min(180px, 40vw);
     }
     
     .cta-box {
@@ -5438,6 +5451,12 @@ body.dark-mode .auth-card .footer-text a {
     .hero-content {
         gap: 30px;
         align-items: center;
+    }
+    
+    .crop-container {
+        margin: 0 0 20px;
+        width: min(180px, 40vw);
+        height: min(180px, 40vw);
     }
     
     .user-greeting {
@@ -7011,7 +7030,7 @@ html {
 /* Once the hero wraps (<=1100px) the greeting is centered,
    so center the quick actions with it. Later rule with the
    same specificity as the base .greeting-actions above. */
-@media (max-width: 1100px) {
+@media (max-width: 1240px) {
     .greeting-actions {
         justify-content: center;
     }
@@ -7129,7 +7148,7 @@ body.dark-mode .cta-box .cta-sub {
    so the right side spilled off-screen. Tablets now use the same hamburger
    menu as phones. Keep this block at the END of the file so it wins.
    ========================================================================== */
-@media (min-width: 768px) and (max-width: 1100px) {
+@media (min-width: 768px) and (max-width: 1240px) {
     html, body {
         max-width: 100%;
         overflow-x: hidden;

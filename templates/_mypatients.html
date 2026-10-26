@@ -140,7 +140,12 @@
 
         <div id="backupModal" class="modal bk-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="bkTitle">
             <div class="bk-card">
-                <button type="button" class="bk-close" aria-label="Close" onclick="closeBackupModal()">&times;</button>
+                <button type="button" class="bk-close" aria-label="Close" onclick="closeBackupModal()">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
                 <h2 id="bkTitle">Backup &amp; Restore</h2>
                 <p class="bk-sub">Keep a safe copy of every patient record and all of their transactions, or bring a saved copy back.</p>
                 <input type="hidden" id="bkCsrf" value="{{ csrf_token() }}">

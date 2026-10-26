@@ -1430,6 +1430,7 @@ body.dark-mode .pd-open-chart__hint {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
 }
 
 .metric-data h3 {
@@ -1439,6 +1440,8 @@ body.dark-mode .pd-open-chart__hint {
     font-weight: 800;
     line-height: 1;
     letter-spacing: -0.5px;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 .metric-data p {
@@ -1473,7 +1476,7 @@ body.dark-mode .pd-open-chart__hint {
 
 @media (max-width: 1024px) {
     .metric-cards {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 16px;
     }
     .metric-card {
@@ -1490,7 +1493,12 @@ body.dark-mode .pd-open-chart__hint {
         height: 22px;
     }
     .metric-data h3 {
-        font-size: 26px;
+        font-size: 22px;
+    }
+    .metric-bg-icon {
+        font-size: 44px;
+        right: 12px;
+        bottom: 10px;
     }
 }
 
@@ -1630,6 +1638,7 @@ body.dark-mode .metric-data p {
     animation: fadeInUp 0.6s ease forwards;
     animation-delay: 0.5s;
     opacity: 0;
+    min-width: 0;
 }
 
 .chart-card:hover {
@@ -1834,6 +1843,20 @@ body.dark-mode .chart-header p {
 }
 
 /* Responsive */
+/* Laptop / small desktop: stack the two charts so neither gets squished
+   when the sidebar is present. */
+@media (max-width: 1240px) {
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+    }
+    .chart-card {
+        padding: 20px;
+    }
+    .chart-wrapper {
+        height: 240px;
+    }
+}
+
 @media (max-width: 1024px) {
     .mini-stats-row {
         grid-template-columns: repeat(2, 1fr);
@@ -2078,6 +2101,15 @@ body.dark-mode .panel-content {
 
 .appointment-table button:hover {
     transform: translateY(-2px);
+}
+
+/* Dashboard patients table empty state */
+.dashboard-patients-empty {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    padding: 20px;
+    opacity: 0.8;
 }
 
 /* Dark Mode Support — matched to the td-records / pd-visits tables */
@@ -2466,6 +2498,8 @@ body.dark-mode .btn-add-row {
     letter-spacing: 0.8px;
     text-transform: uppercase;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .td-records .td-records__table tbody td {
@@ -4730,6 +4764,7 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
     }
     
     .metric-cards {
+        grid-template-columns: repeat(2, 1fr);
         gap: 15px;
     }
     
@@ -4738,7 +4773,7 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
     }
     
     .metric-data h3 {
-        font-size: 22px;
+        font-size: 20px;
     }
     
     .dashboard-grid {
@@ -6275,19 +6310,6 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
 }
 
 /* Backup button emphasis */
-#backupOpenBtn {
-    background: #0f766e;
-    color: #ffffff;
-    border-color: #0f766e;
-}
-#backupOpenBtn:hover:not(:disabled) {
-    background: #115e59;
-}
-body.dark-mode #backupOpenBtn {
-    background: #14b8a6;
-    color: #0f172a;
-    border-color: #14b8a6;
-}
 
 /* =========================================
       TREATMENT INFO MODAL
