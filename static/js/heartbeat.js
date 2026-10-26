@@ -4,6 +4,11 @@
     var HEARTBEAT_INTERVAL_MS = 15000; // 15 seconds
     var heartbeatTimer = null;
 
+    // True once the server has accepted a heartbeat on this page, i.e. the
+    // visitor really was signed in. Visitors who never signed in get a 401
+    // on every heartbeat, and must NOT be redirected.
+    var wasSignedIn = false;
+
     function sendHeartbeat() {
         fetch('/api/heartbeat', {
             method: 'POST',
@@ -11,6 +16,18 @@
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function (res) {
+            if (res.ok) {
+                wasSignedIn = true;
+            } else if (res.status === 401) {
+                // Signed out or login removed: stop pinging.
+                stopHeartbeat();
+                // Was signed in a moment ago, so the clinic removed the login
+                // (or the session ended). Send them home right away.
+                if (wasSignedIn) {
+                    window.location.replace('/');
+                }
             }
         }).catch(function (err) {
             console.debug('Heartbeat failed:', err);

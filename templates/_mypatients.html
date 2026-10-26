@@ -5,7 +5,33 @@
             #myPatientsTable thead th:nth-child(2),
             #myPatientsTable tbody td[data-cell="name"] {
                 text-align: left;
-                padding-left: 4px;
+                padding-left: 8px;
+            }
+
+            /* Keep the # column as narrow as its number so the names sit right
+               next to it. width:1% + nowrap shrinks the column to its content;
+               the spare width goes to the other columns. Tablet/desktop only,
+               so the phone card layout is untouched. */
+            @media (min-width: 769px) {
+                #myPatientsTable {
+                    table-layout: auto !important;
+                }
+
+                #myPatientsTable thead th:first-child,
+                #myPatientsTable tbody td[data-cell="num"] {
+                    width: 1% !important;
+                    min-width: 0 !important;
+                    max-width: 60px !important;
+                    padding-left: 14px !important;
+                    padding-right: 6px !important;
+                    text-align: left !important;
+                    white-space: nowrap;
+                }
+
+                #myPatientsTable thead th:nth-child(2),
+                #myPatientsTable tbody td[data-cell="name"] {
+                    padding-left: 6px !important;
+                }
             }
         </style>
 
@@ -104,13 +130,6 @@
                     <button type="button" id="myPatientsPrevBtn" class="btn-action filter-btn">Prev</button>
                     <span id="myPatientsPageNumbers" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
                     <button type="button" id="myPatientsNextBtn" class="btn-action filter-btn">Next</button>
-                    <label style="margin-left:12px; display:flex; align-items:center; gap:6px;">
-                        <span>Per page</span>
-                        <select id="myPatientsPageSize" class="search-input" style="width:auto;">
-                            <option value="20">20</option>
-                            <option value="30" selected>30</option>
-                        </select>
-                    </label>
                     <span id="myPatientsPageInfo" style="margin-left:8px;"></span>
                 </div>
             </section>

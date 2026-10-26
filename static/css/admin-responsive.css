@@ -1925,3 +1925,198 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
     opacity: 0.8 !important;
 }
 
+/* =====================================================================
+   Independent scrolling: sidebar and content scroll separately.
+   Before: the PAGE scrolled, so a swipe on the fixed sidebar (or past the
+   end of it) moved the content, and a swipe on the content moved the
+   page the sidebar sits on.
+   ===================================================================== */
+
+/* Touch tablets (iPad, Surface and similar) where the sidebar is always
+   visible (769px-1440px). Mouse-driven desktops are left exactly as they were. */
+@media (min-width: 769px) and (max-width: 1440px) and (pointer: coarse) {
+    html,
+    body.dashboard-body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;           /* the page itself no longer scrolls */
+    }
+
+    .sidebar {
+        height: 100vh;
+        height: 100dvh;             /* tracks the real visible height */
+        overflow-y: auto;           /* the sidebar scrolls on its own */
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar-nav {
+        flex: 1 1 auto;
+        min-height: 0;              /* lets the nav shrink so the footer stays reachable */
+    }
+
+    .main-content {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        overflow-y: auto;           /* the content is the only thing that scrolls here */
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Slide-in sidebar (768px and below): keep the sidebar's scroll inside it,
+   and freeze the page behind it while it is open. */
+@media (max-width: 768px) {
+    .sidebar {
+        overscroll-behavior: contain;
+    }
+
+    body:has(.sidebar.open) {
+        overflow: hidden;
+    }
+}
+
+/* =====================================================================
+   Patient Dashboard > Treatment Records on tablets and phones.
+   Older mobile rules in admin.css made the WHOLE card scroll sideways
+   (overflow-x on the card plus a 900px/800px table min-width), which
+   dragged the title, hint text and buttons off the left edge and left a
+   blank strip on the right. The table already has its own scroll box
+   (.td-records__scroll), so the card itself must stay put.
+   ===================================================================== */
+@media (max-width: 1024px) {
+    /* The card stays fixed; only the table inside it scrolls sideways. */
+    #section-patientdashboard .treatment-section.td-records {
+        overflow: visible;
+    }
+
+    /* The table's scroll box must be the containing block for the hidden
+       "Actions" label inside the last header cell. That label is absolutely
+       positioned, so without this it escapes the box and stretches the whole
+       page sideways (page gets wider as the window is stretched). */
+    #section-patientdashboard .td-records .td-records__scroll {
+        position: relative;
+    }
+
+    /* The old 900px / 800px minimum belongs to the retired layout; the
+       fixed column widths already set the real width of the table. */
+    #section-patientdashboard .td-records .treatment-table {
+        min-width: 0;
+        font-size: inherit;
+    }
+
+    /* Submit Information: back to its normal button size. An older
+       #td-save-btn rule had stretched it to 100% (up to 400px). */
+    #section-patientdashboard .td-records #td-save-btn {
+        width: auto;
+        max-width: none;
+        padding: 10px 18px;
+        font-size: 13.5px;
+    }
+
+    /* Next Appointment column: wide enough for "Oct 31, 2026 - 12:00 PM"
+       plus the calendar icon. */
+    #td-treatment-table col:nth-child(9) {
+        width: 210px !important;
+    }
+
+    /* Keep the text clear of the calendar icon on both date fields. */
+    #section-patientdashboard .td-records .td-records__table td input.adm-date-alt {
+        padding-left: 34px !important;
+        padding-right: 8px;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Phones: the hint text and the buttons wrap instead of running off screen. */
+@media (max-width: 480px) {
+    #section-patientdashboard .treatment-section.td-records {
+        padding: 12px 10px;
+    }
+
+    #section-patientdashboard .td-records .td-records__actions {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}
+
+/* =====================================================================
+   My Patients pagination: Prev, page numbers and Next all the same size.
+   On phones and small tablets the shared ".filter-btn { width: 100% }"
+   rule stretched Prev and Next to the full width while the page-number
+   buttons stayed small, so they stacked one per line at different sizes.
+   ===================================================================== */
+#myPatientsPagination button {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    min-width: 64px;
+    height: 36px;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+#myPatientsPageNumbers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+@media (max-width: 768px) {
+    #myPatientsPagination {
+        justify-content: center;
+        gap: 6px;
+    }
+
+    #myPatientsPagination button {
+        width: 56px;
+        min-width: 56px;
+    }
+
+    /* "Page 1 of 3 (84 patients)" sits on its own centred line. */
+    #myPatientsPageInfo {
+        flex: 1 0 100%;
+        margin-left: 0 !important;
+        text-align: center;
+    }
+}
+
+/* =====================================================================
+   My Patients (phones and small tablets, 768px and below):
+   the "#" column kept an old 190px minimum from when the Name column
+   was first, which left a wide empty gap between the number and the
+   name. Shrink "#" to its number (the same as on larger screens) and
+   give that width to the Name column instead.
+   ===================================================================== */
+@media (max-width: 768px) {
+    #section-mypatients #myPatientsTable {
+        table-layout: auto !important;
+    }
+
+    #section-mypatients #myPatientsTable thead th:first-child,
+    #section-mypatients #myPatientsTable tbody td[data-cell="num"] {
+        width: 1% !important;
+        min-width: 0 !important;
+        max-width: 60px !important;
+        padding-left: 14px !important;
+        padding-right: 6px !important;
+        text-align: left !important;
+        white-space: nowrap;
+    }
+
+    #section-mypatients #myPatientsTable thead th:nth-child(2),
+    #section-mypatients #myPatientsTable tbody td[data-cell="name"] {
+        min-width: 190px !important;
+        padding-left: 6px !important;
+        text-align: left;
+    }
+}

@@ -6,9 +6,10 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    flex: 1 1 100%;
-    width: 100%;
-    margin: 0;
+    flex: 0 0 auto;
+    width: max-content;
+    white-space: nowrap;
+    margin: 0 100% 0 0; /* 100% right margin forces its own row without stretching */
     padding: 10px 18px 10px 13px;
     background: #f8fafc;
     color: var(--navy);
