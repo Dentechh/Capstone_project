@@ -353,9 +353,10 @@ function buildMyPatientRow(p) {
                 if (page) state.page = parseInt(page, 10) || state.page;
                 if (state.page < 1) state.page = 1;
 
-                const tbody = document.querySelector('#myPatientsTable tbody');
-                if (!tbody) return;
-                const sel = document.getElementById('myPatientsPageSize');
+const tbody = document.querySelector('#myPatientsTable tbody');
+if (!tbody) return;
+tbody.classList.add('is-switching');
+const sel = document.getElementById('myPatientsPageSize');
                 if (sel) sel.value = state.pageSize;
 
                 fetch('/admin/my_patients_page?page=' + encodeURIComponent(state.page) + '&page_size=' + encodeURIComponent(state.pageSize))
@@ -383,14 +384,16 @@ function buildMyPatientRow(p) {
                         } else if (sortBtn && sortBtn.getAttribute('data-sort') === 'asc' && typeof sortMyPatients === 'function') {
                             sortMyPatients(true);
                         }
-                        renumberMyPatients();
-                        renderMyPatientsPagination();
-                        if (sel) sel.value = state.pageSize;
+renumberMyPatients();
+renderMyPatientsPagination();
+if (sel) sel.value = state.pageSize;
+requestAnimationFrame(function () { tbody.classList.remove('is-switching'); });
                     })
-                    .catch(function (err) {
-                        console.error('Load patients error:', err);
-                        showToast('Failed to load patients. Please try again.');
-                    });
+.catch(function (err) {
+    console.error('Load patients error:', err);
+    tbody.classList.remove('is-switching');
+    showToast('Failed to load patients. Please try again.');
+});
             }
             window.loadMyPatientsPage = loadMyPatientsPage;
 

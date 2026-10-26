@@ -1333,6 +1333,7 @@ function showSection(sectionId) {
 
         function tdUpdateMedicineValue(cell) {
             if (!cell) return;
+            if (cell.querySelector('.medicine-field')) return;
             var hidden = cell.querySelector('.td-medicine');
             if (!hidden) return;
             var vals = [];
@@ -1361,6 +1362,7 @@ function showSection(sectionId) {
 
         function tdInitMedicineCell(cell, initial) {
             if (!cell) return;
+            if (cell.querySelector('.medicine-field')) return;
             var countSel = cell.querySelector('.td-medicine-count');
             var otherInput = cell.querySelector('.td-medicine-other');
             var meds = (initial || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
@@ -1766,9 +1768,9 @@ function showSection(sectionId) {
                             var inputEl = field ? field.querySelector('.td-medicine') : null;
                             var inputRect = inputEl ? inputEl.getBoundingClientRect() : rect;
                             document.body.appendChild(menu);
-                            menu.style.position = 'absolute';
-                            menu.style.top = (inputRect.top + window.scrollY) + 'px';
-                            menu.style.left = (inputRect.left + window.scrollX) + 'px';
+                            menu.style.position = 'fixed';
+                            menu.style.top = (inputRect.bottom + 6) + 'px';
+                            menu.style.left = inputRect.left + 'px';
                             menu.style.zIndex = '1000';
                             menu.style.display = 'block';
                         }

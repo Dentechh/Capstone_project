@@ -521,6 +521,137 @@
         overflow: auto;
     }
 
+    /* Medicine quantity modal (patient dashboard treatment table) */
+    #medicine-qty-modal .modal-content {
+        position: relative;
+        width: 90%;
+        max-width: 420px;
+        padding: 24px 26px 22px;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+    }
+
+    #medicine-qty-modal .modal-x {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+
+    #medicine-qty-modal h2#mqTitle {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #0d47a1;
+        text-align: center;
+        padding: 0 40px;
+    }
+
+    #medicine-qty-modal #medicine-qty-label {
+        margin: 0 0 12px;
+        font-weight: 600;
+        color: #334155;
+        font-size: 14px;
+    }
+
+    #medicine-qty-modal #medicine-qty-input {
+        width: 100%;
+        padding: 11px 13px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        box-sizing: border-box;
+        font-size: 14px;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    #medicine-qty-modal #medicine-qty-input:focus {
+        outline: none;
+        border-color: #0d47a1;
+        box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.15);
+    }
+
+    .mq-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .mq-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.18s ease, color 0.18s ease,
+            border-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+    }
+
+    .mq-btn__icon { font-size: 18px; line-height: 1; }
+
+    .mq-btn-ghost {
+        background: #ffffff;
+        border-color: #cbd5e1;
+        color: #475569;
+    }
+    .mq-btn-ghost:hover:not(:disabled) {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        transform: translateY(-1px);
+    }
+
+    .mq-btn-primary {
+        background: #0d47a1;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(13, 71, 161, 0.25);
+    }
+    .mq-btn-primary:hover:not(:disabled) {
+        background: #0a3b7d;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(13, 71, 161, 0.35);
+    }
+
+    body.dark-mode #medicine-qty-modal .modal-content {
+        background: rgba(20, 25, 35, 0.95);
+        border: 1px solid var(--gold);
+        color: #e0e0e0;
+    }
+    body.dark-mode #medicine-qty-modal h2#mqTitle {
+        color: var(--gold);
+    }
+    body.dark-mode #medicine-qty-modal #medicine-qty-label {
+        color: #cbd5e1;
+    }
+    body.dark-mode #medicine-qty-modal #medicine-qty-input {
+        background: #131a26;
+        border-color: #33415a;
+        color: #e2e8f0;
+    }
+    body.dark-mode .mq-btn-ghost {
+        background: #2d2d2d;
+        border-color: #444;
+        color: #e0e0e0;
+    }
+    body.dark-mode .mq-btn-ghost:hover:not(:disabled) {
+        background: #374151;
+        border-color: #64748b;
+        color: #f1f5f9;
+        transform: translateY(-1px);
+    }
+    body.dark-mode .mq-btn-primary {
+        background: #64b5f6;
+        color: #0b1220;
+    }
+    body.dark-mode .mq-btn-primary:hover:not(:disabled) {
+        background: #93c5fd;
+        color: #0b1220;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(100, 181, 246, 0.35);
+    }
+
     #checkInfoModal .modal-content {
         width: 97% !important;
         max-width: 1600px !important;
@@ -1770,10 +1901,6 @@
        Appointments / My Patients row actions, so every action column in the
        dashboard matches. */
     .td-records .td-row-actions { text-align: left; }
-    .td-records .td-row-actions { text-align: left; }
-        vertical-align: middle;
-        white-space: nowrap;
-    }
 
     .td-records .td-delete-row {
         display: inline-flex;
