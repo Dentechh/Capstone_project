@@ -1312,7 +1312,7 @@ body.dark-mode .nav-card .nav-card__badge {
    (admin appointments-tab button designs)
    ========================= */
 
-#scheduleModal .appt-actions {
+#ptSchedule .appt-actions {
     display: flex;
     gap: 6px;
     flex-wrap: wrap;
@@ -1322,7 +1322,7 @@ body.dark-mode .nav-card .nav-card__badge {
 
 /* Icon-only, square tap targets: same geometry as the
    admin appointments tab so both screens match. */
-#scheduleModal .appt-actions .btn-action {
+#ptSchedule .appt-actions .btn-action {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1340,7 +1340,7 @@ body.dark-mode .nav-card .nav-card__badge {
                 transform 0.12s ease;
 }
 
-#scheduleModal .appt-actions .btn-action > .material-symbols-rounded {
+#ptSchedule .appt-actions .btn-action > .material-symbols-rounded {
     font-size: 21px;
     line-height: 1;
     font-weight: normal;
@@ -1357,55 +1357,55 @@ body.dark-mode .nav-card .nav-card__badge {
     user-select: none;
 }
 
-#scheduleModal .appt-accept-btn {
+#ptSchedule .appt-accept-btn {
     background: var(--navy);
     border-color: var(--navy);
     color: #ffffff;
 }
 
-#scheduleModal .appt-decline-btn {
+#ptSchedule .appt-decline-btn {
     background: #ef4444;
     border-color: #dc2626;
     color: #ffffff;
 }
 
-#scheduleModal .appt-accept-btn:hover:not(:disabled) {
+#ptSchedule .appt-accept-btn:hover:not(:disabled) {
     background: var(--navy-dark);
     border-color: var(--navy-dark);
     transform: translateY(-1px);
     box-shadow: 0 3px 8px rgba(13, 71, 161, 0.26);
 }
 
-#scheduleModal .appt-decline-btn:hover:not(:disabled) {
+#ptSchedule .appt-decline-btn:hover:not(:disabled) {
     background: #dc2626;
     border-color: #b91c1c;
     transform: translateY(-1px);
     box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
 }
 
-#scheduleModal .appt-actions .btn-action:active:not(:disabled) {
+#ptSchedule .appt-actions .btn-action:active:not(:disabled) {
     transform: translateY(0);
 }
 
-#scheduleModal .appt-actions .btn-action:focus-visible {
+#ptSchedule .appt-actions .btn-action:focus-visible {
     outline: 2px solid var(--navy);
     outline-offset: 2px;
 }
 
-#scheduleModal .appt-actions .btn-action:disabled {
+#ptSchedule .appt-actions .btn-action:disabled {
     opacity: 0.55;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
-body.dark-mode #scheduleModal .appt-accept-btn {
+body.dark-mode #ptSchedule .appt-accept-btn {
     background: var(--navy);
     border-color: var(--gold-light);
     color: #0b1220;
 }
 
-body.dark-mode #scheduleModal .appt-decline-btn {
+body.dark-mode #ptSchedule .appt-decline-btn {
     background: #b91c1c;
     border-color: #ef4444;
     color: #ffe4e4;
@@ -1417,7 +1417,7 @@ body.dark-mode #scheduleModal .appt-decline-btn {
    Only the dentist's "next visit" suggestion is
    still waiting on the patient, so it is the only
    row that carries action buttons. */
-#scheduleModal .appt-confirmed {
+#ptSchedule .appt-confirmed {
     display: inline-block;
     padding: 4px 12px;
     border-radius: 999px;
@@ -1429,7 +1429,7 @@ body.dark-mode #scheduleModal .appt-decline-btn {
     white-space: nowrap;
 }
 
-body.dark-mode #scheduleModal .appt-confirmed {
+body.dark-mode #ptSchedule .appt-confirmed {
     background: rgba(16, 185, 129, 0.18);
     color: #34d399;
 }
@@ -1634,3 +1634,330 @@ body.dark-mode .modal-overlay {
         padding: 6px 12px;
     }
 }
+
+/* =========================================================
+    TREATMENT INFORMATION IN THE PAGE BODY (read-only)
+    Profile card top-left, Patient Summary + Medical History
+    beside it, visit cards full width below. Uses the full
+    page width instead of the old 900px column.
+    ========================================================= */
+
+.container { padding: 24px 2.5% 40px; }
+
+.container .profile-back-row,
+.container .pt-top,
+.container .pt-records,
+.container .pt-schedule {
+    width: 100%;
+    max-width: 1600px;
+}
+
+/* Visual order: back link, top row, Schedule, Treatment Information */
+.container .profile-back-row { order: 0; }
+.container .pt-top           { order: 1; }
+.container .pt-schedule      { order: 2; }
+.container .pt-records       { order: 3; }
+
+/* ---- top row ---- */
+.pt-top {
+    display: grid;
+    grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: stretch;
+}
+
+.pt-top .profile-card {
+    max-width: none;
+    margin-bottom: 0;
+    padding: 26px 24px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    row-gap: 14px;
+}
+.pt-top .profile-left,
+.pt-top .profile-right { width: 100%; }
+.pt-top .profile-right { text-align: center; }
+.pt-top .profile-right h2 { font-size: 1.7rem; }
+.pt-top .info-grid { margin-top: 12px; }
+
+.pt-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.pt-panel {
+    background: #f1f6ff;
+    border: 1px solid rgba(13, 71, 161, 0.2);
+    border-left: 4px solid var(--navy, #0d47a1);
+    border-radius: 14px;
+    padding: 16px 20px;
+}
+
+.pt-panel-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--navy, #0d47a1);
+}
+.pt-panel-label .material-symbols-rounded { font-size: 18px; }
+
+.pt-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.pt-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.16);
+    border-radius: 10px;
+}
+.pt-stat-q { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #475569; }
+.pt-stat-a { font-size: 18px; font-weight: 700; color: var(--navy, #0d47a1); overflow-wrap: anywhere; }
+
+.pt-grid4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px 24px;
+}
+.pt-items { display: flex; flex-wrap: wrap; gap: 10px 48px; }
+.pt-item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pt-item-k { font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #475569; }
+.pt-item-v { font-size: 15px; font-weight: 700; color: var(--navy, #0d47a1); overflow-wrap: anywhere; }
+.pt-sep { margin: 14px 0 12px; border-top: 1px dashed rgba(13, 71, 161, 0.25); }
+.pt-sub-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: #475569;
+}
+.pt-sub-label .material-symbols-rounded { font-size: 16px; }
+.pt-info { flex: 1; }
+.pt-med-item { font-size: 13px; line-height: 1.4; color: #334155; overflow-wrap: anywhere; }
+.pt-med-a { font-weight: 700; color: var(--navy, #0d47a1); }
+.pt-muted { font-size: 12px; color: #64748b; font-weight: 500; }
+
+/* The nav-grid now only holds the modals and scripts; it takes no space. */
+.container .nav-grid { display: contents; }
+
+
+/* ---- records ---- */
+.pt-records { margin-bottom: 10px; }
+.pt-records-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy, #0d47a1);
+}
+.pt-empty {
+    padding: 28px;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.16);
+    border-radius: 14px;
+    color: #64748b;
+}
+.pt-empty--err { color: #dc2626; }
+
+.pt-card {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 14px 16px;
+    align-items: start;
+    margin-bottom: 12px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.18);
+    border-left: 4px solid var(--navy, #0d47a1);
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(13, 71, 161, 0.08);
+}
+.pt-f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pt-k { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #334155; }
+.pt-v { font-size: 14px; color: #0f172a; overflow-wrap: anywhere; }
+
+.pt-badge {
+    display: inline-block;
+    width: fit-content;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+.pt-badge--unpaid { color: #b91c1c; background: #fee2e2; border: 1px solid #fca5a5; }
+.pt-badge--paid   { color: #15803d; background: #dcfce7; border: 1px solid #86efac; }
+.pt-badge--follow { color: #1d4ed8; background: #dbeafe; border: 1px solid #93c5fd; }
+
+.pt-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    padding: 6px 9px;
+    background: #eef4ff;
+    border: 1px solid var(--navy, #0d47a1);
+    border-radius: 8px;
+    color: var(--navy, #0d47a1);
+    cursor: pointer;
+}
+.pt-icon-btn .material-symbols-rounded { font-size: 20px; }
+.pt-count { font-size: 12px; font-weight: 700; }
+
+.pt-pay-btn {
+    width: fit-content;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+    color: #ffffff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pt-hist { grid-column: 1 / -1; }
+.pt-hist-table { width: 100%; max-width: 520px; border-collapse: collapse; font-size: 13px; }
+.pt-hist-table th, .pt-hist-table td { padding: 6px 10px; text-align: left; border-bottom: 1px solid rgba(128, 128, 128, 0.25); }
+
+@media (max-width: 1300px) { .pt-card { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+    .pt-top { grid-template-columns: minmax(0, 1fr); }
+    .pt-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+    .container { padding: 16px 12px 32px; }
+    .pt-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pt-stats { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- dark mode ---- */
+body.dark-mode .pt-panel { background: #172033; border-color: #33415a; border-left-color: #64b5f6; }
+body.dark-mode .pt-panel-label,
+body.dark-mode .pt-stat-a,
+body.dark-mode .pt-med-a,
+body.dark-mode .pt-records-title { color: #64b5f6; }
+body.dark-mode .pt-stat { background: #131a26; border-color: #33415a; }
+body.dark-mode .pt-stat-q,
+body.dark-mode .pt-k { color: #94a3b8; }
+body.dark-mode .pt-med-item { color: #cbd5e1; }
+body.dark-mode .pt-muted { color: #94a3b8; }
+body.dark-mode .pt-card,
+body.dark-mode .pt-empty { background: #1e1e1e; border-color: #333; border-left-color: #64b5f6; box-shadow: none; }
+body.dark-mode .pt-empty { border-left-color: #333; }
+body.dark-mode .pt-v { color: #e2e8f0; }
+body.dark-mode .pt-icon-btn { background: rgba(100, 181, 246, 0.1); border-color: #64b5f6; color: #64b5f6; }
+body.dark-mode .pt-badge--unpaid { color: #fca5a5; background: rgba(220, 38, 38, 0.18); border-color: rgba(252, 165, 165, 0.4); }
+body.dark-mode .pt-badge--paid   { color: #86efac; background: rgba(22, 163, 74, 0.18); border-color: rgba(134, 239, 172, 0.4); }
+body.dark-mode .pt-badge--follow { color: #93c5fd; background: rgba(37, 99, 235, 0.2); border-color: rgba(147, 197, 253, 0.4); }
+body.dark-mode .pt-hist-table { color: #e2e8f0; }
+
+
+/* ---- white sections behind Schedule + Treatment Information ----
+   The photo background stays; each section sits on a white card so the
+   title and content are always readable. */
+.pt-section {
+    margin-bottom: 16px;
+    padding: 22px 24px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(13, 71, 161, 0.12);
+}
+.pt-section .pt-records-title {
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    font-size: 22px;
+    border-bottom: 2px solid rgba(13, 71, 161, 0.15);
+}
+.pt-sched-body.modal-body { padding: 0 !important; }
+.pt-section .pt-empty { background: #f8fafc; box-shadow: none; }
+.pt-section .pt-card { background: #ffffff; }
+
+body.dark-mode .pt-section { background: #1a1a1a; border-color: #333; box-shadow: none; }
+body.dark-mode .pt-section .pt-records-title { border-bottom-color: #33415a; }
+body.dark-mode .pt-section .pt-empty { background: #131a26; }
+body.dark-mode .pt-section .pt-card { background: #1e1e1e; }
+body.dark-mode .pt-item-k,
+body.dark-mode .pt-sub-label { color: #94a3b8; }
+body.dark-mode .pt-item-v { color: #64b5f6; }
+body.dark-mode .pt-sep { border-top-color: #33415a; }
+
+
+/* ---- Medical History / Patient Details fill the panel as tiles ---- */
+.pt-info { display: flex; flex-direction: column; }
+#ptMedGrid {
+    flex: 1;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-auto-rows: minmax(64px, 1fr);
+    gap: 12px;
+    align-content: stretch;
+}
+.pt-med-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 1px solid rgba(13, 71, 161, 0.16);
+    border-radius: 10px;
+}
+.pt-med-q { font-size: 12.5px; line-height: 1.3; color: #475569; }
+.pt-med-a { font-size: 17px; font-weight: 700; color: var(--navy, #0d47a1); }
+#ptMedGrid > .pt-muted { grid-column: 1 / -1; align-self: center; }
+body.dark-mode .pt-med-item { background: #131a26; border-color: #33415a; }
+body.dark-mode .pt-med-q { color: #94a3b8; }
+
+/* ---- Schedule cards (same look as the Dental Records cards) ---- */
+.pt-sched-card { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; }
+#ptSchedule .pt-sched-card .appt-actions { justify-content: flex-start; }
+.pt-badge--pending { color: #b45309; background: #fef3c7; border: 1px solid #fcd34d; }
+body.dark-mode .pt-badge--pending { color: #fcd34d; background: rgba(245, 158, 11, 0.18); border-color: rgba(252, 211, 77, 0.4); }
+@media (max-width: 900px) { .pt-sched-card { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .pt-sched-card { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---- Dental Records pager: 1 2 3 ... Next ---- */
+.pt-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 0 12px;
+}
+.pt-pager[hidden] { display: none; }
+.pt-pg {
+    min-width: 38px;
+    padding: 8px 12px;
+    background: #eef4ff;
+    border: 1px solid rgba(13, 71, 161, 0.3);
+    border-radius: 8px;
+    color: var(--navy, #0d47a1);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.pt-pg:hover { background: #dbe8ff; }
+.pt-pg.is-active, .pt-pg--next { background: var(--navy, #0d47a1); border-color: var(--navy, #0d47a1); color: #ffffff; }
+.pt-pg--next:hover { background: #1565c0; }
+.pt-pg-gap { padding: 0 4px; color: #64748b; }
+.pt-pager-info { margin-left: 8px; font-size: 12.5px; color: #64748b; }
+body.dark-mode .pt-pg { background: rgba(100, 181, 246, 0.1); border-color: #64b5f6; color: #64b5f6; }
+body.dark-mode .pt-pg.is-active, body.dark-mode .pt-pg--next { background: #1565c0; border-color: #1565c0; color: #ffffff; }
+body.dark-mode .pt-pager-info, body.dark-mode .pt-pg-gap { color: #94a3b8; }

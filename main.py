@@ -9941,6 +9941,65 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
             }), 500
     
+    def get_my_treatment_record(self):
+        """Read-only treatment record for the logged-in patient's profile
+        page: every visit row plus the saved medical history answers.
+        Always scoped to the session account, never to a uid from the
+        request, so a patient can only ever read their own record."""
+        uid = session.get('uid')
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+
+        try:
+            procedures = []
+            done_docs = (
+                self.db.collection(self.Customer_Account)
+                .document(uid)
+                .collection("Done_procedure")
+                .order_by("updated_at")
+                .stream()
+            )
+            for doc in done_docs:
+                data = doc.to_dict() or {}
+                chart_image = data.get("chart_image", "")
+                for p in data.get("procedures", []):
+                    procedures.append({
+                        "dentist": p.get("dentist", ""),
+                        "medicine": p.get("medicine", ""),
+                        "date": p.get("date", ""),
+                        "tooth": p.get("tooth", ""),
+                        "procedure": p.get("procedure", ""),
+                        "notes": p.get("notes", ""),
+                        "value": p.get("value", 0),
+                        "paid": p.get("paid", 0),
+                        "balance": p.get("balance", 0),
+                        "status": p.get("status", ""),
+                        "next_appointment": p.get("next_appointment", ""),
+                        "plan_ref": p.get("plan_ref", ""),
+                        "payments": self._public_payments(p.get("payments")),
+                        "chart_image": chart_image,
+                    })
+
+            summary = self._latest_appointment_summary(uid) or {}
+
+            return jsonify({
+                "success": True,
+                "procedures": procedures,
+                "medical_history": summary.get("medical_history") or {},
+                "latest_appointment": {
+                    "service": summary.get("service", ""),
+                    "appointment_date": summary.get("appointment_date", ""),
+                    "dentist_name": summary.get("dentist_name", ""),
+                },
+                "patient_details": summary.get("patient_details") or {},
+            })
+        except Exception as e:
+            print("ERROR in get_my_treatment_record:", e)
+            return jsonify({
+                "success": False,
+                "message": "Something went wrong. Please try again."
+            }), 500
+
     def get_patient_profile_data(self):
         """Fetches schedule and treatment data for the logged-in patient's profile page."""
         uid = session.get('uid')
@@ -12208,6 +12267,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/link_patient_account", methods=["POST"])(self.link_patient_account)
         self.app.route("/previous_booking_info")(self.previous_booking_info)
         self.app.route("/get_patient_profile_data")(self.get_patient_profile_data)
+        self.app.route("/get_my_treatment_record")(self.get_my_treatment_record)
         self.app.route("/admin/merge_patients", methods=["POST"])(self.admin_merge_patients)
         self.app.route("/admin/financial_chart_data")(self.admin_financial_chart_data)
         self.app.route("/admin/unpaid_procedures")(self.admin_unpaid_procedures)

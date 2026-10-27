@@ -182,6 +182,7 @@
                     <span class="btn-back__label">Back to Home</span>
                 </a>
             </div>
+            <div class="pt-top">
             <div class="profile-card">
 
             <div class="profile-left">
@@ -219,6 +220,74 @@
                 </div>
             </div>
 
+            <!-- Patient Summary + Medical History sit beside the profile card.
+                 Filled by the treatment record script near the end of the page. -->
+            <div class="pt-side">
+                <section class="pt-panel pt-summary" aria-label="Patient summary">
+                    <span class="pt-panel-label">
+                        <span class="material-symbols-rounded" aria-hidden="true">summarize</span>
+                        Patient Summary
+                    </span>
+                    <div class="pt-stats">
+                        <div class="pt-stat"><span class="pt-stat-q">Treatments</span><span class="pt-stat-a" id="ptStatVisits">-</span></div>
+                        <div class="pt-stat"><span class="pt-stat-q">Last visit</span><span class="pt-stat-a" id="ptStatLast">-</span></div>
+                        <div class="pt-stat"><span class="pt-stat-q">Balance</span><span class="pt-stat-a" id="ptStatBalance">-</span></div>
+                    </div>
+                </section>
+
+                <section class="pt-panel pt-info" aria-label="Appointment, patient details and medical history">
+                    <span class="pt-panel-label">
+                        <span class="material-symbols-rounded" aria-hidden="true">event_note</span>
+                        Last Appointment Information
+                    </span>
+                    <div class="pt-items">
+                        <div class="pt-item"><span class="pt-item-k">Service</span><span class="pt-item-v" id="ptApptService">-</span></div>
+                        <div class="pt-item"><span class="pt-item-k">Date &amp; Time</span><span class="pt-item-v" id="ptApptDate">-</span></div>
+                        <div class="pt-item"><span class="pt-item-k">Dentist</span><span class="pt-item-v" id="ptApptDentist">-</span></div>
+                    </div>
+
+                    <div class="pt-sep"></div>
+                    <span class="pt-sub-label">
+                        <span class="material-symbols-rounded" aria-hidden="true">person</span>
+                        Patient Details
+                    </span>
+                    <div class="pt-grid4">
+                        <div class="pt-med-item"><span class="pt-med-q">Address</span> <span class="pt-med-a" id="ptDetAddress">-</span></div>
+                        <div class="pt-med-item"><span class="pt-med-q">Nationality</span> <span class="pt-med-a" id="ptDetNationality">-</span></div>
+                        <div class="pt-med-item"><span class="pt-med-q">Religion</span> <span class="pt-med-a" id="ptDetReligion">-</span></div>
+                        <div class="pt-med-item"><span class="pt-med-q">Occupation</span> <span class="pt-med-a" id="ptDetOccupation">-</span></div>
+                    </div>
+
+                    <div class="pt-sep"></div>
+                    <span class="pt-sub-label">
+                        <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
+                        Medical History
+                    </span>
+                    <div class="pt-grid4" id="ptMedGrid"><span class="pt-muted">Loading...</span></div>
+                </section>
+            </div>
+        </div><!-- /.pt-top -->
+
+        <!-- Schedule: shown in the page body (used to be a button + modal). -->
+        <section class="pt-section pt-schedule" id="ptSchedule" aria-label="Schedule">
+            <h2 class="pt-records-title">
+                <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                Schedule
+            </h2>
+            <div id="scheduleList"><p class="pt-empty">Loading...</p></div>
+        </section>
+
+        <!-- Dental Records: same layout as the admin treatment record, read-only, 5 per page. -->
+        <section class="pt-section pt-records" id="ptRecords" aria-label="Dental records">
+            <h2 class="pt-records-title">
+                <span class="material-symbols-rounded" aria-hidden="true">clinical_notes</span>
+                Dental Records
+            </h2>
+            <div id="ptCards"><p class="pt-empty">Loading...</p></div>
+            <nav class="pt-pager" id="ptPager" aria-label="Dental records pages" hidden></nav>
+        </section>
+
+
         <!-- =========================
             NAVIGATION BUTTONS
         ========================== -->
@@ -232,47 +301,7 @@
                 </a>
                 -->
 
-                <!-- My next Schedule Card -->
-    <a href="#" class="nav-card" id="scheduleBtn">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/calendar--v1.png" alt="Schedule">
-        <span>Schedule</span>
-        <span class="nav-card__badge" id="scheduleBadge" hidden aria-label="New schedule activity"></span>
-    </a>
-
-    <!-- Schedule Modal -->
-        <div id="scheduleModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-panel-head">
-                    <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">calendar_month</span>
-                    <h2>Schedule</h2>
-                </div>
-                <button class="close" onclick="closeScheduleModal()" aria-label="Close">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-body">
-                <h2 style="display: none;">{{ user.get('uid', '') }}</h2>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date and Time</th>
-                                <th>Dentist</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="scheduleTableBody"> </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Accept Appointment Confirm Modal -->
+                <!-- Accept Appointment Confirm Modal -->
     <div id="apptConfirmModal" class="modal">
         <div class="modal-content" style="max-width:440px;">
             <div class="modal-header">
@@ -1508,34 +1537,12 @@
     </script>
 
   <script>
-        const scheduleBtn = document.getElementById("scheduleBtn");
-        const scheduleModal = document.getElementById("scheduleModal");
-        const scheduleCloseBtn = document.querySelector("#scheduleModal .close");
-
-        function openScheduleModal() {
-            scheduleModal.style.display = "flex";
-            scheduleModal.classList.add("show");
-
-            // Viewing the schedule clears its notification dot.
-            markSectionSeen('schedule');
-
-            const uid = "{{ user.get('uid', '') }}";
-            console.log("UID:", uid);
-
-            loadApprove(uid);
-        }
-
-        function closeScheduleModal() {
-            scheduleModal.style.display = "none";
-            scheduleModal.classList.remove("show");
-        }
-
-        scheduleBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            openScheduleModal();
+        // The schedule is shown in the page body now, so it loads
+        // as soon as the page does (loadApprove is defined below).
+        document.addEventListener("DOMContentLoaded", function () {
+            const scheduleUid = "{{ user.get('uid', '') }}";
+            if (scheduleUid) loadApprove(scheduleUid);
         });
-
-        scheduleCloseBtn.addEventListener("click", closeScheduleModal);
 
         /* Firestore stores "YYYY-MM-DD HH:MM" for appointment_date
            and date-only "YYYY-MM-DD" for next-appointment fields.
@@ -1568,113 +1575,85 @@
             return datePart + ' - ' + hours + ':' + match[5] + meridiem;
         }
 
+        function schedEsc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function schedField(label, valueHtml) {
+            return '<div class="pt-f"><span class="pt-k">' + label + '</span>' +
+                '<span class="pt-v">' + valueHtml + '</span></div>';
+        }
+
+        /* Same look as the Dental Records cards. Accept / Decline still
+           read their appointment through the card's data-idx. */
         function loadApprove(uid) {
 
-            const tbody = document.getElementById("scheduleTableBody");
+            const list = document.getElementById("scheduleList");
+            if (!list) return;
 
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="3" style="text-align:center;">
-                        Loading...
-                    </td>
-                </tr>
-            `;
+            list.innerHTML = '<p class="pt-empty">Loading...</p>';
 
             fetch(`/get_approve/${uid}`)
                 .then(response => response.json())
-        .then(data => {
-
-
-        console.log(data);
+                .then(data => {
 
                     if (data.error) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="3" style="text-align:center;color:red;">
-                                    ${data.error}
-                                </td>
-                            </tr>
-                        `;
+                        list.innerHTML = '<p class="pt-empty pt-empty--err">' + schedEsc(data.error) + '</p>';
                         return;
                     }
 
                     if (!Array.isArray(data) || data.length === 0) {
-                        tbody.innerHTML = `
-                            <tr>
-                                <td colspan="3" style="text-align:center;">
-                                    No schedule found.
-                                </td>
-                            </tr>
-                        `;
+                        list.innerHTML = '<p class="pt-empty">No schedule found.</p>';
                         return;
                     }
 
-                    tbody.innerHTML = "";
-
-                    // Keep the raw rows so the Accept/Decline
-                    // buttons can read the appointment they
-                    // belong to (see getScheduleItem below).
+                    // Keep the raw rows so the Accept/Decline buttons can
+                    // read the appointment they belong to (getScheduleItem).
                     window.__scheduleItems = data;
 
-                    data.forEach((item, index) => {
+                    list.innerHTML = data.map((item, index) => {
 
-                        console.log(item);
+                        // Only the dentist's "next visit" suggestion is still
+                        // waiting on the patient; everything else is already
+                        // confirmed and needs no action.
+                        const actionable = item.status === 'suggested';
 
-                        // Only the dentist's "next visit" suggestion
-                        // (written from a treatment record) is still
-                        // waiting on the patient. The patient's own
-                        // bookings are already accepted once the admin
-                        // confirms them, and the dentist's own creations
-                        // are confirmed on the spot, so neither needs
-                        // an action button.
-                        var actionable = item.status === 'suggested';
+                        const status = actionable
+                            ? '<span class="pt-badge pt-badge--pending">Awaiting your reply</span>'
+                            : '<span class="pt-badge pt-badge--paid">Confirmed</span>';
 
-                        tbody.innerHTML += `
-                            <tr data-idx="${index}">
-                                <td>${formatScheduleDateTime(item.appointment_date || item.Date) || "-"}</td>
-                                <td>${item.DentistName || "-"}</td>
-                                <td>
-                                    ${actionable ? `
-                                    <div class="appt-actions">
-                                        <button type="button" class="btn-action appt-accept-btn"
-                                            title="Accept this appointment" aria-label="Accept this appointment"
-                                            onclick="acceptScheduleAppt(this.closest('tr'))">
-                                            <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
-                                        </button>
-                                        <button type="button" class="btn-action appt-decline-btn"
-                                            title="Decline this appointment" aria-label="Decline this appointment"
-                                            onclick="declineScheduleAppt(this.closest('tr'))">
-                                            <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
-                                        </button>
-                                    </div>` : `
-                                    <span class="appt-confirmed">Confirmed</span>`}
-                                </td>
-                            </tr>
-                        `;
-                    });
+                        const action = actionable ? `
+                            <div class="appt-actions">
+                                <button type="button" class="btn-action appt-accept-btn"
+                                    title="Accept this appointment" aria-label="Accept this appointment"
+                                    onclick="acceptScheduleAppt(this.closest('[data-idx]'))">
+                                    <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                                </button>
+                                <button type="button" class="btn-action appt-decline-btn"
+                                    title="Decline this appointment" aria-label="Decline this appointment"
+                                    onclick="declineScheduleAppt(this.closest('[data-idx]'))">
+                                    <span class="material-symbols-rounded" aria-hidden="true">event_busy</span>
+                                </button>
+                            </div>` : '<span class="pt-v">-</span>';
+
+                        return '<article class="pt-card pt-sched-card" data-idx="' + index + '">' +
+                            schedField('Date &amp; Time', schedEsc(formatScheduleDateTime(item.appointment_date || item.Date) || '-')) +
+                            schedField('Dentist', schedEsc(item.DentistName || '-')) +
+                            schedField('Service', schedEsc(item.Service || '-')) +
+                            schedField('Status', status) +
+                            '<div class="pt-f"><span class="pt-k">Action</span>' + action + '</div>' +
+                            '</article>';
+                    }).join('');
 
                 })
                 .catch(error => {
-
                     console.error(error);
-
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="3" style="text-align:center;color:red;">
-                                Failed to load schedule.
-                            </td>
-                        </tr>
-                    `;
+                    list.innerHTML = '<p class="pt-empty pt-empty--err">Failed to load schedule.</p>';
                 });
         }
         </script>
-
-    <!-- Dental Records -->
-    <a href="javascript:void(0);" class="nav-card" data-uid="{{ user.get('uid', '') }}" onclick="openVisitHistory(this.dataset.uid)">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/pill.png" alt="Records">
-        <span>Dental Records</span>
-        <span class="nav-card__badge" id="recordsBadge" hidden aria-label="New dental records"></span>
-    </a>
 
     <div id="visitHistoryModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
@@ -1877,14 +1856,6 @@ function closeChartView() {
     modal.classList.remove("show");
 }
 </script>
-
-    <!-- Payments Card -->
-    <!-- Payments Card -->
-    <a href="#" class="nav-card" onclick="openPaymentModal(); return false;">
-        <img src="https://img.icons8.com/ios-filled/50/ffffff/cash.png" alt="Payments">
-        <span>Payments</span>
-        <span class="nav-card__badge" id="paymentsBadge" hidden aria-label="New payment activity"></span>
-    </a>
 
     <!-- Payment Modal -->
     <div id="paymentModal" class="modal">
@@ -2822,105 +2793,6 @@ async function payGCash(amount, procedure) {
 </script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Fetch data for the patient profile
-        fetch('/get_patient_profile_data')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    renderSchedule(data.schedule);
-                    renderDentalRecords(data.procedures);
-                    renderPayments(data.procedures);
-                }
-            })
-            .catch(err => console.error('Error loading profile data:', err));
-
-        function renderSchedule(schedule) {
-            const tbody = document.querySelector('#scheduleTable tbody'); // Make sure your table has id="scheduleTable" or select the correct tbody
-            // Fallback selector if no ID: document.querySelectorAll('table')[0].querySelector('tbody');
-            const tbodyEl = document.querySelector('.table-responsive table tbody') || document.querySelector('table tbody');
-            
-            if (!tbodyEl) return;
-            tbodyEl.innerHTML = '';
-
-            if (schedule.length === 0) {
-                tbodyEl.innerHTML = '<tr><td colspan="4" class="text-center">No upcoming or past appointments.</td></tr>';
-                return;
-            }
-
-            schedule.forEach(appt => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${formatScheduleDateTime(appt.appointment_date) || 'N/A'}</td>
-                    <td>${appt.Service || 'N/A'}</td>
-                    <td>${appt.DentistName || 'Not Assigned'}</td>
-                `;
-                tbodyEl.appendChild(tr);
-            });
-        }
-
-        function renderDentalRecords(procedures) {
-            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[1] || document.querySelectorAll('table tbody')[1];
-            if (!tbodyEl) return;
-            tbodyEl.innerHTML = '';
-
-            if (procedures.length === 0) {
-                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No dental records found.</td></tr>';
-                return;
-            }
-
-            procedures.forEach(proc => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${proc.dentist || 'N/A'}</td>
-                    <td>${proc.medicine || '-'}</td>
-                    <td>${formatScheduleDateTime(proc.date) || 'N/A'}</td>
-                    <td>${proc.procedure || 'N/A'}</td>
-                    <td><a href="#" onclick="viewChart('${proc.chart_image || ''}')">View Chart</a></td>
-                    <td>${formatScheduleDateTime(proc.next_appointment) || '-'}</td>
-                `;
-                tbodyEl.appendChild(tr);
-            });
-        }
-
-        function renderPayments(procedures) {
-            const tbodyEl = document.querySelectorAll('.table-responsive table tbody')[2] || document.querySelectorAll('table tbody')[2];
-            if (!tbodyEl) return;
-            tbodyEl.innerHTML = '';
-
-            if (procedures.length === 0) {
-                tbodyEl.innerHTML = '<tr><td colspan="7" class="text-center">No payment records found.</td></tr>';
-                return;
-            }
-
-            procedures.forEach(proc => {
-                const tr = document.createElement('tr');
-                const statusClass = proc.status === 'Paid' ? 'text-success' : 'text-warning';
-                tr.innerHTML = `
-                    <td>${formatScheduleDateTime(proc.date) || 'N/A'}</td>
-                    <td>${proc.procedure || 'N/A'}</td>
-                    <td>₱${proc.value || 0}</td>
-                    <td>₱${proc.paid || 0}</td>
-                    <td>₱${proc.balance || 0}</td>
-                    <td class="${statusClass}">${proc.status || 'Pending'}</td>
-                    <td>${proc.status !== 'Paid' ? '<button class="btn btn-sm btn-primary">Pay Now</button>' : '-'}</td>
-                `;
-                tbodyEl.appendChild(tr);
-            });
-        }
-    });
-
-    function viewChart(base64Image) {
-        if (!base64Image) {
-            showToast("No chart image available for this record.");
-            return;
-        }
-        const win = window.open();
-        win.document.write('<img src="data:image/png;base64,' + base64Image + '" style="max-width:100%;"/>');
-    }
-    </script>
-
-    <script>
     /* ---- Schedule modal action buttons -----------------------
        Accept: ask whether to carry the previous details over,
        then open the booking form right here with the admin's
@@ -3359,36 +3231,261 @@ async function payGCash(amount, procedure) {
         return pdNewestTs(items, fields) > lastSeen;
     }
 
+    </script>
+
+    <script>
+    /* ---- Treatment Information (read-only) --------------------
+       Same layout as the admin Treatment Information, rendered in
+       the page body. Data comes from /get_my_treatment_record, which
+       is always scoped to the logged-in patient. Nothing here can
+       edit or delete a record. */
     (function () {
-        var uid = "{{ user.get('uid', '') }}";
-        if (!uid) return;
+        var MH_FIELDS = [
+            ['q1', 'Are you in good health?', ''],
+            ['q2', 'Under medical treatment now?', 'q2_spec'],
+            ['q3', 'Serious illness / surgical operation?', 'q3_spec'],
+            ['q4', 'Ever been hospitalized?', 'q4_spec'],
+            ['q5', 'Taking any medication?', 'q5_spec'],
+            ['q6', 'Use tobacco products?', ''],
+            ['q7', 'Any allergy?', 'q7_spec'],
+            ['q9', 'Any medical condition/s?', 'q9_spec'],
+            ['w_preg', 'Pregnant?', ''],
+            ['w_nurse', 'Nursing?', ''],
+            ['w_pill', 'Birth control pills?', '']
+        ];
+        var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+            'August', 'September', 'October', 'November', 'December'];
+        var procs = [];
 
-        // Schedule: entries the admin accepted or suggested.
-        fetch("/get_approve/" + uid)
+        function esc(v) {
+            return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+
+        function peso(n) {
+            return '\u20b1' + Number(n || 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+        }
+
+        function longDate(raw) {
+            var m = String(raw || '').match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (!m || !MONTHS[Number(m[2]) - 1]) return raw ? String(raw) : '-';
+            return MONTHS[Number(m[2]) - 1] + ' ' + Number(m[3]) + ', ' + m[1];
+        }
+
+        function field(label, valueHtml, extraClass) {
+            return '<div class="pt-f' + (extraClass ? ' ' + extraClass : '') + '">' +
+                '<span class="pt-k">' + label + '</span>' +
+                '<span class="pt-v">' + valueHtml + '</span></div>';
+        }
+
+        function isFollowUp(p) { return !!p.plan_ref; }
+
+        function isPaid(p) {
+            var bal = parseFloat(p.balance) || 0;
+            return String(p.status || '').toLowerCase() === 'paid' ||
+                (bal <= 0 && (parseFloat(p.value) || 0) > 0);
+        }
+
+        function statusBadge(p) {
+            if (isFollowUp(p)) return '<span class="pt-badge pt-badge--follow">Follow-up</span>';
+            if (isPaid(p)) return '<span class="pt-badge pt-badge--paid">Paid</span>';
+            return '<span class="pt-badge pt-badge--unpaid">' + esc(p.status || 'Not Paid') + '</span>';
+        }
+
+        function renderSummary() {
+            var visits = procs.length;
+            var balance = 0;
+            var last = '';
+            procs.forEach(function (p) {
+                if (!isFollowUp(p)) balance += parseFloat(p.balance) || 0;
+                var d = String(p.date || '').slice(0, 10);
+                if (d > last) last = d;
+            });
+            document.getElementById('ptStatVisits').textContent = visits;
+            document.getElementById('ptStatLast').textContent = last ? longDate(last) : '-';
+            document.getElementById('ptStatBalance').textContent = '\u20b1' + balance.toFixed(2);
+        }
+
+        function setText(id, v) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = v ? v : '-';
+        }
+
+        function renderAppointment(a, d) {
+            a = a || {};
+            d = d || {};
+            setText('ptApptService', a.service);
+            var when = a.appointment_date || '';
+            setText('ptApptDate', when && typeof formatScheduleDateTime === 'function'
+                ? formatScheduleDateTime(when) : when);
+            setText('ptApptDentist', a.dentist_name);
+            setText('ptDetAddress', d.address);
+            setText('ptDetNationality', d.nationality);
+            setText('ptDetReligion', d.religion);
+            setText('ptDetOccupation', d.occupation);
+        }
+
+        function renderMedical(mh) {
+            var grid = document.getElementById('ptMedGrid');
+            var html = '';
+            MH_FIELDS.forEach(function (f) {
+                var ans = mh && mh[f[0]];
+                if (!ans) return;
+                var spec = f[2] && mh[f[2]] ? ' <span class="pt-muted">(' + esc(mh[f[2]]) + ')</span>' : '';
+                html += '<div class="pt-med-item"><span class="pt-med-q">' + esc(f[1]) +
+                    '</span> <span class="pt-med-a">' + esc(ans) + '</span>' + spec + '</div>';
+            });
+            grid.innerHTML = html || '<span class="pt-muted">No medical history on file.</span>';
+        }
+
+        var PAGE_SIZE = 5;
+        var page = 1;
+        var order = [];   // indexes into procs, newest visit first
+
+        function buildOrder() {
+            order = procs.map(function (p, i) { return i; }).sort(function (a, b) {
+                var da = String(procs[a].date || '').slice(0, 10);
+                var db = String(procs[b].date || '').slice(0, 10);
+                if (da !== db) return da < db ? 1 : -1;
+                return b - a;
+            });
+        }
+
+        function renderPager() {
+            var el = document.getElementById('ptPager');
+            var pages = Math.ceil(order.length / PAGE_SIZE);
+            if (pages <= 1) { el.hidden = true; el.innerHTML = ''; return; }
+
+            var html = '';
+            if (page > 1) html += '<button type="button" class="pt-pg" data-page="' + (page - 1) + '">Prev</button>';
+
+            var nums = [];
+            for (var n = 1; n <= pages; n++) {
+                if (pages <= 7 || n === 1 || n === pages || Math.abs(n - page) <= 1) nums.push(n);
+                else if (nums[nums.length - 1] !== '\u2026') nums.push('\u2026');
+            }
+            nums.forEach(function (n) {
+                if (n === '\u2026') { html += '<span class="pt-pg-gap">\u2026</span>'; return; }
+                html += '<button type="button" class="pt-pg' + (n === page ? ' is-active' : '') +
+                    '" data-page="' + n + '"' + (n === page ? ' aria-current="page"' : '') + '>' + n + '</button>';
+            });
+
+            if (page < pages) html += '<button type="button" class="pt-pg pt-pg--next" data-page="' + (page + 1) + '">Next</button>';
+            html += '<span class="pt-pager-info">Page ' + page + ' of ' + pages + ' (' + order.length + ' records)</span>';
+            el.innerHTML = html;
+            el.hidden = false;
+        }
+
+        function renderCards() {
+            var wrap = document.getElementById('ptCards');
+            if (!procs.length) {
+                wrap.innerHTML = '<p class="pt-empty">No dental records yet.</p>';
+                renderPager();
+                return;
+            }
+            var plans = procs.filter(function (p) { return !isFollowUp(p); });
+            window.paymentPlans = plans;        // read by openPayOnline()
+            window.patientProcedures = procs;   // read by viewPatientChart()
+
+            var pages = Math.ceil(order.length / PAGE_SIZE);
+            if (page > pages) page = pages;
+            if (page < 1) page = 1;
+            var slice = order.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+            wrap.innerHTML = slice.map(function (i) {
+                var p = procs[i];
+                var fu = isFollowUp(p);
+                var bal = parseFloat(p.balance) || 0;
+                var pays = Array.isArray(p.payments) ? p.payments : [];
+
+                var value = fu ? '<span class="pt-muted">Follow-up \u00b7 no charge</span>' : peso(p.value);
+                var paid = peso(p.paid) + (fu ? ' <span class="pt-muted">to plan</span>' : '');
+                var balance = fu ? '-' : peso(bal);
+
+                var chart = p.chart_image
+                    ? '<button type="button" class="pt-icon-btn" data-chart="' + i + '" title="View dental chart" aria-label="View dental chart"><span class="material-symbols-rounded" aria-hidden="true">image</span></button>'
+                    : '-';
+                var payments = pays.length
+                    ? '<button type="button" class="pt-icon-btn" data-hist="' + i + '" title="Payment history" aria-label="Payment history"><span class="material-symbols-rounded" aria-hidden="true">receipt_long</span><span class="pt-count">' + pays.length + '</span></button>'
+                    : '';
+
+                var pay = '';
+                if (!fu && bal > 0) {
+                    pay = field('Pay', '<button type="button" class="pt-pay-btn" data-pay="' + plans.indexOf(p) + '">Pay Online</button>');
+                }
+
+                return '<article class="pt-card">' +
+                    field('Assigned Dentist', esc(p.dentist || '-')) +
+                    field('Medicine', esc(p.medicine || '-')) +
+                    field('Visit Date', esc(p.date || '-')) +
+                    field('Tooth#', esc(p.tooth || '-')) +
+                    field('Procedure', esc(p.procedure || '-')) +
+                    field('Notes', esc(p.notes || '-')) +
+                    field('Value', value) +
+                    field('Fee Paid', paid) +
+                    field('Balance', balance) +
+                    field('Status', statusBadge(p)) +
+                    field('Next Appointment', esc(p.next_appointment || '-')) +
+                    field('Chart', chart) +
+                    field('Payments', payments || '-') +
+                    pay +
+                    '<div class="pt-hist" id="ptHist' + i + '" hidden></div>' +
+                    '</article>';
+            }).join('');
+            renderPager();
+        }
+
+        function toggleHistory(i) {
+            var box = document.getElementById('ptHist' + i);
+            if (!box) return;
+            if (!box.hidden) { box.hidden = true; return; }
+            var pays = (procs[i] && procs[i].payments) || [];
+            box.innerHTML = '<table class="pt-hist-table"><thead><tr><th>Date</th><th>Amount</th><th>Paid via</th></tr></thead><tbody>' +
+                pays.map(function (x) {
+                    return '<tr><td>' + esc(x.date || '-') + '</td><td>' + peso(x.amount) + '</td><td>' + esc(x.method || '-') + '</td></tr>';
+                }).join('') + '</tbody></table>';
+            box.hidden = false;
+        }
+
+        document.getElementById('ptCards').addEventListener('click', function (e) {
+            var t = e.target.closest ? e.target.closest('button') : null;
+            if (!t) return;
+            if (t.hasAttribute('data-chart')) viewPatientChart(Number(t.getAttribute('data-chart')));
+            else if (t.hasAttribute('data-hist')) toggleHistory(Number(t.getAttribute('data-hist')));
+            else if (t.hasAttribute('data-pay')) openPayOnline(Number(t.getAttribute('data-pay')));
+        });
+
+        document.getElementById('ptPager').addEventListener('click', function (e) {
+            var b = e.target.closest ? e.target.closest('button') : null;
+            if (!b || !b.hasAttribute('data-page')) return;
+            page = Number(b.getAttribute('data-page'));
+            renderCards();
+            var top = document.getElementById('ptRecords');
+            if (top && top.scrollIntoView) top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        function fail(msg) {
+            document.getElementById('ptCards').innerHTML = '<p class="pt-empty pt-empty--err">' + esc(msg) + '</p>';
+            document.getElementById('ptMedGrid').innerHTML = '<span class="pt-muted">-</span>';
+        }
+
+        fetch('/get_my_treatment_record')
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (!Array.isArray(data)) return;
-                pdSetBadge("scheduleBadge",
-                    pdIsNew(data, ["accepted_at", "created_at"], "schedule"));
+                if (!data || !data.success) { fail((data && data.message) || 'Failed to load treatment records.'); return; }
+                procs = Array.isArray(data.procedures) ? data.procedures : [];
+                buildOrder();
+                page = 1;
+                renderSummary();
+                renderMedical(data.medical_history || {});
+                renderAppointment(data.latest_appointment, data.patient_details);
+                renderCards();
             })
-            .catch(function () { /* leave the dot hidden on failure */ });
-
-        // Dental Records and Payments both render the patient's
-        // Done_procedure history, so one read drives both dots.
-        // Each card tracks its own last-viewed time.
-        fetch("/get_patient/" + uid)
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                var records = (data && Array.isArray(data.Done_procedure))
-                    ? data.Done_procedure : [];
-                pdSetBadge("recordsBadge",
-                    records.length > 0 &&
-                    pdIsNew(records, ["updated_at", "date"], "records"));
-                pdSetBadge("paymentsBadge",
-                    records.length > 0 &&
-                    pdIsNew(records, ["updated_at", "date"], "payments"));
-            })
-            .catch(function () { /* leave the dots hidden on failure */ });
+            .catch(function (err) {
+                console.error(err);
+                fail('Failed to load treatment records.');
+            });
     })();
     </script>
 
