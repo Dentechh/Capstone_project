@@ -2164,7 +2164,7 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
    rule stretched Prev and Next to the full width while the page-number
    buttons stayed small, so they stacked one per line at different sizes.
    ===================================================================== */
-#myPatientsPagination button {
+    #myPatientsPagination button, #dashboardPatientsPagination button {
     box-sizing: border-box;
     flex: 0 0 auto;
     display: inline-flex;
@@ -2179,13 +2179,13 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
     white-space: nowrap;
 }
 
-#myPatientsPageNumbers button {
+    #myPatientsPageNumbers button, #dashboardPatientsPageNumbers button {
     width: 36px;
     min-width: 36px;
     height: 36px;
 }
 
-#myPatientsPageNumbers {
+#myPatientsPageNumbers, #dashboardPatientsPageNumbers {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -2193,32 +2193,76 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
 }
 
 @media (max-width: 768px) {
-    #myPatientsPagination {
+    #myPatientsPagination, #dashboardPatientsPagination {
         justify-content: center;
         gap: 6px;
     }
 
-    #myPatientsPagination button {
+#myPatientsPagination button, #dashboardPatientsPagination button {
         width: 56px;
         min-width: 56px;
     }
 
-    #myPatientsPageNumbers button {
+#myPatientsPageNumbers button, #dashboardPatientsPageNumbers button {
         width: 36px;
         min-width: 36px;
         height: 36px;
     }
 
     /* "Page 1 of 3 (84 patients)" sits on its own centred line. */
-    #myPatientsPageInfo {
+    #myPatientsPageInfo, #dashboardPatientsPageInfo {
         flex: 1 0 100%;
         margin-left: 0 !important;
         text-align: center;
     }
 }
 
-/* =====================================================================
-   My Patients (phones and small tablets, 768px and below):
+/* Activity Log pagination responsive */
+#activityPagination button {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    min-width: 64px;
+    height: 36px;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+}
+#activityPageNumbers button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+}
+#activityPageNumbers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+@media (max-width: 768px) {
+    #activityPagination {
+        justify-content: center;
+        gap: 6px;
+    }
+    #activityPagination button {
+        width: 56px;
+        min-width: 56px;
+    }
+    #activityPageNumbers button {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+    }
+    #activityPageInfo {
+        flex: 1 0 100%;
+        margin-left: 0 !important;
+        text-align: center;
+    }
+}
    the "#" column kept an old 190px minimum from when the Name column
    was first, which left a wide empty gap between the number and the
    name. Shrink "#" to its number (the same as on larger screens) and

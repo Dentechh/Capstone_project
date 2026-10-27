@@ -181,12 +181,12 @@
 <div id="section-financialreports" class="content-section">
             <div class="financial-period-toolbar">
                 <div class="period-btn-group" role="group" aria-label="Report period">
-                    <button type="button" class="period-btn" data-period="today"
+                    <button type="button" class="period-btn active" data-period="today"
                         onclick="loadFinancialChart('today')">
                         <span class="material-symbols-rounded" aria-hidden="true">today</span>
                         <span>Today</span>
                     </button>
-                    <button type="button" class="period-btn active" data-period="weekly"
+                    <button type="button" class="period-btn" data-period="weekly"
                         onclick="loadFinancialChart('weekly')">
                         <span class="material-symbols-rounded" aria-hidden="true">calendar_view_week</span>
                         <span>Weekly</span>
@@ -356,12 +356,12 @@
 
                 <div class="financial-period-toolbar" style="margin-bottom:12px;">
                     <div class="period-btn-group" role="group" aria-label="Braces report period">
-                        <button type="button" class="period-btn braces-period-btn" data-period="today"
+                        <button type="button" class="period-btn braces-period-btn active" data-period="today"
                             onclick="loadBracesFinancialChart('today')">
                             <span class="material-symbols-rounded" aria-hidden="true">today</span>
                             <span>Today</span>
                         </button>
-                        <button type="button" class="period-btn braces-period-btn active" data-period="weekly"
+                        <button type="button" class="period-btn braces-period-btn" data-period="weekly"
                             onclick="loadBracesFinancialChart('weekly')">
                             <span class="material-symbols-rounded" aria-hidden="true">calendar_view_week</span>
                             <span>Weekly</span>
@@ -521,15 +521,86 @@
                                 <th class="num">Total</th>
                                 <th class="num">Paid</th>
                                 <th class="num">Balance</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="unpaidTableBody">
-                            <tr><td colspan="7" class="unpaid-empty">Loading...</td></tr>
+                            <tr><td colspan="8" class="unpaid-empty">Loading...</td></tr>
                         </tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="6" id="unpaidFootLabel">Total balance</td>
                                 <td class="num" id="unpaidFootTotal">₱0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="income-trend-card unpaid-card" id="bracesUnpaidCard">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Unpaid Procedures (Braces)</h3>
+                        <p>Orthodontic braces patients who still have a balance.</p>
+                    </div>
+                </div>
+
+                <div class="unpaid-toolbar">
+                    <div class="period-btn-group" id="bracesUnpaidRangeGroup" role="group"
+                        aria-label="Filter braces unpaid procedures by date range">
+                        <button type="button" class="unpaid-filter-btn active" data-range="all"
+                            onclick="setBracesUnpaidRange('all')">
+                            <span class="material-symbols-rounded" aria-hidden="true">format_list_bulleted</span>
+                            <span>All</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="today"
+                            onclick="setBracesUnpaidRange('today')">
+                            <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                            <span>Today</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="7d"
+                            onclick="setBracesUnpaidRange('7d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                            <span>Last 7 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="30d"
+                            onclick="setBracesUnpaidRange('30d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                            <span>Last 30 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="12m"
+                            onclick="setBracesUnpaidRange('12m')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_view_month</span>
+                            <span>Last 12 Months</span>
+                        </button>
+                    </div>
+                    <div class="unpaid-toolbar-right" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto;">
+                        <input type="text" id="bracesUnpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search braces unpaid procedures by patient name" oninput="renderBracesUnpaidTable()">
+                    </div>
+                </div>
+
+                <div class="unpaid-table-wrap">
+                    <table class="unpaid-table" id="bracesUnpaidTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Procedure</th>
+                                <th>Date</th>
+                                <th>Dentist</th>
+                                <th class="num">Total</th>
+                                <th class="num">Paid</th>
+                                <th class="num">Balance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bracesUnpaidTableBody">
+                            <tr><td colspan="8" class="unpaid-empty">Loading...</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" id="bracesUnpaidFootLabel">Total balance</td>
+                                <td class="num" id="bracesUnpaidFootTotal">₱0.00</td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>

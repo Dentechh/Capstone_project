@@ -26,7 +26,7 @@ function finApplyChartSizing(chart) {
     });
 })();
 
-let bracesFinancialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let bracesFinancialNav = { period: 'today', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
 let bracesFinancialChartRequestId = 0;
 
 function loadBracesFinancialChart(period) {
@@ -299,7 +299,7 @@ function updateBracesIncomeChart(labels, dataValues, chartType) {
         // downloadFinancialReportPDF() so the report always matches the view,
         // without a separate fetch. Seeded from the server-rendered (all-time)
         // values, then kept in sync by loadFinancialChart() on every period switch.
-        let financialReportState = { period: 'weekly', totalIncome: 0, totalOutstanding: 0, unpaidProcedures: 0 };
+        let financialReportState = { period: 'today', totalIncome: 0, totalOutstanding: 0, unpaidProcedures: 0 };
         (function seedFinancialReportState() {
             try {
                 const raw = document.getElementById('financial-report-data');
@@ -311,7 +311,7 @@ function updateBracesIncomeChart(labels, dataValues, chartType) {
 
         // Which week / month / year is on screen for the Weekly, Monthly and
         // Yearly views. null month / year means "the current one".
-let financialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let financialNav = { period: 'today', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
 let financialChartRequestId = 0; // so a slow, older response can't overwrite a newer one
 // Procedure picked in the dropdown above the cards ('' = all procedures; orthodontic braces are
 // never part of this report, they have their own section). Lower-cased key + display name.
@@ -1048,10 +1048,21 @@ let procChartRequestId = 0;
             setInstance(newChart);
         }
 
+document.addEventListener('DOMContentLoaded', function () {
+    const prevBtn = document.getElementById('dashboardPatientsPrevBtn');
+    const nextBtn = document.getElementById('dashboardPatientsNextBtn');
+    if (prevBtn) prevBtn.addEventListener('click', function () {
+        if (dashboardPatientsState.page > 1) loadDashboardStats(dashboardNav.period, dashboardPatientsState.page - 1);
+    });
+    if (nextBtn) nextBtn.addEventListener('click', function () {
+        if (dashboardPatientsState.page < dashboardPatientsState.totalPages) loadDashboardStats(dashboardNav.period, dashboardPatientsState.page + 1);
+    });
+});
+
         // Initialize charts on load
         document.addEventListener('DOMContentLoaded', () => {
-            loadFinancialChart('weekly'); // Default for income
-            loadBracesFinancialChart('weekly'); // Default for braces income
+loadFinancialChart('today'); // Default for income
+loadBracesFinancialChart('today'); // Default for braces income
             loadDashboardStats('today'); // Default for dashboard stats
             loadProcedureCharts('overall'); // Default for procedures (shows all time)
         });
@@ -1408,19 +1419,20 @@ let procChartRequestId = 0;
             const total = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
 
             if (!rows.length) {
-                body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">No unpaid procedures found.</td></tr>';
+                body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">No unpaid procedures found.</td></tr>';
             } else {
                 body.innerHTML = rows.map(r => {
                     const proc = unpaidEsc(r.procedure || '\u2014') +
                         (r.tooth ? ' <span style="color:#78909c;">(Tooth ' + unpaidEsc(r.tooth) + ')</span>' : '');
                     return '<tr>' +
-                        '<td>' + unpaidEsc(r.patient_name) + '</td>' +
+                        '<td>' + unpaidEsc(r.patient_name || 'Unknown patient') + '</td>' +
                         '<td>' + proc + '</td>' +
                         '<td>' + unpaidEsc(unpaidFormatDate(r.date)) + '</td>' +
                         '<td>' + unpaidEsc(formatDentistName(r.dentist) || '\u2014') + '</td>' +
                         '<td class="num">' + unpaidPeso(r.value) + '</td>' +
                         '<td class="num">' + unpaidPeso(r.paid) + '</td>' +
                         '<td class="num unpaid-balance-cell">' + unpaidPeso(r.balance) + '</td>' +
+                        '<td class="ci-actions"><button type="button" class="btn-action accept mp-info-btn" title="Treatment information" aria-label="Treatment information" onclick=\'openUnpaidPatientInMyPatients(' + JSON.stringify(String(r.patient_id || '')) + ', ' + JSON.stringify(String(r.patient_name || '')) + ')\'><span class="material-symbols-rounded" aria-hidden="true">info</span></button></td>' +
                         '</tr>';
                 }).join('');
             }
@@ -1448,13 +1460,272 @@ let procChartRequestId = 0;
                         populateUnpaidProcedureOptions();
                         renderUnpaidTable();
                     } else {
-                        body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
+                        body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
                     }
                 })
                 .catch(() => {
-                    body.innerHTML = '<tr><td colspan="7" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
+                    body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">Could not load unpaid procedures.</td></tr>';
                 });
         }
+        // --- Unpaid Procedures table (Financial Reports) ---
+        // Own filters (date range, procedure, patient name); deliberately
+        // independent of the Today/Weekly/... buttons, which only drive the
+        // three cards and the Income Trend chart. The server
+        // sends every unpaid procedure once and filtering happens here, so
+        // changing a filter costs no request and no Firestore read.
+        let bracesUnpaidRows = [];
+        let bracesUnpaidRange = 'all';
+         let bracesUnpaidProcedureFilter = 'all'; // 'all' or a lower-cased procedure name
+
+         function unpaidEsc(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function unpaidPeso(n) {
+            return '\u20B1' + (Number(n) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function unpaidParseDate(str) {
+            // Procedure dates are stored as YYYY-MM-DD. Parsed as a LOCAL date so
+            // "today" and the day counts follow the clinic's own clock.
+            const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str || ''));
+            if (!m) return null;
+            return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        }
+
+        function unpaidFormatDate(str) {
+            const d = unpaidParseDate(str);
+            if (!d) return '\u2014';
+            return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function unpaidInRange(row, range) {
+            if (range === 'all') return true;
+            const d = unpaidParseDate(row.date);
+            if (!d) return false; // no usable date: only shown under "All"
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let start;
+            if (range === 'today') {
+                start = today;
+            } else if (range === '7d') {
+                start = new Date(today); start.setDate(start.getDate() - 6);
+            } else if (range === '30d') {
+                start = new Date(today); start.setDate(start.getDate() - 29);
+            } else if (range === '12m') {
+                start = new Date(today.getFullYear(), today.getMonth() - 11, 1);
+            } else {
+                return true;
+            }
+            return d >= start && d <= today;
+        }
+
+        // Procedure name used for the filter: trimmed and lower-cased, so
+        // "Orthodontic Braces" matches whatever the tooth / plan label says.
+        function unpaidProcKey(row) {
+            return String(row.procedure || '').trim().toLowerCase();
+        }
+
+        // Fills the procedure dropdown from the rows actually in the table
+        // (with how many rows each has), so there is nothing to maintain by
+        // hand. Keeps the current choice if it still exists, else resets.
+        function populateBracesUnpaidProcedureOptions() {
+            const panel = document.getElementById('bracesUnpaidProcedurePanel');
+            const label = document.getElementById('bracesUnpaidProcedureLabel');
+            if (!panel) return;
+            const byKey = new Map();
+            bracesUnpaidRows.forEach(r => {
+                const key = unpaidProcKey(r);
+                if (!key) return;
+                const entry = byKey.get(key);
+                if (entry) entry.count += 1;
+                else byKey.set(key, { label: String(r.procedure).trim(), count: 1 });
+            });
+            if (bracesUnpaidProcedureFilter !== 'all' && !byKey.has(bracesUnpaidProcedureFilter)) {
+                bracesUnpaidProcedureFilter = 'all';
+            }
+            // Each option: procedure name + a count pill. data-label keeps the plain
+            // "Name (n)" text the trigger button and the PDF header use.
+            function optionHtml(value, name, count) {
+                const selected = bracesUnpaidProcedureFilter === value;
+                const full = value === 'all' ? name : name + ' (' + count + ')';
+                return '<button type="button" class="unpaid-proc-option' + (selected ? ' is-selected' : '') + '"' +
+                    ' data-value="' + unpaidEsc(value) + '" data-label="' + unpaidEsc(full) + '"' +
+                    ' role="option" aria-selected="' + selected + '">' +
+                    '<span class="unpaid-proc-option-name">' + unpaidEsc(name) + '</span>' +
+                    '<span class="unpaid-proc-count">' + count + '</span></button>';
+            }
+            const items = [optionHtml('all', 'All procedures', bracesUnpaidRows.length)];
+            Array.from(byKey.entries())
+                .sort((a, b) => a[1].label.localeCompare(b[1].label))
+                .forEach(([key, entry]) => { items.push(optionHtml(key, entry.label, entry.count)); });
+            panel.innerHTML = items.join('');
+            panel.querySelectorAll('.unpaid-proc-option').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    setBracesUnpaidProcedure(btn.getAttribute('data-value'));
+                    closeBracesUnpaidProcedureDropdown();
+                });
+            });
+            // update label
+            if (label) {
+                if (bracesUnpaidProcedureFilter === 'all') label.textContent = 'All procedures';
+                else {
+                    const found = Array.from(byKey.entries()).find(([k]) => k === bracesUnpaidProcedureFilter);
+                    label.textContent = found ? found[1].label + ' (' + found[1].count + ')' : 'All procedures';
+                }
+            }
+            syncBracesUnpaidProcFilteredClass();
+        }
+
+        // Turns the trigger solid blue while a procedure is picked, like the dropdown above the cards.
+        function syncBracesUnpaidProcFilteredClass() {
+            const dd = document.getElementById('bracesUnpaidProcedureDropdown');
+            if (dd) dd.classList.toggle('is-filtered', bracesUnpaidProcedureFilter !== 'all');
+        }
+
+        function setBracesUnpaidProcedure(value) {
+            bracesUnpaidProcedureFilter = value || 'all';
+            // update label
+            const label = document.getElementById('bracesUnpaidProcedureLabel');
+            const panel = document.getElementById('bracesUnpaidProcedurePanel');
+            if (label && panel) {
+                const sel = panel.querySelector('.unpaid-proc-option.is-selected');
+                // recompute label
+                if (bracesUnpaidProcedureFilter === 'all') label.textContent = 'All procedures';
+                else {
+                    const btn = panel.querySelector('.unpaid-proc-option[data-value="' + bracesUnpaidProcedureFilter.replace(/"/g, '\\"') + '"]');
+                    if (btn) label.textContent = btn.getAttribute('data-label') || btn.textContent;
+                }
+            }
+            syncBracesUnpaidProcFilteredClass();
+            // update selected class
+            if (panel) {
+                panel.querySelectorAll('.unpaid-proc-option').forEach(b => {
+                    const isSel = b.getAttribute('data-value') === bracesUnpaidProcedureFilter;
+                    b.classList.toggle('is-selected', isSel);
+                    b.setAttribute('aria-selected', isSel);
+                });
+            }
+            renderBracesUnpaidTable();
+        }
+
+        function toggleBracesUnpaidProcedureDropdown() {
+            const dd = document.getElementById('bracesUnpaidProcedureDropdown');
+            const trigger = document.getElementById('bracesUnpaidProcedureTrigger');
+            if (!dd || !trigger) return;
+            const open = dd.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', open);
+            if (open) {
+                const pick = dd.querySelector('.unpaid-proc-option.is-selected') || dd.querySelector('.unpaid-proc-option');
+                if (pick) { pick.focus({ preventScroll: true }); pick.scrollIntoView({ block: 'nearest' }); }
+            }
+        }
+        function closeBracesUnpaidProcedureDropdown() {
+            const dd = document.getElementById('bracesUnpaidProcedureDropdown');
+            const trigger = document.getElementById('bracesUnpaidProcedureTrigger');
+            if (dd) dd.classList.remove('is-open');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+        document.addEventListener('click', function (e) {
+            const dd = document.getElementById('bracesUnpaidProcedureDropdown');
+            if (dd && !dd.contains(e.target)) closeBracesUnpaidProcedureDropdown();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            const dd = document.getElementById('bracesUnpaidProcedureDropdown');
+            if (!dd) return;
+            const isOpen = dd.classList.contains('is-open');
+            if (e.key === 'Escape' && isOpen) {
+                closeBracesUnpaidProcedureDropdown();
+                const t = document.getElementById('bracesUnpaidProcedureTrigger');
+                if (t) t.focus();
+                return;
+            }
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && dd.contains(document.activeElement)) {
+                e.preventDefault();
+                if (!isOpen) { toggleBracesUnpaidProcedureDropdown(); return; }
+                const opts = Array.from(dd.querySelectorAll('.unpaid-proc-option'));
+                if (!opts.length) return;
+                let i = opts.indexOf(document.activeElement);
+                i = e.key === 'ArrowDown' ? Math.min(opts.length - 1, i + 1) : Math.max(0, i - 1);
+                opts[i].focus();
+            }
+        });
+
+        function getBracesUnpaidFiltered() {
+            const searchEl = document.getElementById('bracesUnpaidSearch');
+            const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            return bracesUnpaidRows.filter(r =>
+                unpaidInRange(r, bracesUnpaidRange) &&
+                (bracesUnpaidProcedureFilter === 'all' || unpaidProcKey(r) === bracesUnpaidProcedureFilter) &&
+                (!q || String(r.patient_name || '').toLowerCase().includes(q))
+            );
+        }
+
+        function renderBracesUnpaidTable() {
+            const body = document.getElementById('bracesUnpaidTableBody');
+            const footLabel = document.getElementById('bracesUnpaidFootLabel');
+            const footTotal = document.getElementById('bracesUnpaidFootTotal');
+            if (!body) return;
+
+            const rows = getBracesUnpaidFiltered();
+            const total = rows.reduce((sum, r) => sum + (Number(r.balance) || 0), 0);
+
+            if (!rows.length) {
+                body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">No braces unpaid procedures found.</td></tr>';
+            } else {
+                body.innerHTML = rows.map(r => {
+                    const proc = unpaidEsc(r.procedure || '\u2014') +
+                        (r.tooth ? ' <span style="color:#78909c;">(Tooth ' + unpaidEsc(r.tooth) + ')</span>' : '');
+                    return '<tr>' +
+                        '<td>' + unpaidEsc(r.patient_name || 'Unknown patient') + '</td>' +
+                        '<td>' + proc + '</td>' +
+                        '<td>' + unpaidEsc(unpaidFormatDate(r.date)) + '</td>' +
+                        '<td>' + unpaidEsc(formatDentistName(r.dentist) || '\u2014') + '</td>' +
+                        '<td class="num">' + unpaidPeso(r.value) + '</td>' +
+                        '<td class="num">' + unpaidPeso(r.paid) + '</td>' +
+                        '<td class="num unpaid-balance-cell">' + unpaidPeso(r.balance) + '</td>' +
+                        '<td class="ci-actions"><button type="button" class="btn-action accept mp-info-btn" title="Treatment information" aria-label="Treatment information" onclick=\'openUnpaidPatientInMyPatients(' + JSON.stringify(String(r.patient_id || '')) + ', ' + JSON.stringify(String(r.patient_name || '')) + ')\'><span class="material-symbols-rounded" aria-hidden="true">info</span></button></td>' +
+                        '</tr>';
+                }).join('');
+            }
+
+            if (footLabel) footLabel.textContent = 'Total balance (' + rows.length + ' unpaid procedure' + (rows.length === 1 ? '' : 's') + ')';
+            if (footTotal) footTotal.textContent = unpaidPeso(total);
+        }
+
+        function setBracesUnpaidRange(range) {
+            bracesUnpaidRange = range;
+            document.querySelectorAll('#bracesUnpaidRangeGroup .unpaid-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === range);
+            });
+            renderBracesUnpaidTable();
+        }
+
+        function loadBracesUnpaidProcedures() {
+            const body = document.getElementById('bracesUnpaidTableBody');
+            if (!body) return;
+            fetch('/admin/unpaid_procedures?scope=braces')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        bracesUnpaidRows = data.rows || [];
+                        populateBracesUnpaidProcedureOptions();
+                        renderBracesUnpaidTable();
+                    } else {
+                        body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">Could not load braces unpaid procedures.</td></tr>';
+                    }
+                })
+                .catch(() => {
+                    body.innerHTML = '<tr><td colspan="8" class="unpaid-empty">Could not load braces unpaid procedures.</td></tr>';
+                });
+        }
+
 
         /* Compact date for the PDF table: "6 Oct 2026".
            The screen formatter (unpaidFormatDate) renders "Oct 6, 2026", which
@@ -1660,17 +1931,75 @@ let procChartRequestId = 0;
         })();
 // --- Dashboard stats period (Accepted / Pending / Total patients) ---
 let dashboardNav = { period: 'overall', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let dashboardPatientsState = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
+
+function renderDashboardPatientsPagination() {
+    const state = dashboardPatientsState;
+    const numbers = document.getElementById('dashboardPatientsPageNumbers');
+    const info = document.getElementById('dashboardPatientsPageInfo');
+    const prevBtn = document.getElementById('dashboardPatientsPrevBtn');
+    const nextBtn = document.getElementById('dashboardPatientsNextBtn');
+    if (prevBtn) {
+        prevBtn.disabled = state.page <= 1;
+        prevBtn.style.display = state.page <= 1 ? 'none' : '';
+    }
+    if (nextBtn) {
+        nextBtn.disabled = state.page >= state.totalPages;
+        nextBtn.style.display = state.page >= state.totalPages ? 'none' : '';
+    }
+    if (info) info.textContent = 'Page ' + state.page + ' of ' + state.totalPages + ' (' + state.total + ' patients)';
+    if (!numbers) return;
+    numbers.innerHTML = '';
+    const total = state.totalPages;
+    const current = state.page;
+    const pages = [];
+    if (total <= 7) {
+        for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+        pages.push(1);
+        if (current > 3) pages.push('...');
+        for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+        if (current < total - 2) pages.push('...');
+        pages.push(total);
+    }
+    pages.forEach(function (p) {
+        if (p === '...') {
+            const span = document.createElement('span');
+            span.textContent = '\u2026';
+            numbers.appendChild(span);
+            return;
+        }
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-action filter-btn';
+        btn.textContent = p;
+        if (p === current) btn.disabled = true;
+        btn.addEventListener('click', function () { loadDashboardStats(dashboardNav.period, p); });
+        numbers.appendChild(btn);
+    });
+}
 let dashboardStatsRequestId = 0;
 
-function loadDashboardStats(period) {
+function loadDashboardStats(period, page) {
     const patientsBody = document.getElementById('dashboardPatientsBody');
-    if (patientsBody) patientsBody.innerHTML =
-        '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>Loading patients...</p></div>';
+    if (patientsBody) {
+        patientsBody.classList.add('is-switching');
+        patientsBody.innerHTML =
+            '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>Loading patients...</p></div>';
+    }
+
+    if (!period) period = dashboardNav.period || 'overall';
 
     if (period !== dashboardNav.period) {
         dashboardNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
             minYear: dashboardNav.minYear, maxYear: dashboardNav.maxYear, maxMonth: dashboardNav.maxMonth };
+        dashboardPatientsState.page = 1;
     }
+    if (page) {
+        const p = parseInt(page, 10);
+        if (!isNaN(p) && p > 0) dashboardPatientsState.page = p;
+    }
+    if (dashboardPatientsState.page < 1) dashboardPatientsState.page = 1;
 
     document.querySelectorAll('.dashboard-period-btn').forEach(btn => {
         btn.classList.remove('active');
@@ -1681,6 +2010,8 @@ function loadDashboardStats(period) {
     if (period === 'weekly') query.set('week', dashboardNav.week);
     if (period === 'monthly' && dashboardNav.month) query.set('month', dashboardNav.month);
     if (period === 'yearly' && dashboardNav.year) query.set('year', dashboardNav.year);
+    query.set('page', dashboardPatientsState.page);
+    query.set('page_size', dashboardPatientsState.pageSize || 10);
 
     const requestId = ++dashboardStatsRequestId;
 
@@ -1701,8 +2032,9 @@ function loadDashboardStats(period) {
                     patientsBody.innerHTML = '';
                     const patients = Array.isArray(data.patients) ? data.patients : [];
                     const hint = document.getElementById('dashboardPatientsHint');
-                    if (hint) hint.textContent = patients.length
-                        ? (patients.length + ' patient' + (patients.length === 1 ? '' : 's') + ' for the selected period')
+                    const total = (typeof data.patients_total === 'number') ? data.patients_total : patients.length;
+                    if (hint) hint.textContent = total
+                        ? (total + ' patient' + (total === 1 ? '' : 's') + ' for the selected period')
                         : 'No patients for the selected period';
                     if (patients.length === 0) {
                         patientsBody.innerHTML = '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>No patients for this period.</p><span class="recent-empty__hint">Try a different period.</span></div>';
@@ -1717,6 +2049,15 @@ function loadDashboardStats(period) {
                             patientsBody.appendChild(item);
                         });
                     }
+
+                    dashboardPatientsState.page = (typeof data.patients_page === 'number') ? data.patients_page : dashboardPatientsState.page;
+                    dashboardPatientsState.pageSize = (typeof data.patients_page_size === 'number') ? data.patients_page_size : dashboardPatientsState.pageSize;
+                    dashboardPatientsState.total = total;
+                    dashboardPatientsState.totalPages = (typeof data.patients_total_pages === 'number') ? data.patients_total_pages : Math.max(1, Math.ceil(total / (dashboardPatientsState.pageSize || 10)));
+                    if (dashboardPatientsState.totalPages < 1) dashboardPatientsState.totalPages = 1;
+                    if (dashboardPatientsState.page > dashboardPatientsState.totalPages) dashboardPatientsState.page = dashboardPatientsState.totalPages;
+                    renderDashboardPatientsPagination();
+                    requestAnimationFrame(function () { if (patientsBody) patientsBody.classList.remove('is-switching'); });
                 }
 
                 dashboardNav.week = data.week || 0;
@@ -1730,7 +2071,7 @@ function loadDashboardStats(period) {
                 renderDashboardNav(period, data.range_label);
             }
         })
-        .catch(err => console.error('Failed to load dashboard stats:', err));
+        .catch(err => { console.error('Failed to load dashboard stats:', err); const pb = document.getElementById('dashboardPatientsBody'); if (pb) pb.classList.remove('is-switching'); });
 }
 
 function renderDashboardNav(period, rangeLabel) {
@@ -1795,6 +2136,7 @@ function dashboardNavPick() {
     } else {
         return;
     }
+dashboardPatientsState.page = 1;
     loadDashboardStats(n.period);
 }
 
@@ -1813,5 +2155,12 @@ function dashboardNavStep(dir) {
     } else {
         return;
     }
+dashboardPatientsState.page = 1;
     loadDashboardStats(n.period);
+}
+function openUnpaidPatientInMyPatients(patientId, patientName) {
+    if (typeof showSection === 'function') showSection('mypatients');
+    setTimeout(function () {
+        if (typeof openCheckInfoModal === 'function') openCheckInfoModal(patientId, patientName);
+    }, 200);
 }

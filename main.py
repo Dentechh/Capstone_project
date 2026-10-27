@@ -6948,6 +6948,27 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         except Exception as e:
             print("DASHBOARD STATS TOTAL PATIENTS ERROR:", e)
 
+        # Paginate the "Patients This Period" list (10 per page by default)
+        try:
+            _pp = int(request.args.get("page", 1))
+        except (TypeError, ValueError):
+            _pp = 1
+        try:
+            _pps = int(request.args.get("page_size", 10))
+        except (TypeError, ValueError):
+            _pps = 10
+        if _pp < 1:
+            _pp = 1
+        if _pps < 1:
+            _pps = 10
+        if _pps > 100:
+            _pps = 100
+        _patients_total = len(patients_list)
+        _patients_total_pages = max(1, (_patients_total + _pps - 1) // _pps)
+        if _pp > _patients_total_pages:
+            _pp = _patients_total_pages
+        _patients_page_list = patients_list[(_pp - 1) * _pps:_pp * _pps]
+
         # pending requests + urgency
         pending_count = 0
         urgency_counts = {"Emergency": 0, "Urgent": 0, "Normal": 0}
@@ -6988,7 +7009,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "pending_count": pending_count,
             "total_patients": total_patients,
             "urgency_counts": urgency_counts,
-            "patients": patients_list,
+            "patients": _patients_page_list,
+            "patients_page": _pp,
+            "patients_page_size": _pps,
+            "patients_total": _patients_total,
+            "patients_total_pages": _patients_total_pages,
             "range_label": range_label,
         }
         payload.update(extra)
@@ -7684,10 +7709,9 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             updated_value = 0.0
             updated_paid = 0.0
         elif has_payment_log:
-            # Payments on a plan change only through Record Payment, so the
-            # payment log can never disagree with `paid`.
-            updated_paid = old_paid
-            if updated_value + 0.005 < old_paid:
+            # Fee Paid may be corrected directly (e.g. a wrongly entered
+            # amount), but it still cannot exceed the procedure's value.
+            if updated_value + 0.005 < updated_paid:
                 return jsonify({
                     "success": False,
                     "message": "Value cannot be lower than what has already been paid."
@@ -10555,9 +10579,15 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     balance = self.safe_float(p.get("balance", 0))
                     if balance <= 0:
                         continue
-                    # Orthodontic braces are tracked in their own section.
-                    if "braces" in str(p.get("procedure", "")).strip().lower():
-                        continue
+                    _is_braces = "braces" in str(p.get("procedure", "")).strip().lower()
+                    _scope = (request.args.get("scope") or "").strip().lower()
+                    if _scope == "braces":
+                        if not _is_braces:
+                            continue
+                    else:
+                        # Orthodontic braces are tracked in their own section.
+                        if _is_braces:
+                            continue
 
                     if resolved_name is None:
                         resolved_name = ""
@@ -10577,7 +10607,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     rows.append({
                         "patient_name": resolved_name or "Unknown patient",
                         "uid": account_uid,
-                        "patient_id": patient_unq_id,
+                        "patient_id": (self._get_account_to_patient_map().get(account_uid) or patient_unq_id),
                         "procedure": str(p.get("procedure", "") or ""),
                         "tooth": str(p.get("tooth", "") or ""),
                         "date": str(p.get("date", "") or "").strip(),
@@ -11871,9 +11901,15 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     balance = self.safe_float(p.get("balance", 0))
                     if balance <= 0:
                         continue
-                    # Orthodontic braces are tracked in their own section.
-                    if "braces" in str(p.get("procedure", "")).strip().lower():
-                        continue
+                    _is_braces = "braces" in str(p.get("procedure", "")).strip().lower()
+                    _scope = (request.args.get("scope") or "").strip().lower()
+                    if _scope == "braces":
+                        if not _is_braces:
+                            continue
+                    else:
+                        # Orthodontic braces are tracked in their own section.
+                        if _is_braces:
+                            continue
 
                     if resolved_name is None:
                         resolved_name = ""
@@ -11893,7 +11929,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     rows.append({
                         "patient_name": resolved_name or "Unknown patient",
                         "uid": account_uid,
-                        "patient_id": patient_unq_id,
+                        "patient_id": (self._get_account_to_patient_map().get(account_uid) or patient_unq_id),
                         "procedure": str(p.get("procedure", "") or ""),
                         "tooth": str(p.get("tooth", "") or ""),
                         "date": str(p.get("date", "") or "").strip(),

@@ -24,7 +24,9 @@
         newest: '',
         category: 'all',
         admin: 'all',
-        retentionDays: 365
+        retentionDays: 365,
+        page: 1,
+        pageSize: 10
     };
 
     function $(id) { return document.getElementById(id); }
@@ -233,39 +235,88 @@
             setBody(state.entries.length
                 ? 'No activity matches these filters.'
                 : 'No activity recorded in this period.');
-        } else {
-            body.textContent = '';
-            var lastDay = '';
-            rows.forEach(function (e) {
-                var day = manilaDay(e.ts);
-                if (day !== lastDay) {
-                    lastDay = day;
-                    var dr = el('tr', 'act-day');
-                    var dc = el('td', '', prettyDay(day));
-                    dc.colSpan = 5;
-                    dr.appendChild(dc);
-                    body.appendChild(dr);
-                }
-                var tr = el('tr');
-                tr.appendChild(el('td', 'act-time', manilaTime(e.ts)));
-                var tdS = el('td', 'act-staff', staffName(e));
-                tdS.appendChild(el('span', 'role-badge role-' + roleOf(e), ROLE_LABELS[roleOf(e)]));
-                tr.appendChild(tdS);
-                var tdA = el('td');
-                tdA.appendChild(el('span', 'act-badge cat-' + e.category, CATEGORY_LABELS[e.category] || e.category));
-                tdA.appendChild(document.createTextNode(e.action));
-                tr.appendChild(tdA);
-                tr.appendChild(el('td', '', e.target || '\u2014'));
-                tr.appendChild(el('td', 'act-detail', e.detail || ''));
-                body.appendChild(tr);
-            });
+            renderActivityPagination(0);
+            return;
         }
+
+        var totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
+        if (state.page > totalPages) state.page = totalPages;
+        if (state.page < 1) state.page = 1;
+        var start = (state.page - 1) * state.pageSize;
+        var pageRows = rows.slice(start, start + state.pageSize);
+
+        body.textContent = '';
+        var lastDay = '';
+        pageRows.forEach(function (e) {
+            var day = manilaDay(e.ts);
+            if (day !== lastDay) {
+                lastDay = day;
+                var dr = el('tr', 'act-day');
+                var dc = el('td', '', prettyDay(day));
+                dc.colSpan = 5;
+                dr.appendChild(dc);
+                body.appendChild(dr);
+            }
+            var tr = el('tr');
+            tr.appendChild(el('td', 'act-time', manilaTime(e.ts)));
+            var tdS = el('td', 'act-staff', staffName(e));
+            tdS.appendChild(el('span', 'role-badge role-' + roleOf(e), ROLE_LABELS[roleOf(e)]));
+            tr.appendChild(tdS);
+            var tdA = el('td');
+            tdA.appendChild(el('span', 'act-badge cat-' + e.category, CATEGORY_LABELS[e.category] || e.category));
+            tdA.appendChild(document.createTextNode(e.action));
+            tr.appendChild(tdA);
+            tr.appendChild(el('td', '', e.target || '\u2014'));
+            tr.appendChild(el('td', 'act-detail', e.detail || ''));
+            body.appendChild(tr);
+        });
 
         var span = state.oldest && state.newest
             ? ' from ' + prettyDay(state.oldest) + ' to ' + prettyDay(state.newest)
             : '';
-        setStatus('Showing ' + rows.length + ' of ' + state.entries.length + ' entries' + span +
+        setStatus('Showing ' + pageRows.length + ' of ' + rows.length + ' entries (page ' + state.page + ' of ' + totalPages + ')' + span +
             (state.hasMore ? '' : ' (the log goes back ' + state.retentionDays + ' days).'));
+        renderActivityPagination(totalPages);
+    }
+
+    function renderActivityPagination(totalPages) {
+        var numbers = $('activityPageNumbers');
+        var info = $('activityPageInfo');
+        var prevBtn = $('activityPrevBtn');
+        var nextBtn = $('activityNextBtn');
+        if (prevBtn) {
+            prevBtn.disabled = state.page <= 1;
+            prevBtn.style.display = state.page <= 1 ? 'none' : '';
+        }
+        if (nextBtn) {
+            nextBtn.disabled = state.page >= totalPages;
+            nextBtn.style.display = state.page >= totalPages ? 'none' : '';
+        }
+        if (info) info.textContent = totalPages ? ('Page ' + state.page + ' of ' + totalPages) : '';
+        if (!numbers) return;
+        numbers.innerHTML = '';
+        var pages = [];
+        if (totalPages <= 7) {
+            for (var i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (state.page > 3) pages.push('...');
+            for (var i = Math.max(2, state.page - 1); i <= Math.min(totalPages - 1, state.page + 1); i++) pages.push(i);
+            if (state.page < totalPages - 2) pages.push('...');
+            pages.push(totalPages);
+        }
+        pages.forEach(function (p) {
+            if (p === '...') {
+                var s = el('span', '', '\u2026');
+                numbers.appendChild(s);
+                return;
+            }
+            var btn = el('button', 'btn-action filter-btn', String(p));
+            btn.type = 'button';
+            if (p === state.page) btn.disabled = true;
+            btn.addEventListener('click', function () { state.page = p; renderActivityLog(); });
+            numbers.appendChild(btn);
+        });
     }
 
     function addDays(ymd, n) {
@@ -289,6 +340,7 @@
             state.loaded = false;
             state.oldest = '';
             state.newest = '';
+            state.page = 1;
             setBody('Loading...');
             setStatus('');
         }
@@ -337,11 +389,12 @@
     }
 
     function loadActivityLog(reset) {
-        load(!!reset, undefined, 14);
+        load(!!reset, undefined, 1);
     }
 
     function setActivityCategory(cat) {
         state.category = cat || 'all';
+        state.page = 1;
         document.querySelectorAll('#activityCategoryGroup .unpaid-filter-btn').forEach(function (b) {
             b.classList.toggle('active', b.getAttribute('data-cat') === state.category);
         });
@@ -350,6 +403,7 @@
 
     function setActivityAdmin(name) {
         state.admin = name || 'all';
+        state.page = 1;
         updateAdminLabel();
         highlightAdminOption();
         renderActivityLog();
@@ -368,13 +422,14 @@
             span = 62;
             $('activityFrom').value = from;
         }
+        state.page = 1;
         load(true, to, span);
     }
 
     function resetActivityRange() {
         if ($('activityFrom')) $('activityFrom').value = '';
         if ($('activityTo')) $('activityTo').value = '';
-        load(true, undefined, 14);
+        load(true, undefined, 1);
     }
 
     /* ---- PDF (what is currently shown, after the filters) ---- */
@@ -496,12 +551,12 @@
         var to = $('activityTo');
         var preset = $('activityRangePreset');
         if (!from || !to) return;
-        val = val || (preset ? preset.value : '14');
+        val = val || (preset ? preset.value : '1');
         if (val === 'custom') {
             setActivityRangeLabel('Custom');
             return;
         }
-        var labels = { '7': 'Last 7 days', '14': 'Last 14 days', '30': 'Last 30 days', '60': 'Last 60 days', '90': 'Last 90 days', 'month': 'This month' };
+        var labels = { '1': 'Today', '7': 'Last 7 days', '14': 'Last 14 days', '30': 'Last 30 days', '60': 'Last 60 days', '90': 'Last 90 days', 'month': 'This month' };
         setActivityRangeLabel(labels[val] || val);
         var t = todayYMD();
         if (val === 'month') {
@@ -510,7 +565,7 @@
             to.value = t;
         } else {
             var n = parseInt(val, 10);
-            if (isNaN(n) || n < 1) n = 14;
+            if (isNaN(n) || n < 1) n = 1;
             from.value = addDaysYMD(t, -(n - 1));
             to.value = t;
         }
@@ -530,10 +585,11 @@
         if ($('activityFrom')) $('activityFrom').value = '';
         if ($('activityTo')) $('activityTo').value = '';
         var preset = $('activityRangePreset');
-        if (preset) preset.value = '14';
-        setActivityRangeLabel('Last 14 days');
+        if (preset) preset.value = '1';
+        setActivityRangeLabel('Today');
         highlightRangeOption();
-        load(true, undefined, 14);
+        state.page = 1;
+        load(true, undefined, 1);
     }
     function initActivityDatePickers() {
         if (typeof flatpickr !== 'function') return;
@@ -568,6 +624,14 @@
     // First load when the card is really on screen (the section starts hidden).
     document.addEventListener('DOMContentLoaded', function () {
         initActivityDatePickers();
+        var prevBtn = $('activityPrevBtn');
+        var nextBtn = $('activityNextBtn');
+        if (prevBtn) prevBtn.addEventListener('click', function () {
+            if (state.page > 1) { state.page -= 1; renderActivityLog(); }
+        });
+        if (nextBtn) nextBtn.addEventListener('click', function () {
+            state.page += 1; renderActivityLog();
+        });
         document.addEventListener('click', function (e) {
             var adminWrap = $('activityAdminWrap');
             var rangeWrap = $('activityRangeWrap');

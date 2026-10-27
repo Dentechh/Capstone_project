@@ -125,6 +125,12 @@
                         <p>Loading patients...</p>
                     </div>
                 </div>
+                <div class="mypatients-pagination" id="dashboardPatientsPagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+                    <button type="button" id="dashboardPatientsPrevBtn" class="btn-action filter-btn">Prev</button>
+                    <span id="dashboardPatientsPageNumbers" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
+                    <button type="button" id="dashboardPatientsNextBtn" class="btn-action filter-btn">Next</button>
+                    <span id="dashboardPatientsPageInfo" style="margin-left:8px;"></span>
+                </div>
             </div>
 
             <!-- Urgency breakdown. Two cards, so the grid is two columns: it was
