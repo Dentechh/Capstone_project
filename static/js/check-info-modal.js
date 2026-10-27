@@ -628,7 +628,7 @@ let currentCheckInfoPatientId = "";
                 // On a plan, payments change only through "Record payment" so the
                 // payment log can never disagree with Fee Paid. A follow-up
                 // visit has no charge, so its money fields are fixed.
-                const lockPaid = followUp || !!item.plan_id;
+                const lockPaid = followUp;
                 const lockValue = followUp;
                 const lockTip = followUp
                     ? "A follow-up visit has no charge of its own."

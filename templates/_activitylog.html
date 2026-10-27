@@ -60,11 +60,12 @@
                 <div class="activity-custom-select" id="activityRangeWrap">
                     <button type="button" id="activityRangeBtn" class="activity-select-trigger"
                         aria-haspopup="listbox" aria-expanded="false" onclick="toggleActivityRangeMenu()">
-                        <span id="activityRangeLabel">Last 14 days</span>
+                        <span id="activityRangeLabel">Today</span>
                         <span class="activity-select-chevron"></span>
                     </button>
                     <div id="activityRangeMenu" class="activity-select-menu" role="listbox" hidden>
                         <button type="button" class="activity-select__option" data-value="14" onclick="applyActivityPreset('14'); closeActivityRangeMenu();">Last 14 days</button>
+                        <button type="button" class="activity-select__option" data-value="1" onclick="applyActivityPreset('1'); closeActivityRangeMenu();">Today</button>
                         <button type="button" class="activity-select__option" data-value="7" onclick="applyActivityPreset('7'); closeActivityRangeMenu();">Last 7 days</button>
                         <button type="button" class="activity-select__option" data-value="30" onclick="applyActivityPreset('30'); closeActivityRangeMenu();">Last 30 days</button>
                         <button type="button" class="activity-select__option" data-value="60" onclick="applyActivityPreset('60'); closeActivityRangeMenu();">Last 60 days</button>
@@ -73,7 +74,7 @@
                         <button type="button" class="activity-select__option" data-value="custom" onclick="applyActivityPreset('custom'); closeActivityRangeMenu();">Custom</button>
                     </div>
                 </div>
-                <input type="hidden" id="activityRangePreset" value="14">
+                <input type="hidden" id="activityRangePreset" value="1">
             </div>
             <div class="activity-field activity-field--date">
                 <label for="activityFrom">From</label>
@@ -112,6 +113,12 @@
 
         <div class="activity-foot">
             <span id="activityStatus" class="activity-status" aria-live="polite"></span>
+            <div class="mypatients-pagination" id="activityPagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+                <button type="button" id="activityPrevBtn" class="btn-action filter-btn">Prev</button>
+                <span id="activityPageNumbers" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
+                <button type="button" id="activityNextBtn" class="btn-action filter-btn">Next</button>
+                <span id="activityPageInfo" style="margin-left:8px;"></span>
+            </div>
             <button type="button" id="activityMoreBtn" class="unpaid-filter-btn" style="display:none;"
                 onclick="loadActivityLog(false)">
                 <span class="material-symbols-rounded" aria-hidden="true">history</span>

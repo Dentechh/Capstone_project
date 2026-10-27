@@ -6383,11 +6383,11 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
 /* =========================================
    MY PATIENTS PAGINATION
    ========================================= */
-#myPatientsPagination {
+#myPatientsPagination, #dashboardPatientsPagination {
     gap: 6px;
     flex-wrap: wrap;
 }
-#myPatientsPagination button {
+#myPatientsPagination button, #dashboardPatientsPagination button {
     min-width: 36px;
     height: 36px;
     padding: 0 12px;
@@ -6396,29 +6396,29 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
     font-size: 13px;
     transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
 }
-#myPatientsPageNumbers button {
+#myPatientsPageNumbers button, #dashboardPatientsPageNumbers button {
     width: 36px;
     min-width: 36px;
     height: 36px;
     padding: 0;
     border-radius: 8px;
 }
-#myPatientsPagination button:hover:not(:disabled) {
+#myPatientsPagination button:hover:not(:disabled), #dashboardPatientsPagination button:hover:not(:disabled) {
     transform: translateY(-1px) scale(1.03);
 }
-#myPatientsPagination button:disabled {
+#myPatientsPagination button:disabled, #dashboardPatientsPagination button:disabled {
     opacity: 0.45;
     cursor: not-allowed;
 }
-#myPatientsPageNumbers button {
+#myPatientsPageNumbers button, #dashboardPatientsPageNumbers button {
     background: #ffffff;
     color: #1f2937;
     border: 1px solid #cbd5e1;
 }
-#myPatientsPageNumbers button:hover:not(:disabled) {
+#myPatientsPageNumbers button:hover:not(:disabled), #dashboardPatientsPageNumbers button:hover:not(:disabled) {
     background: #e2e8f0;
 }
-#myPatientsPageNumbers button:disabled {
+#myPatientsPageNumbers button:disabled, #dashboardPatientsPageNumbers button:disabled {
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
@@ -6426,31 +6426,125 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
     transform: scale(1.08);
     box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
-#myPatientsPrevBtn,
-#myPatientsNextBtn {
+#myPatientsPrevBtn, #myPatientsNextBtn,
+#dashboardPatientsPrevBtn, #dashboardPatientsNextBtn {
     background: #2563eb;
     color: #ffffff;
     border-color: #2563eb;
 }
-#myPatientsPrevBtn:hover:not(:disabled),
-#myPatientsNextBtn:hover:not(:disabled) {
+#myPatientsPrevBtn:hover:not(:disabled), #myPatientsNextBtn:hover:not(:disabled),
+#dashboardPatientsPrevBtn:hover:not(:disabled), #dashboardPatientsNextBtn:hover:not(:disabled) {
     background: #1d4ed8;
 }
 #myPatientsPageSize {
     height: 36px;
     border-radius: 8px;
 }
-#myPatientsPageInfo {
+#myPatientsPageInfo, #dashboardPatientsPageInfo {
     font-size: 13px;
     color: #64748b;
     margin-left: 8px;
 }
 
-/* My Patients table page-switch animation */
+/* Activity Log pagination */
+#activityPagination {
+    gap: 6px;
+    flex-wrap: wrap;
+}
+#activityPagination button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+#activityPageNumbers button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 8px;
+}
+#activityPagination button:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.03);
+}
+#activityPagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+#activityPageNumbers button {
+    background: #ffffff;
+    color: #1f2937;
+    border: 1px solid #cbd5e1;
+}
+#activityPageNumbers button:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+#activityPageNumbers button:disabled {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+    opacity: 1;
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+#activityPrevBtn,
+#activityNextBtn {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+#activityPrevBtn:hover:not(:disabled),
+#activityNextBtn:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+#activityPageInfo {
+    font-size: 13px;
+    color: #64748b;
+    margin-left: 8px;
+}
+
+.unpaid-table .ci-actions .btn-action {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    padding: 0;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.unpaid-table .ci-actions .btn-action .material-symbols-rounded {
+    font-size: 18px;
+}
+    background: none;
+    border: none;
+    color: #2563eb;
+    font: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    font-weight: 600;
+}
+.unpaid-patient-link:hover {
+    text-decoration: underline;
+    color: #1d4ed8;
+}
 #myPatientsTable tbody {
     transition: opacity 0.18s ease, transform 0.18s ease;
 }
 #myPatientsTable tbody.is-switching {
+    opacity: 0.35;
+    transform: translateY(6px);
+}
+
+/* Dashboard "Patients This Period" page-switch animation */
+#dashboardPatientsBody {
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+#dashboardPatientsBody.is-switching {
     opacity: 0.35;
     transform: translateY(6px);
 }
@@ -8421,14 +8515,16 @@ body.dark-mode #checkInfoModal .treatment-table td::before {
    Solid slate keeps it inside the existing palette (navy / red / neutrals)
    while reading unmistakably as the read-only, non-primary action. */
 #section-mypatients .mp-info-btn,
-#section-usermanagement .mp-info-btn {
+#section-usermanagement .mp-info-btn,
+#section-financialreports .mp-info-btn {
     background: #475569;
     border-color: #334155;
     color: #ffffff;
 }
 
 #section-mypatients .mp-info-btn:hover:not(:disabled),
-#section-usermanagement .mp-info-btn:hover:not(:disabled) {
+#section-usermanagement .mp-info-btn:hover:not(:disabled),
+#section-financialreports .mp-info-btn:hover:not(:disabled) {
     background: #334155;
     border-color: #1e293b;
     transform: translateY(-1px);
@@ -8494,7 +8590,8 @@ body.dark-mode #checkInfoModal .treatment-table td::before {
 
 /* Dark mode keeps the same blue-primary / red-danger relationship. */
 body.dark-mode #section-mypatients .mp-info-btn,
-body.dark-mode #section-usermanagement .mp-info-btn {
+body.dark-mode #section-usermanagement .mp-info-btn,
+body.dark-mode #section-financialreports .mp-info-btn {
     background: #334155;
     border-color: #64748b;
     color: #e2e8f0;

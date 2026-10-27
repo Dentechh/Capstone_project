@@ -50,6 +50,9 @@ function showSection(sectionId) {
             if (sectionId === 'financialreports' && typeof loadUnpaidProcedures === 'function') {
                 loadUnpaidProcedures();
             }
+            if (sectionId === 'financialreports' && typeof loadBracesUnpaidProcedures === 'function') {
+                loadBracesUnpaidProcedures();
+            }
 
             // Messages inbox: poll only while its tab is the one showing.
             if (window.AdminMessages) {
