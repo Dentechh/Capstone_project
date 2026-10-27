@@ -10247,8 +10247,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 filtered = []
                 for data in done_docs:
                     procs = [p for p in (data.get("procedures") or [])
-                             if isinstance(p, dict)
-                             and self._fin_row_ok(p.get("procedure"), scope, procedure)]
+                                if isinstance(p, dict)
+                                and self._fin_row_ok(p.get("procedure"), scope, procedure)]
                     if procs:
                         filtered.append(dict(data, procedures=procs))
                 done_docs = filtered
