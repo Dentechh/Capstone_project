@@ -1,3 +1,6 @@
+<style>
+.dentist-select{width:100%;min-width:150px;padding:8px 10px;border:1px solid var(--border-color,#cfd8e6);border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;cursor:pointer;}
+</style>
         <div id="section-appointments" class="content-section">
             <section class="content-panel">
                 <div class="filter-bar">
@@ -68,17 +71,9 @@
                                 appointment.appointment_date }}</td>
                             <td>{{ appointment.Service }}</td>
                             <td>
-                                <div class="dentist-field">
-                                    <input type="text" name="dentist_name" class="dentist-input"
-                                        placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
-                                        spellcheck="false" role="combobox" aria-autocomplete="list"
-                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
-                                        aria-label="Consulting dentist">
-                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
-                                        title="Show dentists">
-                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
-                                    </button>
-                                </div>
+                                <select name="dentist_name" class="dentist-select" aria-required="true" aria-label="Consulting dentist">
+                                    <option value="Dr. Julix Dionne Capizonda" selected>Dr. Julix Dionne Capizonda</option>
+                                </select>
                             </td>
 
                             <td>

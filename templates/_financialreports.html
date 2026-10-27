@@ -1,3 +1,183 @@
+<style>
+    /* Procedure dropdown (Financial Reports). Light by default, body.dark-mode below. */
+    .fin-proc-filter { position: relative; z-index: 20; margin: 2px 0 16px; }
+    .fin-proc-dd { position: relative; display: inline-block; max-width: 100%; }
+
+    .fin-proc-trigger {
+        display: inline-flex; align-items: center; gap: 12px; max-width: 100%;
+        padding: 8px 12px 8px 8px; border-radius: 16px; cursor: pointer; font: inherit; text-align: left;
+        color: #0d47a1; background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(25, 118, 210, .18);
+        box-shadow: 0 2px 10px rgba(13, 71, 161, .10);
+        transition: box-shadow .2s ease, border-color .2s ease, background .2s ease, transform .15s ease;
+    }
+    .fin-proc-trigger:hover { border-color: rgba(25, 118, 210, .45); box-shadow: 0 6px 18px rgba(13, 71, 161, .18); transform: translateY(-1px); }
+    .fin-proc-trigger:active { transform: translateY(0); }
+    .fin-proc-trigger:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
+
+    .fin-proc-icon {
+        flex: none; width: 36px; height: 36px; display: grid; place-items: center; font-size: 20px;
+        border-radius: 11px; color: #1565c0; background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        transition: background .2s ease, color .2s ease;
+    }
+    .fin-proc-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+    .fin-proc-caption { font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #78909c; }
+    .fin-proc-value { font-size: 14.5px; font-weight: 700; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fin-proc-chevron { flex: none; font-size: 22px; color: #1976d2; transition: transform .22s ease, color .2s ease; }
+    .fin-proc-dd.is-open .fin-proc-chevron { transform: rotate(180deg); }
+
+    /* A procedure is picked: the trigger turns solid blue so it's obvious the numbers are filtered. */
+    .fin-proc-dd.is-filtered .fin-proc-trigger {
+        color: #fff; border-color: transparent;
+        background: linear-gradient(135deg, #1565c0, #42a5f5);
+        box-shadow: 0 6px 18px rgba(21, 101, 192, .35);
+    }
+    .fin-proc-dd.is-filtered .fin-proc-icon { color: #fff; background: rgba(255, 255, 255, .22); }
+    .fin-proc-dd.is-filtered .fin-proc-caption { color: rgba(255, 255, 255, .82); }
+    .fin-proc-dd.is-filtered .fin-proc-chevron { color: #fff; }
+
+    .fin-proc-panel {
+        position: absolute; top: calc(100% + 8px); left: 0; z-index: 30;
+        min-width: 100%; width: max-content; max-width: min(360px, calc(100vw - 48px));
+        max-height: 320px; overflow-y: auto; padding: 6px; border-radius: 16px;
+        background: #fff; border: 1px solid rgba(25, 118, 210, .14);
+        box-shadow: 0 18px 44px rgba(13, 71, 161, .24);
+        opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top left;
+        transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s;
+        scrollbar-width: thin;
+    }
+    .fin-proc-dd.is-open .fin-proc-panel { opacity: 1; visibility: visible; transform: none; transition: opacity .16s ease, transform .16s ease, visibility 0s; }
+
+    .fin-proc-option {
+        display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px;
+        border: 0; border-radius: 11px; background: transparent; cursor: pointer;
+        font: inherit; font-size: 14px; text-align: left; color: #263238;
+        transition: background .12s ease;
+    }
+    .fin-proc-option-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fin-proc-option:hover, .fin-proc-option:focus-visible { background: #e3f2fd; outline: none; }
+    .fin-proc-option.is-selected { background: #e3f2fd; color: #0d47a1; font-weight: 700; }
+    .fin-proc-check { flex: none; font-size: 18px; color: #1976d2; visibility: hidden; }
+    .fin-proc-option.is-selected .fin-proc-check { visibility: visible; }
+    .fin-proc-divider { height: 1px; margin: 4px 8px; background: rgba(25, 118, 210, .14); }
+
+    body.dark-mode .fin-proc-trigger { color: #bbdefb; background: rgba(30, 41, 59, .92); border-color: rgba(144, 202, 249, .25); box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
+    body.dark-mode .fin-proc-trigger:hover { border-color: rgba(144, 202, 249, .55); }
+    body.dark-mode .fin-proc-icon { color: #90caf9; background: rgba(144, 202, 249, .16); }
+    body.dark-mode .fin-proc-caption { color: #90a4ae; }
+    body.dark-mode .fin-proc-chevron { color: #90caf9; }
+    body.dark-mode .fin-proc-dd.is-filtered .fin-proc-trigger { color: #fff; background: linear-gradient(135deg, #1565c0, #1e88e5); border-color: transparent; }
+    body.dark-mode .fin-proc-dd.is-filtered .fin-proc-icon { color: #fff; background: rgba(255, 255, 255, .22); }
+    body.dark-mode .fin-proc-dd.is-filtered .fin-proc-caption { color: rgba(255, 255, 255, .82); }
+    body.dark-mode .fin-proc-dd.is-filtered .fin-proc-chevron { color: #fff; }
+    body.dark-mode .fin-proc-panel { background: #1e293b; border-color: rgba(144, 202, 249, .2); box-shadow: 0 18px 44px rgba(0, 0, 0, .55); }
+    body.dark-mode .fin-proc-option { color: #e2e8f0; }
+    body.dark-mode .fin-proc-option:hover, body.dark-mode .fin-proc-option:focus-visible { background: rgba(144, 202, 249, .14); }
+    body.dark-mode .fin-proc-option.is-selected { background: rgba(144, 202, 249, .2); color: #bbdefb; }
+    body.dark-mode .fin-proc-check { color: #90caf9; }
+    body.dark-mode .fin-proc-divider { background: rgba(144, 202, 249, .2); }
+
+    @media (max-width: 600px) {
+        .fin-proc-dd { display: block; }
+        .fin-proc-trigger { width: 100%; }
+        .fin-proc-text { flex: 1; }
+        .fin-proc-value { max-width: none; }
+        .fin-proc-panel { width: 100%; max-width: none; }
+    }
+
+    /* Unpaid Procedures table: procedure dropdown. Nothing styled these classes before, so the
+       option list was always open and sat in the page as plain buttons. */
+    /* The dropdown list hangs below the toolbar, over the table, so the card must not clip it. */
+    .income-trend-card.unpaid-card { overflow: visible; }
+    .unpaid-toolbar { position: relative; z-index: 20; }
+    .unpaid-proc-dropdown { position: relative; display: inline-block; max-width: 100%; }
+
+    .unpaid-proc-dropdown .unpaid-proc-trigger {
+        display: inline-flex; align-items: center; gap: 10px; min-width: 240px; max-width: 100%; height: 44px;
+        padding: 0 10px 0 7px; border-radius: 14px; cursor: pointer; font: inherit; font-size: 14px; font-weight: 700;
+        text-align: left; color: #0d47a1; background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(25, 118, 210, .18); box-shadow: 0 2px 10px rgba(13, 71, 161, .10);
+        transition: box-shadow .2s ease, border-color .2s ease, transform .15s ease;
+    }
+    .unpaid-proc-dropdown .unpaid-proc-trigger:hover { border-color: rgba(25, 118, 210, .45); box-shadow: 0 6px 18px rgba(13, 71, 161, .18); transform: translateY(-1px); }
+    .unpaid-proc-dropdown .unpaid-proc-trigger:active { transform: translateY(0); }
+    .unpaid-proc-dropdown .unpaid-proc-trigger:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
+    .unpaid-proc-icon {
+        flex: none; width: 30px; height: 30px; display: grid; place-items: center; font-size: 18px;
+        border-radius: 10px; color: #1565c0; background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    }
+    #unpaidProcedureLabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .unpaid-proc-chevron { flex: none; font-size: 22px; color: #1976d2; transition: transform .22s ease; }
+    .unpaid-proc-dropdown.is-open .unpaid-proc-chevron { transform: rotate(180deg); }
+    .unpaid-proc-dropdown.is-filtered .unpaid-proc-trigger {
+        color: #fff; border-color: transparent; background: linear-gradient(135deg, #1565c0, #42a5f5);
+        box-shadow: 0 6px 18px rgba(21, 101, 192, .35);
+    }
+    .unpaid-proc-dropdown.is-filtered .unpaid-proc-icon { color: #fff; background: rgba(255, 255, 255, .22); }
+    .unpaid-proc-dropdown.is-filtered .unpaid-proc-chevron { color: #fff; }
+
+    .unpaid-proc-panel {
+        position: absolute; top: calc(100% + 8px); left: 0; z-index: 30;
+        min-width: 100%; width: max-content; max-width: min(380px, calc(100vw - 48px));
+        max-height: 320px; overflow-y: auto; padding: 6px; border-radius: 16px;
+        background: #fff; border: 1px solid rgba(25, 118, 210, .14); box-shadow: 0 18px 44px rgba(13, 71, 161, .24);
+        opacity: 0; visibility: hidden; transform: translateY(-6px) scale(.98); transform-origin: top left;
+        transition: opacity .16s ease, transform .16s ease, visibility 0s linear .16s; scrollbar-width: thin;
+    }
+    .unpaid-proc-dropdown.is-open .unpaid-proc-panel { opacity: 1; visibility: visible; transform: none; transition: opacity .16s ease, transform .16s ease, visibility 0s; }
+    .unpaid-proc-option {
+        display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border: 0; border-radius: 11px;
+        background: transparent; cursor: pointer; font: inherit; font-size: 14px; text-align: left; color: #263238;
+        transition: background .12s ease;
+    }
+    .unpaid-proc-option-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .unpaid-proc-count {
+        flex: none; min-width: 26px; padding: 2px 8px; border-radius: 999px; text-align: center;
+        font-size: 12px; font-weight: 700; color: #1565c0; background: #e3f2fd;
+    }
+    .unpaid-proc-option:hover, .unpaid-proc-option:focus-visible { background: #e3f2fd; outline: none; }
+    .unpaid-proc-option.is-selected { background: #e3f2fd; color: #0d47a1; font-weight: 700; }
+    .unpaid-proc-option.is-selected .unpaid-proc-count { color: #fff; background: #1976d2; }
+
+    body.dark-mode .unpaid-proc-dropdown .unpaid-proc-trigger { color: #bbdefb; background: rgba(30, 41, 59, .92); border-color: rgba(144, 202, 249, .25); box-shadow: 0 2px 10px rgba(0, 0, 0, .35); }
+    body.dark-mode .unpaid-proc-dropdown .unpaid-proc-trigger:hover { border-color: rgba(144, 202, 249, .55); }
+    body.dark-mode .unpaid-proc-icon { color: #90caf9; background: rgba(144, 202, 249, .16); }
+    body.dark-mode .unpaid-proc-chevron { color: #90caf9; }
+    body.dark-mode .unpaid-proc-dropdown.is-filtered .unpaid-proc-trigger { color: #fff; background: linear-gradient(135deg, #1565c0, #1e88e5); border-color: transparent; }
+    body.dark-mode .unpaid-proc-dropdown.is-filtered .unpaid-proc-icon { color: #fff; background: rgba(255, 255, 255, .22); }
+    body.dark-mode .unpaid-proc-dropdown.is-filtered .unpaid-proc-chevron { color: #fff; }
+    body.dark-mode .unpaid-proc-panel { background: #1e293b; border-color: rgba(144, 202, 249, .2); box-shadow: 0 18px 44px rgba(0, 0, 0, .55); }
+    body.dark-mode .unpaid-proc-option { color: #e2e8f0; }
+    body.dark-mode .unpaid-proc-count { color: #bbdefb; background: rgba(144, 202, 249, .16); }
+    body.dark-mode .unpaid-proc-option:hover, body.dark-mode .unpaid-proc-option:focus-visible { background: rgba(144, 202, 249, .14); }
+    body.dark-mode .unpaid-proc-option.is-selected { background: rgba(144, 202, 249, .2); color: #bbdefb; }
+    body.dark-mode .unpaid-proc-option.is-selected .unpaid-proc-count { color: #fff; background: #1e88e5; }
+
+    @media (max-width: 600px) {
+        .unpaid-toolbar-right { width: 100%; }
+        .unpaid-proc-dropdown { display: block; width: 100%; }
+        .unpaid-proc-dropdown .unpaid-proc-trigger { width: 100%; }
+        .unpaid-proc-panel { width: 100%; max-width: none; }
+    }
+    /* Period picker (prev / range / next) on the left, procedure dropdown right beside it. */
+    #section-financialreports .fin-filter-row {
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-start;
+        gap: 12px 14px; margin: 0 0 16px;
+    }
+    #section-financialreports .fin-filter-row .financial-nav {
+        margin: 0 !important; width: auto !important; justify-content: flex-start !important;
+    }
+    #section-financialreports .fin-filter-row .fin-proc-filter { margin: 0; }
+    @media (max-width: 600px) {
+        #section-financialreports .fin-filter-row .financial-nav { flex: 1 1 100%; width: 100% !important; }
+        #section-financialreports .fin-filter-row .fin-proc-filter { flex: 1 1 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .fin-proc-trigger, .fin-proc-panel, .fin-proc-chevron, .fin-proc-option,
+        .unpaid-proc-trigger, .unpaid-proc-panel, .unpaid-proc-chevron, .unpaid-proc-option { transition: none; }
+    }
+</style>
+
 <div id="section-financialreports" class="content-section">
             <div class="financial-period-toolbar">
                 <div class="period-btn-group" role="group" aria-label="Report period">
@@ -41,20 +221,47 @@
                 </div>
             </div>
 
-            <div class="financial-nav" id="financialNav" style="display:none;">
-                <button type="button" class="fin-nav-btn" id="finNavPrev" aria-label="Previous period"
-                    onclick="financialNavStep(-1)">
-                    <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
-                </button>
-                <span class="fin-nav-label" id="finNavLabel" aria-live="polite"></span>
-                <select class="fin-nav-select" id="finMonthSel" aria-label="Choose month" style="display:none;"
-                    onchange="financialNavPick()"></select>
-                <select class="fin-nav-select" id="finYearSel" aria-label="Choose year" style="display:none;"
-                    onchange="financialNavPick()"></select>
-                <button type="button" class="fin-nav-btn" id="finNavNext" aria-label="Next period"
-                    onclick="financialNavStep(1)">
-                    <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
-                </button>
+            <div class="fin-filter-row">
+                <div class="financial-nav" id="financialNav" style="display:none;">
+                    <button type="button" class="fin-nav-btn" id="finNavPrev" aria-label="Previous period"
+                        onclick="financialNavStep(-1)">
+                        <span class="material-symbols-rounded" aria-hidden="true">chevron_left</span>
+                    </button>
+                    <span class="fin-nav-label" id="finNavLabel" aria-live="polite"></span>
+                    <select class="fin-nav-select" id="finMonthSel" aria-label="Choose month" style="display:none;"
+                        onchange="financialNavPick()"></select>
+                    <select class="fin-nav-select" id="finYearSel" aria-label="Choose year" style="display:none;"
+                        onchange="financialNavPick()"></select>
+                    <button type="button" class="fin-nav-btn" id="finNavNext" aria-label="Next period"
+                        onclick="financialNavStep(1)">
+                        <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
+                    </button>
+                </div>
+
+                {# One dropdown for income per procedure. loadFinancialChart() in financial-reports.js fills
+                   #finProcPanel from the server's procedure_options (only procedures that have records).
+                   Orthodontic braces are not listed: they have their own section below. #}
+                <div class="fin-proc-filter">
+                    <div class="fin-proc-dd" id="finProcDropdown">
+                        <button type="button" class="fin-proc-trigger" id="finProcTrigger"
+                            aria-haspopup="listbox" aria-expanded="false" aria-controls="finProcPanel"
+                            onclick="toggleFinProcDropdown()">
+                            <span class="material-symbols-rounded fin-proc-icon" aria-hidden="true">medical_services</span>
+                            <span class="fin-proc-text">
+                                <span class="fin-proc-caption">Procedure</span>
+                                <span class="fin-proc-value" id="finProcLabel">All procedures</span>
+                            </span>
+                            <span class="material-symbols-rounded fin-proc-chevron" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="fin-proc-panel" id="finProcPanel" role="listbox" aria-label="Filter income by procedure">
+                            <button type="button" class="fin-proc-option is-selected" role="option" aria-selected="true"
+                                data-value="" onclick="selectFinProcedure('', 'All procedures')">
+                                <span class="fin-proc-option-name">All procedures</span>
+                                <span class="material-symbols-rounded fin-proc-check" aria-hidden="true">check</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="metric-cards">
@@ -125,7 +332,7 @@
                 <div class="income-trend-header">
                     <div>
                         <h3>Income Trend</h3>
-                        <p>Revenue collected over time</p>
+                        <p>Revenue collected over time. Orthodontic braces are tracked separately below.</p>
                     </div>
                 </div>
 
@@ -291,7 +498,9 @@
                     <div class="unpaid-toolbar-right" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto;">
                     <div class="unpaid-proc-dropdown" id="unpaidProcedureDropdown">
                         <button type="button" class="unpaid-search unpaid-proc-trigger" id="unpaidProcedureTrigger"
-                            aria-haspopup="listbox" aria-expanded="false" onclick="toggleUnpaidProcedureDropdown()">
+                            aria-haspopup="listbox" aria-expanded="false" aria-controls="unpaidProcedurePanel"
+                            onclick="toggleUnpaidProcedureDropdown()">
+                            <span class="material-symbols-rounded unpaid-proc-icon" aria-hidden="true">medical_services</span>
                             <span id="unpaidProcedureLabel">All procedures</span>
                             <span class="material-symbols-rounded unpaid-proc-chevron" aria-hidden="true">expand_more</span>
                         </button>

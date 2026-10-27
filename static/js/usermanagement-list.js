@@ -10,13 +10,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const state = { page: 1, pageSize: 30, total: 0, totalPages: 1 };
 
+    function cleanPart(v) {
+        const s = (v === null || v === undefined) ? '' : String(v).trim();
+        return (s === 'None' || s === 'null' || s === 'undefined') ? '' : s;
+    }
+
     function buildRow(a) {
         const tr = document.createElement('tr');
         const isDisabled = !!a.disabled;
         const isOnline = !!a.is_online;
+        // First Middle Last; falls back to the old display name if the parts are empty
+        const fullName = [cleanPart(a.first_name), cleanPart(a.middle_name), cleanPart(a.last_name)]
+            .filter(Boolean).join(' ') || a.display_name || a.full_name || '';
         if (isDisabled) tr.style.opacity = '0.6';
         tr.innerHTML = `
-            <td data-cell="name">${a.display_name || a.full_name || ''}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
+            <td data-cell="name">${fullName}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
             <td data-cell="mobile">${a.contact_number || '-'}</td>
             <td>${a.email || '-'}</td>
             <td data-cell="status">
@@ -25,13 +33,13 @@ document.addEventListener('DOMContentLoaded', function () {
             <td>
                 <div class="mp-actions">
                     <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"
-                        data-uid="${a.uid}" data-name="${a.display_name || a.full_name}" data-disabled="${isDisabled ? 'true' : 'false'}"><span class="material-symbols-rounded" aria-hidden="true">${isDisabled ? 'lock_open' : 'block'}</span></button>
+                        data-uid="${a.uid}" data-name="${fullName}" data-disabled="${isDisabled ? 'true' : 'false'}"><span class="material-symbols-rounded" aria-hidden="true">${isDisabled ? 'lock_open' : 'block'}</span></button>
                     <button type="button" class="btn-action edit-patient-btn" title="Edit patient" aria-label="Edit patient"
                         data-uid="${a.uid}" data-patient-id="${a.patient_id}"
                         data-firstname="${a.first_name}" data-middlename="${a.middle_name}"
                         data-lastname="${a.last_name}" data-contact="${a.contact_number}" data-email="${a.email}" data-sex="${a.sex || ''}" data-civilstatus="${a.CivilStatus || ''}"><span class="material-symbols-rounded" aria-hidden="true">edit</span></button>
                     <button type="button" class="btn-action delete-patient-btn" title="Delete account" aria-label="Delete account"
-                        data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${a.display_name || a.full_name}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
+                        data-uid="${a.uid}" data-patient-id="${a.patient_id}" data-name="${fullName}"><span class="material-symbols-rounded" aria-hidden="true">delete</span></button>
                 </div>
             </td>
         `;
@@ -99,6 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 state.totalPages = result.total_pages || state.totalPages;
                 if (state.totalPages < 1) state.totalPages = 1;
                 if (state.page > state.totalPages) state.page = state.totalPages;
+                tbody.style.counterReset = 'um-row ' + ((state.page - 1) * state.pageSize);
                 renderPagination();
                 if (state.page === 1 && typeof sortUserManagement === 'function') {
                     // keep sort state

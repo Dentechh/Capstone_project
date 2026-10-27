@@ -1,3 +1,31 @@
+/* Responsive chart sizing for the Financial Reports charts. Chart.js reads font sizes
+   and tick limits once, when the chart is built, so these are checked at build time and
+   again when the screen crosses a breakpoint (rotate, resize). */
+function finIsPhone() { return window.innerWidth <= 640; }
+function finTickFont() { return finIsPhone() ? 10.5 : 12; }
+function finYTickLimit() { return finIsPhone() ? 5 : 6; }
+function finXTickLimit() { return finIsPhone() ? 6 : undefined; }
+function finApplyChartSizing(chart) {
+    if (!chart || !chart.options || !chart.options.scales) return;
+    const x = chart.options.scales.x, y = chart.options.scales.y;
+    if (x && x.ticks) { x.ticks.font.size = finTickFont(); x.ticks.maxTicksLimit = finXTickLimit(); }
+    if (y && y.ticks) { y.ticks.font.size = finTickFont(); y.ticks.maxTicksLimit = finYTickLimit(); }
+    chart.update('none');
+}
+(function watchFinChartBreakpoint() {
+    let wasPhone = finIsPhone(), timer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            const nowPhone = finIsPhone();
+            if (nowPhone === wasPhone) return;
+            wasPhone = nowPhone;
+            if (typeof incomeChartInstance !== 'undefined') finApplyChartSizing(incomeChartInstance);
+            if (typeof bracesIncomeChartInstance !== 'undefined') finApplyChartSizing(bracesIncomeChartInstance);
+        }, 150);
+    });
+})();
+
 let bracesFinancialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
 let bracesFinancialChartRequestId = 0;
 
@@ -228,9 +256,9 @@ function updateBracesIncomeChart(labels, dataValues, chartType) {
                     beginAtZero: true,
                     ticks: {
                         color: axisColor,
-                        font: { family: 'Kumbh Sans', size: 12 },
+                        font: { family: 'Kumbh Sans', size: finTickFont() },
                         callback: pesoTick,
-                        maxTicksLimit: 6
+                        maxTicksLimit: finYTickLimit()
                     },
                     grid: {
                         color: gridColor,
@@ -243,9 +271,10 @@ function updateBracesIncomeChart(labels, dataValues, chartType) {
                 x: {
                     ticks: {
                         color: axisColor,
-                        font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                        font: { family: 'Kumbh Sans', size: finTickFont(), weight: '600' },
                         maxRotation: 0,
-                        autoSkipPadding: 12
+                        autoSkipPadding: finIsPhone() ? 16 : 12,
+                        maxTicksLimit: finXTickLimit()
                     },
                     grid: { display: false },
                     border: { color: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.12)' }
@@ -284,6 +313,10 @@ function updateBracesIncomeChart(labels, dataValues, chartType) {
         // Yearly views. null month / year means "the current one".
 let financialNav = { period: 'weekly', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
 let financialChartRequestId = 0; // so a slow, older response can't overwrite a newer one
+// Procedure picked in the dropdown above the cards ('' = all procedures; orthodontic braces are
+// never part of this report, they have their own section). Lower-cased key + display name.
+let financialProcedure = '';
+let financialProcedureName = '';
 
 // Same picker state for the dashboard procedure charts (Procedures Performed,
 // Revenue by Procedure): week / month / year selection with prev-next stepping.
@@ -309,6 +342,7 @@ let procChartRequestId = 0;
             if (period === 'weekly') query.set('week', financialNav.week);
             if (period === 'monthly' && financialNav.month) query.set('month', financialNav.month);
             if (period === 'yearly' && financialNav.year) query.set('year', financialNav.year);
+            if (financialProcedure) query.set('procedure', financialProcedure);
 
             const requestId = ++financialChartRequestId;
 
@@ -317,6 +351,11 @@ let procChartRequestId = 0;
                 .then(data => {
                     if (requestId !== financialChartRequestId) return; // a newer request is in flight
                     if (data.success) {
+                        if (renderFinProcedureOptions(data.procedure_options)) {
+                            // The picked procedure has no records any more: show all procedures.
+                            loadFinancialChart(period);
+                            return;
+                        }
                         updateIncomeChart(data.labels, data.data, data.chart_type);
                         updateFinancialCards(data.total_income, data.total_outstanding, data.unpaid_procedures);
 
@@ -339,6 +378,7 @@ let procChartRequestId = 0;
                             unpaidProcedures: data.unpaid_procedures,
                             rangeLabel: data.range_label || '',
                             asOfLabel: data.as_of_label || '',
+                            procedureLabel: financialProcedure ? financialProcedureName : '',
                             selection: period === 'monthly' ? (data.month || '')
                                 : period === 'yearly' ? String(data.year || '')
                                 : period === 'weekly' ? (data.week ? 'week-' + data.week + '-back' : '')
@@ -348,6 +388,127 @@ let procChartRequestId = 0;
                 })
                 .catch(err => console.error('Failed to load financial chart:', err));
         }
+
+        // ---- Procedure dropdown (cards + Income Trend, braces excluded) ----
+        function setFinProcLabel() {
+            const label = document.getElementById('finProcLabel');
+            const dd = document.getElementById('finProcDropdown');
+            if (label) label.textContent = financialProcedure ? financialProcedureName : 'All procedures';
+            if (dd) dd.classList.toggle('is-filtered', !!financialProcedure);
+        }
+
+        function markFinProcSelected() {
+            const panel = document.getElementById('finProcPanel');
+            if (!panel) return;
+            panel.querySelectorAll('.fin-proc-option').forEach(function (b) {
+                const on = b.getAttribute('data-value') === financialProcedure;
+                b.classList.toggle('is-selected', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+
+        // Rebuilds the list from the server's procedure_options, so only procedures that really
+        // have records are offered. Returns true when the picked procedure no longer exists and
+        // the selection had to be reset.
+        function renderFinProcedureOptions(options) {
+            const panel = document.getElementById('finProcPanel');
+            if (!panel || !Array.isArray(options)) return false;
+
+            let reset = false;
+            if (financialProcedure && !options.some(function (o) { return String(o.name).toLowerCase() === financialProcedure; })) {
+                financialProcedure = '';
+                financialProcedureName = '';
+                reset = true;
+            }
+
+            panel.textContent = '';
+            function addOption(value, text) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'fin-proc-option';
+                btn.setAttribute('role', 'option');
+                btn.setAttribute('data-value', value);
+                const name = document.createElement('span');
+                name.className = 'fin-proc-option-name';
+                name.textContent = text;
+                const check = document.createElement('span');
+                check.className = 'material-symbols-rounded fin-proc-check';
+                check.setAttribute('aria-hidden', 'true');
+                check.textContent = 'check';
+                btn.appendChild(name);
+                btn.appendChild(check);
+                btn.addEventListener('click', function () { selectFinProcedure(value, text); });
+                panel.appendChild(btn);
+            }
+            addOption('', 'All procedures');
+            if (options.length) {
+                const divider = document.createElement('div');
+                divider.className = 'fin-proc-divider';
+                divider.setAttribute('role', 'separator');
+                panel.appendChild(divider);
+            }
+            options.forEach(function (o) { addOption(String(o.name).toLowerCase(), String(o.name)); });
+
+            markFinProcSelected();
+            setFinProcLabel();
+            return reset;
+        }
+
+        function selectFinProcedure(value, name) {
+            closeFinProcDropdown();
+            if (value === financialProcedure) return;
+            financialProcedure = value;
+            financialProcedureName = value ? name : '';
+            setFinProcLabel();
+            markFinProcSelected();
+            // Same period, so a week / month / year the admin stepped to stays selected.
+            loadFinancialChart(financialNav.period);
+        }
+
+        function toggleFinProcDropdown() {
+            const dd = document.getElementById('finProcDropdown');
+            const trigger = document.getElementById('finProcTrigger');
+            if (!dd || !trigger) return;
+            const open = dd.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) {
+                const pick = dd.querySelector('.fin-proc-option.is-selected') || dd.querySelector('.fin-proc-option');
+                if (pick) { pick.focus({ preventScroll: true }); pick.scrollIntoView({ block: 'nearest' }); }
+            }
+        }
+
+        function closeFinProcDropdown() {
+            const dd = document.getElementById('finProcDropdown');
+            const trigger = document.getElementById('finProcTrigger');
+            if (dd) dd.classList.remove('is-open');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        document.addEventListener('click', function (e) {
+            const dd = document.getElementById('finProcDropdown');
+            if (dd && !dd.contains(e.target)) closeFinProcDropdown();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            const dd = document.getElementById('finProcDropdown');
+            if (!dd) return;
+            const isOpen = dd.classList.contains('is-open');
+            if (e.key === 'Escape' && isOpen) {
+                closeFinProcDropdown();
+                const t = document.getElementById('finProcTrigger');
+                if (t) t.focus();
+                return;
+            }
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && dd.contains(document.activeElement)) {
+                e.preventDefault();
+                if (!isOpen) { toggleFinProcDropdown(); return; }
+                const opts = Array.from(dd.querySelectorAll('.fin-proc-option'));
+                if (!opts.length) return;
+                let i = opts.indexOf(document.activeElement);
+                i = e.key === 'ArrowDown' ? Math.min(opts.length - 1, i + 1) : Math.max(0, i - 1);
+                opts[i].focus();
+            }
+        });
 
         // Shows the  < label >  picker for Weekly / Monthly / Yearly only.
         function renderFinancialNav(period, rangeLabel) {
@@ -665,9 +826,9 @@ let procChartRequestId = 0;
                             beginAtZero: true,
                             ticks: {
                                 color: axisColor,
-                                font: { family: 'Kumbh Sans', size: 12 },
+                                font: { family: 'Kumbh Sans', size: finTickFont() },
                                 callback: pesoTick,
-                                maxTicksLimit: 6
+                                maxTicksLimit: finYTickLimit()
                             },
                             grid: {
                                 color: gridColor,
@@ -682,9 +843,10 @@ let procChartRequestId = 0;
                         x: {
                             ticks: {
                                 color: axisColor,
-                                font: { family: 'Kumbh Sans', size: 12, weight: '600' },
+                                font: { family: 'Kumbh Sans', size: finTickFont(), weight: '600' },
                                 maxRotation: 0,
-                                autoSkipPadding: 12
+                                autoSkipPadding: finIsPhone() ? 16 : 12,
+                                maxTicksLimit: finXTickLimit()
                             },
                             grid: { display: false },
                             border: { color: isDark ? 'rgba(255,255,255,0.14)' : 'rgba(15,23,42,0.12)' }
@@ -965,7 +1127,11 @@ let procChartRequestId = 0;
                 pdf.setTextColor(90, 90, 90);
                 pdf.text(`Period: ${periodLabel}`, margin, y);
                 pdf.text(`Generated: ${new Date().toLocaleString()}`, pageW - margin, y, { align: 'right' });
-                y += 10;
+                y += 5;
+                pdf.text(financialReportState.procedureLabel
+                    ? `Procedure: ${financialReportState.procedureLabel}`
+                    : 'Procedure: All procedures (orthodontic braces are reported separately)', margin, y);
+                y += 8;
 
                 pdf.setDrawColor(220, 220, 220);
                 pdf.line(margin, y, pageW - margin, y);
@@ -1114,14 +1280,21 @@ let procChartRequestId = 0;
             if (unpaidProcedureFilter !== 'all' && !byKey.has(unpaidProcedureFilter)) {
                 unpaidProcedureFilter = 'all';
             }
-            const items = [];
-            items.push('<button type="button" class="unpaid-proc-option' + (unpaidProcedureFilter === 'all' ? ' is-selected' : '') + '" data-value="all" role="option" aria-selected="' + (unpaidProcedureFilter === 'all') + '">All procedures</button>');
+            // Each option: procedure name + a count pill. data-label keeps the plain
+            // "Name (n)" text the trigger button and the PDF header use.
+            function optionHtml(value, name, count) {
+                const selected = unpaidProcedureFilter === value;
+                const full = value === 'all' ? name : name + ' (' + count + ')';
+                return '<button type="button" class="unpaid-proc-option' + (selected ? ' is-selected' : '') + '"' +
+                    ' data-value="' + unpaidEsc(value) + '" data-label="' + unpaidEsc(full) + '"' +
+                    ' role="option" aria-selected="' + selected + '">' +
+                    '<span class="unpaid-proc-option-name">' + unpaidEsc(name) + '</span>' +
+                    '<span class="unpaid-proc-count">' + count + '</span></button>';
+            }
+            const items = [optionHtml('all', 'All procedures', unpaidRows.length)];
             Array.from(byKey.entries())
                 .sort((a, b) => a[1].label.localeCompare(b[1].label))
-                .forEach(([key, entry]) => {
-                    items.push('<button type="button" class="unpaid-proc-option' + (unpaidProcedureFilter === key ? ' is-selected' : '') + '" data-value="' + unpaidEsc(key) + '" role="option" aria-selected="' + (unpaidProcedureFilter === key) + '">' +
-                        unpaidEsc(entry.label) + ' (' + entry.count + ')</button>');
-                });
+                .forEach(([key, entry]) => { items.push(optionHtml(key, entry.label, entry.count)); });
             panel.innerHTML = items.join('');
             panel.querySelectorAll('.unpaid-proc-option').forEach(btn => {
                 btn.addEventListener('click', function () {
@@ -1137,6 +1310,13 @@ let procChartRequestId = 0;
                     label.textContent = found ? found[1].label + ' (' + found[1].count + ')' : 'All procedures';
                 }
             }
+            syncUnpaidProcFilteredClass();
+        }
+
+        // Turns the trigger solid blue while a procedure is picked, like the dropdown above the cards.
+        function syncUnpaidProcFilteredClass() {
+            const dd = document.getElementById('unpaidProcedureDropdown');
+            if (dd) dd.classList.toggle('is-filtered', unpaidProcedureFilter !== 'all');
         }
 
         function setUnpaidProcedure(value) {
@@ -1150,9 +1330,10 @@ let procChartRequestId = 0;
                 if (unpaidProcedureFilter === 'all') label.textContent = 'All procedures';
                 else {
                     const btn = panel.querySelector('.unpaid-proc-option[data-value="' + unpaidProcedureFilter.replace(/"/g, '\\"') + '"]');
-                    if (btn) label.textContent = btn.textContent;
+                    if (btn) label.textContent = btn.getAttribute('data-label') || btn.textContent;
                 }
             }
+            syncUnpaidProcFilteredClass();
             // update selected class
             if (panel) {
                 panel.querySelectorAll('.unpaid-proc-option').forEach(b => {
@@ -1170,6 +1351,10 @@ let procChartRequestId = 0;
             if (!dd || !trigger) return;
             const open = dd.classList.toggle('is-open');
             trigger.setAttribute('aria-expanded', open);
+            if (open) {
+                const pick = dd.querySelector('.unpaid-proc-option.is-selected') || dd.querySelector('.unpaid-proc-option');
+                if (pick) { pick.focus({ preventScroll: true }); pick.scrollIntoView({ block: 'nearest' }); }
+            }
         }
         function closeUnpaidProcedureDropdown() {
             const dd = document.getElementById('unpaidProcedureDropdown');
@@ -1180,6 +1365,27 @@ let procChartRequestId = 0;
         document.addEventListener('click', function (e) {
             const dd = document.getElementById('unpaidProcedureDropdown');
             if (dd && !dd.contains(e.target)) closeUnpaidProcedureDropdown();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            const dd = document.getElementById('unpaidProcedureDropdown');
+            if (!dd) return;
+            const isOpen = dd.classList.contains('is-open');
+            if (e.key === 'Escape' && isOpen) {
+                closeUnpaidProcedureDropdown();
+                const t = document.getElementById('unpaidProcedureTrigger');
+                if (t) t.focus();
+                return;
+            }
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && dd.contains(document.activeElement)) {
+                e.preventDefault();
+                if (!isOpen) { toggleUnpaidProcedureDropdown(); return; }
+                const opts = Array.from(dd.querySelectorAll('.unpaid-proc-option'));
+                if (!opts.length) return;
+                let i = opts.indexOf(document.activeElement);
+                i = e.key === 'ArrowDown' ? Math.min(opts.length - 1, i + 1) : Math.max(0, i - 1);
+                opts[i].focus();
+            }
         });
 
         function getUnpaidFiltered() {
@@ -1302,9 +1508,9 @@ let procChartRequestId = 0;
 
             const searchEl = document.getElementById('unpaidSearch');
             const q = searchEl ? searchEl.value.trim() : '';
-            const procSel = document.getElementById('unpaidProcedureSelect');
-            const procLabel = (unpaidProcedureFilter !== 'all' && procSel && procSel.selectedIndex > -1)
-                ? procSel.options[procSel.selectedIndex].text.replace(/\s*\(\d+\)$/, '')
+            const procOpt = document.querySelector('#unpaidProcedurePanel .unpaid-proc-option.is-selected');
+            const procLabel = (unpaidProcedureFilter !== 'all' && procOpt)
+                ? (procOpt.getAttribute('data-label') || '').replace(/\s*\(\d+\)$/, '')
                 : '';
             const filterText = 'Filter: ' + (UNPAID_RANGE_LABELS[unpaidRange] || unpaidRange) +
                 (procLabel ? '  ·  Procedure: ' + procLabel : '') +

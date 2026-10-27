@@ -1,3 +1,6 @@
+<style>
+.dentist-select{width:100%;min-width:150px;padding:8px 10px;border:1px solid var(--border-color,#cfd8e6);border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;cursor:pointer;}
+</style>
 <div id="section-patientdashboard" class="content-section">
 
             <button type="button" class="pd-back"
@@ -490,18 +493,9 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <div class="dentist-field">
-                                        <input type="text" class="dentist-input td-dentist"
-                                            placeholder="Select or type a dentist" autocomplete="off"
-                                            autocapitalize="off" spellcheck="false" role="combobox"
-                                            aria-autocomplete="list" aria-expanded="false" aria-controls="dentistMenu"
-                                            aria-label="Treating dentist" />
-                                        <button type="button" class="dentist-field__toggle" tabindex="-1"
-                                            aria-hidden="true" title="Show dentists">
-                                            <span class="material-symbols-rounded"
-                                                aria-hidden="true">arrow_drop_down</span>
-                                        </button>
-                                    </div>
+                                    <select class="td-dentist dentist-select" aria-label="Treating dentist">
+                                        <option value="Dr. Julix Dionne Capizonda" selected>Dr. Julix Dionne Capizonda</option>
+                                    </select>
                                 </td>
                                 <td><input type="number" class="td-value" placeholder="0.00" step="0.01" required />
                                 </td>

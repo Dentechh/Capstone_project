@@ -1,3 +1,6 @@
+<style>
+.dentist-select{width:100%;min-width:150px;padding:8px 10px;border:1px solid var(--border-color,#cfd8e6);border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;cursor:pointer;}
+</style>
 <div id="newApptModal" class="modal" style="display:none;">
         <div class="adm-modal-box">
             <div class="adm-modal-header">
@@ -153,18 +156,18 @@
 
                             <!-- Address -->
                             <div class="form-group">
-                                <label for="admAddress">Address <span class="adm-req" aria-hidden="true">*</span></label>
+                                <label for="admAddress">Address <span class="adm-req adm-req--new" aria-hidden="true" style="display:none;">*</span></label>
                                 <input type="text" id="admAddress" name="Address" class="form-control"
                                     placeholder="House No., Street, Barangay, Municipality/City, Province">
                             </div>
 
                             <div class="adm-row2">
                                 <div class="form-group">
-                                    <label for="admNationality">Nationality</label>
+                                    <label for="admNationality">Nationality <span class="adm-req adm-req--new" aria-hidden="true" style="display:none;">*</span></label>
                                     <input type="text" id="admNationality" name="Nationality" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <label for="admReligion">Religion</label>
+                                    <label for="admReligion">Religion <span class="adm-req adm-req--new" aria-hidden="true" style="display:none;">*</span></label>
                                     <select id="admReligion" name="Religion" class="form-control">
                                         <option value="" disabled selected>Religion</option>
                                         <option value="Roman Catholic">Roman Catholic</option>
@@ -181,7 +184,7 @@
 
                             <div class="adm-row2">
                                 <div class="form-group">
-                                    <label for="admOccupation">Occupation</label>
+                                    <label for="admOccupation">Occupation <span class="adm-req adm-req--new" aria-hidden="true" style="display:none;">*</span></label>
                                     <select id="admOccupation" name="Occupation" class="form-control">
                                         <option value="" disabled selected>Occupation</option>
                                         <option value="Student">Student</option>
@@ -264,19 +267,44 @@
                             <div class="form-group">
                                 <label for="admDentistName">Dentist Name <span class="adm-req"
                                         aria-hidden="true">*</span></label>
-                                <div class="dentist-field">
-                                    <input type="text" id="admDentistName" name="dentist_name" class="dentist-input"
-                                        placeholder="Select or type a dentist" autocomplete="off" autocapitalize="off"
-                                        spellcheck="false" role="combobox" aria-autocomplete="list"
-                                        aria-expanded="false" aria-controls="dentistMenu" aria-required="true"
-                                        aria-label="Dentist name">
-                                    <button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true"
-                                        title="Show dentists">
-                                        <span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>
-                                    </button>
-                                </div>
+                                <select id="admDentistName" name="dentist_name" class="dentist-select" required aria-label="Dentist name">
+                                    <option value="Dr. Julix Dionne Capizonda" selected>Dr. Julix Dionne Capizonda</option>
+                                </select>
                             </div>
 
+                            <script>
+                                /* Address, nationality, religion and occupation are
+                                   required for a NEW patient only. Existing patients
+                                   keep them on file, so they stay optional there.
+                                   The server enforces the same rule. */
+                                (function () {
+                                    var IDS = ['admAddress', 'admNationality', 'admReligion', 'admOccupation'];
+
+                                    function isNew() {
+                                        var r = document.querySelector('input[name="patientMode"]:checked');
+                                        return !!r && r.value === 'new';
+                                    }
+
+                                    function sync() {
+                                        var on = isNew();
+                                        IDS.forEach(function (id) {
+                                            var f = document.getElementById(id);
+                                            if (f) f.required = on;
+                                        });
+                                        document.querySelectorAll('.adm-req--new').forEach(function (star) {
+                                            star.style.display = on ? '' : 'none';
+                                        });
+                                    }
+
+                                    document.addEventListener('change', function (e) {
+                                        if (e.target && e.target.name === 'patientMode') sync();
+                                    });
+                                    // The duplicate-patient prompt can switch modes in code.
+                                    document.addEventListener('click', function () { setTimeout(sync, 0); });
+                                    document.addEventListener('submit', sync, true);
+                                    sync();
+                                })();
+                            </script>
                             <!-- Medical History -->
                             <div id="admMedHistoryWrap">
                                 <div class="adm-medhead" id="admMedHistoryHead">

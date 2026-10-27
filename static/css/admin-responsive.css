@@ -1,8 +1,8 @@
-/* ==========================================================================
-   ADMIN RESPONSIVE OVERRIDES
-   Covers: My Patients, Activity Log, Doctors Calendar, Messages.
-   Breakpoints include common phones, iPad portrait/landscape, and large tablets.
-   ========================================================================== */
+    /* ==========================================================================
+    ADMIN RESPONSIVE OVERRIDES
+    Covers: My Patients, Activity Log, Doctors Calendar, Messages.
+    Breakpoints include common phones, iPad portrait/landscape, and large tablets.
+    ========================================================================== */
 
 /* ---------- Horizontal scroll wrappers for admin tables ---------- */
 .appointment-table-wrap {
@@ -2246,4 +2246,643 @@ body.dark-mode #editPatientModal .ep-field input[type="date"]::-webkit-calendar-
         padding-left: 6px !important;
         text-align: left;
     }
+}
+
+
+    /* ==========================================================================
+    FINANCIAL REPORTS - RESPONSIVE
+    Paste at the bottom of admin-responsive.css (or link after admin.css).
+    Everything is scoped to #section-financialreports so no other page changes.
+
+    Note: from 769px to 1440px the sidebar is a fixed 300px wide, so on an iPad
+    the content area is far narrower than the screen. These rules size things by
+    the space available (auto-fit / minmax / flex-wrap) and not only by the
+    device width.
+    ========================================================================== */
+
+/* ---------- Base: let everything shrink instead of pushing the page sideways ---------- */
+#section-financialreports {
+    max-width: 100%;
+    min-width: 0;
+}
+
+#section-financialreports .income-trend-card,
+#section-financialreports .metric-card,
+#section-financialreports .metric-data,
+#section-financialreports .financial-period-toolbar,
+#section-financialreports .financial-nav {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+#section-financialreports .income-chart-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+#section-financialreports .income-chart-wrapper canvas {
+    max-width: 100%;
+}
+
+/* Period buttons + prev/next navigation wrap instead of overflowing */
+#section-financialreports .period-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 100%;
+}
+
+#section-financialreports .period-btn,
+#section-financialreports .unpaid-filter-btn,
+#section-financialreports .financial-download-btn {
+    white-space: nowrap;
+}
+
+#section-financialreports .financial-nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+#section-financialreports .fin-nav-label {
+    min-width: 0;
+    max-width: 100%;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+#section-financialreports .fin-nav-select {
+    max-width: 100%;
+}
+
+/* Unpaid table always scrolls sideways inside its own box */
+#section-financialreports .unpaid-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+#section-financialreports .unpaid-table {
+    min-width: 680px;
+}
+
+/* ---------- Tablets (iPad Pro landscape and below) ---------- */
+@media (max-width: 1100px) {
+    /* Two cards per row, with the third one full width so it is not left
+       orphaned beside an empty slot (admin.css leaves it half-width). */
+    #section-financialreports .metric-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    #section-financialreports .metric-cards > .metric-card:nth-child(3):last-child {
+        grid-column: 1 / -1;
+    }
+
+    /* admin.css sets word-break: break-all on these, which splits a peso
+       amount in the middle of its digits. Break only if it truly cannot fit. */
+    #section-financialreports .metric-data h3 {
+        font-size: clamp(20px, 2.6vw, 26px);
+        word-break: normal;
+        overflow-wrap: anywhere;
+    }
+
+    /* Chart height follows the width of the card; also beats the inline
+       height:320px on the braces chart. */
+    #section-financialreports .income-chart-wrapper {
+        height: clamp(240px, 40vw, 340px) !important;
+    }
+
+    /* Unpaid toolbar: range buttons on top, dropdown + search underneath */
+    #section-financialreports .unpaid-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    #section-financialreports #unpaidRangeGroup {
+        width: 100%;
+    }
+
+    #section-financialreports .unpaid-filter-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    #section-financialreports .unpaid-toolbar-right {
+        width: 100%;
+        margin-left: 0 !important;
+        flex-wrap: wrap;
+    }
+
+    #section-financialreports .unpaid-proc-dropdown {
+        flex: 1 1 220px;
+        min-width: 0;
+    }
+
+    #section-financialreports .unpaid-proc-dropdown .unpaid-proc-trigger {
+        width: 100%;
+        min-width: 0;
+    }
+
+    #section-financialreports #unpaidSearch {
+        flex: 1 1 220px;
+        min-width: 0;
+        width: auto;
+        box-sizing: border-box;
+    }
+
+    /* Dropdown lists stay inside the screen */
+    #section-financialreports .unpaid-proc-panel,
+    #section-financialreports .fin-proc-panel {
+        max-width: min(380px, calc(100vw - 32px));
+    }
+}
+
+/* ---------- Tablet portrait / large phones ---------- */
+@media (max-width: 900px) {
+    /* Period buttons on their own row, download buttons below */
+    #section-financialreports .financial-period-toolbar {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    #section-financialreports .period-btn-group {
+        width: 100%;
+    }
+
+    #section-financialreports .period-btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    #section-financialreports .financial-toolbar-actions {
+        width: 100%;
+    }
+
+    #section-financialreports .financial-toolbar-actions .financial-download-btn {
+        flex: 1 1 180px;
+        justify-content: center;
+    }
+
+    #section-financialreports .income-trend-card {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    #section-financialreports .income-trend-header p {
+        font-size: 12.5px;
+        line-height: 1.4;
+    }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 640px) {
+    #section-financialreports .metric-cards {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    /* admin.css gives the active section 20px / 10px / 20px / 20px of padding,
+       which wastes a lot of a phone's width. */
+    #section-financialreports.active-section {
+        padding: 12px 4px 20px 6px;
+    }
+
+    #section-financialreports .income-trend-card {
+        padding: 14px 12px;
+        border-radius: 14px;
+    }
+
+    #section-financialreports .income-trend-header h3 {
+        font-size: 17px;
+    }
+
+    /* Three buttons on the first row, two on the second */
+    #section-financialreports .period-btn,
+    #section-financialreports .unpaid-filter-btn {
+        flex: 1 1 calc(33.333% - 8px);
+        min-width: 0;
+        padding: 9px 8px;
+        font-size: 12.5px;
+        gap: 4px;
+    }
+
+    #section-financialreports .period-btn .material-symbols-rounded,
+    #section-financialreports .unpaid-filter-btn .material-symbols-rounded {
+        font-size: 17px;
+    }
+
+    #section-financialreports .financial-toolbar-actions .financial-download-btn {
+        flex: 1 1 100%;
+    }
+
+    /* Prev / next stay on one row with the label (or the two selects) */
+    #section-financialreports .fin-nav-label {
+        flex: 1 1 0;
+    }
+
+    #section-financialreports .fin-nav-select,
+    #section-financialreports .financial-nav .adm-select {
+        flex: 1 1 110px;
+        min-width: 0;
+    }
+
+    /* Search takes the full width */
+    #section-financialreports #unpaidSearch {
+        flex: 1 1 100%;
+    }
+
+    /* Unpaid table: tighter cells, still scrolls sideways */
+    #section-financialreports .unpaid-table-wrap {
+        max-height: 60vh;
+    }
+
+    #section-financialreports .unpaid-table th,
+    #section-financialreports .unpaid-table td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 400px) {
+    #section-financialreports .period-btn,
+    #section-financialreports .unpaid-filter-btn {
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    #section-financialreports .metric-data h3 {
+        font-size: 20px;
+    }
+
+    #section-financialreports .income-chart-wrapper {
+        height: 230px !important;
+    }
+}
+
+/* ---------- Phones turned sideways: keep the charts from filling the screen ---------- */
+@media (max-height: 480px) and (orientation: landscape) {
+    #section-financialreports .income-chart-wrapper {
+        height: 240px !important;
+    }
+}
+
+    /* ==========================================================================
+    TREATMENT RECORDS - TWO ROWS PER TREATMENT
+    Patient Dashboard > Treatment Records (#td-treatment-table).
+
+    Paste at the bottom of admin-responsive.css (it must load after admin.css).
+    CSS only: the markup and the JS are unchanged, because app-core.js and the
+    save code find every cell by its class and never by its position.
+
+    Row 1: Date | Tooth# | Procedure | Notes | Plan | Dentist/s
+    Row 2: Value of Work | Amount Paid | Balance | Next Appointment | Medicine | Paid Via
+    The Delete button sits at the right, centred between the two rows.
+
+    The column headings can no longer sit above both rows, so each field now
+    carries its own small label and the header row is hidden.
+    ========================================================================== */
+
+#section-patientdashboard .td-records .td-records__scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+    padding-right: 0;
+}
+
+/* Turn the table into plain blocks so each <tr> can become a grid */
+#section-patientdashboard .td-records .td-records__table,
+#section-patientdashboard .td-records .td-records__table tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+}
+
+/* Space around the cards, kept wide enough for the sideways-scroll width of one card */
+#section-patientdashboard .td-records .td-records__table tbody {
+    box-sizing: border-box;
+    padding: 12px;
+    min-width: 904px !important;
+}
+
+#section-patientdashboard .td-records .td-records__table colgroup,
+#section-patientdashboard .td-records .td-records__table thead {
+    display: none !important;
+}
+
+/* One treatment = one grid: 6 equal columns + a slim column for Delete */
+#section-patientdashboard .td-records .td-records__table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) 48px;
+    gap: 12px 12px;
+    align-items: start;
+    box-sizing: border-box;
+    min-width: 880px;               /* narrow screens scroll sideways inside the card */
+    margin: 0 0 14px;               /* gap between one treatment and the next */
+    padding: 14px 16px 16px;
+    background: #ffffff;
+    border: 1px solid #cfd9e6;
+    border-left: 4px solid #1976d2; /* accent edge: each treatment reads as its own card */
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.08);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#section-patientdashboard .td-records .td-records__table tbody tr:last-child {
+    margin-bottom: 0;
+}
+
+#section-patientdashboard .td-records .td-records__table tbody tr:hover {
+    background: #fbfdff;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.14);
+}
+
+/* Cells: no table borders or padding, the grid gap does the spacing */
+#section-patientdashboard .td-records .td-records__table tbody td {
+    display: block;
+    box-sizing: border-box;
+    width: auto !important;
+    min-width: 0 !important;        /* beats the inline min-width on the Tooth# cell */
+    max-width: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    white-space: normal;
+    overflow: visible;
+}
+
+#section-patientdashboard .td-records .td-records__table tbody tr:hover td {
+    background: transparent;
+}
+
+/* Field labels (these replace the table header) */
+#section-patientdashboard .td-records .td-records__table tbody td::before {
+    display: block;
+    margin: 0 0 5px 2px;
+    color: #1e293b;
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(1)::before  { content: "Date"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(2)::before  { content: "Tooth#"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(3)::before  { content: "Procedure"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(4)::before  { content: "Notes"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(5)::before  { content: "Plan"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(6)::before  { content: "Dentist/s"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(7)::before  { content: "Value of Work"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(8)::before  { content: "Amount Paid"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(9)::before  { content: "Balance"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(10)::before { content: "Next Appointment"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(11)::before { content: "Medicine"; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(12)::before { content: "Paid Via"; }
+#section-patientdashboard .td-records .td-records__table tbody td.td-row-actions::before { content: none; }
+
+/* Explicit placement: cells 1-6 on the first row, 7-12 on the second */
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(1)  { grid-area: 1 / 1; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(2)  { grid-area: 1 / 2; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(3)  { grid-area: 1 / 3; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(4)  { grid-area: 1 / 4; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(5)  { grid-area: 1 / 5; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(6)  { grid-area: 1 / 6; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(7)  { grid-area: 2 / 1; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(8)  { grid-area: 2 / 2; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(9)  { grid-area: 2 / 3; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(10) { grid-area: 2 / 4; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(11) { grid-area: 2 / 5; }
+#section-patientdashboard .td-records .td-records__table tbody td:nth-child(12) { grid-area: 2 / 6; }
+
+/* Delete button: right-hand column, centred across both rows */
+#section-patientdashboard .td-records .td-records__table tbody td.td-row-actions {
+    grid-area: 1 / 7 / span 2 / 7;
+    align-self: center;
+    justify-self: center;
+    width: auto !important;
+    min-width: 0 !important;
+}
+
+/* Controls fill their cell */
+#section-patientdashboard .td-records .td-records__table tbody td input,
+#section-patientdashboard .td-records .td-records__table tbody td select,
+#section-patientdashboard .td-records .td-records__table tbody td .adm-select,
+#section-patientdashboard .td-records .td-records__table tbody td .dentist-field,
+#section-patientdashboard .td-records .td-records__table tbody td .medicine-field {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* ---------- Dark mode ---------- */
+body.dark-mode #section-patientdashboard .td-records .td-records__table tbody tr {
+    background: #1a2233;
+    border-color: #33415a;
+    border-left-color: #64b5f6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode #section-patientdashboard .td-records .td-records__table tbody tr:hover {
+    background: #131a26;
+}
+
+body.dark-mode #section-patientdashboard .td-records .td-records__table tbody tr:hover td {
+    background: transparent;
+}
+
+body.dark-mode #section-patientdashboard .td-records .td-records__table tbody td::before {
+    color: #e2e8f0;
+}
+
+    /* ==========================================================================
+    TREATMENT INFORMATION MODAL - TWO ROWS PER TREATMENT
+    My Patients > "i" button > Treatment Information (#checkInfoModal).
+
+    Paste at the bottom of admin-responsive.css (below everything else).
+    CSS only: the HTML and JS are unchanged. Every rule here is !important
+    because admin-responsive.css already forces this table into a plain
+    one-line table with !important, and those rules have to be beaten.
+
+    Row 1: Assigned Dentist | Medicine | Visit Date | Tooth# | Procedure | Notes | Value
+    Row 2: Fee Paid | Balance | Status | Next Appointment | Chart | Payments | Manage
+
+    Each treatment is its own card. The column headings are hidden because they
+    cannot sit above two rows, so every field carries its own small label.
+    Only rows with all 14 cells become cards; the "no treatment found" row and
+    anything else stays as it was.
+    ========================================================================== */
+
+/* The list scrolls inside the modal, so a long history is never clipped */
+#checkInfoModal .ci-table-scroll {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    padding-right: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+/* Table and body become plain blocks; the header row is replaced by labels */
+#checkInfoModal .ci-table-scroll .treatment-table,
+#checkInfoModal .ci-table-scroll .treatment-table tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    box-sizing: border-box !important;
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table tbody {
+    padding: 12px 16px 16px !important;
+    min-width: 932px !important;    /* one card's width + the padding, so narrow screens scroll sideways */
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table thead {
+    display: none !important;
+}
+
+/* Rows that are not treatments (e.g. "No treatment information found") */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr {
+    display: block !important;
+    min-height: 0 !important;
+}
+
+/* ---------- One treatment = one card ---------- */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) {
+    display: grid !important;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 12px 12px;
+    align-items: start;
+    box-sizing: border-box;
+    min-width: 900px;
+    margin: 0 0 14px !important;
+    padding: 14px 16px 16px !important;
+    background: #ffffff;
+    border: 1px solid #cfd9e6;
+    border-left: 4px solid #1976d2;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(13, 71, 161, 0.08);
+    transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)):last-child {
+    margin-bottom: 0 !important;
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)):hover {
+    background: #fbfdff;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.14);
+}
+
+/* Cells: no table borders or padding, the grid gap does the spacing */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td {
+    display: block !important;
+    box-sizing: border-box;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    text-align: left !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    overflow-wrap: anywhere;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Field labels (these replace the table header) */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td::before {
+    display: block !important;
+    flex: none !important;
+    margin: 0 0 6px 0 !important;
+    color: #1e293b;
+    font-size: 11.5px;
+    font-weight: 800 !important;
+    line-height: 1.2;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(1)::before  { content: "Assigned Dentist" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(2)::before  { content: "Medicine" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(3)::before  { content: "Visit Date" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(4)::before  { content: "Tooth#" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(5)::before  { content: "Procedure" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(6)::before  { content: "Notes" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(7)::before  { content: "Value" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(8)::before  { content: "Fee Paid" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(9)::before  { content: "Balance" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(10)::before { content: "Status" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(11)::before { content: "Next Appointment" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(12)::before { content: "Chart" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(13)::before { content: "Payments" !important; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(14)::before { content: "Manage" !important; }
+
+/* Placement: cells 1-7 on the first row, 8-14 on the second */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(1)  { grid-area: 1 / 1; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(2)  { grid-area: 1 / 2; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(3)  { grid-area: 1 / 3; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(4)  { grid-area: 1 / 4; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(5)  { grid-area: 1 / 5; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(6)  { grid-area: 1 / 6; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(7)  { grid-area: 1 / 7; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(8)  { grid-area: 2 / 1; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(9)  { grid-area: 2 / 2; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(10) { grid-area: 2 / 3; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(11) { grid-area: 2 / 4; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(12) { grid-area: 2 / 5; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(13) { grid-area: 2 / 6; }
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td:nth-child(14) { grid-area: 2 / 7; }
+
+/* Buttons and edit-mode controls sit at the left of their cell, not centred */
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td .ci-actions,
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td .ci-action-btns,
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td .treatment-actions {
+    justify-content: flex-start !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+}
+
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td input,
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td select,
+#checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td .adm-select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+}
+
+/* ---------- Dark mode ---------- */
+body.dark-mode #checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) {
+    background: #1a2233 !important;
+    border-color: #33415a !important;
+    border-left-color: #64b5f6 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode #checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)):hover {
+    background: #131a26 !important;
+}
+
+body.dark-mode #checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode #checkInfoModal .ci-table-scroll .treatment-table tbody tr:has(> td:nth-child(14)) > td::before {
+    color: #e2e8f0;
 }

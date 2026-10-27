@@ -230,6 +230,53 @@
                             </div>
                         </section>
 
+                        <section class="ep-group">
+                            <h3 class="ep-group-title">Personal Details</h3>
+                            <div class="ep-grid">
+                                <div class="ep-field" style="grid-column: 1 / -1;">
+                                    <label for="editAddress">Address</label>
+                                    <input type="text" id="editAddress" name="address" maxlength="300"
+                                        placeholder="House No., Street, Barangay, Municipality/City, Province"
+                                        autocomplete="street-address" disabled>
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editNationality">Nationality</label>
+                                    <input type="text" id="editNationality" name="nationality" maxlength="100" disabled>
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editReligion">Religion</label>
+                                    <select id="editReligion" name="religion" disabled>
+                                        <option value="">-- Not set --</option>
+                                        <option value="Roman Catholic">Roman Catholic</option>
+                                        <option value="Christian">Christian</option>
+                                        <option value="Islam">Islam</option>
+                                        <option value="Iglesia ni Cristo">IGLESIA NI CRISTO</option>
+                                        <option value="Baptist">Baptist</option>
+                                        <option value="Methodist">Methodist</option>
+                                        <option value="Born Again Christian">Born Again Christian</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="ep-field">
+                                    <label for="editOccupation">Occupation</label>
+                                    <select id="editOccupation" name="occupation" disabled>
+                                        <option value="">-- Not set --</option>
+                                        <option value="Student">Student</option>
+                                        <option value="Employee">Employee</option>
+                                        <option value="Self-Employed">Self-Employed</option>
+                                        <option value="Teacher">Teacher</option>
+                                        <option value="Nurse">Nurse</option>
+                                        <option value="Doctor">Doctor</option>
+                                        <option value="Business Owner">Business Owner</option>
+                                        <option value="Housewife">Housewife</option>
+                                        <option value="Retired">Retired</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <p class="ep-hint" id="editDetailsHint">Loading saved details&hellip;</p>
+                        </section>
+
                     </div>
 
                     <div class="ep-actions">
@@ -265,6 +312,93 @@
         </div>
 
         <script src="{{ url_for('static', filename='js/patient-edit-confirm-modals.js') }}?v=3"></script>
+
+        <script>
+            /* Edit Patient: prefill the personal details (address,
+               nationality, religion, occupation) from the server whenever
+               the pencil button is clicked. The four inputs stay disabled
+               until the saved values have loaded, so a save made too early
+               (or after a failed load) can never send blanks and wipe them.
+               Disabled inputs are not part of the submitted form. */
+            (function () {
+                var IDS = ['editAddress', 'editNationality', 'editReligion', 'editOccupation'];
+                var KEYS = ['address', 'nationality', 'religion', 'occupation'];
+                var token = 0;
+
+                function el(id) { return document.getElementById(id); }
+
+                function setSelect(select, value) {
+                    value = String(value || '').trim();
+                    // A saved value that is not one of the listed options
+                    // (older records) gets its own option so it is not lost.
+                    if (value && !Array.prototype.some.call(select.options, function (o) {
+                        return o.value === value;
+                    })) {
+                        var extra = document.createElement('option');
+                        extra.value = value;
+                        extra.textContent = value;
+                        select.appendChild(extra);
+                    }
+                    select.value = value;
+                }
+
+                function setLocked(locked, hint) {
+                    IDS.forEach(function (id) {
+                        var node = el(id);
+                        if (node) node.disabled = locked;
+                    });
+                    var h = el('editDetailsHint');
+                    if (h) h.textContent = hint || '';
+                }
+
+                document.addEventListener('click', function (event) {
+                    var btn = event.target.closest && event.target.closest('.edit-patient-btn');
+                    if (!btn || !el('editAddress')) return;
+
+                    var patientId = btn.getAttribute('data-patient-id') || '';
+                    var mine = ++token;
+
+                    IDS.forEach(function (id) {
+                        var node = el(id);
+                        if (!node) return;
+                        if (node.tagName === 'SELECT') {
+                            setSelect(node, '');
+                        } else {
+                            node.value = '';
+                        }
+                    });
+                    setLocked(true, 'Loading saved details\u2026');
+
+                    if (!patientId) {
+                        setLocked(true, 'No patient record is linked, so these details cannot be edited.');
+                        return;
+                    }
+
+                    fetch('/admin/patient_details/' + encodeURIComponent(patientId), {
+                        credentials: 'same-origin'
+                    })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (mine !== token) return;
+                            if (!data || !data.success) throw new Error('load failed');
+                            KEYS.forEach(function (key, i) {
+                                var node = el(IDS[i]);
+                                if (!node) return;
+                                if (node.tagName === 'SELECT') {
+                                    setSelect(node, data[key]);
+                                } else {
+                                    node.value = data[key] || '';
+                                }
+                            });
+                            setLocked(false, 'Shown on the patient\u2019s Treatment Information. Leave a field empty to clear what you typed here.');
+                        })
+                        .catch(function () {
+                            if (mine !== token) return;
+                            setLocked(true, 'Could not load these details, so they are locked to avoid overwriting them. Close and reopen to retry.');
+                        });
+                }, true);
+            })();
+        </script>
 
         <div id="checkInfoModal" class="modal" style="display:none;">
             <div class="modal-content">
@@ -419,9 +553,7 @@
             </div>
         </div>
 
-        <script src="{{ url_for('static', filename='js/check-info-modal.js') }}?v=18"></script>
+        <script src="{{ url_for('static', filename='js/check-info-modal.js') }}?v=19"></script>
 
 
         <script src="{{ url_for('static', filename='js/patient-profile-modal.js') }}?v=1"></script>
-
-

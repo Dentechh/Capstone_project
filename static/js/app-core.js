@@ -1234,24 +1234,10 @@ function showSection(sectionId) {
                 '<td class="td-plan-cell"><select class="td-plan" aria-label="New charge or follow-up of an existing plan">' +
                 '<option value="__new__">New charge</option></select></td>' +
 
-                    /* Same Consulting Dentist combobox as the Appointments table, driven by the
-                    same delegated handlers keyed on .dentist-field / .dentist-input,
-                    so no extra wiring is needed here. The td-dentist class stays
-                    on the input: that is what saveTreatmentNotes(), the
-                    FormData submit and the row validation all read. */
-                '<td>' +
-                '<div class="dentist-field">' +
-                /* Loaded value goes through formatDentistName() so treatment rows saved
-                   under the old short name still read as the full name. */
-                '<input type="text" class="dentist-input td-dentist" value="' + escHtml(formatDentistName(data.dentist)) + '" placeholder="Select or type a dentist"' +
-                ' autocomplete="off" autocapitalize="off" spellcheck="false"' +
-                ' role="combobox" aria-autocomplete="list" aria-expanded="false"' +
-                ' aria-controls="dentistMenu" aria-label="Treating dentist">' +
-                '<button type="button" class="dentist-field__toggle" tabindex="-1" aria-hidden="true" title="Show dentists">' +
-                '<span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span>' +
-                '</button>' +
-                '</div>' +
-                '</td>' +
+                    /* Dentist is a plain dropdown (no typing). The td-dentist class stays
+                   on the <select>: saveTreatmentNotes(), the FormData submit and the
+                   row validation all read .td-dentist.value. */
+                '<td>' + tdDentistSelectHtml(data.dentist) + '</td>' +
 
                 '<td><input type="number" class="td-value" value="' + escHtml(data.valueOfWork || '') + '" placeholder="0.00" step="0.01"></td>' +
 
@@ -1316,6 +1302,25 @@ function showSection(sectionId) {
             // Give the new row the same listboxes and date pickers as the
             // rows already on screen.
             refreshTreatmentControls(document.querySelector('#td-treatment-table tbody'));
+        }
+
+        // Dentists offered in every dentist dropdown. The first one is the default.
+        // To add a dentist, add a name here (and to the <select> in the three templates).
+        var DENTIST_OPTIONS = ['Dr. Julix Dionne Capizonda'];
+
+        function tdDentistSelectHtml(saved) {
+            var current = '';
+            try { current = (typeof formatDentistName === 'function') ? formatDentistName(saved) : (saved || ''); } catch (e) { current = saved || ''; }
+            current = String(current || '').trim();
+            var opts = DENTIST_OPTIONS.slice();
+            // A saved dentist that is not in the list must still show, not vanish.
+            if (current && opts.indexOf(current) === -1) opts.push(current);
+            var pick = current || opts[0];
+            var html = '<select class="td-dentist dentist-select" aria-label="Treating dentist">';
+            opts.forEach(function (n) {
+                html += '<option value="' + escHtml(n) + '"' + (n === pick ? ' selected' : '') + '>' + escHtml(n) + '</option>';
+            });
+            return html + '</select>';
         }
 
         var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
@@ -1460,14 +1465,14 @@ function showSection(sectionId) {
             }
 
             // Get the dentist name from the input field in the Consulting Dentist column
-            const dentistInput = rowElement.querySelector('.dentist-input');
+            const dentistInput = rowElement.querySelector('.dentist-select, .dentist-input');
             const dentist_name = dentistInput ? dentistInput.value.trim() : '';
 
             // Accepting commits the appointment to a dentist, so the name has to
             // be there first. Declining still works without one - nothing gets
             // assigned, so there is nothing to fill in.
-            if (action === 'accept' && !requireDentistInput(dentistInput)) {
-                showToast('Please select or type the consulting dentist before accepting.');
+            if (action === 'accept' && !dentist_name) {
+                showToast('Please select the consulting dentist before accepting.');
                 return;
             }
 

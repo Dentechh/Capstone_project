@@ -317,6 +317,80 @@ let currentCheckInfoPatientId = "";
                 section.hidden = false;
             }
 
+            // Patient details (address, nationality, religion,
+            // occupation) from the same latest-appointment
+            // payload. The block is cloned from the medical
+            // history section at runtime so it inherits its look
+            // without needing new markup. DOM nodes only: values
+            // come straight from Firestore.
+            const CI_DETAIL_FIELDS = [
+                ["address", "Address"],
+                ["nationality", "Nationality"],
+                ["religion", "Religion"],
+                ["occupation", "Occupation"]
+            ];
+
+            function renderCiPatientDetails(details) {
+                const medical = document.getElementById("ciApptMedical");
+                if (!medical || !medical.parentNode) return;
+
+                let section = document.getElementById("ciApptDetails");
+
+                if (!section) {
+                    section = medical.cloneNode(true);
+                    section.id = "ciApptDetails";
+
+                    const clonedList = section.querySelector("#ciApptMedicalList");
+                    if (clonedList) clonedList.id = "ciApptDetailsList";
+
+                    // Retitle the cloned heading and icon.
+                    const walker = document.createTreeWalker(
+                        section, NodeFilter.SHOW_TEXT);
+                    let node;
+                    while ((node = walker.nextNode())) {
+                        if (/medical\s*history/i.test(node.nodeValue)) {
+                            node.nodeValue = node.nodeValue.replace(
+                                /medical\s*history/i, "Patient Details");
+                        }
+                    }
+                    const icon = section.querySelector(".material-symbols-rounded");
+                    if (icon) icon.textContent = "person";
+
+                    medical.parentNode.insertBefore(section, medical);
+                }
+
+                const list = section.querySelector("#ciApptDetailsList");
+                if (!list) return;
+                list.textContent = "";
+
+                let count = 0;
+                CI_DETAIL_FIELDS.forEach(function (pair) {
+                    const value = String(
+                        (details || {})[pair[0]] || ""
+                    ).trim();
+                    if (!value) return;
+
+                    const item = document.createElement("div");
+                    item.className = "ci-appt-med-item";
+
+                    const label = document.createElement("span");
+                    label.className = "ci-appt-med-q";
+                    label.textContent = pair[1];
+
+                    const val = document.createElement("span");
+                    val.className = "ci-appt-med-a";
+                    val.textContent = value;
+
+                    item.appendChild(label);
+                    item.appendChild(val);
+                    list.appendChild(item);
+                    count++;
+                });
+
+                // Optional: nothing recorded means no block at all.
+                section.hidden = count === 0;
+            }
+
             // At-a-glance figures for the patient, computed
             // from the treatment records already loaded.
             // null (nothing loaded yet) hides the card; an
@@ -379,6 +453,7 @@ let currentCheckInfoPatientId = "";
                         ? formatDentistName(appt.dentist_name)
                         : appt.dentist_name);
 
+                renderCiPatientDetails(appt.patient_details);
                 renderCiMedicalHistory(appt.medical_history);
 
                 setCiApptVisible(true);

@@ -7,6 +7,10 @@
   function csrfToken() { return (document.querySelector('meta[name="csrf-token"]') || {}).content || ''; }
   var convs = {}, active = null, listSince = '', cursor = '', shown = {}, timer = null, running = false, sending = false;
   var FAST = 4000, SLOW = 30000, delay = FAST;   // adaptive polling
+  var MAX_FILE = 10 * 1024 * 1024;               // keep in step with messaging.py
+  var ACCEPT = '.jpg,.jpeg,.png,.gif,.webp,.pdf,.docx,.xlsx,image/*,application/pdf';
+  var EXT_OK = /\.(jpe?g|png|gif|webp|pdf|docx|xlsx)$/i;
+  var pendingFile = null;
 
   root.innerHTML =
     '<div class="cm-admin">' +
@@ -28,6 +32,29 @@
     if (!iso) return ''; var d = new Date(iso), n = new Date();
     return d.toDateString() === n.toDateString() ? d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})
       : d.toLocaleDateString([], {month: 'short', day: 'numeric'});
+  }
+  function fmtSize(n) {
+    n = Number(n) || 0;
+    return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+  }
+  function buildAttachment(att, onLoad) {
+    var a = document.createElement('a');
+    a.href = att.url; a.rel = 'noopener';
+    if (att.kind === 'image') {
+      a.target = '_blank'; a.className = 'cm-att-imglink';
+      var img = document.createElement('img');
+      img.className = 'cm-att-img'; img.src = att.url; img.alt = att.name || 'Photo'; img.loading = 'lazy';
+      img.addEventListener('load', onLoad || function () {});
+      a.appendChild(img);
+    } else {
+      a.className = 'cm-att-file'; a.setAttribute('download', att.name || '');
+      var ic = document.createElement('span'); ic.className = 'material-symbols-rounded'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = 'description';
+      var meta = document.createElement('span'); meta.className = 'cm-att-meta';
+      var nm = document.createElement('b'); nm.textContent = att.name || 'File';
+      var sz = document.createElement('small'); sz.textContent = fmtSize(att.size);
+      meta.appendChild(nm); meta.appendChild(sz); a.appendChild(ic); a.appendChild(meta);
+    }
+    return a;
   }
   function get(url) { return fetch(url, {headers: {'X-Requested-With': 'fetch'}}).then(function (r) { return r.ok ? r.json() : null; }); }
   function pollBadge() { return get('/admin/messages/conversations?badge=1').then(function (d) { if (d) setBadge(d.unread_total); }); }
@@ -117,7 +144,10 @@
       '</div></div>' +
       '<div class="cm-msgs"><div class="cm-empty">No messages yet. Say hello!</div><button class="cm-scroll-btn" type="button" aria-label="Scroll to bottom">↓</button></div>' +
       '<div class="cm-emoji-picker"></div>' +
-      '<form class="cm-form"><button type="button" class="cm-emoji-btn" aria-label="Emoji" title="Emoji">😊</button><textarea rows="1" maxlength="1000" placeholder="Reply to ' + esc(c.name) + '..."></textarea>' +
+      '<div class="cm-attach-preview" hidden></div>' +
+      '<form class="cm-form"><input type="file" class="cm-file" hidden accept="' + ACCEPT + '">' +
+      '<button type="button" class="cm-attach-btn" aria-label="Attach a photo or document" title="Attach a photo or document"><span class="material-symbols-rounded" aria-hidden="true">attach_file</span></button>' +
+      '<button type="button" class="cm-emoji-btn" aria-label="Emoji" title="Emoji">😊</button><textarea rows="1" maxlength="1000" placeholder="Reply to ' + esc(c.name) + '..."></textarea>' +
       '<button type="submit" aria-label="Send"><span class="material-symbols-rounded" aria-hidden="true">send</span></button></form>';
     attachScroll();
     var form = pane.querySelector('form'), ta = pane.querySelector('textarea');
@@ -161,13 +191,45 @@
     pane.querySelector('.cm-back').onclick = function () { wrap.classList.remove('chat-open'); active = null; renderList(); };
     ta.addEventListener('input', function () { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 90) + 'px'; });
     ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+
+    // ---- attachments: pick a file, show a removable preview, send with the message ----
+    var fileInput = pane.querySelector('.cm-file'), preview = pane.querySelector('.cm-attach-preview');
+    pendingFile = null;
+    function clearPending() { pendingFile = null; fileInput.value = ''; preview.hidden = true; preview.textContent = ''; }
+    function showPending() {
+      preview.textContent = '';
+      var chip = document.createElement('div'); chip.className = 'cm-prev-chip';
+      var isImg = /^image\//.test(pendingFile.type);
+      if (isImg) {
+        var im = document.createElement('img'); im.alt = ''; im.src = URL.createObjectURL(pendingFile);
+        im.addEventListener('load', function () { URL.revokeObjectURL(im.src); });
+        chip.appendChild(im);
+      } else {
+        var ic = document.createElement('span'); ic.className = 'material-symbols-rounded'; ic.setAttribute('aria-hidden', 'true'); ic.textContent = 'description';
+        chip.appendChild(ic);
+      }
+      var info = document.createElement('span'); info.className = 'cm-prev-name'; info.textContent = pendingFile.name + ' · ' + fmtSize(pendingFile.size);
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'cm-prev-x'; x.setAttribute('aria-label', 'Remove attachment');
+      x.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">close</span>';
+      x.addEventListener('click', clearPending);
+      chip.appendChild(info); chip.appendChild(x); preview.appendChild(chip); preview.hidden = false;
+    }
+    pane.querySelector('.cm-attach-btn').addEventListener('click', function () { fileInput.click(); });
+    fileInput.addEventListener('change', function () {
+      var f = fileInput.files && fileInput.files[0]; if (!f) return;
+      if (!EXT_OK.test(f.name)) { alert('Only photos (JPG, PNG, GIF, WebP), PDF, Word (.docx) and Excel (.xlsx) files are allowed.'); clearPending(); return; }
+      if (f.size > MAX_FILE) { alert('That file is larger than 10 MB.'); clearPending(); return; }
+      pendingFile = f; showPending(); ta.focus();
+    });
+
     form.addEventListener('submit', function (e) {
-      e.preventDefault(); var text = ta.value.trim(); if (!text || sending) return; sending = true;
+      e.preventDefault(); var text = ta.value.trim(), file = pendingFile; if ((!text && !file) || sending) return; sending = true;
       var fd = new FormData(); fd.append('uid', uid); fd.append('text', text);
+      if (file) fd.append('file', file);
       if (!convs[uid]) fd.append('new', '1');
       fetch('/admin/messages/send', {method: 'POST', body: fd, headers: {'X-CSRFToken': csrfToken()}})
         .then(function (r) { return r.json(); })
-        .then(function (d) { if (d.success) { ta.value = ''; ta.style.height = 'auto'; delay = FAST; return loadThread(); } alert(d.message || 'Could not send.'); })
+        .then(function (d) { if (d.success) { ta.value = ''; ta.style.height = 'auto'; clearPending(); delay = FAST; return loadThread(); } alert(d.message || 'Could not send.'); })
         .catch(function () { alert('Could not send.'); })
         .then(function () {
           sending = false; ta.focus();
@@ -199,16 +261,23 @@
           var day = new Date(m.created_at).toLocaleDateString([], {weekday: 'long', month: 'long', day: 'numeric'});
           if (box.dataset.day !== day) { var dd = document.createElement('div'); dd.className = 'cm-day'; dd.textContent = day; box.appendChild(dd); box.dataset.day = day; }
           var row = document.createElement('div'); row.className = 'cm-row ' + (m.sender === 'admin' ? 'me' : 'them');
-          var b = document.createElement('div'); b.className = 'cm-bubble'; b.textContent = m.text;
-          var copy = document.createElement('button'); copy.className = 'cm-copy'; copy.type = 'button'; copy.setAttribute('aria-label', 'Copy message');
-          copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>';
-          copy.addEventListener('click', function () {
-            if (navigator.clipboard) navigator.clipboard.writeText(m.text).then(function () {
-              copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">check</span>';
-              setTimeout(function () { copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>'; }, 1200);
+          var b = document.createElement('div'); b.className = 'cm-bubble';
+          if (m.attachment) {
+            b.classList.add('has-att');
+            b.appendChild(buildAttachment(m.attachment, function () { if (near) box.scrollTop = box.scrollHeight; }));
+          }
+          if (m.text) {
+            var tx = document.createElement('div'); tx.className = 'cm-text'; tx.textContent = m.text; b.appendChild(tx);
+            var copy = document.createElement('button'); copy.className = 'cm-copy'; copy.type = 'button'; copy.setAttribute('aria-label', 'Copy message');
+            copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>';
+            copy.addEventListener('click', function () {
+              if (navigator.clipboard) navigator.clipboard.writeText(m.text).then(function () {
+                copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">check</span>';
+                setTimeout(function () { copy.innerHTML = '<span class="material-symbols-rounded" aria-hidden="true">content_copy</span>'; }, 1200);
+              });
             });
-          });
-          b.appendChild(copy);
+            b.appendChild(copy);
+          }
           var t = document.createElement('div'); t.className = 'cm-time';
           t.textContent = new Date(m.created_at).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'}) + (m.sender === 'admin' && m.staff_name ? ' · ' + m.staff_name : '');
           row.appendChild(b); row.appendChild(t); box.appendChild(row); cursor = m.created_at;

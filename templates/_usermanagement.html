@@ -1,11 +1,26 @@
 <style>
-            /* Name column: left-aligned (header and names) */
-            #section-usermanagement #userManagementTable th:first-child,
-            #section-usermanagement #userManagementTable td:first-child {
-                text-align: left;
-                padding-left: 24px;
-            }
-        </style>
+    /* Name column: left-aligned (header and names) */
+    #section-usermanagement #userManagementTable th:first-child,
+    #section-usermanagement #userManagementTable td:first-child {
+        text-align: left;
+        padding-left: 24px;
+    }
+
+    /* Row numbering: "1. Name", "2. Name", ... */
+    #section-usermanagement #userManagementTable tbody {
+        counter-reset: um-row;
+    }
+    #section-usermanagement #userManagementTable tbody tr {
+        counter-increment: um-row;
+    }
+    #section-usermanagement #userManagementTable tbody tr td:first-child:not([colspan])::before {
+        content: counter(um-row) ".";
+        display: inline-block;
+        min-width: 30px;
+        margin-right: 6px;
+        font-weight: 700;
+    }
+</style>
         <div id="section-usermanagement" class="content-section">
             <section class="content-panel">
                 <div class="filter-bar">
@@ -153,4 +168,4 @@
             })();
         </script>
 
-        <script src="{{ url_for('static', filename='js/usermanagement-list.js') }}?v=2"></script>
+        <script src="{{ url_for('static', filename='js/usermanagement-list.js') }}?v=3"></script>

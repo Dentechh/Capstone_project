@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 import hashlib
 import hmac
 import os
@@ -248,7 +248,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         if not secret or secret.startswith("<") or len(secret) < 32:
             raise RuntimeError("SECRET_KEY is missing or is a placeholder")
         self.app.secret_key = secret
-        self.app.permanent_session_lifetime = timedelta(hours=8)
+        self.app.permanent_session_lifetime = timedelta(hours=1)  # idle timeout: resets on every request
         self.app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
         self.app.config["SESSION_COOKIE_HTTPONLY"] = True
         self.app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -406,8 +406,27 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
     def _invalidate_accounts_cache(self):
         self.cache.invalidate("manageable_accounts_all")
+        self.cache.invalidate("history_accounts_all")
         self.cache.invalidate("removed_login_uids")
         self.cache.invalidate("unpaid_account_names")
+
+    def _get_history_accounts_cached(self):
+        """
+        Raw (uid, data) pairs for EVERY account that has patient history,
+        walk-in accounts included. This is the same set "My Patients" lists.
+        _get_manageable_accounts_cached() only returns google/password logins,
+        so using it for patient counts silently dropped every walk-in patient.
+        Short 60s cache because approving a patient does not invalidate it.
+        """
+        cached = self.cache.get("history_accounts_all")
+        if cached is not None:
+            return cached
+        query = self.db.collection(self.Customer_Account).where(
+            filter=FieldFilter("has_history", "==", True)
+        )
+        docs = [(doc.id, doc.to_dict() or {}) for doc in query.stream()]
+        self.cache.set("history_accounts_all", docs, ttl_seconds=60)
+        return docs
 
     def _get_patients_cached(self):
         """
@@ -2501,7 +2520,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 if last_activity:
                     try:
                         last_active = datetime.fromisoformat(last_activity)
-                        if datetime.now(UTC) - last_active > timedelta(hours=8):
+                        if datetime.now(UTC) - last_active > timedelta(hours=1):
                             session.clear()
                             flash("Admin session expired. Please log in again.", "error")
                             return redirect(url_for("adminLogin"))
@@ -5474,6 +5493,16 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     "message": "Patient first name and last name are required"
                 }), 400
 
+            # A brand-new patient has nothing on file yet, so these four
+            # must be filled in. (Existing patients keep them on file and
+            # may leave them blank.)
+            for _field in ("Address", "Nationality", "Religion", "Occupation"):
+                if not bleach.clean(request.form.get(_field, "")).strip():
+                    return jsonify({
+                        "success": False,
+                        "message": f"{_field} is required for a new patient."
+                    }), 400
+
             # ---------------------------------------------------------
             # CHECK IF THIS PERSON ALREADY HAS A CANONICAL PATIENT
             # RECORD (AND A LINKED ACCOUNT) BEFORE CREATING A NEW ONE
@@ -6638,6 +6667,64 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         # their tab is opened (see showSection in admin_dashboard.html).
         # Opening the dashboard now only needs the cheap summary below.
 
+        summary = self._overview_summary()
+        pending_count = summary["pending_count"]
+        approved_count = summary["approved_count"]
+        total_patients = summary["total_patients"]
+        urgency_counts = summary["urgency_counts"]
+        total_income = summary["total_income"]
+        total_outstanding = summary["total_outstanding"]
+        unpaid_procedures = summary["unpaid_procedures"]
+
+        # Recent Accepted Patients: one card per patient, not per procedure.
+        # _fetch_approved_page returns Approve documents newest-accepted_at
+        # first, so the first occurrence of each account is that patient's
+        # latest acceptance. Deduplicate by account uid and take the 3 newest
+        # distinct patients, so a patient with several re-booked procedures
+        # shows once instead of once per procedure.
+        recent_rows, _ = self._fetch_approved_page(page_size=25)
+        seen_uids = set()
+        recent_approve = []
+        for row in recent_rows:
+            uid = row.get("uid") or ""
+            if uid and uid in seen_uids:
+                continue
+            seen_uids.add(uid)
+            recent_approve.append(row)
+            if len(recent_approve) >= 3:
+                break
+
+        # =========================
+        # RENDER TEMPLATE
+        # =========================
+        return render_template(
+            "admin_dashboard.html",
+            Appointment_clients=[],
+            Approve=[],
+            manageable_accounts=[],
+            my_patients=[],
+            admin_welcome_toast=admin_welcome_toast,
+            pending_count=pending_count,
+            approved_count=approved_count,
+            total_patients=total_patients,
+            urgency_counts=urgency_counts,
+            recent_approve=recent_approve,
+            total_income=total_income,
+            total_outstanding=total_outstanding,
+            unpaid_procedures=unpaid_procedures,
+            my_patients_next_cursor="",
+            manageable_accounts_next_cursor="",
+            appointment_list_next_cursor="",
+            approve_list_next_cursor="",
+        )
+
+    def _overview_summary(self):
+        """
+        The numbers behind the dashboard overview cards and charts.
+        Shared by adminDashboard() (first page load) and
+        admin_overview_counts() (refresh after a save, no page reload),
+        so the two can never disagree.
+        """
         # =========================
         # COUNTS (server-side aggregation, ~1 read per 1000 index entries)
         # =========================
@@ -6700,24 +6787,6 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 if level in urgency_counts:
                     urgency_counts[level] += 1
 
-        # Recent Accepted Patients: one card per patient, not per procedure.
-        # _fetch_approved_page returns Approve documents newest-accepted_at
-        # first, so the first occurrence of each account is that patient's
-        # latest acceptance. Deduplicate by account uid and take the 3 newest
-        # distinct patients, so a patient with several re-booked procedures
-        # shows once instead of once per procedure.
-        recent_rows, _ = self._fetch_approved_page(page_size=25)
-        seen_uids = set()
-        recent_approve = []
-        for row in recent_rows:
-            uid = row.get("uid") or ""
-            if uid and uid in seen_uids:
-                continue
-            seen_uids.add(uid)
-            recent_approve.append(row)
-            if len(recent_approve) >= 3:
-                break
-
         # =========================
         # FINANCIAL CALCULATIONS (Step 2: cached, no full scan)
         # =========================
@@ -6733,29 +6802,31 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             total_outstanding = 0.0
             unpaid_procedures = 0
 
-        # =========================
-        # RENDER TEMPLATE
-        # =========================
-        return render_template(
-            "admin_dashboard.html",
-            Appointment_clients=[],
-            Approve=[],
-            manageable_accounts=[],
-            my_patients=[],
-            admin_welcome_toast=admin_welcome_toast,
-            pending_count=pending_count,
-            approved_count=approved_count,
-            total_patients=total_patients,
-            urgency_counts=urgency_counts,
-            recent_approve=recent_approve,
-            total_income=total_income,
-            total_outstanding=total_outstanding,
-            unpaid_procedures=unpaid_procedures,
-            my_patients_next_cursor="",
-            manageable_accounts_next_cursor="",
-            appointment_list_next_cursor="",
-            approve_list_next_cursor="",
-        )
+        return {
+            "pending_count": pending_count,
+            "approved_count": approved_count,
+            "total_patients": total_patients,
+            "urgency_counts": urgency_counts,
+            "total_income": total_income,
+            "total_outstanding": total_outstanding,
+            "unpaid_procedures": unpaid_procedures,
+        }
+
+    def admin_overview_counts(self):
+        """JSON for refreshing the overview cards/charts without a page reload."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        s = self._overview_summary()
+        return jsonify({
+            "success": True,
+            "approvedCount": s["approved_count"],
+            "pendingCount": s["pending_count"],
+            "totalPatients": s["total_patients"],
+            "urgencyCounts": s["urgency_counts"],
+            "totalIncome": s["total_income"],
+            "totalOutstanding": s["total_outstanding"],
+            "unpaidProcedures": s["unpaid_procedures"],
+        })
 
     def admin_dashboard_stats(self):
         if not session.get('admin_logged_in'):
@@ -6862,14 +6933,17 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     last = str(pdata.get("last_name", "")).strip()
                     full_name = " ".join(part for part in [first, middle, last] if part) or "Unnamed Patient"
                     patient_name_by_uid[account_uid] = full_name
-            for uid, d in self._get_manageable_accounts_cached():
+            for uid, d in self._get_history_accounts_cached():
                 if not d.get("has_history"):
                     continue
-                if period != "overall" and not in_range(d.get("created_at") or d.get("last_approved_at")):
+                if period != "overall" and not in_range(d.get("last_approved_at") or d.get("created_at")):
                     continue
                 total_patients += 1
                 account_uid = str(uid).strip()
-                patients_list.append(patient_name_by_uid.get(account_uid, "Unnamed Patient"))
+                fallback = " ".join(
+                    str(d.get(k) or "").strip() for k in ("firstname", "middlename", "lastname")
+                ).strip() or "Unnamed Patient"
+                patients_list.append(patient_name_by_uid.get(account_uid, fallback))
             patients_list.sort(key=lambda n: n.lower())
         except Exception as e:
             print("DASHBOARD STATS TOTAL PATIENTS ERROR:", e)
@@ -7011,6 +7085,25 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "has_account": bool(existing_patient.get("account_uid"))
         })
 
+    def admin_patient_details(self, patient_id):
+        """Address / nationality / religion / occupation for one patient,
+        used to prefill the Edit Patient modal (the full get_patient
+        payload also carries chart images, far too heavy for that)."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            patient_doc = self.db.collection(
+                self.Doc_Patients
+            ).document(str(patient_id).strip()).get()
+            account_uid = ""
+            if patient_doc.exists:
+                account_uid = (patient_doc.to_dict() or {}).get("account_uid") or ""
+            details = self._patient_details_for(account_uid)
+            return jsonify({"success": True, **details})
+        except Exception as e:
+            print("ADMIN PATIENT DETAILS ERROR:", e)
+            return jsonify({"success": False, "message": "Could not load details"}), 500
+
     def update_patient(self):
         """
         Update a patient's basic info from the admin "My Patients" table.
@@ -7073,6 +7166,17 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 "success": False,
                 "message": "Invalid civil status"
             }), 400
+
+        # Optional personal details. Only touched when the form actually
+        # sent them, so an older client can never wipe saved values.
+        details_sent = any(
+            k in request.form for k in self.PROFILE_EXTRA_KEYS
+        )
+        details_override = {}
+        if details_sent:
+            for k in self.PROFILE_EXTRA_KEYS:
+                v = bleach.clean(request.form.get(k, "").strip())
+                details_override[k] = v[:300]
 
         # Birthday is the editable source of truth; Age is never stored, it is
         # always derived from it by compute_age_and_birth_year(). A blank value
@@ -7138,6 +7242,14 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                         "message": "This account has no linked patient record, "
                                    "so a birthday cannot be saved."
                     }), 400
+
+            if details_sent:
+                # Admin edits win over what the appointments say; a blank
+                # removes the admin value for that field.
+                account_ref.update({
+                    f"profile_override.{k}": (v if v else firestore.DELETE_FIELD)
+                    for k, v in details_override.items()
+                })
 
             account_ref.update({
                 "firstname": first_name,
@@ -7927,6 +8039,10 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                         or data.get("sex")
                         or ""
                     ).strip()
+            if account_uid:
+                for _k, _v in self._patient_details_for(account_uid).items():
+                    if _v or _k not in data:
+                        data[_k] = _v
 
             visit_history = []
             if account_uid:
@@ -8081,6 +8197,9 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             or data.get("Sex")
             or ""
         ).strip()
+        for _k, _v in self._patient_details_for(uid).items():
+            if _v or _k not in data:
+                data[_k] = _v
 
         visit_history = []
         done_docs = (
@@ -9043,39 +9162,34 @@ backup. Groups marked "check" may be separate treatments that just share a price
             # =====================================================
             # DENTAL CHART JSON
             # =====================================================
-            dental_chart = {}
+            dental_chart = {
+                key: request.form.get(key)
+                for key in request.form
+                if key.startswith("tooth_")
+            }
 
-            for key in request.form:
-
-                if key.startswith("tooth_"):
-
-                    dental_chart[key] = request.form.get(key)
-
-                    # =====================================================
-                    # IMAGE TO BASE64
-                    # =====================================================
-                    image_base64 = ""
-                    image_file = request.files.get("dental_chart_image")
-                    if image_file and image_file.filename:
-                        try:
-                            # Check file size
-                            image_file.seek(0, 2)  # Seek to end
-                            file_size = image_file.tell()
-                            image_file.seek(0)  # Reset to beginning
-
-                            if file_size == 0:
-                                print("WARNING: Image file is empty (0 bytes)")
-                            else:
-                                image_bytes = image_file.read()
-                                if image_bytes:
-                                    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
-                                    print(f"CHART IMAGE SAVED. BASE64 LENGTH: {len(image_base64)}")
-                        except Exception as img_error:
-                            print(f"IMAGE ENCODE ERROR: {str(img_error)}")
-                            # Continue without image - don't fail the entire save
-                            image_base64 = ""
+            # =====================================================
+            # IMAGE TO BASE64
+            # =====================================================
+            # Runs once, outside the tooth loop. It used to sit inside
+            # `if key.startswith("tooth_")`, so a form with no tooth_ field
+            # left image_base64 undefined and the save failed with a 500.
+            image_base64 = ""
+            image_file = request.files.get("dental_chart_image")
+            if image_file and image_file.filename:
+                try:
+                    image_bytes = image_file.read()
+                    if image_bytes:
+                        image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+                        print(f"CHART IMAGE SAVED. BASE64 LENGTH: {len(image_base64)}")
                     else:
-                        print("WARNING: No dental chart image file received")
+                        print("WARNING: Image file is empty (0 bytes)")
+                except Exception as img_error:
+                    print(f"IMAGE ENCODE ERROR: {str(img_error)}")
+                    # Continue without image - don't fail the entire save
+                    image_base64 = ""
+            else:
+                print("WARNING: No dental chart image file received")
 
             # =====================================================
             # TREATMENT TABLE
@@ -9284,6 +9398,17 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
                 for doc in approve_docs:
 
+                    # The medical history answers only live on this
+                    # Approve doc. Save them on the account doc first,
+                    # otherwise they vanish with the delete below and the
+                    # Treatment Information modal has nothing to show.
+                    self._persist_medical_history(
+                        user_ref, doc.to_dict() or {}
+                    )
+                    self._persist_profile_extra(
+                        user_ref, doc.to_dict() or {}
+                    )
+
                     print(
                         "Deleting Approve document:",
                         doc.id
@@ -9375,6 +9500,126 @@ backup. Groups marked "check" may be separate treatments that just share a price
     
     
 
+    # Medical history field names, as stored on appointment docs.
+    MEDICAL_HISTORY_KEYS = (
+        "q1", "q2", "q2_spec", "q3", "q3_spec", "q4", "q4_spec",
+        "q5", "q5_spec", "q6", "q7", "q7_spec", "q9", "q9_spec",
+        "w_preg", "w_nurse", "w_pill",
+    )
+
+    def _extract_medical_history(self, data):
+        """Medical history answers from one doc, or {} when the form
+        was submitted with the medical history switched off."""
+        answers = {
+            key: str((data or {}).get(key) or "").strip()
+            for key in self.MEDICAL_HISTORY_KEYS
+        }
+        return answers if any(answers.values()) else {}
+
+    def _persist_medical_history(self, account_ref, appointment_data):
+        """Keep the newest non-empty medical history on the account doc so
+        it outlives the Approve doc (deleted when the treatment record is
+        saved). An empty/optional submission never overwrites a real one."""
+        answers = self._extract_medical_history(appointment_data)
+        if not answers:
+            return
+        try:
+            account_ref.set({
+                "medical_history": answers,
+                "medical_history_updated_at": datetime.now(UTC).isoformat(),
+            }, merge=True)
+        except Exception as e:
+            print("PERSIST MEDICAL HISTORY ERROR:", e)
+
+    PROFILE_EXTRA_KEYS = ("address", "nationality", "religion", "occupation")
+
+    def _extract_profile_extra(self, data):
+        """Address / nationality / religion / occupation from one appointment
+        doc (or from the saved copy on the account), keyed in lower case.
+        Only non-empty values are returned."""
+        data = data or {}
+
+        def val(*keys):
+            for k in keys:
+                v = str(data.get(k) or "").strip()
+                if v:
+                    return v
+            return ""
+
+        address = val("Address", "address") or " ".join(
+            part for part in (
+                val("HouseNo"),
+                val("Street"),
+                val("Brgy", "Barangay"),
+                val("Municipality"),
+                val("City"),
+            ) if part
+        )
+        out = {
+            "address": address,
+            "nationality": val("Nationality", "nationality"),
+            "religion": val("Religion", "religion"),
+            "occupation": val("Occupation", "occupation"),
+        }
+        return {k: v for k, v in out.items() if v}
+
+    def _persist_profile_extra(self, account_ref, appointment_data):
+        """Keep the latest non-empty address / nationality / religion /
+        occupation on the account doc so they outlive the Approve doc."""
+        extra = self._extract_profile_extra(appointment_data)
+        if not extra:
+            return
+        try:
+            account_ref.set({"profile_extra": extra}, merge=True)
+        except Exception as e:
+            print("PERSIST PROFILE EXTRA ERROR:", e)
+
+    def _patient_details_for(self, account_uid):
+        """Address / nationality / religion / occupation for a patient.
+        Per field, the newest appointment that filled it in wins; the copy
+        saved on the account doc is the fallback. Always returns all four
+        keys (empty string when unknown)."""
+        result = {k: "" for k in self.PROFILE_EXTRA_KEYS}
+        if not account_uid:
+            return result
+
+        docs = []
+        saved = {}
+        override = {}
+        for main_collection in ("google_create_account", self.Customer_Account):
+            account_ref = self.db.collection(main_collection).document(account_uid)
+            for sub in (self.Appointment_cliets, "Approve"):
+                try:
+                    for doc in account_ref.collection(sub).limit(10).stream():
+                        d = doc.to_dict() or {}
+                        docs.append((str(d.get("appointment_date") or ""), d))
+                except Exception as e:
+                    print("PATIENT DETAILS LOOKUP ERROR:", e)
+            if main_collection == self.Customer_Account:
+                try:
+                    acc = account_ref.get()
+                    if acc.exists:
+                        acc_data = acc.to_dict() or {}
+                        saved = acc_data.get("profile_extra") or {}
+                        override = acc_data.get("profile_override") or {}
+                except Exception as e:
+                    print("PATIENT DETAILS ACCOUNT ERROR:", e)
+
+        # Values the admin typed in Edit Patient win over everything else.
+        for k in self.PROFILE_EXTRA_KEYS:
+            result[k] = str(override.get(k) or "").strip()
+
+        docs.sort(key=lambda item: item[0], reverse=True)
+        for _date, d in docs:
+            found = self._extract_profile_extra(d)
+            for k in self.PROFILE_EXTRA_KEYS:
+                if not result[k] and found.get(k):
+                    result[k] = found[k]
+        for k in self.PROFILE_EXTRA_KEYS:
+            if not result[k]:
+                result[k] = str(saved.get(k) or "").strip()
+        return result
+
     def _latest_appointment_summary(self, account_uid):
         """
         Latest appointment entered for this patient through the
@@ -9383,8 +9628,15 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
         Pending requests ("appointments") and accepted bookings
         ("Approve") both carry the form answers, so both are
-        scanned and the newest one by scheduled date wins -- the
-        same rule get_previous_booking_info() uses.
+        scanned and the newest one by scheduled date wins for the
+        service / date / dentist -- the same rule
+        get_previous_booking_info() uses.
+
+        The medical history is picked separately: the newest doc that
+        actually has answers, falling back to the copy kept on the
+        account doc. It is optional, so a newer appointment submitted
+        without it (or a "next visit" suggestion doc) must not hide
+        an earlier one.
 
         Deliberately excludes name / age / birthday / sex / civil
         status / mobile number: those are identity fields the modal
@@ -9394,16 +9646,19 @@ backup. Groups marked "check" may be separate treatments that just share a price
         if not account_uid:
             return None
 
-        # The account doc (and its appointment subcollections) lives
-        # under either main collection depending on how the patient
-        # signed up -- same resolution as _record_schedule_notification.
         main_collection = None
+        account_data = {}
 
         try:
-            if self.db.collection("google_create_account").document(account_uid).get().exists:
+            google_doc = self.db.collection("google_create_account").document(account_uid).get()
+            if google_doc.exists:
                 main_collection = "google_create_account"
-            elif self.db.collection(self.Customer_Account).document(account_uid).get().exists:
-                main_collection = self.Customer_Account
+                account_data = google_doc.to_dict() or {}
+            else:
+                customer_doc = self.db.collection(self.Customer_Account).document(account_uid).get()
+                if customer_doc.exists:
+                    main_collection = self.Customer_Account
+                    account_data = customer_doc.to_dict() or {}
         except Exception as e:
             print("LATEST APPOINTMENT ACCOUNT LOOKUP ERROR:", e)
 
@@ -9428,12 +9683,42 @@ backup. Groups marked "check" may be separate treatments that just share a price
             except Exception as e:
                 print("LATEST APPOINTMENT LOOKUP ERROR:", e)
 
-        if not candidates:
-            return None
-
         # Newest scheduled date first.
         candidates.sort(key=lambda item: item[0], reverse=True)
-        data = candidates[0][1]
+
+        print("MEDICAL HISTORY LOOKUP:", account_uid, "docs:", [
+            (d, bool(self._extract_medical_history(c))) for d, c in candidates
+        ])
+
+        # Newest appointment that actually carries medical history answers.
+        medical_history = {}
+        for _date, cand in candidates:
+            medical_history = self._extract_medical_history(cand)
+            if medical_history:
+                break
+
+        # Fall back to the copy saved when the treatment record was stored.
+        if not medical_history:
+            medical_history = self._extract_medical_history(
+                account_data.get("medical_history")
+            )
+
+        # save_dental_record writes the copy to the Customer_Account doc,
+        # which may differ from the collection resolved above.
+        if not medical_history:
+            try:
+                cust = self.db.collection(self.Customer_Account).document(account_uid).get()
+                if cust.exists:
+                    medical_history = self._extract_medical_history(
+                        (cust.to_dict() or {}).get("medical_history")
+                    )
+            except Exception as e:
+                print("MEDICAL HISTORY FALLBACK ERROR:", e)
+
+        if not candidates and not medical_history:
+            return None
+
+        data = candidates[0][1] if candidates else {}
 
         def clean(key):
             return str(data.get(key) or "").strip()
@@ -9442,28 +9727,11 @@ backup. Groups marked "check" may be separate treatments that just share a price
             "service": clean("Service"),
             "appointment_date": clean("appointment_date"),
             "dentist_name": clean("DentistName"),
-            # Medical history answers from the same
-            # appointment form, keyed by field name.
-            # The labels live in check-info-modal.js.
-            "medical_history": {
-                "q1": clean("q1"),
-                "q2": clean("q2"),
-                "q2_spec": clean("q2_spec"),
-                "q3": clean("q3"),
-                "q3_spec": clean("q3_spec"),
-                "q4": clean("q4"),
-                "q4_spec": clean("q4_spec"),
-                "q5": clean("q5"),
-                "q5_spec": clean("q5_spec"),
-                "q6": clean("q6"),
-                "q7": clean("q7"),
-                "q7_spec": clean("q7_spec"),
-                "q9": clean("q9"),
-                "q9_spec": clean("q9_spec"),
-                "w_preg": clean("w_preg"),
-                "w_nurse": clean("w_nurse"),
-                "w_pill": clean("w_pill"),
-            },
+            # Keyed by field name; labels live in check-info-modal.js.
+            "medical_history": medical_history,
+            # Address / nationality / religion / occupation, for the
+            # modal's patient details.
+            "patient_details": self._patient_details_for(account_uid),
         }
 
     def get_treatment_info(self, patient_id):
@@ -9787,6 +10055,25 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
         return jsonify({"success": True, "message": "Patients merged successfully"})
 
+    @staticmethod
+    def _fin_row_ok(name, scope, procedure=""):
+        """
+        Does a treatment row belong in the selected Financial Reports view?
+        scope "all"      -> every row (braces included)
+        scope "braces"   -> orthodontic braces rows only
+        scope "nobraces" -> everything except braces; if `procedure` is given
+                            (lower-cased), only rows with exactly that name.
+        """
+        n = str(name or "").strip().lower()
+        is_braces = "braces" in n
+        if scope == "braces":
+            return is_braces
+        if scope == "nobraces":
+            if is_braces:
+                return False
+            return (not procedure) or n == procedure
+        return True
+
     def _financial_alltime_stats(self, docs=None, proc_filter=None):
         """
         One pass over the cached Done_procedure scan (no extra Firestore
@@ -9907,9 +10194,16 @@ backup. Groups marked "check" may be separate treatments that just share a price
         # Braces-only views bypass the aggregates (they filter by procedure,
         # which the aggregate income scan does not carry) and use the cached
         # scan instead -- same data, just not the pre-aggregated fast path.
-        scope = request.args.get("scope", "all").strip().lower()
+        # The main Financial Reports cards and chart now leave out orthodontic
+        # braces (they have their own section), so "nobraces" is the default.
+        # scope=braces is the braces section; scope=all still means everything.
+        # &procedure=<name> narrows "nobraces" to one procedure.
+        scope = request.args.get("scope", "nobraces").strip().lower()
+        if scope not in ("all", "braces", "nobraces"):
+            scope = "nobraces"
+        procedure = request.args.get("procedure", "").strip().lower()
         braces_only = scope == "braces"
-        if self._agg_enabled() and self._agg_ready() and not braces_only:
+        if self._agg_enabled() and self._agg_ready() and scope == "all":
             return self._agg_admin_financial_chart_data()
 
         period = request.args.get("period", "weekly").strip().lower()
@@ -9924,26 +10218,45 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 return default
 
         try:
-            if braces_only:
-                stats = self._financial_alltime_stats(proc_filter="braces")
-            else:
-                stats = self._financial_alltime_stats()
             done_docs = self._get_done_procedures_cached()
+
+            # Procedure buttons: every non-braces procedure that has a record,
+            # with the income collected on it (all time), so the buttons only
+            # ever list procedures that exist.
+            procedure_options = []
+            if scope == "nobraces":
+                opt = {}
+                for data in done_docs:
+                    for p in (data.get("procedures") or []):
+                        if not isinstance(p, dict):
+                            continue
+                        nm = str(p.get("procedure", "") or "").strip()
+                        if not nm or "braces" in nm.lower():
+                            continue
+                        e = opt.setdefault(nm.lower(), {"name": nm, "income": 0.0})
+                        e["income"] += self.safe_float(p.get("paid", 0))
+                procedure_options = sorted(
+                    ({"name": e["name"], "income": round(e["income"], 2)} for e in opt.values()),
+                    key=lambda e: e["name"].lower(),
+                )
+
+            # Drop every row outside the selected view up front so the rest of
+            # this function (income totals, period unpaid, pickers) needs no
+            # further filtering.
+            if scope != "all":
+                filtered = []
+                for data in done_docs:
+                    procs = [p for p in (data.get("procedures") or [])
+                             if isinstance(p, dict)
+                             and self._fin_row_ok(p.get("procedure"), scope, procedure)]
+                    if procs:
+                        filtered.append(dict(data, procedures=procs))
+                done_docs = filtered
+
+            stats = self._financial_alltime_stats(docs=done_docs)
         except Exception as e:
             print("FINANCIAL CHART DATA ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
-
-        # For the braces-only view, drop every non-braces procedure up front
-        # so the rest of this function (income totals, period unpaid, pickers)
-        # needs no further filtering.
-        if braces_only:
-            filtered = []
-            for data in done_docs:
-                procs = [p for p in (data.get("procedures") or [])
-                         if isinstance(p, dict) and "braces" in str(p.get("procedure", "")).strip().lower()]
-                if procs:
-                    filtered.append(dict(data, procedures=procs))
-            done_docs = filtered
 
         earliest = stats["earliest"]
         # Earliest year the pickers/dropdowns offer: at least the last 5 years
@@ -9972,6 +10285,9 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 "range_label": range_label,
                 "as_of_label": f"{today:%B} {today.day}, {today.year}",
                 "chart_type": "line",
+                "scope": scope,
+                "procedure": procedure,
+                "procedure_options": procedure_options,
                 "can_prev": False,
                 "can_next": False,
                 "min_year": first_year,
@@ -10124,7 +10440,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         window_end = start_date + timedelta(days=num_days - 1)
         extra.update(self._financial_period_unpaid(done_docs, start_date, window_end))
         window_end = start_date + timedelta(days=num_days - 1)
-        if not braces_only:
+        if scope == "all":
             extra.update(self._agg_period_unpaid(self._agg_load_all(), start_date, window_end))
         return respond(labels, values, total_income, range_label, **extra)
 
@@ -10238,6 +10554,9 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
                     balance = self.safe_float(p.get("balance", 0))
                     if balance <= 0:
+                        continue
+                    # Orthodontic braces are tracked in their own section.
+                    if "braces" in str(p.get("procedure", "")).strip().lower():
                         continue
 
                     if resolved_name is None:
@@ -11552,6 +11871,9 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     balance = self.safe_float(p.get("balance", 0))
                     if balance <= 0:
                         continue
+                    # Orthodontic braces are tracked in their own section.
+                    if "braces" in str(p.get("procedure", "")).strip().lower():
+                        continue
 
                     if resolved_name is None:
                         resolved_name = ""
@@ -11791,6 +12113,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/patient-profile")(self.p_profile)
         self.app.route("/admin_dashboard")(self.adminDashboard)
         self.app.route("/admin/dashboard_stats")(self.admin_dashboard_stats)
+        self.app.route("/admin/overview_counts")(self.admin_overview_counts)
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
         self.app.route("/admin/approved_page")(self.admin_approved_page)
@@ -11830,6 +12153,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/reschedule_appointment", methods=["POST"])(self.admin_reschedule_appointment)
         self.app.route("/search_patients", methods=["POST"])(self.search_patients)
         self.app.route("/admin/update_patient", methods=["POST"])(self.update_patient)
+        self.app.route("/admin/patient_details/<patient_id>")(self.admin_patient_details)
         self.app.route("/admin/delete_patient", methods=["POST"])(self.delete_patient)
         self.app.route("/admin/delete_account", methods=["POST"])(self.delete_account)
         self.app.route("/admin/toggle_user_block", methods=["POST"])(self.toggle_user_block)
