@@ -1681,6 +1681,10 @@ body.dark-mode .modal-overlay {
 .pt-top .profile-right { text-align: center; }
 .pt-top .profile-right h2 { font-size: 1.7rem; }
 .pt-top .info-grid { margin-top: 12px; }
+/* Profile card fields: label and value both centred in every box. */
+.pt-top .info-item { align-items: center; text-align: center; }
+.pt-top .info-item label,
+.pt-top .info-item p { text-align: center; width: 100%; }
 
 .pt-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 

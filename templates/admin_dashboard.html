@@ -15,7 +15,7 @@
 
     <!-- Doctors Calendar: flatpickr theme (loaded after flatpickr + admin.css) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-theme.css') }}?v=2">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-extras.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctors-calendar-extras.css') }}?v=5">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/header-datetime.css') }}?v=9">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/appointments-reschedule.css') }}?v=2">
     <script src="{{ url_for('static', filename='js/flatpickr.min.js') }}"></script>
@@ -43,12 +43,12 @@
     <script src="{{ url_for('static', filename='js/toast.js') }}?v=8"></script>
 
     {% if admin_welcome_toast %}
-        <!-- The message travels in a data attribute rather than being interpolated
-        straight into the script. A Jinja expression renders to valid JS here,
-        but the editor parses the *template source*, where braces in an argument
-        position are not JavaScript, so it flagged the line as a syntax error.
-        Attribute context is also the correct escaping context here -- showToast()
-        writes the message with textContent, never innerHTML. -->
+    <!-- The message travels in a data attribute rather than being interpolated
+     straight into the script. A Jinja expression renders to valid JS here,
+     but the editor parses the *template source*, where braces in an argument
+     position are not JavaScript, so it flagged the line as a syntax error.
+     Attribute context is also the correct escaping context here -- showToast()
+     writes the message with textContent, never innerHTML. -->
     <div id="adminWelcomeToast" data-message="{{ admin_welcome_toast }}" hidden></div>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

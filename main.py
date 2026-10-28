@@ -5991,6 +5991,23 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     
             if user_data:
                 user_data.setdefault('uid', user_data.get('id', ''))
+
+                # Birthday + age for the profile card. Age is always computed
+                # from the birthday (never stored). If the account has no
+                # birthday yet, borrow it from the linked Patients record with
+                # one targeted read (not the full cached scan).
+                birthday = str(user_data.get("birthday", "") or "").strip()
+                if not birthday:
+                    try:
+                        linked = self.db.collection(self.Doc_Patients).where(
+                            filter=FieldFilter("account_uid", "==", user_data.get("id", ""))
+                        ).limit(1).get()
+                        if linked:
+                            birthday = str((linked[0].to_dict() or {}).get("birthday", "") or "").strip()
+                    except Exception as e:
+                        print("PROFILE BIRTHDAY LOOKUP ERROR:", e)
+                user_data["birthday"] = birthday
+                user_data["age"], _by = self.compute_age_and_birth_year(birthday)
         
         return render_template("patient-profile.html", name=name, user=user_data)
     
@@ -8385,10 +8402,24 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             new_firstname = request.form.get("new_firstname", "").strip()
             new_lastname = request.form.get("new_lastname", "").strip()
             new_phone = request.form.get("new_phone", "").strip()
+            new_birthday = request.form.get("new_birthday", "").strip()
 
             if not uid:
                 flash("Unable to identify your account.", "error")
                 return redirect(url_for("index"))
+
+            # Optional birthday (YYYY-MM-DD). Left blank = keep what is on file.
+            if new_birthday:
+                try:
+                    bday_date = datetime.strptime(new_birthday[:10], "%Y-%m-%d").date()
+                except ValueError:
+                    flash("Please enter a valid birthday.", "error")
+                    return redirect(request.referrer)
+                today_ph = datetime.now(PH_TZ).date()
+                if bday_date > today_ph or bday_date.year < today_ph.year - 120:
+                    flash("Please enter a valid birthday.", "error")
+                    return redirect(request.referrer)
+                new_birthday = bday_date.isoformat()
 
             if not new_firstname:
                 flash("First name is required.", "error")
@@ -8418,22 +8449,42 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             if provider == "google":
                 # Google accounts: update name and also store first/last name
                 full_name = f"{new_firstname} {new_lastname}".strip()
-                account_doc.reference.update({
+                account_update = {
                     "name": full_name,
                     "firstname": new_firstname,
                     "lastname": new_lastname,
                     "contact_number": new_phone
-                })
+                }
+                if new_birthday:
+                    account_update["birthday"] = new_birthday
+                account_doc.reference.update(account_update)
                 session["name"] = full_name
 
             else:
                 # Password accounts: update firstname + lastname
-                account_doc.reference.update({
+                account_update = {
                     "firstname": new_firstname,
                     "lastname": new_lastname,
                     "contact_number": new_phone
-                })
+                }
+                if new_birthday:
+                    account_update["birthday"] = new_birthday
+                account_doc.reference.update(account_update)
                 session["name"] = f"{new_firstname} {new_lastname}".strip()
+
+            # Keep the clinic's Patients record in step with the new birthday
+            # so name + birthday matching never sees two different dates.
+            if new_birthday:
+                try:
+                    linked = self.db.collection(self.Doc_Patients).where(
+                        filter=FieldFilter("account_uid", "==", account_doc.id)
+                    ).limit(1).get()
+                    if linked:
+                        linked[0].reference.update({"birthday": new_birthday})
+                        self._invalidate_patients_cache()
+                    self._invalidate_accounts_cache()
+                except Exception as e:
+                    print("UPDATE PROFILE BIRTHDAY SYNC ERROR:", e)
 
             flash("Profile updated successfully!", "success")
 

@@ -34,7 +34,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}?v=2">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment-modal.css') }}?v=1">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/dentech-credit.css') }}?v=1">
 </head>
@@ -214,6 +214,16 @@
                         <div class="info-item">
                             <label>Email Address</label>
                             <p>{{ user.get('email', 'N/A') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Age</label>
+                            <p>{% if user.get('age') is not none %}{{ user.get('age') }}{% else %}Not set{% endif %}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Birthday</label>
+                            <p>{% if user.get('birthday') %}{{ user.get('birthday') }}{% else %}Not set{% endif %}</p>
                         </div>
                     </div>
 
@@ -2372,6 +2382,23 @@ async function payGCash(amount, procedure) {
                 placeholder="+63 9XX XXX XXXX">
     </div>
 
+    <div class="info-item">
+        <label>Birthday</label>
+        <input type="date"
+                name="new_birthday"
+                id="updBirthday"
+                value="{{ user.get('birthday', '') }}">
+    </div>
+
+    <div class="info-item">
+        <label>Age</label>
+        <input type="text"
+                id="updAge"
+                value="{% if user.get('age') is not none %}{{ user.get('age') }}{% endif %}"
+                placeholder="Set from birthday"
+                readonly>
+    </div>
+
     <div class="modal-actions">
         <button type="submit" class="btn-primary">Save Changes</button>
         <button type="button" onclick="closeUpdateModal()" class="btn-secondary">Cancel</button>
@@ -2393,6 +2420,23 @@ async function payGCash(amount, procedure) {
             modal.style.display = 'none';
             modal.classList.remove("show");
         }
+
+        // Age follows the birthday: pick a date and the age updates right away.
+        (function () {
+            const bd = document.getElementById('updBirthday');
+            const ageEl = document.getElementById('updAge');
+            if (!bd || !ageEl) return;
+            const t = new Date();
+            bd.max = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
+            bd.addEventListener('input', function () {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bd.value);
+                if (!m) { ageEl.value = ''; return; }
+                const now = new Date();
+                let age = now.getFullYear() - Number(m[1]);
+                if ((now.getMonth() + 1) * 100 + now.getDate() < Number(m[2]) * 100 + Number(m[3])) age--;
+                ageEl.value = age >= 0 ? age : '';
+            });
+        })();
 
         document.getElementById('profilePicInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
