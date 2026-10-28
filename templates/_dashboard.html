@@ -1,4 +1,4 @@
-        <div id="section-dashboard" class="content-section active-section">
+<div id="section-dashboard" class="content-section active-section">
                 {# Each stat card links to the tab it counts, so a number is a way in
                 rather than just a number. showSection() also highlights the sidebar,
                 retitles the page and lazy-loads that list, exactly as the sidebar
@@ -42,6 +42,8 @@
                     onchange="dashboardNavPick()"></select>
                 <select class="fin-nav-select" id="dashboardYearSel" aria-label="Choose year" style="display:none;"
                     onchange="dashboardNavPick()"></select>
+                <input type="date" class="fin-nav-select" id="dashboardDaySel" aria-label="Choose day"
+                    style="display:none;" onchange="dashboardNavPick()">
                 <button type="button" class="fin-nav-btn" id="dashboardNavNext" aria-label="Next period"
                     onclick="dashboardNavStep(1)">
                     <span class="material-symbols-rounded" aria-hidden="true">chevron_right</span>
@@ -330,5 +332,3 @@
                 </div>
             </div>
         </div>
-
-

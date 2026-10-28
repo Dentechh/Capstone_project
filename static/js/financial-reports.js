@@ -1399,14 +1399,24 @@ loadBracesFinancialChart('today'); // Default for braces income
             }
         });
 
+        // Newest procedure date first, oldest last; rows with no usable date go to the bottom.
+        function unpaidSortNewestFirst(rows) {
+            const time = r => { const d = unpaidParseDate(r.date); return d ? d.getTime() : -Infinity; };
+            return rows.slice().sort((a, b) => {
+                const ta = time(a), tb = time(b);
+                if (ta === tb) return 0;
+                return tb > ta ? 1 : -1;
+            });
+        }
+
         function getUnpaidFiltered() {
             const searchEl = document.getElementById('unpaidSearch');
             const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
-            return unpaidRows.filter(r =>
+            return unpaidSortNewestFirst(unpaidRows.filter(r =>
                 unpaidInRange(r, unpaidRange) &&
                 (unpaidProcedureFilter === 'all' || unpaidProcKey(r) === unpaidProcedureFilter) &&
                 (!q || String(r.patient_name || '').toLowerCase().includes(q))
-            );
+            ));
         }
 
         function renderUnpaidTable() {
@@ -1660,11 +1670,11 @@ loadBracesFinancialChart('today'); // Default for braces income
         function getBracesUnpaidFiltered() {
             const searchEl = document.getElementById('bracesUnpaidSearch');
             const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
-            return bracesUnpaidRows.filter(r =>
+            return unpaidSortNewestFirst(bracesUnpaidRows.filter(r =>
                 unpaidInRange(r, bracesUnpaidRange) &&
                 (bracesUnpaidProcedureFilter === 'all' || unpaidProcKey(r) === bracesUnpaidProcedureFilter) &&
                 (!q || String(r.patient_name || '').toLowerCase().includes(q))
-            );
+            ));
         }
 
         function renderBracesUnpaidTable() {
@@ -1930,7 +1940,7 @@ loadBracesFinancialChart('today'); // Default for braces income
             };
         })();
 // --- Dashboard stats period (Accepted / Pending / Total patients) ---
-let dashboardNav = { period: 'overall', week: 0, month: null, year: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
+let dashboardNav = { period: 'overall', week: 0, month: null, year: null, day: null, minDate: null, maxDate: null, canPrev: false, canNext: false, minYear: null, maxYear: null, maxMonth: 12 };
 let dashboardPatientsState = { page: 1, pageSize: 10, total: 0, totalPages: 1 };
 
 function renderDashboardPatientsPagination() {
@@ -1991,7 +2001,8 @@ function loadDashboardStats(period, page) {
     if (!period) period = dashboardNav.period || 'overall';
 
     if (period !== dashboardNav.period) {
-        dashboardNav = { period: period, week: 0, month: null, year: null, canPrev: false, canNext: false,
+        dashboardNav = { period: period, week: 0, month: null, year: null, day: null,
+            minDate: dashboardNav.minDate, maxDate: dashboardNav.maxDate, canPrev: false, canNext: false,
             minYear: dashboardNav.minYear, maxYear: dashboardNav.maxYear, maxMonth: dashboardNav.maxMonth };
         dashboardPatientsState.page = 1;
     }
@@ -2010,6 +2021,7 @@ function loadDashboardStats(period, page) {
     if (period === 'weekly') query.set('week', dashboardNav.week);
     if (period === 'monthly' && dashboardNav.month) query.set('month', dashboardNav.month);
     if (period === 'yearly' && dashboardNav.year) query.set('year', dashboardNav.year);
+    if (period === 'today' && dashboardNav.day) query.set('day', dashboardNav.day);
     query.set('page', dashboardPatientsState.page);
     query.set('page_size', dashboardPatientsState.pageSize || 10);
 
@@ -2039,13 +2051,30 @@ function loadDashboardStats(period, page) {
                     if (patients.length === 0) {
                         patientsBody.innerHTML = '<div class="recent-empty"><span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">group_off</span><p>No patients for this period.</p><span class="recent-empty__hint">Try a different period.</span></div>';
                     } else {
-                        patients.forEach(function (name) {
+                        const escHtml = function (t) {
+                            return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+                                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                            });
+                        };
+                        patients.forEach(function (row) {
+                            // Rows are {name, procedures[]}; plain strings are still accepted.
+                            const name = (row && typeof row === 'object') ? row.name : row;
+                            const procs = (row && typeof row === 'object' && Array.isArray(row.procedures)) ? row.procedures : [];
                             const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
+                            // Procedure(s) sit on the same line, right beside the name.
+                            const chipStyle = 'display:inline-block; padding:2px 10px; border-radius:999px; ' +
+                                'background:rgba(21,87,184,0.10); color:#1557b8; font-size:0.78rem; font-weight:600; white-space:nowrap;';
+                            const sub = procs.length
+                                ? procs.map(function (pr) {
+                                    return '<span class="recent-sub__service" style="' + chipStyle + '">' + escHtml(pr) + '</span>';
+                                }).join('')
+                                : '<span class="recent-sub" style="font-size:0.78rem; opacity:0.7;">No procedure recorded</span>';
                             const item = document.createElement('div');
                             item.className = 'recent-item';
                             item.innerHTML =
-                                '<span class="recent-avatar" aria-hidden="true">' + initial + '</span>' +
-                                '<span class="recent-info"><strong>' + (name || 'Unnamed Patient') + '</strong></span>';
+                                '<span class="recent-avatar" aria-hidden="true">' + escHtml(initial) + '</span>' +
+                                '<span class="recent-info" style="display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; gap:6px 12px;">' +
+                                '<strong>' + escHtml(name || 'Unnamed Patient') + '</strong>' + sub + '</span>';
                             patientsBody.appendChild(item);
                         });
                     }
@@ -2063,6 +2092,9 @@ function loadDashboardStats(period, page) {
                 dashboardNav.week = data.week || 0;
                 dashboardNav.month = data.month || null;
                 dashboardNav.year = data.year || null;
+                dashboardNav.day = data.day || null;
+                dashboardNav.minDate = data.min_date || null;
+                dashboardNav.maxDate = data.max_date || null;
                 dashboardNav.canPrev = !!data.can_prev;
                 dashboardNav.canNext = !!data.can_next;
                 dashboardNav.minYear = data.min_year;
@@ -2077,7 +2109,7 @@ function loadDashboardStats(period, page) {
 function renderDashboardNav(period, rangeLabel) {
     const nav = document.getElementById('dashboardNav');
     if (!nav) return;
-    const hasPicker = period === 'weekly' || period === 'monthly' || period === 'yearly';
+    const hasPicker = period === 'today' || period === 'weekly' || period === 'monthly' || period === 'yearly';
     nav.style.display = hasPicker ? 'flex' : 'none';
     if (!hasPicker) return;
     document.getElementById('dashboardNavLabel').textContent = rangeLabel || '';
@@ -2089,7 +2121,17 @@ function renderDashboardNav(period, rangeLabel) {
     const yearSel = document.getElementById('dashboardYearSel');
     const showYear = period === 'monthly' || period === 'yearly';
     const showMonth = period === 'monthly';
-    label.style.display = (showYear || showMonth) ? 'none' : '';
+    const showDay = period === 'today';
+    const daySel = document.getElementById('dashboardDaySel');
+    label.style.display = (showYear || showMonth || showDay) ? 'none' : '';
+    if (daySel) {
+        daySel.style.display = showDay ? '' : 'none';
+        if (showDay) {
+            if (dashboardNav.minDate) daySel.min = dashboardNav.minDate;
+            if (dashboardNav.maxDate) daySel.max = dashboardNav.maxDate;
+            if (dashboardNav.day) daySel.value = dashboardNav.day;
+        }
+    }
     setFinNavVisible(monthSel, showMonth);
     setFinNavVisible(yearSel, showYear);
 
@@ -2133,6 +2175,10 @@ function dashboardNavPick() {
         let m = Number(monthSel.value);
         if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
         n.month = y + '-' + String(m).padStart(2, '0');
+    } else if (n.period === 'today') {
+        const daySel = document.getElementById('dashboardDaySel');
+        if (!daySel || !daySel.value) return;   // cleared field: keep the current day
+        n.day = daySel.value;                   // server clamps out-of-range dates
     } else {
         return;
     }
@@ -2152,6 +2198,10 @@ function dashboardNavStep(dir) {
         n.month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     } else if (n.period === 'yearly' && n.year) {
         n.year = n.year + dir;
+    } else if (n.period === 'today' && n.day) {
+        const parts = n.day.split('-');
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]) + dir);
+        n.day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     } else {
         return;
     }

@@ -20,10 +20,10 @@
                 const datePart = monthName + ' ' + Number(match[3]) + ', ' + match[1];
                 if (match[4] === undefined) return datePart;
 
-                /* Stored hours are 24-hour ("13:00"), so the meridiem has to be
-                   derived and the hour converted. The picker offers real PM slots
-                   (12:00 PM to 5:00 PM), so appending "AM" unconditionally would
-                   print "13:00AM" for a 1:00 PM appointment. */
+                    /* Stored hours are 24-hour ("13:00"), so the meridiem has to be
+                    derived and the hour converted. The picker offers real PM slots
+                    (12:00 PM to 5:00 PM), so appending "AM" unconditionally would
+                    print "13:00AM" for a 1:00 PM appointment. */
                 const hour24 = Number(match[4]);
                 const meridiem = hour24 >= 12 ? 'PM' : 'AM';
                 let hour12 = hour24 % 12;
@@ -37,18 +37,18 @@
                the table (server-rendered and loaded on demand) picks them up. */
             const APPOINTMENT_DENTIST_OPTIONS = ['Dr. Julix Dionne Capizonda'];
 
-            /* The one name we display for this practitioner. Records saved before
-               the rename carry the short form, so every read of a stored dentist
-               name has to go through formatDentistName() or the same dentist shows
-               up under two spellings on one screen. */
+                /* The one name we display for this practitioner. Records saved before
+                the rename carry the short form, so every read of a stored dentist
+                name has to go through formatDentistName() or the same dentist shows
+                up under two spellings on one screen. */
             const CANONICAL_DENTIST_NAME = 'Dr. Julix Dionne Capizonda';
 
-            /* Every stored spelling that means this practitioner, lower-cased with
-               whitespace collapsed. Mirrors normalize_dentist_name() in main.py
-               exactly - the two must agree, because the server's double-booking
-               check and this file's reschedule check both compare names for
-               equality. Keep the list, and the Python one, in step. */
-            const DENTIST_NAME_ALIASES = [
+                /* Every stored spelling that means this practitioner, lower-cased with
+                whitespace collapsed. Mirrors normalize_dentist_name() in main.py
+                exactly - the two must agree, because the server's double-booking
+                check and this file's reschedule check both compare names for
+                equality. Keep the list, and the Python one, in step. */
+                const DENTIST_NAME_ALIASES = [
                 'capizonda',
                 'dr capizonda',
                 'dr. capizonda',
@@ -62,9 +62,9 @@
                 return raw.toLowerCase().replace(/\s+/g, ' ').trim();
             }
 
-            /* Display form of a stored dentist name. Display only - never write the
-               result back to the database, and never use it for equality checks,
-               because old records legitimately hold the short form. */
+                /* Display form of a stored dentist name. Display only - never write the
+                result back to the database, and never use it for equality checks,
+                because old records legitimately hold the short form. */
             function formatDentistName(value) {
                 const raw = value == null ? '' : String(value).trim();
                 if (!raw) return '';
@@ -73,11 +73,11 @@
                     : raw;
             }
 
-            /* Identity key for "is this the same dentist?". Both spellings collapse
-               to "capizonda", which is what the double-booking checks need: the
-               server (normalize_dentist_name) and reschedule.js both compare names
-               for equality, and a plain case-fold would stop matching old records
-               the moment a new one is saved under the full name. */
+                /* Identity key for "is this the same dentist?". Both spellings collapse
+                to "capizonda", which is what the double-booking checks need: the
+                server (normalize_dentist_name) and reschedule.js both compare names
+                for equality, and a plain case-fold would stop matching old records
+                the moment a new one is saved under the full name. */
             function dentistIdentityKey(value) {
                 const normalized = normalizeDentistCase(value);
                 if (!normalized) return '';
@@ -101,18 +101,18 @@
                 });
             }
 
-            /* ---- Required Consulting Dentist ----
-               An appointment is never accepted or created without a dentist, so
-               both the Accept button and the New Appointment submit funnel
-               through here. Returns true when the box already holds a name;
-               otherwise it flags the field and returns false for the caller to
-               abort on.
+                /* ---- Required Consulting Dentist ----
+                An appointment is never accepted or created without a dentist, so
+                both the Accept button and the New Appointment submit funnel
+                through here. Returns true when the box already holds a name;
+                otherwise it flags the field and returns false for the caller to
+                abort on.
 
-               The modal copy of the field deliberately has no `required`
-               attribute: it sits on step 1 while step 2 submits, and a hidden
-               required control makes the browser block the submit with an
-               undismissable console error instead of a message the admin can
-               act on. Same reason the appointment date is checked by hand. */
+                The modal copy of the field deliberately has no `required`
+                attribute: it sits on step 1 while step 2 submits, and a hidden
+                required control makes the browser block the submit with an
+                undismissable console error instead of a message the admin can
+                act on. Same reason the appointment date is checked by hand. */
             function clearDentistInputError(input) {
                 if (!input) return;
                 input.classList.remove('dentist-input--invalid');
@@ -135,9 +135,9 @@
                 return false;
             }
 
-            /* Clears the flag on the first keystroke, so a red box is never left
-               sitting on a field the admin is already filling in. Delegated, so
-               the rows built by "Load More" are covered without re-binding. */
+                /* Clears the flag on the first keystroke, so a red box is never left
+                sitting on a field the admin is already filling in. Delegated, so
+                the rows built by "Load More" are covered without re-binding. */
             document.addEventListener('input', function (e) {
                 const el = e.target;
                 if (el && el.classList && el.classList.contains('dentist-input')) {
@@ -237,9 +237,9 @@
                 if (toggle) toggle.classList.toggle('is-open', isOpen);
             }
 
-            /* The popup is portalled to <body>, so it needs a different stacking level
-               depending on what opened it: .modal sits at z-index 99999 and the modal
-               box clips its own overflow. */
+                /* The popup is portalled to <body>, so it needs a different stacking level
+                depending on what opened it: .modal sits at z-index 99999 and the modal
+                box clips its own overflow. */
             function setDentistMenuContext(input) {
                 const menu = getDentistMenu();
                 menu.classList.toggle('is-over-modal',

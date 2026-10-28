@@ -346,6 +346,86 @@
                 </p>
             </div>
 
+            <div class="income-trend-card unpaid-card" id="unpaidCard" style="margin-top:16px;">
+                <div class="income-trend-header">
+                    <div>
+                        <h3>Unpaid Procedures</h3>
+                        <p>Patients who still have a balance.</p>
+                    </div>
+                </div>
+
+                <div class="unpaid-toolbar">
+                    <div class="period-btn-group" id="unpaidRangeGroup" role="group"
+                        aria-label="Filter unpaid procedures by date range">
+                        <button type="button" class="unpaid-filter-btn active" data-range="all"
+                            onclick="setUnpaidRange('all')">
+                            <span class="material-symbols-rounded" aria-hidden="true">format_list_bulleted</span>
+                            <span>All</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="today"
+                            onclick="setUnpaidRange('today')">
+                            <span class="material-symbols-rounded" aria-hidden="true">today</span>
+                            <span>Today</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="7d"
+                            onclick="setUnpaidRange('7d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
+                            <span>Last 7 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="30d"
+                            onclick="setUnpaidRange('30d')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                            <span>Last 30 Days</span>
+                        </button>
+                        <button type="button" class="unpaid-filter-btn" data-range="12m"
+                            onclick="setUnpaidRange('12m')">
+                            <span class="material-symbols-rounded" aria-hidden="true">calendar_view_month</span>
+                            <span>Last 12 Months</span>
+                        </button>
+                    </div>
+                    <div class="unpaid-toolbar-right" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto;">
+                    <div class="unpaid-proc-dropdown" id="unpaidProcedureDropdown">
+                        <button type="button" class="unpaid-search unpaid-proc-trigger" id="unpaidProcedureTrigger"
+                            aria-haspopup="listbox" aria-expanded="false" aria-controls="unpaidProcedurePanel"
+                            onclick="toggleUnpaidProcedureDropdown()">
+                            <span class="material-symbols-rounded unpaid-proc-icon" aria-hidden="true">medical_services</span>
+                            <span id="unpaidProcedureLabel">All procedures</span>
+                            <span class="material-symbols-rounded unpaid-proc-chevron" aria-hidden="true">expand_more</span>
+                        </button>
+                        <div class="unpaid-proc-panel" id="unpaidProcedurePanel" role="listbox"></div>
+                    </div>
+                        <input type="text" id="unpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search unpaid procedures by patient name" oninput="renderUnpaidTable()">
+                    </div>
+                </div>
+
+                <div class="unpaid-table-wrap">
+                    <table class="unpaid-table" id="unpaidTable">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Procedure</th>
+                                <th>Date</th>
+                                <th>Dentist</th>
+                                <th class="num">Total</th>
+                                <th class="num">Paid</th>
+                                <th class="num">Balance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unpaidTableBody">
+                            <tr><td colspan="8" class="unpaid-empty">Loading...</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" id="unpaidFootLabel">Total balance</td>
+                                <td class="num" id="unpaidFootTotal">₱0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
             <div class="income-trend-card" style="margin-top:16px;">
                 <div class="income-trend-header">
                     <div>
@@ -458,86 +538,7 @@
                 </div>
             </div>
 
-            <div class="income-trend-card unpaid-card" id="unpaidCard">
-                <div class="income-trend-header">
-                    <div>
-                        <h3>Unpaid Procedures</h3>
-                        <p>Patients who still have a balance.</p>
-                    </div>
-                </div>
-
-                <div class="unpaid-toolbar">
-                    <div class="period-btn-group" id="unpaidRangeGroup" role="group"
-                        aria-label="Filter unpaid procedures by date range">
-                        <button type="button" class="unpaid-filter-btn active" data-range="all"
-                            onclick="setUnpaidRange('all')">
-                            <span class="material-symbols-rounded" aria-hidden="true">format_list_bulleted</span>
-                            <span>All</span>
-                        </button>
-                        <button type="button" class="unpaid-filter-btn" data-range="today"
-                            onclick="setUnpaidRange('today')">
-                            <span class="material-symbols-rounded" aria-hidden="true">today</span>
-                            <span>Today</span>
-                        </button>
-                        <button type="button" class="unpaid-filter-btn" data-range="7d"
-                            onclick="setUnpaidRange('7d')">
-                            <span class="material-symbols-rounded" aria-hidden="true">date_range</span>
-                            <span>Last 7 Days</span>
-                        </button>
-                        <button type="button" class="unpaid-filter-btn" data-range="30d"
-                            onclick="setUnpaidRange('30d')">
-                            <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
-                            <span>Last 30 Days</span>
-                        </button>
-                        <button type="button" class="unpaid-filter-btn" data-range="12m"
-                            onclick="setUnpaidRange('12m')">
-                            <span class="material-symbols-rounded" aria-hidden="true">calendar_view_month</span>
-                            <span>Last 12 Months</span>
-                        </button>
-                    </div>
-                    <div class="unpaid-toolbar-right" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-left:auto;">
-                    <div class="unpaid-proc-dropdown" id="unpaidProcedureDropdown">
-                        <button type="button" class="unpaid-search unpaid-proc-trigger" id="unpaidProcedureTrigger"
-                            aria-haspopup="listbox" aria-expanded="false" aria-controls="unpaidProcedurePanel"
-                            onclick="toggleUnpaidProcedureDropdown()">
-                            <span class="material-symbols-rounded unpaid-proc-icon" aria-hidden="true">medical_services</span>
-                            <span id="unpaidProcedureLabel">All procedures</span>
-                            <span class="material-symbols-rounded unpaid-proc-chevron" aria-hidden="true">expand_more</span>
-                        </button>
-                        <div class="unpaid-proc-panel" id="unpaidProcedurePanel" role="listbox"></div>
-                    </div>
-                        <input type="text" id="unpaidSearch" class="unpaid-search" placeholder="Search patient name..." aria-label="Search unpaid procedures by patient name" oninput="renderUnpaidTable()">
-                    </div>
-                </div>
-
-                <div class="unpaid-table-wrap">
-                    <table class="unpaid-table" id="unpaidTable">
-                        <thead>
-                            <tr>
-                                <th>Patient</th>
-                                <th>Procedure</th>
-                                <th>Date</th>
-                                <th>Dentist</th>
-                                <th class="num">Total</th>
-                                <th class="num">Paid</th>
-                                <th class="num">Balance</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="unpaidTableBody">
-                            <tr><td colspan="8" class="unpaid-empty">Loading...</td></tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="6" id="unpaidFootLabel">Total balance</td>
-                                <td class="num" id="unpaidFootTotal">₱0.00</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-            <div class="income-trend-card unpaid-card" id="bracesUnpaidCard">
+            <div class="income-trend-card unpaid-card" id="bracesUnpaidCard" style="margin-top:16px;">
                 <div class="income-trend-header">
                     <div>
                         <h3>Unpaid Procedures (Braces)</h3>

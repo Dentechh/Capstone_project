@@ -6846,11 +6846,24 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         first_year = today.year - 4
 
         if period == "today":
-            start_date = today
-            end_date = today
+            # Optional &day=YYYY-MM-DD lets the admin look at any single day
+            # (clamped to the same 5-year window the other pickers use).
+            lowest_day = today.replace(year=first_year, month=1, day=1)
+            raw_day = request.args.get("day", "").strip()
+            try:
+                picked_day = datetime.strptime(raw_day, "%Y-%m-%d").date()
+            except (TypeError, ValueError):
+                picked_day = today
+            picked_day = max(lowest_day, min(picked_day, today))
+            start_date = picked_day
+            end_date = picked_day
             num_days = 1
-            range_label = f"{today:%B} {today.day}, {today.year}"
-            extra = {}
+            range_label = f"{picked_day:%B} {picked_day.day}, {picked_day.year}"
+            extra = {
+                "day": picked_day.isoformat(),
+                "can_prev": picked_day > lowest_day,
+                "can_next": picked_day < today,
+            }
         elif period == "monthly":
             raw_month = request.args.get("month", "").strip()
             try:
@@ -6920,6 +6933,55 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     return False
             return start_date <= d <= end_date
 
+        # accepted patients. Scanned BEFORE the patient list is built so the same
+        # pass also collects each patient's booked service for that list (no
+        # extra Firestore reads).
+        approved_uids = set()
+        procs_by_uid = {}
+
+        def add_proc(uid, name):
+            name = str(name or "").strip()
+            if not uid or not name:
+                return
+            bucket = procs_by_uid.setdefault(str(uid).strip(), [])
+            if name.lower() not in (n.lower() for n in bucket):
+                bucket.append(name)
+
+        try:
+            for doc in self.db.collection_group("Approve").stream():
+                data = doc.to_dict() or {}
+                if period != "overall" and not in_range(data.get("accepted_at") or data.get("appointment_date")):
+                    continue
+                try:
+                    uid = doc.reference.parent.parent.id
+                except Exception:
+                    uid = ""
+                if uid:
+                    approved_uids.add(uid)
+                    svc = data.get("Service")
+                    if isinstance(svc, (list, tuple)):
+                        for one in svc:
+                            add_proc(uid, one)
+                    else:
+                        add_proc(uid, svc)
+            approved_count = len(approved_uids)
+        except Exception as e:
+            print("DASHBOARD STATS ACCEPTED ERROR:", e)
+            approved_count = len(approved_uids)
+
+        # Procedures actually recorded as done inside the period. Uses the
+        # already-cached Done_procedure scan, so it costs no extra reads.
+        try:
+            for dp in self._get_done_procedures_cached():
+                dp_uid = dp.get("_account_uid") or ""
+                for p in dp.get("procedures", []) or []:
+                    pdate = str(p.get("date", "")).strip()
+                    if period != "overall" and not in_range(pdate):
+                        continue
+                    add_proc(dp_uid, p.get("procedure"))
+        except Exception as e:
+            print("DASHBOARD STATS PROCEDURES ERROR:", e)
+
         # total patients
         total_patients = 0
         patients_list = []
@@ -6943,8 +7005,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 fallback = " ".join(
                     str(d.get(k) or "").strip() for k in ("firstname", "middlename", "lastname")
                 ).strip() or "Unnamed Patient"
-                patients_list.append(patient_name_by_uid.get(account_uid, fallback))
-            patients_list.sort(key=lambda n: n.lower())
+                patients_list.append({
+                    "name": patient_name_by_uid.get(account_uid, fallback),
+                    "procedures": procs_by_uid.get(account_uid, []),
+                })
+            patients_list.sort(key=lambda r: r["name"].lower())
         except Exception as e:
             print("DASHBOARD STATS TOTAL PATIENTS ERROR:", e)
 
@@ -6984,24 +7049,6 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         except Exception as e:
             print("DASHBOARD STATS PENDING ERROR:", e)
 
-        # accepted patients
-        approved_uids = set()
-        try:
-            for doc in self.db.collection_group("Approve").stream():
-                data = doc.to_dict() or {}
-                if period != "overall" and not in_range(data.get("accepted_at") or data.get("appointment_date")):
-                    continue
-                try:
-                    uid = doc.reference.parent.parent.id
-                except Exception:
-                    uid = ""
-                if uid:
-                    approved_uids.add(uid)
-            approved_count = len(approved_uids)
-        except Exception as e:
-            print("DASHBOARD STATS ACCEPTED ERROR:", e)
-            approved_count = len(approved_uids)
-
         payload = {
             "success": True,
             "period": period,
@@ -7023,6 +7070,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "min_year": first_year,
             "max_year": today.year,
             "max_month": today.month,
+            "min_date": f"{first_year}-01-01",
+            "max_date": today.isoformat(),
         })
         return jsonify(payload)
     def search_patients(self):
