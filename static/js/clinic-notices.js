@@ -1,4 +1,4 @@
-    /* Patient notification bell.
+/* Patient notification bell.
     Reads /get_clinic_notices (upcoming clinic closures / limited
     availability that the dentist chose to tell patients about) and
     /get_schedule_notifications (the patient's own appointment
@@ -97,13 +97,17 @@
     var SCHEDULE_ICONS = {
         accepted: 'event_available',
         declined: 'event_busy',
-        rescheduled: 'event_repeat'
+        rescheduled: 'event_repeat',
+        braces_proposal: 'event_upcoming',
+        braces_auto: 'event_available'
     };
 
     var SCHEDULE_TITLES = {
         accepted: 'Appointment Accepted',
         declined: 'Appointment Declined',
-        rescheduled: 'Appointment Rescheduled'
+        rescheduled: 'Appointment Rescheduled',
+        braces_proposal: 'Braces Appointment - Reply Needed',
+        braces_auto: 'Braces Appointment Booked'
     };
 
     function scheduleMessage(n) {
@@ -122,6 +126,12 @@
             case 'rescheduled':
                 return 'Your ' + service + ' was moved' +
                     (old ? ' from ' + old : '') + (when ? ' to ' + when : '') + '.';
+            case 'braces_proposal':
+                return 'Your next braces appointment is proposed for ' + (when || 'a new date') +
+                    '. Open your profile to choose a time, reschedule or reject it.';
+            case 'braces_auto':
+                return 'No reply was received, so your ' + service +
+                    (when ? ' was booked for ' + when : ' was booked') + '.';
             default:
                 return 'Your appointment was updated.';
         }

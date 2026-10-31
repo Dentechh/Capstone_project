@@ -1,5 +1,25 @@
 <style>
 .dentist-select{width:100%;min-width:150px;padding:8px 10px;border:1px solid var(--border-color,#cfd8e6);border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;cursor:pointer;}
+
+.braces-panel{margin:0 0 18px;border:1px solid rgba(13,71,161,.18);border-radius:14px;background:rgba(13,71,161,.04);padding:14px 16px;}
+.braces-panel [hidden]{display:none !important;}
+.braces-panel__head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.braces-panel__title{margin:0;font-size:15px;font-weight:700;color:#0d47a1;display:flex;align-items:center;gap:8px;}
+.braces-panel__count{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e53935;color:#fff;}
+.braces-panel__hint{font-size:12.5px;color:#64748b;flex:1;min-width:180px;}
+.braces-list{display:flex;flex-direction:column;gap:8px;}
+.braces-row{display:grid;grid-template-columns:minmax(120px,1.2fr) minmax(110px,1fr) minmax(200px,2.4fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;background:#fff;border:1px solid #e2e8f0;}
+.braces-row.is-unseen{border-color:#0d47a1;box-shadow:0 0 0 2px rgba(13,71,161,.12);}
+.braces-row__name{font-weight:700;color:#1f2937;}
+.braces-row__date{font-size:13px;color:#475467;}
+.braces-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+.braces-pill--wait{background:rgba(245,158,11,.16);color:#b45309;}
+.braces-pill--info{background:rgba(13,71,161,.12);color:#0d47a1;}
+.braces-pill--ok{background:rgba(22,163,74,.14);color:#15803d;}
+.braces-pill--bad{background:rgba(229,57,53,.12);color:#c62828;}
+.braces-row__detail{display:block;margin-top:3px;font-size:12px;color:#64748b;overflow-wrap:anywhere;}
+.braces-tag{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;background:rgba(13,71,161,.12);color:#0d47a1;white-space:nowrap;}
+@media (max-width:760px){.braces-row{grid-template-columns:1fr;}}
 </style>
         <div id="section-appointments" class="content-section">
             <section class="content-panel">
@@ -8,6 +28,20 @@
                         <span class="material-symbols-rounded" aria-hidden="true">add</span>
                         <span>New Appointment</span>
                     </button>
+                </div>
+                <!-- Orthodontic Braces follow-ups: proposals waiting for the patient,
+                     and what patients answered. Filled by loadBracesProposals(). -->
+                <div id="bracesPanel" class="braces-panel" hidden>
+                    <div class="braces-panel__head">
+                        <h3 class="braces-panel__title">
+                            <span class="material-symbols-rounded" aria-hidden="true">event_upcoming</span>
+                            Braces follow-ups
+                            <span id="bracesUnread" class="braces-panel__count" hidden></span>
+                        </h3>
+                        <span class="braces-panel__hint">Accepted and rescheduled requests also appear in the table below for you to approve.</span>
+                        <button type="button" id="bracesDismissAll" class="btn-action" hidden>Mark all as read</button>
+                    </div>
+                    <div id="bracesList" class="braces-list"></div>
                 </div>
                 <div id="appointmentsCursor" data-cursor="{{ appointment_list_next_cursor or '' }}"
                     style="display:none;"></div>
@@ -69,7 +103,7 @@
                             </td>
                             <td class="appt-date-cell" data-raw="{{ appointment.appointment_date }}">{{
                                 appointment.appointment_date }}</td>
-                            <td>{{ appointment.Service }}</td>
+                            <td>{{ appointment.Service }}{% if appointment.braces_followup %}<span class="braces-tag">Braces follow-up{% if appointment.rescheduled_from %} - patient moved it from {{ appointment.rescheduled_from }}{% endif %}</span>{% endif %}</td>
                             <td>
                                 <select name="dentist_name" class="dentist-select" aria-required="true" aria-label="Consulting dentist">
                                     <option value="Dr. Julix Dionne Capizonda" selected>Dr. Julix Dionne Capizonda</option>
@@ -114,3 +148,142 @@
 
         <script src="{{ url_for('static', filename='js/appointments-helpers.js') }}?v=3"></script>
         <script src="{{ url_for('static', filename='js/load-more.js') }}?v=2"></script>
+        <script>
+        /* Orthodontic Braces follow-ups panel (Appointments section).
+           Proposals waiting for the patient, plus answers not yet read.
+           Loaded once on page load and each time the section is opened. */
+        (function () {
+            var panel = document.getElementById('bracesPanel');
+            var list = document.getElementById('bracesList');
+            var unreadEl = document.getElementById('bracesUnread');
+            var dismissAll = document.getElementById('bracesDismissAll');
+            var section = document.getElementById('section-appointments');
+            if (!panel || !list) return;
+
+            var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+            function fmt(raw) {
+                var m = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{1,2}):(\d{2}))?/.exec(String(raw || ''));
+                if (!m) return String(raw || '');
+                var out = MONTHS[+m[2] - 1] + ' ' + (+m[3]) + ', ' + m[1];
+                if (m[4] !== undefined) {
+                    var h = +m[4];
+                    out += ' \u00b7 ' + ((h % 12) || 12) + ':' + m[5] + ' ' + (h >= 12 ? 'PM' : 'AM');
+                }
+                return out;
+            }
+
+            function describe(r) {
+                switch (r.status) {
+                    case 'awaiting':
+                        var left = r.days_left;
+                        return { cls: 'wait', text: 'Awaiting patient response' +
+                            (left === null ? '' : (left <= 1 ? ' - last day' : ' - ' + left + ' days left')),
+                            detail: 'If there is no reply, it is booked automatically.' };
+                    case 'accepted':
+                        return { cls: 'info', text: 'Patient accepted ' + fmt(r.chosen_appointment_date),
+                            detail: 'Waiting in the table below for you to accept.' };
+                    case 'rescheduled':
+                        return { cls: 'info', text: 'Patient asked to move it to ' + fmt(r.chosen_appointment_date),
+                            detail: 'Waiting in the table below for your approval.' };
+                    case 'rejected':
+                        return { cls: 'bad', text: 'Rejected by patient',
+                            detail: r.reason ? 'Reason: ' + r.reason : 'No reason given.' };
+                    case 'auto_confirmed':
+                        return { cls: 'ok', text: 'Booked automatically for ' + fmt(r.chosen_appointment_date),
+                            detail: 'The patient did not reply in time. It is already accepted.' };
+                    case 'needs_review':
+                        return { cls: 'bad', text: 'Could not book automatically',
+                            detail: 'No patient details on file. Please book this visit manually.' };
+                    case 'expired':
+                        return { cls: 'bad', text: 'Expired without a reply',
+                            detail: 'The proposed date passed before the patient answered.' };
+                    default:
+                        return { cls: 'info', text: r.status || '', detail: '' };
+                }
+            }
+
+            function csrf() {
+                var meta = document.querySelector('meta[name="csrf-token"]');
+                return meta ? meta.content : '';
+            }
+
+            function markSeen(uid) {
+                var body = new URLSearchParams();
+                body.append('uid', uid);
+                return fetch('/admin/braces_proposals/seen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrf() },
+                    body: body.toString()
+                }).then(function (res) { return res.json(); })
+                  .then(function (d) { if (d && d.success) load(); });
+            }
+
+            function el(tag, cls, text) {
+                var e = document.createElement(tag);
+                if (cls) e.className = cls;
+                if (text != null) e.textContent = text;
+                return e;
+            }
+
+            function render(rows) {
+                list.innerHTML = '';
+                var unseen = rows.filter(function (r) { return r.unseen; }).length;
+                panel.hidden = rows.length === 0;
+                unreadEl.hidden = unseen === 0;
+                unreadEl.textContent = unseen + ' new';
+                dismissAll.hidden = unseen === 0;
+
+                // Same count on the sidebar's Appointments item.
+                var navBadge = document.getElementById('adminBracesBadge');
+                if (navBadge) {
+                    navBadge.hidden = unseen === 0;
+                    navBadge.textContent = unseen > 9 ? '9+' : String(unseen);
+                }
+
+                rows.forEach(function (r) {
+                    var d = describe(r);
+                    var row = el('div', 'braces-row' + (r.unseen ? ' is-unseen' : ''));
+                    row.appendChild(el('div', 'braces-row__name', r.patient_name || 'Patient'));
+                    row.appendChild(el('div', 'braces-row__date', 'Proposed ' + fmt(r.appointment_date)));
+
+                    var status = el('div');
+                    status.appendChild(el('span', 'braces-pill braces-pill--' + d.cls, d.text));
+                    if (d.detail) status.appendChild(el('span', 'braces-row__detail', d.detail));
+                    row.appendChild(status);
+
+                    var action = el('div');
+                    if (r.unseen) {
+                        var b = el('button', 'btn-action', 'Mark as read');
+                        b.type = 'button';
+                        b.addEventListener('click', function () { markSeen(r.uid); });
+                        action.appendChild(b);
+                    }
+                    row.appendChild(action);
+                    list.appendChild(row);
+                });
+            }
+
+            function load() {
+                fetch('/admin/braces_proposals')
+                    .then(function (res) { return res.json(); })
+                    .then(function (d) { if (d && d.success) render(d.rows || []); })
+                    .catch(function (e) { console.error('Braces follow-ups failed to load:', e); });
+            }
+
+            dismissAll.addEventListener('click', function () { markSeen('all'); });
+
+            // Refresh whenever the Appointments section is opened.
+            if (section && 'MutationObserver' in window) {
+                var wasOpen = section.classList.contains('active-section');
+                new MutationObserver(function () {
+                    var open = section.classList.contains('active-section');
+                    if (open && !wasOpen) load();
+                    wasOpen = open;
+                }).observe(section, { attributes: true, attributeFilter: ['class'] });
+            }
+
+            window.loadBracesProposals = load;
+            load();
+        })();
+        </script>

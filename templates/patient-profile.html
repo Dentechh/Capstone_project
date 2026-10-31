@@ -243,6 +243,16 @@
                         <div class="pt-stat"><span class="pt-stat-q">Last visit</span><span class="pt-stat-a" id="ptStatLast">-</span></div>
                         <div class="pt-stat"><span class="pt-stat-q">Balance</span><span class="pt-stat-a" id="ptStatBalance">-</span></div>
                     </div>
+
+                    <div class="pt-sep"></div>
+                    <div class="pt-sub-row">
+                        <span class="pt-sub-label">
+                            <span class="material-symbols-rounded" aria-hidden="true">payments</span>
+                            Payments by Month
+                        </span>
+                        <span class="pt-pay-total" id="ptPayTotal"></span>
+                    </div>
+                    <div class="pt-pay" id="ptPayRundown"><span class="pt-muted">Loading...</span></div>
                 </section>
 
                 <section class="pt-panel pt-info" aria-label="Appointment, patient details and medical history">
@@ -257,11 +267,20 @@
                     </div>
 
                     <div class="pt-sep"></div>
-                    <span class="pt-sub-label">
-                        <span class="material-symbols-rounded" aria-hidden="true">person</span>
-                        Patient Details
-                    </span>
-                    <div class="pt-grid4">
+                    <div class="pt-sub-row">
+                        <span class="pt-sub-label">
+                            <span class="material-symbols-rounded" aria-hidden="true">person</span>
+                            Patient Details
+                        </span>
+                        <span class="pt-det-actions">
+                            <button type="button" class="pt-det-btn" id="ptDetEditBtn" onclick="ptDetStartEdit()">
+                                <span class="material-symbols-rounded" aria-hidden="true">edit</span>Edit
+                            </button>
+                            <button type="button" class="pt-det-btn pt-det-btn--primary" id="ptDetSaveBtn" onclick="ptDetSave()" hidden>Save</button>
+                            <button type="button" class="pt-det-btn" id="ptDetCancelBtn" onclick="ptDetCancel()" hidden>Cancel</button>
+                        </span>
+                    </div>
+                    <div class="pt-grid4" id="ptDetGrid">
                         <div class="pt-med-item"><span class="pt-med-q">Address</span> <span class="pt-med-a" id="ptDetAddress">-</span></div>
                         <div class="pt-med-item"><span class="pt-med-q">Nationality</span> <span class="pt-med-a" id="ptDetNationality">-</span></div>
                         <div class="pt-med-item"><span class="pt-med-q">Religion</span> <span class="pt-med-a" id="ptDetReligion">-</span></div>
@@ -334,6 +353,50 @@
                 <div class="modal-actions">
                     <button type="button" class="btn-primary" onclick="confirmAcceptAppointment(true)">Yes</button>
                     <button type="button" class="btn-secondary" onclick="confirmAcceptAppointment(false)">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orthodontic Braces proposal: accept / reschedule / reject -->
+    <div id="bracesModal" class="modal">
+        <div class="modal-content" style="max-width:480px;">
+            <div class="modal-header">
+                <div class="modal-panel-head">
+                    <span class="material-symbols-rounded modal-panel-head__icon" id="bracesModalIcon" aria-hidden="true">event_available</span>
+                    <h2 id="bracesModalTitle">Orthodontic Braces Appointment</h2>
+                </div>
+                <button class="close" onclick="closeBracesModal()" aria-label="Close">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="braces-modal-lead" id="bracesModalLead"></p>
+                <p class="braces-modal-date" id="bracesModalDate"></p>
+
+                <div id="bracesDateRow" style="display:none;">
+                    <label class="braces-label" for="bracesDateInput">New date</label>
+                    <input type="text" id="bracesDateInput" class="braces-input" placeholder="Select a date" autocomplete="off">
+                </div>
+
+                <div id="bracesTimeRow" style="display:none;">
+                    <span class="braces-label">Choose a time</span>
+                    <div class="braces-times" id="bracesTimes"></div>
+                </div>
+
+                <div id="bracesReasonRow" style="display:none;">
+                    <label class="braces-label" for="bracesReason">Reason (optional)</label>
+                    <textarea id="bracesReason" class="braces-input" rows="3" maxlength="300" placeholder="Tell the clinic why"></textarea>
+                </div>
+
+                <p class="braces-msg" id="bracesMsg" role="alert"></p>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" id="bracesConfirmBtn" onclick="bracesSubmit()">Confirm</button>
+                    <button type="button" class="btn-secondary" onclick="closeBracesModal()">Cancel</button>
                 </div>
             </div>
         </div>
@@ -1625,6 +1688,12 @@
 
                     list.innerHTML = data.map((item, index) => {
 
+                        // Orthodontic Braces proposal: date only, the patient
+                        // picks the time (see bracesCardHtml below).
+                        if (item.type === 'braces_followup' && item.status === 'suggested') {
+                            return bracesCardHtml(item, index);
+                        }
+
                         // Only the dentist's "next visit" suggestion is still
                         // waiting on the patient; everything else is already
                         // confirmed and needs no action.
@@ -1664,6 +1733,386 @@
                 });
         }
         </script>
+
+    <script>
+    /* =========================================================
+       Orthodontic Braces proposal
+       The dentist proposes a DATE one month after the visit. The
+       patient has a few days to accept (and pick a time), choose a
+       new date and time, or reject. No answer by the deadline and
+       the clinic books it automatically. Accept and reschedule go
+       to the admin as ordinary pending appointments.
+       ========================================================= */
+    var bracesItem = null;
+    var bracesMode = '';
+    var bracesTime = '';
+    var bracesDate = '';
+    var bracesPicker = null;
+    var bracesBusy = false;
+
+
+    /* ---- Editable patient details (address, nationality, religion, occupation) ---- */
+    var PT_DET_FIELDS = [
+        ['address', 'ptDetAddress', 200],
+        ['nationality', 'ptDetNationality', 60],
+        ['religion', 'ptDetReligion', 60],
+        ['occupation', 'ptDetOccupation', 80]
+    ];
+    var ptDetOriginal = {};
+    var ptDetEditing = false;
+
+    function ptDetSetMode(editing) {
+        ptDetEditing = editing;
+        document.getElementById('ptDetEditBtn').hidden = editing;
+        document.getElementById('ptDetSaveBtn').hidden = !editing;
+        document.getElementById('ptDetCancelBtn').hidden = !editing;
+        var hint = document.getElementById('ptDetHint');
+        if (hint) hint.hidden = !editing;
+    }
+
+    function ptDetStartEdit() {
+        if (ptDetEditing) return;
+        PT_DET_FIELDS.forEach(function (f) {
+            var el = document.getElementById(f[1]);
+            if (!el) return;
+            var shown = el.textContent.trim();
+            var value = shown === '-' ? '' : shown;
+            ptDetOriginal[f[0]] = value;
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'pt-det-input';
+            input.id = f[1] + 'Input';
+            input.maxLength = f[2];
+            input.value = value;
+            input.setAttribute('aria-label', f[0]);
+            el.textContent = '';
+            el.appendChild(input);
+        });
+        var grid = document.getElementById('ptDetGrid');
+        if (grid && !document.getElementById('ptDetHint')) {
+            var hint = document.createElement('p');
+            hint.id = 'ptDetHint';
+            hint.className = 'pt-det-hint';
+            hint.textContent = 'Leave a field empty to use what you entered on your last booking.';
+            grid.insertAdjacentElement('afterend', hint);
+        }
+        ptDetSetMode(true);
+        var first = document.getElementById('ptDetAddressInput');
+        if (first) first.focus();
+    }
+
+    function ptDetRestore(values) {
+        PT_DET_FIELDS.forEach(function (f) {
+            var el = document.getElementById(f[1]);
+            if (!el) return;
+            var v = values[f[0]];
+            el.textContent = v ? v : '-';
+        });
+    }
+
+    function ptDetCancel() {
+        if (!ptDetEditing) return;
+        ptDetRestore(ptDetOriginal);
+        ptDetSetMode(false);
+    }
+
+    function ptDetSave() {
+        if (!ptDetEditing) return;
+        var body = new URLSearchParams();
+        PT_DET_FIELDS.forEach(function (f) {
+            var input = document.getElementById(f[1] + 'Input');
+            body.append(f[0], input ? input.value : '');
+        });
+        var saveBtn = document.getElementById('ptDetSaveBtn');
+        saveBtn.disabled = true;
+        fetch('/update-profile-details', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: body.toString()
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            saveBtn.disabled = false;
+            if (data && data.success) {
+                ptDetRestore(data.details || {});
+                ptDetSetMode(false);
+                showToast(data.message || 'Your details were updated.', 'success');
+            } else {
+                showToast((data && data.message) || 'Could not save your details.', 'error');
+            }
+        })
+        .catch(function () {
+            saveBtn.disabled = false;
+            showToast('Could not save your details. Please try again.', 'error');
+        });
+    }
+
+    function bracesDaysLeft(item) {
+        var t = Date.parse(item.expires_at || '');
+        if (isNaN(t)) return null;
+        return Math.max(0, Math.ceil((t - Date.now()) / 86400000));
+    }
+
+    function bracesFmtTime(hhmm) {
+        var parts = String(hhmm || '').split(':');
+        var h = parseInt(parts[0], 10);
+        if (isNaN(h)) return hhmm;
+        var m = parts[1] || '00';
+        return ((h % 12) || 12) + ':' + m + ' ' + (h >= 12 ? 'PM' : 'AM');
+    }
+
+    function bracesBtn(mode, icon, label, cls) {
+        return '<button type="button" class="btn-action braces-btn ' + cls + '"' +
+            ' onclick="bracesOpen(\'' + mode + '\', this.closest(\'[data-idx]\'))">' +
+            '<span class="material-symbols-rounded" aria-hidden="true">' + icon + '</span>' +
+            '<span>' + label + '</span></button>';
+    }
+
+    function bracesCardHtml(item, index) {
+        var left = bracesDaysLeft(item);
+        var badgeText = 'Awaiting your reply';
+        if (left !== null) {
+            badgeText += left <= 1 ? ' - last day' : ' - ' + left + ' days left';
+        }
+        var status = '<span class="pt-badge pt-badge--pending">' + schedEsc(badgeText) + '</span>';
+        var actions = '<div class="braces-actions">' +
+            bracesBtn('accept', 'event_available', 'Accept and choose time', 'appt-accept-btn') +
+            bracesBtn('reschedule', 'event_repeat', 'Reschedule', 'appt-reschedule-btn') +
+            bracesBtn('reject', 'event_busy', 'Reject', 'appt-decline-btn') +
+            '</div>';
+        var note = '<span class="braces-note">Your next braces adjustment. If you do not reply in time, ' +
+            'the clinic will book this date for you.</span>';
+
+        return '<article class="pt-card pt-sched-card braces-card" data-idx="' + index + '">' +
+            schedField('Date', schedEsc(formatScheduleDateTime(item.appointment_date) || '-')) +
+            schedField('Dentist', schedEsc(item.DentistName || '-')) +
+            schedField('Service', schedEsc(item.Service || '-')) +
+            schedField('Status', status) +
+            '<div class="pt-f braces-card__note"><span class="pt-k">Note</span>' + note + '</div>' +
+            '<div class="pt-f braces-card__action"><span class="pt-k">Action</span>' + actions + '</div>' +
+            '</article>';
+    }
+
+    function bracesSetMsg(text) {
+        var el = document.getElementById('bracesMsg');
+        if (el) el.textContent = text || '';
+    }
+
+    function bracesSetBusy(on) {
+        bracesBusy = on;
+        var btn = document.getElementById('bracesConfirmBtn');
+        if (btn) btn.disabled = on;
+    }
+
+    function bracesRenderTimes(times, emptyText) {
+        var box = document.getElementById('bracesTimes');
+        if (!box) return;
+        box.innerHTML = '';
+        bracesTime = '';
+        if (!times || !times.length) {
+            var p = document.createElement('p');
+            p.className = 'braces-empty';
+            p.textContent = emptyText || 'No open times on this day.';
+            box.appendChild(p);
+            return;
+        }
+        times.forEach(function (t) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'braces-time';
+            b.setAttribute('data-time', t);
+            b.textContent = bracesFmtTime(t);
+            b.addEventListener('click', function () {
+                bracesTime = t;
+                box.querySelectorAll('.braces-time').forEach(function (x) {
+                    x.classList.toggle('active', x === b);
+                });
+                bracesSetMsg('');
+            });
+            box.appendChild(b);
+        });
+    }
+
+    function bracesLoadTimes(dateStr) {
+        bracesDate = dateStr;
+        bracesRenderTimes([], 'Loading times...');
+        fetch('/braces_open_times?date=' + encodeURIComponent(dateStr))
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (dateStr !== bracesDate) return;      // a newer date was picked
+                if (data && data.success) {
+                    bracesRenderTimes(data.times, bracesMode === 'accept'
+                        ? 'This date has no open times anymore. Please use Reschedule to pick another date.'
+                        : 'No open times on this day. Please choose another date.');
+                } else {
+                    bracesRenderTimes([], (data && data.message) || 'Could not load the times.');
+                }
+            })
+            .catch(function () { bracesRenderTimes([], 'Could not load the times.'); });
+    }
+
+    function bracesInitPicker() {
+        var input = document.getElementById('bracesDateInput');
+        if (!input) return;
+        if (bracesPicker) { bracesPicker.clear(); return; }
+        if (typeof flatpickr !== 'function') {
+            // Fallback: the browser's own date input.
+            input.type = 'date';
+            input.min = new Date().toLocaleDateString('en-CA');
+            input.addEventListener('change', function () {
+                if (input.value) bracesLoadTimes(input.value);
+            });
+            return;
+        }
+        bracesPicker = flatpickr(input, {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'F j, Y',
+            altInputClass: 'braces-input',
+            allowInput: false,
+            disableMobile: true,
+            minDate: 'today',
+            maxDate: new Date(Date.now() + 120 * 86400000),
+            monthSelectorType: 'static',
+            // A fully blocked day cannot host an appointment.
+            disable: [function (d) {
+                var map = window.__blockedSlotsMap || {};
+                var info = map[d.toLocaleDateString('en-CA')];
+                return !!(info && info.full_day);
+            }],
+            onChange: function (sel, str) {
+                if (str) bracesLoadTimes(str);
+            }
+        });
+    }
+
+    function bracesOpen(mode, row) {
+        var item = getScheduleItem(row);
+        if (!item) {
+            showToast('Appointment details not found.', 'error');
+            return;
+        }
+        bracesItem = item;
+        bracesMode = mode;
+        bracesTime = '';
+        bracesDate = '';
+        bracesSetMsg('');
+        bracesSetBusy(false);
+
+        var nice = formatScheduleDateTime(item.appointment_date);
+        var lead = document.getElementById('bracesModalLead');
+        var dateEl = document.getElementById('bracesModalDate');
+        var title = document.getElementById('bracesModalTitle');
+        var icon = document.getElementById('bracesModalIcon');
+        var confirmBtn = document.getElementById('bracesConfirmBtn');
+        var dateRow = document.getElementById('bracesDateRow');
+        var timeRow = document.getElementById('bracesTimeRow');
+        var reasonRow = document.getElementById('bracesReasonRow');
+        dateRow.style.display = timeRow.style.display = reasonRow.style.display = 'none';
+        dateEl.style.display = 'none';
+
+        if (mode === 'accept') {
+            title.textContent = 'Accept Appointment';
+            icon.textContent = 'event_available';
+            lead.textContent = 'Your braces adjustment is on this date. Choose the time that suits you. ' +
+                'The clinic will then confirm it.';
+            dateEl.textContent = nice;
+            dateEl.style.display = '';
+            timeRow.style.display = '';
+            confirmBtn.textContent = 'Confirm appointment';
+            bracesLoadTimes(String(item.appointment_date).slice(0, 10));
+        } else if (mode === 'reschedule') {
+            title.textContent = 'Reschedule Appointment';
+            icon.textContent = 'event_repeat';
+            lead.textContent = 'Not available on ' + nice + '? Pick another date and time. ' +
+                'The clinic will review your request.';
+            dateRow.style.display = '';
+            timeRow.style.display = '';
+            confirmBtn.textContent = 'Send for approval';
+            bracesInitPicker();
+            bracesRenderTimes([], 'Pick a date first.');
+        } else {
+            title.textContent = 'Reject Appointment';
+            icon.textContent = 'event_busy';
+            lead.textContent = 'Reject the proposed braces appointment on ' + nice + '? ' +
+                'The clinic will be told.';
+            reasonRow.style.display = '';
+            document.getElementById('bracesReason').value = '';
+            confirmBtn.textContent = 'Reject appointment';
+        }
+
+        var modal = document.getElementById('bracesModal');
+        modal.style.display = 'flex';
+        modal.classList.add('show');
+    }
+
+    function closeBracesModal() {
+        var modal = document.getElementById('bracesModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+        }
+        bracesItem = null;
+        bracesMode = '';
+        bracesDate = '';
+    }
+
+    function bracesSubmit() {
+        if (bracesBusy || !bracesItem) return;
+        var url, body = new URLSearchParams();
+
+        if (bracesMode === 'accept') {
+            if (!bracesTime) { bracesSetMsg('Please choose a time.'); return; }
+            url = '/braces_proposal/accept';
+            body.append('time', bracesTime);
+        } else if (bracesMode === 'reschedule') {
+            if (!bracesDate) { bracesSetMsg('Please pick a new date.'); return; }
+            if (!bracesTime) { bracesSetMsg('Please choose a time.'); return; }
+            url = '/braces_proposal/reschedule';
+            body.append('date', bracesDate);
+            body.append('time', bracesTime);
+        } else {
+            url = '/braces_proposal/reject';
+            body.append('reason', document.getElementById('bracesReason').value || '');
+        }
+
+        bracesSetBusy(true);
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: body.toString()
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            bracesSetBusy(false);
+            if (data && data.success) {
+                closeBracesModal();
+                showToast(data.message || 'Done.', 'success');
+                var uid = "{{ user.get('uid', '') }}";
+                if (uid) {
+                    loadApprove(uid);
+                    markSectionSeen('schedule');
+                }
+                return;
+            }
+            // The chosen time was taken in the meantime: show what is left.
+            if (data && Array.isArray(data.times)) {
+                bracesRenderTimes(data.times, 'No open times left on this day.');
+            }
+            bracesSetMsg((data && data.message) || 'Something went wrong. Please try again.');
+        })
+        .catch(function () {
+            bracesSetBusy(false);
+            bracesSetMsg('Something went wrong. Please try again.');
+        });
+    }
+    </script>
 
     <div id="visitHistoryModal" class="modal">
         <div class="modal-content" style="max-width:900px;">
@@ -1929,6 +2378,76 @@ function closeChartView() {
         body.dark-mode .po-tab { background: rgba(255,255,255,.06); color: #94a3b8; border-color: rgba(255,255,255,.12); }
         body.dark-mode .po-tab:hover { background: rgba(100,181,246,.1); color: #64b5f6; border-color: #64b5f6; }
         body.dark-mode .po-tab.active { background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%); color: #fff; }
+
+        /* Orthodontic Braces proposal: card actions, time chips */
+        /* Braces card: one tidy grid - Date / Dentist / Service / Status on a row,
+           then the note, then the three buttons side by side. */
+        .pt-card.pt-sched-card.braces-card { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 24px; align-items: start; }
+        .braces-card .pt-f { min-width: 0; }
+        /* Note on the left half, buttons beside it on the right half */
+        .braces-card .braces-card__note, .braces-card .braces-card__action { grid-column: span 2; }
+        @media (max-width: 900px) {
+            .pt-card.pt-sched-card.braces-card { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .braces-card .braces-card__note, .braces-card .braces-card__action { grid-column: 1 / -1; }
+        }
+        @media (max-width: 520px) { .pt-card.pt-sched-card.braces-card { grid-template-columns: 1fr; } }
+        .braces-card .braces-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+        .braces-card .braces-btn { box-sizing: border-box; height: 40px !important; min-height: 40px; padding: 0 18px !important; width: auto !important; font-size: 13px !important; white-space: nowrap; justify-content: center; }
+        .braces-card .braces-note { display: block; max-width: 62ch; }
+
+        /* Patient Summary: payments rundown by month */
+        .pt-pay-total { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }
+        .pt-pay { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; padding-right: 4px; }
+        .pt-pay-month { border: 1px solid rgba(128,128,128,.28); border-radius: 12px; background: rgba(13,71,161,.03); }
+        .pt-pay-month > summary { list-style: none; display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; }
+        .pt-pay-month > summary::-webkit-details-marker { display: none; }
+        .pt-pay-month > summary::before { content: "\25B8"; font-size: 12px; color: #0d47a1; transition: transform .15s ease; }
+        .pt-pay-month[open] > summary::before { transform: rotate(90deg); }
+        .pt-pay-mname { font-weight: 800; color: var(--text-primary); flex: 1; }
+        .pt-pay-mmeta { font-size: 12px; color: var(--text-secondary); }
+        .pt-pay-msum { font-weight: 800; color: #0d47a1; }
+        .pt-pay-rows { padding: 0 14px 10px; }
+        .pt-pay-row { display: grid; grid-template-columns: minmax(110px, 1.1fr) minmax(0, 2fr) auto; gap: 10px; align-items: center; padding: 7px 0; border-top: 1px dashed rgba(128,128,128,.3); font-size: 13px; }
+        .pt-pay-date { color: var(--text-secondary); font-weight: 600; }
+        .pt-pay-proc { color: var(--text-primary); overflow-wrap: anywhere; }
+        .pt-pay-proc small { color: var(--text-secondary); font-weight: 600; }
+        .pt-pay-amt { font-weight: 800; color: var(--text-primary); text-align: right; }
+        .pt-pay-amt.is-zero { color: var(--text-secondary); font-weight: 600; }
+        @media (max-width: 520px) { .pt-pay-row { grid-template-columns: 1fr auto; } .pt-pay-date { grid-column: 1 / -1; } }
+        body.dark-mode .pt-pay-month { background: rgba(255,255,255,.04); }
+        body.dark-mode .pt-pay-month > summary::before, body.dark-mode .pt-pay-msum { color: #64b5f6; }
+
+        /* Editable patient details */
+        .pt-sub-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .pt-det-actions { display: inline-flex; gap: 8px; }
+        .pt-det-btn[hidden], .pt-det-hint[hidden] { display: none !important; }
+        .pt-det-btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(13,71,161,.35); background: transparent; color: #0d47a1; font: inherit; font-weight: 700; font-size: 12px; cursor: pointer; }
+        .pt-det-btn:hover { background: rgba(13,71,161,.08); }
+        .pt-det-btn--primary { background: #0d47a1; color: #fff; border-color: #0d47a1; }
+        .pt-det-btn--primary:hover { background: #1565c0; }
+        .pt-det-btn .material-symbols-rounded { font-size: 16px; }
+        .pt-det-input { width: 100%; box-sizing: border-box; padding: 8px 10px; margin-top: 4px; border-radius: 8px; border: 1px solid rgba(128,128,128,.5); background: transparent; color: inherit; font: inherit; font-weight: 600; }
+        .pt-det-input:focus { outline: 2px solid rgba(13,71,161,.4); border-color: #0d47a1; }
+        .pt-det-hint { margin: 8px 0 0; font-size: 12px; color: var(--text-secondary); }
+        body.dark-mode .pt-det-btn { color: #64b5f6; border-color: rgba(100,181,246,.45); }
+        body.dark-mode .pt-det-btn--primary { background: #1565c0; color: #fff; }
+        .braces-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .braces-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font: inherit; font-weight: 700; font-size: 13px; width: auto; height: auto; }
+        .braces-btn .material-symbols-rounded { font-size: 18px; }
+        .braces-note { font-size: 12.5px; line-height: 1.5; color: var(--text-secondary); }
+        .braces-modal-lead { margin: 0 0 12px; line-height: 1.55; }
+        .braces-modal-date { margin: 0 0 14px; font-size: 20px; font-weight: 800; color: var(--text-primary); }
+        .braces-label { display: block; margin: 12px 0 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-secondary); }
+        .braces-times { display: flex; flex-wrap: wrap; gap: 8px; min-height: 40px; }
+        .braces-time { padding: 9px 16px; border-radius: 999px; border: 1px solid rgba(128,128,128,.45); background: #f8fafc; color: var(--text-secondary); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; transition: all .2s ease; }
+        .braces-time:hover { border-color: #0d47a1; color: #0d47a1; background: #eef4ff; }
+        .braces-time.active { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); border-color: #0d47a1; color: #fff; box-shadow: 0 2px 6px rgba(13,71,161,.25); }
+        body.dark-mode .braces-time { background: rgba(255,255,255,.06); color: #94a3b8; border-color: rgba(255,255,255,.12); }
+        body.dark-mode .braces-time:hover { background: rgba(100,181,246,.1); color: #64b5f6; border-color: #64b5f6; }
+        body.dark-mode .braces-time.active { background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%); color: #fff; }
+        .braces-empty { margin: 0; font-size: 13px; color: var(--text-secondary); }
+        .braces-input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,.45); background: transparent; color: inherit; font: inherit; }
+        .braces-msg { margin: 10px 0 0; font-size: 13px; color: #d93025; min-height: 1em; }
         .po-panel-card { background: #fff; border: 1px solid rgba(128,128,128,.16); border-radius: 16px; padding: 18px; box-shadow: 0 8px 24px rgba(13,71,161,.08); }
         body.dark-mode .po-panel-card { background: #1e1e1e; border-color: rgba(255,255,255,.08); box-shadow: 0 8px 24px rgba(0,0,0,.45); }
         .po-content { display: flex; gap: 18px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
@@ -3337,6 +3856,67 @@ async function payGCash(amount, procedure) {
             return '<span class="pt-badge pt-badge--unpaid">' + esc(p.status || 'Not Paid') + '</span>';
         }
 
+        /* Payments rundown: every visit's payment, grouped by month, newest first. */
+        function paymentRundownHtml(list) {
+            var groups = {};
+            var grand = 0;
+            list.forEach(function (p) {
+                var d = String(p.date || '').slice(0, 10);
+                var m = d.match(/^(\d{4})-(\d{1,2})/);
+                var key = m ? m[1] + '-' + ('0' + Number(m[2])).slice(-2) : 'undated';
+                (groups[key] = groups[key] || []).push(p);
+            });
+            var keys = Object.keys(groups).sort().reverse();
+            // "undated" sorts after real months so it lands last
+            keys = keys.filter(function (k) { return k !== 'undated'; })
+                .concat(keys.filter(function (k) { return k === 'undated'; }));
+
+            var html = '';
+            keys.forEach(function (key, idx) {
+                var rows = groups[key].slice().sort(function (a, b) {
+                    return String(b.date || '').localeCompare(String(a.date || ''));
+                });
+                var monthPaid = 0;
+                var rowsHtml = '';
+                rows.forEach(function (p) {
+                    var paid = parseFloat(p.paid) || 0;
+                    monthPaid += paid;
+                    var tag = isFollowUp(p) ? ' <small>(follow-up)</small>' : '';
+                    rowsHtml += '<div class="pt-pay-row">' +
+                        '<span class="pt-pay-date">' + esc(longDate(String(p.date || '').slice(0, 10))) + '</span>' +
+                        '<span class="pt-pay-proc">' + esc(p.procedure || 'Treatment') + tag + '</span>' +
+                        '<span class="pt-pay-amt' + (paid ? '' : ' is-zero') + '">' + peso(paid) + '</span>' +
+                        '</div>';
+                });
+                grand += monthPaid;
+                var label = 'Undated';
+                if (key !== 'undated') {
+                    var parts = key.split('-');
+                    label = MONTHS[Number(parts[1]) - 1] + ' ' + parts[0];
+                }
+                html += '<details class="pt-pay-month"' + (idx === 0 ? ' open' : '') + '>' +
+                    '<summary><span class="pt-pay-mname">' + esc(label) + '</span>' +
+                    '<span class="pt-pay-mmeta">' + rows.length + (rows.length === 1 ? ' visit' : ' visits') + '</span>' +
+                    '<span class="pt-pay-msum">' + peso(monthPaid) + '</span></summary>' +
+                    '<div class="pt-pay-rows">' + rowsHtml + '</div></details>';
+            });
+            return { html: html, total: grand };
+        }
+
+        function renderPaymentRundown() {
+            var box = document.getElementById('ptPayRundown');
+            var totalEl = document.getElementById('ptPayTotal');
+            if (!box) return;
+            if (!procs.length) {
+                box.innerHTML = '<span class="pt-muted">No payments yet.</span>';
+                if (totalEl) totalEl.textContent = '';
+                return;
+            }
+            var out = paymentRundownHtml(procs);
+            box.innerHTML = out.html;
+            if (totalEl) totalEl.textContent = 'Total paid ' + peso(out.total);
+        }
+
         function renderSummary() {
             var visits = procs.length;
             var balance = 0;
@@ -3349,6 +3929,7 @@ async function payGCash(amount, procedure) {
             document.getElementById('ptStatVisits').textContent = visits;
             document.getElementById('ptStatLast').textContent = last ? longDate(last) : '-';
             document.getElementById('ptStatBalance').textContent = '\u20b1' + balance.toFixed(2);
+            renderPaymentRundown();
         }
 
         function setText(id, v) {

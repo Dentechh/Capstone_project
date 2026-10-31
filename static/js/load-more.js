@@ -1,4 +1,4 @@
-            document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
                 // ---- Appointments Load More ----
                 const apptBtn = document.getElementById('appointmentsLoadMoreBtn');
                 const apptCursor = document.getElementById('appointmentsCursor');
@@ -44,7 +44,7 @@
                             ${apptHiddenCells(appt)}
                             ${apptUrgencyCell(appt.UrgencyLevel)}
                             <td class="appt-date-cell" data-raw="${apptAttr(appt.appointment_date)}">${apptText(formatApptDateTime(appt.appointment_date))}</td>
-                            <td>${apptText(appt.Service)}</td>
+                            <td>${apptText(appt.Service)}${appt.braces_followup ? '<span class="braces-tag">Braces follow-up' + (appt.rescheduled_from ? ' - patient moved it from ' + apptText(formatApptDateTime(appt.rescheduled_from)) : '') + '</span>' : ''}</td>
                             <td>
                                 <div class="dentist-field">
                                     <input type="text" name="dentist_name" class="dentist-input"

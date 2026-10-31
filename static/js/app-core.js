@@ -710,6 +710,11 @@ function showSection(sectionId) {
                     delete tr.dataset.wantedPlan;
                     tdApplyToothMode(tr);
                     refreshPlanCell(tr, '');
+                    tdApplyNextApptMode(tr, { procedureChanged: true });
+                } else if (e.target.classList.contains('td-date')) {
+                    // Braces: the next appointment follows the visit date
+                    // until the dentist picks a different date by hand.
+                    tdApplyNextApptMode(tr, { visitDateChanged: true });
                 } else if (e.target.classList.contains('td-area')) {
                     var toothBox = tr.querySelector('.td-tooth');
                     if (toothBox) toothBox.value = e.target.value;
@@ -993,6 +998,7 @@ function showSection(sectionId) {
 
             tbody.querySelectorAll('tr').forEach(tdApplyToothMode);
             initTreatmentDatePickers(tbody);
+            tbody.querySelectorAll('tr').forEach(function (tr) { tdApplyNextApptMode(tr); });
             tdInitMedicineCells(tbody);
         }
 
@@ -1013,6 +1019,10 @@ function showSection(sectionId) {
             var root = scope || document;
             root.querySelectorAll('input.adm-date-native').forEach(function (input) {
                 if (input._flatpickr) return;
+                // The Next Appointment picker of a table row is built by
+                // tdApplyNextApptMode(): date-only for Orthodontic Braces,
+                // date and time for everything else.
+                if (input.classList.contains('td-next-appt') && input.closest('tr')) return;
                 var withTime = input.classList.contains('td-next-appt');
                 var opts = {
                     disableMobile: true,
@@ -1037,6 +1047,169 @@ function showSection(sectionId) {
                 input.style.display = 'none';
                 input.removeAttribute('required');
             });
+        }
+
+        // =====================================================================
+        // Orthodontic Braces: automatic next appointment
+        // For braces the Next Appointment is a DATE only (the patient picks the
+        // time later, from their profile) and fills itself with one month after
+        // the visit date: Oct 30 -> Nov 30. If that day is blocked for the whole
+        // day in the Doctors Calendar it moves to the next open day. The dentist
+        // can still change it by hand; after that, changing the visit date no
+        // longer overwrites it. Every other procedure keeps date and time.
+        // =====================================================================
+        var TD_BRACES_PROCEDURE = 'Orthodontic Braces';
+        // Weekdays the clinic never opens, as JS getDay() numbers (Sunday = 0).
+        // Empty because only days blocked in the Doctors Calendar are skipped.
+        // Use [0] to skip Sundays as well.
+        var TD_BRACES_SKIP_WEEKDAYS = [];
+
+        window.tdBlockedFullDays = null;   // { 'YYYY-MM-DD': true } once loaded
+        var tdBlockedLoading = false;
+
+        function tdPad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+        function tdFmtYmd(d) {
+            return d.getFullYear() + '-' + tdPad2(d.getMonth() + 1) + '-' + tdPad2(d.getDate());
+        }
+
+        function tdParseYmd(str) {
+            var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str || ''));
+            return m ? new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10)) : null;
+        }
+
+        // Same day next month; a short month uses its last day (Jan 31 -> Feb 28).
+        function tdAddOneMonth(d) {
+            var lastDay = new Date(d.getFullYear(), d.getMonth() + 2, 0).getDate();
+            return new Date(d.getFullYear(), d.getMonth() + 1, Math.min(d.getDate(), lastDay));
+        }
+
+        function tdNextOpenDay(d) {
+            for (var i = 0; i < 366; i++) {
+                var blocked = window.tdBlockedFullDays && window.tdBlockedFullDays[tdFmtYmd(d)];
+                if (!blocked && TD_BRACES_SKIP_WEEKDAYS.indexOf(d.getDay()) === -1) break;
+                d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+            }
+            return d;
+        }
+
+        function tdIsBracesRow(tr) {
+            var proc = tr && tr.querySelector('.td-procedure');
+            return !!proc && proc.value === TD_BRACES_PROCEDURE;
+        }
+
+        // Whole days the dentist blocked, so the auto date can skip them.
+        function tdEnsureBlockedDays() {
+            if (window.tdBlockedFullDays !== null || tdBlockedLoading) return;
+            tdBlockedLoading = true;
+            fetch('/get_blocked_slots')
+                .then(function (r) { return r.json(); })
+                .then(function (list) {
+                    var days = {};
+                    if (Array.isArray(list)) {
+                        list.forEach(function (item) {
+                            if (item && item.full_day && item.date) days[item.date] = true;
+                        });
+                    }
+                    window.tdBlockedFullDays = days;
+                    // Rows filled before the list arrived may need to move.
+                    document.querySelectorAll('#td-treatment-table tbody tr').forEach(function (tr) {
+                        if (tr.dataset.nextApptAuto === '1' && !tr.dataset.nextApptManual && tdIsBracesRow(tr)) {
+                            tdAutoFillNextAppt(tr);
+                        }
+                    });
+                })
+                .catch(function () { window.tdBlockedFullDays = {}; })
+                .then(function () { tdBlockedLoading = false; });
+        }
+
+        function tdBuildNextApptPicker(input, tr, dateOnly) {
+            if (input._flatpickr) input._flatpickr.destroy();
+            var withTime = !dateOnly;
+            flatpickr(input, {
+                disableMobile: true,
+                enableTime: withTime,
+                dateFormat: withTime ? 'Y-m-d H:i' : 'Y-m-d',
+                altInput: true,
+                altFormat: withTime ? 'M j, Y - h:i K' : 'M j, Y',
+                altInputClass: withTime ? 'adm-date-alt adm-next-appt-alt' : 'adm-date-alt',
+                className: 'adm-datepicker',
+                allowInput: false,
+                monthSelectorType: 'static',
+                minuteIncrement: withTime ? 30 : 1,
+                appendTo: document.body,
+                // A next appointment cannot be in the past.
+                minDate: 'today',
+                // Fires only for the dentist's own picks, not for setDate(..., false).
+                onChange: function () {
+                    tr.dataset.nextApptManual = '1';
+                    delete tr.dataset.nextApptAuto;
+                }
+            });
+            input.style.display = 'none';
+            input.removeAttribute('required');
+            if (input._flatpickr && input._flatpickr.altInput) {
+                input._flatpickr.altInput.placeholder = withTime ? 'Select date & time' : 'Select date';
+            }
+        }
+
+        function tdAutoFillNextAppt(tr) {
+            var input = tr.querySelector('.td-next-appt');
+            var fp = input && input._flatpickr;
+            if (!fp) return;
+            var dateEl = tr.querySelector('.td-date');
+            var visit = tdParseYmd(dateEl && dateEl.value);
+            var now = new Date();
+            var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            var target = tdNextOpenDay(tdAddOneMonth(visit || today));
+            if (target < today) {
+                // An old visit being entered afterwards: nothing to propose.
+                fp.clear();
+                delete tr.dataset.nextApptAuto;
+                return;
+            }
+            fp.setDate(tdFmtYmd(target), false);
+            tr.dataset.nextApptAuto = '1';
+        }
+
+        function tdApplyNextApptMode(tr, opts) {
+            opts = opts || {};
+            var input = tr && tr.querySelector('.td-next-appt');
+            if (!input || typeof flatpickr !== 'function') return;
+
+            var mode = tdIsBracesRow(tr) ? 'braces' : 'normal';
+            var previous = tr.dataset.nextApptMode;
+            var flipped = previous !== mode || !input._flatpickr;
+
+            if (flipped) {
+                var carried = input.value || '';
+                tdBuildNextApptPicker(input, tr, mode === 'braces');
+                tr.dataset.nextApptMode = mode;
+                if (mode === 'braces') {
+                    // A date already on the row (saved record, or picked
+                    // earlier) is kept as a date; the time part is dropped.
+                    if (carried) {
+                        input._flatpickr.setDate(carried.slice(0, 10), false);
+                        tr.dataset.nextApptManual = '1';
+                    }
+                } else if (previous === 'braces') {
+                    // A date-only value is not valid for the date-and-time picker.
+                    input._flatpickr.clear();
+                    delete tr.dataset.nextApptManual;
+                    delete tr.dataset.nextApptAuto;
+                }
+            }
+
+            if (mode !== 'braces') return;
+            tdEnsureBlockedDays();
+
+            if (opts.procedureChanged) {
+                // Choosing braces starts fresh: always propose visit date + 1 month.
+                delete tr.dataset.nextApptManual;
+                tdAutoFillNextAppt(tr);
+            } else if (opts.visitDateChanged && !tr.dataset.nextApptManual) {
+                tdAutoFillNextAppt(tr);
+            }
         }
 
         // =====================================================================

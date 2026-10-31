@@ -7847,19 +7847,12 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 .document("next_visit")
             )
 
-            if next_appt_date:
-                next_visit_ref.set({
-                    "Patient_unq_id": patient_id,
-                    "uid": account_uid,
-                    "appointment_date": next_appt_date,
-                    "Service": next_appt_service,
-                    "DentistName": next_appt_dentist,
-                    "status": "suggested",
-                    "source": "treatment_record",
-                    "created_at": datetime.now(UTC).isoformat()
-                })
-            else:
-                next_visit_ref.delete()
+            # Orthodontic Braces becomes a date-only proposal with a 10 day
+            # decision window; every other procedure is unchanged.
+            self._write_next_visit(
+                next_visit_ref, patient_id, account_uid,
+                next_appt_date, next_appt_service, next_appt_dentist
+            )
 
             self._invalidate_financial_cache()
 
@@ -7984,19 +7977,12 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 .document("next_visit")
             )
 
-            if next_appt_date:
-                next_visit_ref.set({
-                    "Patient_unq_id": patient_id,
-                    "uid": account_uid,
-                    "appointment_date": next_appt_date,
-                    "Service": next_appt_service,
-                    "DentistName": next_appt_dentist,
-                    "status": "suggested",
-                    "source": "treatment_record",
-                    "created_at": datetime.now(UTC).isoformat()
-                })
-            else:
-                next_visit_ref.delete()
+            # Orthodontic Braces becomes a date-only proposal with a 10 day
+            # decision window; every other procedure is unchanged.
+            self._write_next_visit(
+                next_visit_ref, patient_id, account_uid,
+                next_appt_date, next_appt_service, next_appt_dentist
+            )
 
             self._invalidate_financial_cache()
 
@@ -8395,6 +8381,43 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             return redirect(url_for("adminDashboard"))
         
         return render_template("admin_login.html", google_client_id=self.CLIENT_ID)
+
+    def update_profile_details(self):
+        """Patient edits the address / nationality / religion / occupation
+        shown on their profile. Stored as profile_override (the same place
+        the admin's Edit Patient writes), which wins over what old
+        appointments say. A blank field removes the override, so the value
+        from the latest booking shows again."""
+        uid = session.get("uid", "")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+
+        def tidy(value, limit):
+            value = re.sub(r"[<>\r\n\t]+", " ", str(value or ""))
+            return " ".join(value.split())[:limit]
+
+        values = {
+            "address": tidy(request.form.get("address"), 200),
+            "nationality": tidy(request.form.get("nationality"), 60),
+            "religion": tidy(request.form.get("religion"), 60),
+            "occupation": tidy(request.form.get("occupation"), 80),
+        }
+        try:
+            account_ref = self.db.collection(self.Customer_Account).document(str(uid))
+            if not account_ref.get().exists:
+                return jsonify({"success": False, "message": "Account not found."}), 404
+            account_ref.update({
+                f"profile_override.{k}": (v if v else firestore.DELETE_FIELD)
+                for k, v in values.items()
+            })
+            return jsonify({
+                "success": True,
+                "message": "Your details were updated.",
+                "details": self._patient_details_for(uid)
+            })
+        except Exception as e:
+            print("UPDATE PROFILE DETAILS ERROR:", e)
+            return jsonify({"success": False, "message": "Could not save your details. Please try again."}), 500
 
     def update_profile(self):
         try:
@@ -9574,21 +9597,11 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
             next_visit_ref = user_ref.collection("Approve").document("next_visit")
 
-            if next_appt_date:
-                next_visit_ref.set({
-                    "Patient_unq_id": patient_unq_id,
-                    "uid": uid,
-                    "appointment_date": next_appt_date,
-                    "Service": next_appt_service,
-                    "DentistName": next_appt_dentist,
-                    "status": "suggested",
-                    "source": "treatment_record",
-                    "created_at": datetime.now(UTC).isoformat()
-                })
-                print("NEXT VISIT SUGGESTION SAVED:", next_appt_date)
-            else:
-                next_visit_ref.delete()
-                print("NO NEXT VISIT DATE PROVIDED - CLEARED ANY EXISTING SUGGESTION.")
+            self._write_next_visit(
+                next_visit_ref, patient_unq_id, uid,
+                next_appt_date, next_appt_service, next_appt_dentist
+            )
+            print("NEXT VISIT SUGGESTION HANDLED:", next_appt_date or "(cleared)")
 
             # =====================================================
             # SUCCESS
@@ -10825,6 +10838,688 @@ backup. Groups marked "check" may be separate treatments that just share a price
         except Exception as e:
             print(e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    # =====================================================================
+    # ORTHODONTIC BRACES: AUTOMATIC NEXT-APPOINTMENT PROPOSAL
+    # =====================================================================
+    # When a treatment row for Orthodontic Braces carries a next-appointment
+    # DATE (no time), it becomes a proposal the patient answers from their
+    # profile within BRACES_DECISION_DAYS days:
+    #   accept     -> patient picks a time, a normal PENDING appointment is
+    #                 created from their previous details (admin still accepts)
+    #   reschedule -> patient picks a new date and time, also a PENDING
+    #                 appointment (admin approves it in Appointments)
+    #   reject     -> proposal is dropped, admin sees it as rejected
+    #   no answer  -> the daily cron confirms it automatically
+    #
+    # Two documents carry a proposal:
+    #   <Customer_Account>/<uid>/Approve/next_visit   what the patient's
+    #       My Schedule card reads (type = "braces_followup")
+    #   Braces_Proposals/<uid>   one per patient; what the admin Appointments
+    #       sidebar and the cron read. auto_confirm_at exists ONLY while the
+    #       proposal is awaiting an answer, so the cron's range query never
+    #       re-reads answered ones.
+
+    BRACES_PROCEDURE = "Orthodontic Braces"
+    BRACES_DECISION_DAYS = 10
+    BRACES_PROPOSALS = "Braces_Proposals"
+    BRACES_DEFAULT_DENTIST = "Dr. Julix Dionne Capizonda"
+    BRACES_MAX_DAYS_AHEAD = 120
+    # Hourly clinic slots, same as the booking form's time list.
+    CLINIC_TIME_SLOTS = tuple("%02d:00" % h for h in range(9, 18))
+
+    def _is_walkin_uid(self, uid):
+        uid = str(uid or "")
+        return (not uid) or uid.startswith("walkin_")
+
+    def _braces_proposal_ref(self, uid):
+        return self.db.collection(self.BRACES_PROPOSALS).document(str(uid))
+
+    def _braces_next_visit_ref(self, uid):
+        return (
+            self.db.collection(self.Customer_Account)
+            .document(str(uid))
+            .collection("Approve")
+            .document("next_visit")
+        )
+
+    def _braces_today(self):
+        return datetime.now(PH_TZ).date()
+
+    @staticmethod
+    def _braces_parse_day(value):
+        try:
+            return datetime.strptime(str(value or "").strip()[:10], "%Y-%m-%d").date()
+        except ValueError:
+            return None
+
+    def _braces_open_day(self, day):
+        """`day`, or the next day that is not blocked for the whole day."""
+        full = {b.get("date") for b in self._load_blocked_slots() if b.get("full_day")}
+        for _ in range(366):
+            if day.strftime("%Y-%m-%d") not in full:
+                break
+            day += timedelta(days=1)
+        return day
+
+    def _braces_open_times(self, day_str, dentist_name=""):
+        """
+        Hourly slots (HH:MM) still open on this day: not blocked by the
+        dentist, not already taken by an accepted appointment of the same
+        dentist, and not in the past. Empty list if the day is closed.
+        """
+        day = self._braces_parse_day(day_str)
+        if day is None or day < self._braces_today():
+            return []
+
+        blocked_times = set()
+        for b in self._load_blocked_slots():
+            if b.get("date") == day_str:
+                if b.get("full_day"):
+                    return []
+                blocked_times = set(b.get("blocked_times") or [])
+
+        taken = set()
+        try:
+            wanted = self.normalize_dentist_name(dentist_name) if dentist_name else ""
+            docs = (
+                self.db.collection_group("Approve")
+                .where(filter=FieldFilter("appointment_date", ">=", day_str + " 00:00"))
+                .where(filter=FieldFilter("appointment_date", "<=", day_str + " 23:59"))
+                .stream()
+            )
+            for doc in docs:
+                d = doc.to_dict() or {}
+                if str(d.get("status", "")).strip().lower() not in ("accept", "accepted"):
+                    continue
+                if wanted and self.normalize_dentist_name(d.get("DentistName", "")) != wanted:
+                    continue
+                appt = str(d.get("appointment_date", "")).strip()
+                if len(appt) >= 16:
+                    taken.add(appt[11:16])
+        except Exception as e:
+            print("BRACES OPEN TIMES LOOKUP ERROR:", e)
+
+        now_ph = datetime.now(PH_TZ)
+        slots = []
+        for t in self.CLINIC_TIME_SLOTS:
+            if t in blocked_times or t in taken:
+                continue
+            if day == now_ph.date() and t <= now_ph.strftime("%H:%M"):
+                continue
+            slots.append(t)
+        return slots
+
+    def _braces_patient_name(self, patient_id, uid):
+        """Display name for the admin panel: the account's own name first
+        (firstname / lastname, or the Google "name"), then the Patients
+        record, then the last booking."""
+        try:
+            acc = self.db.collection(self.Customer_Account).document(str(uid)).get()
+            if acc.exists:
+                a = acc.to_dict() or {}
+                name = f"{a.get('firstname', '')} {a.get('lastname', '')}".strip()
+                if name:
+                    return name
+                name = str(a.get("name", "") or "").strip()
+                if name:
+                    return name
+        except Exception as e:
+            print("BRACES PATIENT NAME ACCOUNT ERROR:", e)
+        try:
+            snap = self.db.collection(self.Doc_Patients).document(str(patient_id)).get()
+            if snap.exists:
+                d = snap.to_dict() or {}
+                name = f"{d.get('first_name', '')} {d.get('last_name', '')}".strip()
+                if name:
+                    return name
+        except Exception as e:
+            print("BRACES PATIENT NAME ERROR:", e)
+        info = self.get_previous_booking_info(uid) or {}
+        return f"{info.get('FirstName', '')} {info.get('LastName', '')}".strip() or "Patient"
+
+    def _braces_drop_awaiting(self, uid):
+        """Remove a proposal that is still waiting for an answer."""
+        if self._is_walkin_uid(uid):
+            return
+        try:
+            ref = self._braces_proposal_ref(uid)
+            snap = ref.get()
+            if snap.exists and (snap.to_dict() or {}).get("status") == "awaiting":
+                ref.delete()
+        except Exception as e:
+            print("BRACES DROP PROPOSAL ERROR:", e)
+
+    def _write_next_visit(self, next_visit_ref, patient_id, uid, date_value, service, dentist):
+        """
+        Set or clear the patient's "next visit" suggestion after a treatment
+        record is saved. Every procedure except Orthodontic Braces keeps the
+        original behaviour (a date + time suggestion). Braces for a patient
+        with a login becomes a date-only proposal with a decision deadline.
+        """
+        date_value = str(date_value or "").strip()
+        service = str(service or "").strip()
+
+        if not date_value:
+            next_visit_ref.delete()
+            self._braces_drop_awaiting(uid)
+            return
+
+        proposal = (
+            service == self.BRACES_PROCEDURE
+            and not self._is_walkin_uid(uid)
+            and self._braces_parse_day(date_value) is not None
+        )
+
+        if not proposal:
+            next_visit_ref.set({
+                "Patient_unq_id": patient_id,
+                "uid": uid,
+                "appointment_date": date_value,
+                "Service": service,
+                "DentistName": dentist,
+                "status": "suggested",
+                "source": "treatment_record",
+                "created_at": datetime.now(UTC).isoformat()
+            })
+            self._braces_drop_awaiting(uid)
+            return
+
+        today = self._braces_today()
+        day = self._braces_open_day(self._braces_parse_day(date_value))
+        if day < today:
+            # An old visit entered afterwards: nothing left to propose.
+            next_visit_ref.delete()
+            self._braces_drop_awaiting(uid)
+            return
+        day_str = day.strftime("%Y-%m-%d")
+        dentist = str(dentist or "").strip() or self.BRACES_DEFAULT_DENTIST
+
+        prop_ref = self._braces_proposal_ref(uid)
+        prior = prop_ref.get()
+        prior_data = (prior.to_dict() or {}) if prior.exists else {}
+        if prior_data.get("appointment_date") == day_str and prior_data.get("status"):
+            # Same date already proposed (still waiting, or already answered):
+            # re-saving the record must not restart the clock or re-notify.
+            return
+
+        now_ph = datetime.now(PH_TZ)
+        deadline = now_ph + timedelta(days=self.BRACES_DECISION_DAYS)
+        last_ok = day - timedelta(days=1)
+        cap = datetime(last_ok.year, last_ok.month, last_ok.day, 23, 59, 59, tzinfo=PH_TZ)
+        if cap < now_ph:
+            cap = datetime(today.year, today.month, today.day, 23, 59, 59, tzinfo=PH_TZ)
+        deadline = min(deadline, cap)
+        expires_iso = deadline.astimezone(UTC).isoformat()
+        created = datetime.now(UTC).isoformat()
+
+        next_visit_ref.set({
+            "Patient_unq_id": patient_id,
+            "uid": uid,
+            "appointment_date": day_str,
+            "Service": self.BRACES_PROCEDURE,
+            "DentistName": dentist,
+            "status": "suggested",
+            "source": "treatment_record",
+            "type": "braces_followup",
+            "date_only": True,
+            "decision_days": self.BRACES_DECISION_DAYS,
+            "expires_at": expires_iso,
+            "created_at": created
+        })
+        prop_ref.set({
+            "uid": uid,
+            "account_collection": self.Customer_Account,
+            "patient_id": patient_id,
+            "patient_name": self._braces_patient_name(patient_id, uid),
+            "appointment_date": day_str,
+            "Service": self.BRACES_PROCEDURE,
+            "DentistName": dentist,
+            "status": "awaiting",
+            "created_at": created,
+            "auto_confirm_at": expires_iso,
+            "admin_seen": True
+        })
+        self._record_schedule_notification(
+            uid, "braces_proposal", main_collection=self.Customer_Account,
+            service=self.BRACES_PROCEDURE, appointment_date=day_str,
+            dentist_name=dentist
+        )
+
+    def _braces_build_booking(self, uid, patient_id, appointment_date):
+        """
+        The booking fields for a braces visit, copied from what the patient
+        entered before (identity, address, medical history). Returns None
+        when there is not enough on file; the patient then fills the normal
+        booking form once.
+        """
+        account_ref = self.db.collection(self.Customer_Account).document(str(uid))
+        acct_snap = account_ref.get()
+        if not acct_snap.exists:
+            return None
+        acct = acct_snap.to_dict() or {}
+        info = self.get_previous_booking_info(uid) or {}
+
+        patient = {}
+        try:
+            ps = self.db.collection(self.Doc_Patients).document(str(patient_id)).get()
+            if ps.exists:
+                patient = ps.to_dict() or {}
+        except Exception as e:
+            print("BRACES BOOKING PATIENT LOOKUP ERROR:", e)
+
+        def pick(*values):
+            for v in values:
+                v = str(v or "").strip()
+                if v:
+                    return v
+            return ""
+
+        first = pick(info.get("FirstName"), patient.get("first_name"))
+        middle = pick(info.get("MiddleName"), patient.get("middle_name"))
+        last = pick(info.get("LastName"), patient.get("last_name"))
+        if not (first and last):
+            return None
+
+        extra = self._patient_details_for(uid)
+        summary = self._latest_appointment_summary(uid) or {}
+        history = summary.get("medical_history") or {}
+        birthday = pick(info.get("Birthday"), patient.get("birthday"))
+
+        age = pick(info.get("Age"))
+        if not age and birthday:
+            born = self._braces_parse_day(birthday)
+            if born:
+                today = self._braces_today()
+                age = str(today.year - born.year - ((today.month, today.day) < (born.month, born.day)))
+
+        booking = {
+            "patient_id": patient_id,
+            "uid": uid,
+            "email": pick(acct.get("email")),
+            "FirstName": first,
+            "MiddleName": middle,
+            "LastName": last,
+            "Address": pick(info.get("Address"), extra.get("address")),
+            "ContactNumber": pick(info.get("ContactNumber"), acct.get("contact_number"), acct.get("ContactNumber")),
+            "Nationality": pick(info.get("Nationality"), extra.get("nationality")),
+            "Religion": pick(info.get("Religion"), extra.get("religion")),
+            "Age": age,
+            "Sex": pick(info.get("Sex"), acct.get("last_sex"), acct.get("sex")),
+            "Birthday": birthday,
+            "Occupation": pick(info.get("Occupation"), extra.get("occupation")),
+            "CivilStatus": pick(info.get("CivilStatus"), acct.get("CivilStatus")),
+            "Service": self.BRACES_PROCEDURE,
+            "UrgencyLevel": "Normal",
+            "appointment_date": appointment_date,
+        }
+        for key in self.MEDICAL_HISTORY_KEYS:
+            booking[key] = str(history.get(key) or "")
+        return booking
+
+    def _braces_load_for_patient(self, uid):
+        """(next_visit ref, its data) when the patient has a live proposal."""
+        ref = self._braces_next_visit_ref(uid)
+        snap = ref.get()
+        data = (snap.to_dict() or {}) if snap.exists else {}
+        if data.get("type") != "braces_followup" or data.get("status") != "suggested":
+            return ref, None
+        return ref, data
+
+    def braces_open_times(self):
+        """Patient side: open time slots for a date, for the time picker."""
+        uid = session.get("uid")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+        day_str = bleach.clean(request.args.get("date", "")).strip()
+        day = self._braces_parse_day(day_str)
+        if day is None or len(day_str) != 10:
+            return jsonify({"success": False, "message": "Invalid date"}), 400
+        _ref, prop = self._braces_load_for_patient(uid)
+        if not prop:
+            return jsonify({"success": False, "message": "No proposal is waiting for you."}), 404
+        times = self._braces_open_times(day_str, prop.get("DentistName") or self.BRACES_DEFAULT_DENTIST)
+        return jsonify({"success": True, "date": day_str, "times": times})
+
+    def _braces_create_pending(self, uid, prop, appointment_date, status, extra_fields=None):
+        """
+        Create the patient's PENDING appointment (what the admin Appointments
+        sidebar lists), remove the proposal card and record the answer.
+        Returns (ok, response) -- response is a (json, code) pair on failure.
+        """
+        booking = self._braces_build_booking(uid, prop.get("Patient_unq_id"), appointment_date)
+        if booking is None:
+            return False, (jsonify({
+                "success": False,
+                "needs_form": True,
+                "message": (
+                    "We could not find your previous details. "
+                    "Please use Book Appointment and fill in the form once."
+                )
+            }), 409)
+
+        booking["braces_followup"] = True
+        booking["proposal_date"] = prop.get("appointment_date", "")
+        booking.update(extra_fields or {})
+
+        account_ref = self.db.collection(self.Customer_Account).document(str(uid))
+        appt_ref = account_ref.collection(self.Appointment_cliets).document()
+        batch = self.db.batch()
+        batch.set(appt_ref, booking)
+        batch.delete(self._braces_next_visit_ref(uid))
+        batch.set(self._braces_proposal_ref(uid), {
+            "status": status,
+            "chosen_appointment_date": appointment_date,
+            "responded_at": datetime.now(UTC).isoformat(),
+            "pending_appointment_id": appt_ref.id,
+            "admin_seen": False,
+            "auto_confirm_at": firestore.DELETE_FIELD,
+        }, merge=True)
+        batch.commit()
+        return True, None
+
+    def braces_proposal_accept(self):
+        """Patient accepts the proposed date and picks a time."""
+        uid = session.get("uid")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+        time_str = bleach.clean(request.form.get("time", "")).strip()
+        try:
+            _ref, prop = self._braces_load_for_patient(uid)
+            if not prop:
+                return jsonify({"success": False, "message": "This proposal is no longer available."}), 404
+            day_str = prop.get("appointment_date", "")
+            dentist = prop.get("DentistName") or self.BRACES_DEFAULT_DENTIST
+            times = self._braces_open_times(day_str, dentist)
+            if time_str not in times:
+                return jsonify({
+                    "success": False,
+                    "message": "That time is not available. Please choose another time or reschedule.",
+                    "times": times
+                }), 409
+            ok, err = self._braces_create_pending(uid, prop, f"{day_str} {time_str}", "accepted")
+            if not ok:
+                return err
+            return jsonify({"success": True, "message": "Your appointment request was sent to the clinic for confirmation."})
+        except Exception as e:
+            print("BRACES ACCEPT ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def braces_proposal_reschedule(self):
+        """Patient picks a different date and time; the admin still approves it."""
+        uid = session.get("uid")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+        day_str = bleach.clean(request.form.get("date", "")).strip()
+        time_str = bleach.clean(request.form.get("time", "")).strip()
+        try:
+            day = self._braces_parse_day(day_str)
+            today = self._braces_today()
+            if (day is None or len(day_str) != 10 or day < today
+                    or day > today + timedelta(days=self.BRACES_MAX_DAYS_AHEAD)):
+                return jsonify({"success": False, "message": "Please choose a valid date."}), 400
+            _ref, prop = self._braces_load_for_patient(uid)
+            if not prop:
+                return jsonify({"success": False, "message": "This proposal is no longer available."}), 404
+            dentist = prop.get("DentistName") or self.BRACES_DEFAULT_DENTIST
+            times = self._braces_open_times(day_str, dentist)
+            if time_str not in times:
+                return jsonify({
+                    "success": False,
+                    "message": "That time is not available. Please choose another.",
+                    "times": times
+                }), 409
+            ok, err = self._braces_create_pending(
+                uid, prop, f"{day_str} {time_str}", "rescheduled",
+                {"rescheduled_from": prop.get("appointment_date", "")}
+            )
+            if not ok:
+                return err
+            return jsonify({"success": True, "message": "Your new schedule was sent to the clinic for approval."})
+        except Exception as e:
+            print("BRACES RESCHEDULE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def braces_proposal_reject(self):
+        """Patient rejects the proposal: it is dropped and the admin is told."""
+        uid = session.get("uid")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+        reason = bleach.clean(request.form.get("reason", "")).strip()[:300]
+        try:
+            ref, prop = self._braces_load_for_patient(uid)
+            if not prop:
+                return jsonify({"success": False, "message": "This proposal is no longer available."}), 404
+            batch = self.db.batch()
+            batch.delete(ref)
+            batch.set(self._braces_proposal_ref(uid), {
+                "status": "rejected",
+                "reason": reason,
+                "responded_at": datetime.now(UTC).isoformat(),
+                "admin_seen": False,
+                "auto_confirm_at": firestore.DELETE_FIELD,
+            }, merge=True)
+            batch.commit()
+            return jsonify({"success": True, "message": "The proposed appointment was cancelled."})
+        except Exception as e:
+            print("BRACES REJECT ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def _braces_auto_confirm(self, uid, prop):
+        """
+        Confirm one proposal nobody answered in time: the proposed day (or the
+        next open one) at its first open hour, straight into Approve, using the
+        patient's previous details. Returns a short status string.
+        """
+        prop_ref = self._braces_proposal_ref(uid)
+        nv_ref = self._braces_next_visit_ref(uid)
+        nv_snap = nv_ref.get()
+        nv = (nv_snap.to_dict() or {}) if nv_snap.exists else {}
+        if nv.get("type") != "braces_followup" or nv.get("appointment_date") != prop.get("appointment_date"):
+            prop_ref.delete()
+            return "stale"
+
+        today = self._braces_today()
+        day = self._braces_parse_day(prop.get("appointment_date"))
+        if day is None or day < today:
+            batch = self.db.batch()
+            batch.delete(nv_ref)
+            batch.set(prop_ref, {
+                "status": "expired", "responded_at": datetime.now(UTC).isoformat(),
+                "admin_seen": False, "auto_confirm_at": firestore.DELETE_FIELD,
+            }, merge=True)
+            batch.commit()
+            return "expired"
+
+        dentist = prop.get("DentistName") or self.BRACES_DEFAULT_DENTIST
+        day = self._braces_open_day(day)
+        chosen = None
+        for offset in range(15):
+            ds = (day + timedelta(days=offset)).strftime("%Y-%m-%d")
+            times = self._braces_open_times(ds, dentist)
+            if times:
+                chosen = f"{ds} {times[0]}"
+                break
+        if not chosen:
+            return "no_slot"          # retried by the next daily run
+
+        booking = self._braces_build_booking(uid, prop.get("patient_id"), chosen)
+        if booking is None:
+            prop_ref.set({
+                "status": "needs_review", "responded_at": datetime.now(UTC).isoformat(),
+                "admin_seen": False, "auto_confirm_at": firestore.DELETE_FIELD,
+            }, merge=True)
+            return "no_details"
+
+        account_ref = self.db.collection(self.Customer_Account).document(str(uid))
+        approve_ref = account_ref.collection("Approve").document()
+        now_iso = datetime.now(UTC).isoformat()
+        data = dict(booking)
+        data.update({
+            "status": "accept",
+            "Patient_unq_id": approve_ref.id,
+            "DentistName": dentist,
+            "accepted_at": now_iso,
+            "auto_confirmed": True,
+            "braces_followup": True,
+            "proposal_date": prop.get("appointment_date", ""),
+        })
+        batch = self.db.batch()
+        batch.set(approve_ref, data)
+        batch.delete(nv_ref)
+        batch.set(prop_ref, {
+            "status": "auto_confirmed",
+            "chosen_appointment_date": chosen,
+            "responded_at": now_iso,
+            "admin_seen": False,
+            "auto_confirm_at": firestore.DELETE_FIELD,
+        }, merge=True)
+        batch.commit()
+
+        try:
+            account_ref.update({"has_history": True, "last_approved_at": now_iso})
+        except Exception as e:
+            print("BRACES AUTO CONFIRM ACCOUNT UPDATE ERROR:", e)
+
+        self._record_schedule_notification(
+            uid, "braces_auto", main_collection=self.Customer_Account,
+            service=self.BRACES_PROCEDURE, appointment_date=chosen,
+            dentist_name=dentist
+        )
+        try:
+            email = (account_ref.get().to_dict() or {}).get("email")
+            if email:
+                fullname = f"{data.get('FirstName', '')} {data.get('LastName', '')}".strip()
+                threading.Thread(
+                    target=self.send_appointment_email,
+                    args=(email, fullname, "accept", data),
+                    daemon=True
+                ).start()
+        except Exception as e:
+            print("BRACES AUTO CONFIRM EMAIL ERROR:", e)
+        return "confirmed"
+
+    def admin_braces_proposals(self):
+        """
+        Admin Appointments sidebar: braces proposals still waiting for the
+        patient, plus answers the admin has not looked at yet. Two cheap
+        equality queries on one small collection, never the whole table.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            found = {}
+            for field, value in (("status", "awaiting"), ("admin_seen", False)):
+                query = self.db.collection(self.BRACES_PROPOSALS).where(
+                    filter=FieldFilter(field, "==", value)
+                )
+                for snap in query.stream():
+                    found[snap.id] = snap.to_dict() or {}
+
+            now = datetime.now(UTC)
+            rows = []
+            for uid, d in found.items():
+                status = d.get("status", "")
+                days_left = None
+                if status == "awaiting" and d.get("auto_confirm_at"):
+                    try:
+                        due = datetime.fromisoformat(d["auto_confirm_at"])
+                        secs = (due - now).total_seconds()
+                        days_left = max(0, int(-(-secs // 86400)))
+                    except ValueError:
+                        days_left = None
+                name = d.get("patient_name") or "Patient"
+                if name == "Patient":
+                    # Proposals made before the name lookup was fixed.
+                    resolved = self._braces_patient_name(d.get("patient_id"), uid)
+                    if resolved and resolved != "Patient":
+                        name = resolved
+                        try:
+                            self._braces_proposal_ref(uid).update({"patient_name": resolved})
+                        except Exception as e:
+                            print("BRACES NAME BACKFILL ERROR:", e)
+                rows.append({
+                    "uid": uid,
+                    "patient_name": name,
+                    "service": d.get("Service", self.BRACES_PROCEDURE),
+                    "appointment_date": d.get("appointment_date", ""),
+                    "chosen_appointment_date": d.get("chosen_appointment_date", ""),
+                    "status": status,
+                    "reason": d.get("reason", ""),
+                    "days_left": days_left,
+                    "responded_at": d.get("responded_at", ""),
+                    "auto_confirm_at": d.get("auto_confirm_at", ""),
+                    "unseen": status != "awaiting" and d.get("admin_seen") is False,
+                })
+            # Waiting ones first (soonest deadline), then newest answers.
+            rows.sort(key=lambda r: (
+                0 if r["status"] == "awaiting" else 1,
+                r["auto_confirm_at"] if r["status"] == "awaiting" else "",
+                "".join(chr(255 - ord(c)) for c in r["responded_at"]),
+            ))
+            return jsonify({"success": True, "rows": rows})
+        except Exception as e:
+            print("ADMIN BRACES PROPOSALS ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_braces_proposals_seen(self):
+        """Mark one answered proposal (uid) or all of them (uid=all) as read."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        uid = bleach.clean(request.form.get("uid", "")).strip()
+        if not uid:
+            return jsonify({"success": False, "message": "No patient specified"}), 400
+        try:
+            if uid == "all":
+                query = self.db.collection(self.BRACES_PROPOSALS).where(
+                    filter=FieldFilter("admin_seen", "==", False)
+                )
+                for snap in query.stream():
+                    if (snap.to_dict() or {}).get("status") != "awaiting":
+                        snap.reference.update({"admin_seen": True})
+            else:
+                ref = self._braces_proposal_ref(uid)
+                snap = ref.get()
+                if snap.exists and (snap.to_dict() or {}).get("status") != "awaiting":
+                    ref.update({"admin_seen": True})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("ADMIN BRACES SEEN ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def cron_auto_confirm_proposals(self):
+        """
+        Daily job (same X-Cron-Token as the reminders): confirm every braces
+        proposal whose decision window ended without an answer. Safe to run
+        more than once a day.
+        """
+        expected = os.getenv("REMINDER_CRON_TOKEN", "")
+        supplied = request.headers.get("X-Cron-Token", "")
+        if len(expected) < 24 or not hmac.compare_digest(
+            supplied.encode("utf-8"), expected.encode("utf-8")
+        ):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        now_iso = datetime.now(UTC).isoformat()
+        counts = {}
+        query = self.db.collection(self.BRACES_PROPOSALS).where(
+            filter=FieldFilter("auto_confirm_at", "<=", now_iso)
+        )
+        for snap in query.stream():
+            prop = snap.to_dict() or {}
+            try:
+                if prop.get("status") != "awaiting":
+                    snap.reference.update({"auto_confirm_at": firestore.DELETE_FIELD})
+                    result = "skipped"
+                else:
+                    result = self._braces_auto_confirm(snap.id, prop)
+            except Exception as e:
+                print("BRACES AUTO CONFIRM ERROR:", snap.id, e)
+                result = "failed"
+            counts[result] = counts.get(result, 0) + 1
+
+        print("BRACES AUTO CONFIRM:", counts)
+        return jsonify({"success": True, "results": counts})
 
     def patient_decline_appointment(self):
         """
@@ -12289,6 +12984,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/health")(self.health_check)
         self.app.route("/payment-success", endpoint="paymongo_off_success")(self.online_payment_disabled)
         self.app.route("/update-profile", methods=["POST"])(self.update_profile)
+        self.app.route("/update-profile-details", methods=["POST"])(self.update_profile_details)
         self.app.route("/upload_profile_pic", methods=["POST"])(self.upload_profile_pic)
         self.app.route("/payment-cancel", endpoint="paymongo_off_cancel")(self.online_payment_disabled)
         self.app.route("/webhook/paymongo", methods=["POST"], endpoint="paymongo_off_webhook")(self.paymongo_webhook_disabled)
@@ -12378,6 +13074,13 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/aggregates/compare")(self.admin_aggregates_compare)
         self.app.route("/admin/aggregates/switch")(self.admin_aggregates_switch)
         self.app.route("/cron/send-reminders", methods=["GET"])(self.cron_send_reminders)
+        self.app.route("/cron/auto-confirm-proposals", methods=["GET"])(self.cron_auto_confirm_proposals)
+        self.app.route("/braces_open_times")(self.braces_open_times)
+        self.app.route("/braces_proposal/accept", methods=["POST"])(self.braces_proposal_accept)
+        self.app.route("/braces_proposal/reschedule", methods=["POST"])(self.braces_proposal_reschedule)
+        self.app.route("/braces_proposal/reject", methods=["POST"])(self.braces_proposal_reject)
+        self.app.route("/admin/braces_proposals")(self.admin_braces_proposals)
+        self.app.route("/admin/braces_proposals/seen", methods=["POST"])(self.admin_braces_proposals_seen)
         self._register_message_routes()
         self._register_backup_routes()
 
