@@ -80,11 +80,6 @@
 @media (max-width:480px){.rem-dialog__card{padding:22px 18px 18px;}.rem-dialog__actions{flex-direction:column-reverse;}.rem-btn{width:100%;}}
 @media (max-width:768px){#section-reminders .rem-select{max-width:none;flex:1 1 140px;}}
 
-/* Narrow screens: cards instead of a wide table. */
-@media (max-width:1100px){
-    #section-reminders .appointment-table-wrap{overflow-x:auto;}
-    #remTable{min-width:900px !important;}
-}
 
 .rem-dialog__icon--danger{background:linear-gradient(135deg,#c62828,#ef5350);box-shadow:0 6px 16px rgba(198,40,40,.35);}
 #remConfirmDialog .rem-dialog__card::before{background:linear-gradient(90deg,#c62828,#ef5350);}
@@ -106,3 +101,48 @@
 /* Email link under the number (accounts only) */
 .rem-link--mail{max-width:100%;}
 .rem-mail__txt{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:150px;}
+
+/* ===== Responsive: filters wrap, table becomes cards ===== */
+#section-reminders .content-panel{min-width:0;max-width:100%;overflow:hidden;}
+#section-reminders .rem-filter-bar{min-width:0;}
+#section-reminders .filter-search-wrap{min-width:0;}
+#section-reminders .filter-group{display:flex;flex-wrap:wrap;gap:8px;min-width:0;max-width:100%;}
+#section-reminders .rem-select{min-width:0;text-overflow:ellipsis;}
+
+@media (max-width:1100px){
+    #section-reminders .appointment-table-wrap{overflow-x:visible;}
+    #remTable{display:block;min-width:0 !important;width:100% !important;}
+    #remTable thead{display:none;}
+    #remTable tbody{display:flex;flex-direction:column;gap:12px;}
+    #remBody tr{display:block;position:relative;background:var(--card-bg,#fff);border:1px solid var(--border-color,#d5dde9);border-radius:14px;padding:10px 16px;box-shadow:0 2px 8px rgba(15,23,42,.06);}
+    #remBody tr.is-unseen{box-shadow:inset 4px 0 0 #0d47a1,0 2px 8px rgba(15,23,42,.06);}
+    #remTable tr.is-unseen td:first-child{box-shadow:none !important;}
+    #remBody td{display:block;width:100% !important;padding:8px 0 !important;border:0 !important;text-align:left !important;white-space:normal !important;position:static;}
+    #remBody td + td{border-top:1px solid rgba(100,116,139,.15) !important;}
+
+    /* row number sits in front of the patient name */
+    #remBody td:first-child::before{content:"#" counter(remrow);position:static;transform:none;display:inline-block;width:auto;margin:0 8px 6px 0;padding:2px 8px;border-radius:999px;background:rgba(13,71,161,.1);color:#0d47a1;font-size:12px;}
+
+    /* small labels for each field */
+    #remBody td[data-cell="procedure"]::before,
+    #remBody td[data-cell="due"]::before,
+    #remBody td[data-cell="status"]::before,
+    #remBody td[data-cell="contact"]::before{display:block;margin-bottom:3px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#64748b;}
+    #remBody td[data-cell="procedure"]::before{content:"Procedure";}
+    #remBody td[data-cell="due"]::before{content:"Due date";}
+    #remBody td[data-cell="status"]::before{content:"Status";}
+    #remBody td[data-cell="contact"]::before{content:"Contact";}
+
+    #remBody .rem-contact{align-items:flex-start;}
+    #remBody .rem-contact__row{justify-content:flex-start;flex-wrap:wrap;}
+    #remBody .rem-actions{justify-content:flex-start;}
+    #remBody .rem-actions .btn-action{flex:1 1 auto;}
+    .rem-mail__txt{max-width:220px;}
+}
+
+@media (max-width:600px){
+    #section-reminders .filter-group{width:100%;}
+    #section-reminders .rem-select{flex:1 1 100%;width:100%;max-width:none;}
+    #section-reminders #remMarkAll{flex:1 1 100%;}
+    .rem-tab{padding:6px 11px;font-size:12.5px;}
+}
