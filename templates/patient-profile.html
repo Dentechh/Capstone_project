@@ -34,7 +34,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr.min.css') }}">
         <script src="https://accounts.google.com/gsi/client" async defer></script>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index-s.css') }}">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}?v=2">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/patient-profile.css') }}?v=3">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment-modal.css') }}?v=1">
         <link rel="stylesheet" href="{{ url_for('static', filename='css/dentech-credit.css') }}?v=1">
 </head>
@@ -186,14 +186,17 @@
             <div class="profile-card">
 
             <div class="profile-left">
-                <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User" referrerpolicy="no-referrer">
-                <label for="profilePicInput" class="btn-edit-trigger" style="margin-top: 10px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem; cursor: pointer;">UPDATE AVATAR</label>
+                <label for="profilePicInput" class="avatar-wrap avatar-clickable" title="Update avatar" aria-label="Update avatar">
+                    <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User" referrerpolicy="no-referrer">
+                    <span class="avatar-edit-btn" aria-hidden="true">
+                        <span class="material-symbols-rounded">photo_camera</span>
+                    </span>
+                </label>
                 <input type="file" id="profilePicInput" accept="image/png, image/jpeg, image/gif" style="display: none;">
-                <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 8px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
             </div>
 
                 <div class="profile-right">
-                    <h2>{{ user.get('firstname', name) }} {% if user.get('lastname') %}{{ user.get('lastname') }}{% endif %}</h2>
+                    <h2 class="profile-name">{{ user.get('firstname', name) }} {% if user.get('lastname') %}{{ user.get('lastname') }}{% endif %}</h2>
 
                     <div class="info-grid">
                         <div class="info-item">
@@ -242,6 +245,10 @@
                         </div>
                     </div>
 
+                    <button onclick="openUpdateModal()" class="btn-edit-trigger btn-edit-trigger--profile profile-update-btn">
+                        <span class="material-symbols-rounded" aria-hidden="true">edit</span>
+                        Update Profile
+                    </button>
                 </div>
             </div>
 
@@ -270,7 +277,7 @@
                     <div class="pt-pay" id="ptPayRundown"><span class="pt-muted">Loading...</span></div>
                 </section>
 
-                <section class="pt-panel pt-info" aria-label="Appointment, patient details and medical history">
+                <section class="pt-panel pt-info" aria-label="Appointment and patient details">
                     <span class="pt-panel-label">
                         <span class="material-symbols-rounded" aria-hidden="true">event_note</span>
                         Last Appointment Information
@@ -291,8 +298,12 @@
                             <button type="button" class="pt-det-btn" id="ptDetEditBtn" onclick="ptDetStartEdit()">
                                 <span class="material-symbols-rounded" aria-hidden="true">edit</span>Edit
                             </button>
-                            <button type="button" class="pt-det-btn pt-det-btn--primary" id="ptDetSaveBtn" onclick="ptDetSave()" hidden>Save</button>
-                            <button type="button" class="pt-det-btn" id="ptDetCancelBtn" onclick="ptDetCancel()" hidden>Cancel</button>
+                            <button type="button" class="pt-det-btn pt-det-btn--primary" id="ptDetSaveBtn" onclick="ptDetSave()" hidden>
+                                <span class="material-symbols-rounded" aria-hidden="true">save</span>Save
+                            </button>
+                            <button type="button" class="pt-det-btn pt-det-btn--cancel" id="ptDetCancelBtn" onclick="ptDetCancel()" hidden>
+                                <span class="material-symbols-rounded" aria-hidden="true">close</span>Cancel
+                            </button>
                         </span>
                     </div>
                     <div class="pt-grid4" id="ptDetGrid">
@@ -302,8 +313,10 @@
                         <div class="pt-med-item"><span class="pt-med-q">Occupation</span> <span class="pt-med-a" id="ptDetOccupation">-</span></div>
                     </div>
 
-                    <div class="pt-sep"></div>
-                    <span class="pt-sub-label">
+                </section>
+
+                <section class="pt-panel pt-medical" aria-label="Medical history">
+                    <span class="pt-panel-label">
                         <span class="material-symbols-rounded" aria-hidden="true">medical_services</span>
                         Medical History
                     </span>
@@ -314,21 +327,31 @@
 
         <!-- Schedule: shown in the page body (used to be a button + modal). -->
         <section class="pt-section pt-schedule" id="ptSchedule" aria-label="Schedule">
-            <h2 class="pt-records-title">
-                <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
-                Schedule
-            </h2>
-            <div id="scheduleList"><p class="pt-empty">Loading...</p></div>
+            <details class="pt-disclosure">
+                <summary class="pt-records-title pt-disclosure__summary">
+                    <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
+                    Schedule
+                    <span class="material-symbols-rounded pt-disclosure__chevron" aria-hidden="true">expand_more</span>
+                </summary>
+                <div class="pt-disclosure__body">
+                    <div id="scheduleList"><p class="pt-empty">Loading...</p></div>
+                </div>
+            </details>
         </section>
 
         <!-- Dental Records: same layout as the admin treatment record, read-only, 5 per page. -->
         <section class="pt-section pt-records" id="ptRecords" aria-label="Dental records">
-            <h2 class="pt-records-title">
-                <span class="material-symbols-rounded" aria-hidden="true">clinical_notes</span>
-                Dental Records
-            </h2>
-            <div id="ptCards"><p class="pt-empty">Loading...</p></div>
-            <nav class="pt-pager" id="ptPager" aria-label="Dental records pages" hidden></nav>
+            <details class="pt-disclosure">
+                <summary class="pt-records-title pt-disclosure__summary">
+                    <span class="material-symbols-rounded" aria-hidden="true">clinical_notes</span>
+                    Dental Records
+                    <span class="material-symbols-rounded pt-disclosure__chevron" aria-hidden="true">expand_more</span>
+                </summary>
+                <div class="pt-disclosure__body">
+                    <div id="ptCards"><p class="pt-empty">Loading...</p></div>
+                    <nav class="pt-pager" id="ptPager" aria-label="Dental records pages" hidden></nav>
+                </div>
+            </details>
         </section>
 
 
@@ -1836,7 +1859,7 @@
     ];
     /* Same choices as the Religion / Occupation dropdowns on the appointment form (index.html) */
     var PT_DET_OPTIONS = {
-        religion: ['Roman Catholic', 'Christian', 'Islam', 'Iglesia ni Cristo', 'Baptist',
+        religion: ['Roman Catholic', 'Christian', 'Islam', 'IGLESIA NI CRISTO', 'Baptist',
                    'Methodist', 'Born Again Christian', 'Other'],
         occupation: ['Student', 'Employee', 'Self-Employed', 'Teacher', 'Nurse', 'Doctor',
                      'Business Owner', 'Housewife', 'Retired', 'Other']
@@ -1863,39 +1886,89 @@
             ptDetOriginal[f[0]] = value;
             var input;
             var choices = PT_DET_OPTIONS[f[0]];
+            var isSelect = !!choices;
             if (choices) {
-                /* Dropdown - same choices as the appointment form */
-                input = document.createElement('select');
-                var blank = document.createElement('option');
-                blank.value = '';
-                blank.textContent = 'Select ' + f[0];
-                input.appendChild(blank);
+                /* Custom dropdown - styled options (not native) */
+                var wrap = document.createElement('div');
+                wrap.className = 'pt-det-select';
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.id = f[1] + 'Input';
+                hidden.value = '';
+                var trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'pt-det-input pt-det-trigger';
+                trigger.setAttribute('aria-haspopup', 'listbox');
+                trigger.setAttribute('aria-expanded', 'false');
+                var menu = document.createElement('ul');
+                menu.className = 'pt-det-menu';
+                menu.setAttribute('role', 'listbox');
+                menu.hidden = true;
+
                 var matched = '';
-                choices.forEach(function (c) {
-                    var opt = document.createElement('option');
-                    opt.value = c;
-                    opt.textContent = c;
-                    input.appendChild(opt);
-                    if (value && c.toLowerCase() === value.toLowerCase()) matched = c;
-                });
+                function addOption(val, label) {
+                    var li = document.createElement('li');
+                    li.className = 'pt-det-option';
+                    li.setAttribute('role', 'option');
+                    li.dataset.value = val;
+                    li.textContent = label;
+                    if (val && value && val.toLowerCase() === value.toLowerCase()) {
+                        li.classList.add('is-selected');
+                        matched = val;
+                    }
+                    menu.appendChild(li);
+                }
+                addOption('', 'Select ' + f[0]);
+                choices.forEach(function (c) { addOption(c, c); });
                 if (value && !matched) {
-                    /* keep an older free-typed value so it is not lost */
-                    var extra = document.createElement('option');
-                    extra.value = value;
-                    extra.textContent = value;
-                    input.appendChild(extra);
+                    addOption(value, value);
                     matched = value;
                 }
-                input.value = matched;
+                hidden.value = matched;
+                trigger.textContent = matched ? matched : ('Select ' + f[0]);
+                if (!matched) trigger.classList.add('is-placeholder');
+
+                menu.addEventListener('click', function (e) {
+                    var li = e.target.closest ? e.target.closest('.pt-det-option') : null;
+                    if (!li) return;
+                    e.stopPropagation();
+                    hidden.value = li.dataset.value;
+                    trigger.textContent = li.textContent;
+                    trigger.classList.toggle('is-placeholder', !li.dataset.value);
+                    menu.querySelectorAll('.pt-det-option').forEach(function (o) { o.classList.remove('is-selected'); });
+                    li.classList.add('is-selected');
+                    menu.hidden = true;
+                    trigger.setAttribute('aria-expanded', 'false');
+                    trigger.classList.remove('is-open');
+                });
+                trigger.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var willOpen = menu.hidden;
+                    // close others
+                    document.querySelectorAll('.pt-det-menu').forEach(function (m) { m.hidden = true; });
+                    document.querySelectorAll('.pt-det-trigger').forEach(function (t) {
+                        t.classList.remove('is-open');
+                        t.setAttribute('aria-expanded', 'false');
+                    });
+                    menu.hidden = !willOpen;
+                    trigger.classList.toggle('is-open', willOpen);
+                    trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+                });
+                wrap.appendChild(hidden);
+                wrap.appendChild(trigger);
+                wrap.appendChild(menu);
+                input = wrap;
             } else {
                 input = document.createElement('input');
                 input.type = 'text';
                 input.maxLength = f[2];
                 input.value = value;
             }
-            input.className = 'pt-det-input';
-            input.id = f[1] + 'Input';
-            input.setAttribute('aria-label', f[0]);
+            if (!choices) {
+                input.className = 'pt-det-input';
+                input.id = f[1] + 'Input';
+                input.setAttribute('aria-label', f[0]);
+            }
             el.textContent = '';
             el.appendChild(input);
         });
@@ -2977,7 +3050,7 @@ async function payGCash(amount, procedure) {
         <div class="modal-header">
             <div class="modal-panel-head">
                 <span class="material-symbols-rounded modal-panel-head__icon" aria-hidden="true">manage_accounts</span>
-                <h2>UPDATE PROFILE</h2>
+                <h2>Update Profile</h2>
             </div>
             <button class="close" onclick="closeUpdateModal()" aria-label="Close">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -3020,11 +3093,17 @@ async function payGCash(amount, procedure) {
     <div class="info-item">
         <label>Sex</label>
         {% set _sex = (user.get('sex') or '')|lower %}
-        <select name="new_sex">
-            <option value="">Select sex</option>
-            <option value="Male" {% if _sex == 'male' %}selected{% endif %}>Male</option>
-            <option value="Female" {% if _sex == 'female' %}selected{% endif %}>Female</option>
-        </select>
+        <div class="pt-det-select modal-custom-select">
+            <input type="hidden" name="new_sex" id="updSex" value="{% if _sex == 'male' %}Male{% elif _sex == 'female' %}Female{% else %}{{ user.get('sex', '') }}{% endif %}">
+            <button type="button" class="pt-det-input pt-det-trigger" data-placeholder="Select sex">
+                {% if _sex == 'male' %}Male{% elif _sex == 'female' %}Female{% elif user.get('sex') %}{{ user.get('sex') }}{% else %}Select sex{% endif %}
+            </button>
+            <ul class="pt-det-menu" role="listbox">
+                <li class="pt-det-option" data-value="">Select sex</li>
+                <li class="pt-det-option" data-value="Male">Male</li>
+                <li class="pt-det-option" data-value="Female">Female</li>
+            </ul>
+        </div>
     </div>
 
     <div class="info-item">
@@ -3055,18 +3134,28 @@ async function payGCash(amount, procedure) {
     <div class="info-item">
         <label>Civil Status</label>
         {% set _civil = (user.get('civil_status') or '')|lower %}
-        <select name="new_civil_status">
-            <option value="">Select civil status</option>
-            {% for cs in ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'] %}
-            <option value="{{ cs }}" {% if _civil == cs|lower %}selected{% endif %}>{{ cs }}</option>
-            {% endfor %}
-        </select>
+        <div class="pt-det-select modal-custom-select">
+            <input type="hidden" name="new_civil_status" id="updCivil" value="{{ user.get('civil_status', '') }}">
+            <button type="button" class="pt-det-input pt-det-trigger" data-placeholder="Select civil status">
+                {% if user.get('civil_status') %}{{ user.get('civil_status') }}{% else %}Select civil status{% endif %}
+            </button>
+            <ul class="pt-det-menu" role="listbox">
+                <li class="pt-det-option" data-value="">Select civil status</li>
+                {% for cs in ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'] %}
+                <li class="pt-det-option" data-value="{{ cs }}" {% if _civil == cs|lower %}class="pt-det-option is-selected"{% endif %}>{{ cs }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 
-    <div class="modal-actions">
-        <button type="submit" class="btn-primary">Save Changes</button>
-        <button type="button" onclick="closeUpdateModal()" class="btn-secondary">Cancel</button>
-    </div>
+    <button type="submit" class="btn-primary modal-action-btn">
+        <span class="material-symbols-rounded" aria-hidden="true">save</span>
+        Save Changes
+    </button>
+    <button type="button" onclick="closeUpdateModal()" class="btn-secondary modal-action-btn">
+        <span class="material-symbols-rounded" aria-hidden="true">close</span>
+        Cancel
+    </button>
 
 </form>
     </div>
@@ -3092,14 +3181,35 @@ async function payGCash(amount, procedure) {
             if (!bd || !ageEl) return;
             const t = new Date();
             bd.max = t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
-            bd.addEventListener('input', function () {
-                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bd.value);
+            function updateAgeFromValue(val) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(val);
                 if (!m) { ageEl.value = ''; return; }
                 const now = new Date();
                 let age = now.getFullYear() - Number(m[1]);
                 if ((now.getMonth() + 1) * 100 + now.getDate() < Number(m[2]) * 100 + Number(m[3])) age--;
                 ageEl.value = age >= 0 ? age : '';
+            }
+            bd.addEventListener('input', function () {
+                updateAgeFromValue(bd.value);
             });
+            if (typeof flatpickr === 'function') {
+                flatpickr(bd, {
+                    dateFormat: 'Y-m-d',
+                    altInput: true,
+                    altFormat: 'F j, Y',
+                    altInputClass: 'adm-date-alt',
+                    className: 'adm-datepicker',
+                    allowInput: false,
+                    maxDate: 'today',
+                    onChange: function (selectedDates, dateStr) {
+                        bd.value = dateStr;
+                        updateAgeFromValue(dateStr);
+                    }
+                });
+                if (bd._flatpickr) {
+                    bd.style.display = 'none';
+                }
+            }
         })();
 
         document.getElementById('profilePicInput').addEventListener('change', function(e) {
@@ -3130,6 +3240,47 @@ async function payGCash(amount, procedure) {
             .catch(err => {
                 console.error(err);
                 showToast('Failed to upload profile picture');
+            });
+        });
+
+        document.addEventListener('click', function () {
+            document.querySelectorAll('.pt-det-menu').forEach(function (m) { m.hidden = true; });
+            document.querySelectorAll('.pt-det-trigger').forEach(function (t) {
+                t.classList.remove('is-open');
+                t.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        document.querySelectorAll('.modal-custom-select').forEach(function (wrap) {
+            var trigger = wrap.querySelector('.pt-det-trigger');
+            var menu = wrap.querySelector('.pt-det-menu');
+            var hidden = wrap.querySelector('input[type="hidden"]');
+            if (!trigger || !menu || !hidden) return;
+            if (!hidden.value) trigger.classList.add('is-placeholder');
+            trigger.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var willOpen = menu.hidden;
+                document.querySelectorAll('.pt-det-menu').forEach(function (m) { m.hidden = true; });
+                document.querySelectorAll('.pt-det-trigger').forEach(function (t) {
+                    t.classList.remove('is-open');
+                    t.setAttribute('aria-expanded', 'false');
+                });
+                menu.hidden = !willOpen;
+                trigger.classList.toggle('is-open', willOpen);
+                trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+            });
+            menu.addEventListener('click', function (e) {
+                var li = e.target.closest ? e.target.closest('.pt-det-option') : null;
+                if (!li) return;
+                e.stopPropagation();
+                hidden.value = li.dataset.value;
+                trigger.textContent = li.textContent;
+                trigger.classList.toggle('is-placeholder', !li.dataset.value);
+                menu.querySelectorAll('.pt-det-option').forEach(function (o) { o.classList.remove('is-selected'); });
+                li.classList.add('is-selected');
+                menu.hidden = true;
+                trigger.classList.remove('is-open');
+                trigger.setAttribute('aria-expanded', 'false');
             });
         });
 
@@ -4039,7 +4190,7 @@ async function payGCash(amount, procedure) {
                     var parts = key.split('-');
                     label = MONTHS[Number(parts[1]) - 1] + ' ' + parts[0];
                 }
-                html += '<details class="pt-pay-month"' + (idx === 0 ? ' open' : '') + '>' +
+                html += '<details class="pt-pay-month">' +
                     '<summary><span class="pt-pay-mname">' + esc(label) + '</span>' +
                     '<span class="pt-pay-mmeta">' + rows.length + (rows.length === 1 ? ' visit' : ' visits') + '</span>' +
                     '<span class="pt-pay-msum">' + peso(monthPaid) + '</span></summary>' +
@@ -4258,6 +4409,83 @@ async function payGCash(amount, procedure) {
             });
     })();
     </script>
+
+<script>
+(function () {
+    function animateDetails(details, bodySelector) {
+        if (!details || details.dataset.animated) return;
+        details.dataset.animated = '1';
+        var summary = details.querySelector('summary');
+        var body = details.querySelector(bodySelector);
+        if (!summary || !body) return;
+        summary.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (details.dataset.busy === '1') return;
+            details.dataset.busy = '1';
+            if (details.open) {
+                var start = body.scrollHeight;
+                body.style.height = start + 'px';
+                body.style.overflow = 'hidden';
+                body.style.opacity = '1';
+                requestAnimationFrame(function () {
+                    body.style.setProperty('transition','height 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.2s ease','important');
+                    body.style.height = '0px';
+                    body.style.opacity = '0';
+                });
+                setTimeout(function () {
+                    details.open = false;
+                    body.style.height = '';
+                    body.style.opacity = '';
+                    body.style.removeProperty('transition');
+                    body.style.overflow = '';
+                    delete details.dataset.busy;
+                }, 320);
+            } else {
+                details.open = true;
+                var end = body.scrollHeight;
+                body.style.height = '0px';
+                body.style.opacity = '0';
+                body.style.overflow = 'hidden';
+                requestAnimationFrame(function () {
+                    body.style.setProperty('transition','height 0.3s cubic-bezier(0.16,1,0.3,1), opacity 0.2s ease','important');
+                    body.style.height = end + 'px';
+                    body.style.opacity = '1';
+                });
+                setTimeout(function () {
+                    body.style.height = '';
+                    body.style.opacity = '';
+                    body.style.removeProperty('transition');
+                    body.style.overflow = '';
+                    delete details.dataset.busy;
+                }, 320);
+            }
+        });
+    }
+
+    function init() {
+        document.querySelectorAll('.pt-disclosure').forEach(function (d) {
+            animateDetails(d, '.pt-disclosure__body');
+        });
+        document.querySelectorAll('.pt-pay-month').forEach(function (d) {
+            animateDetails(d, '.pt-pay-rows');
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+    // Re-init after treatment records load (payments months are dynamic)
+    var observer = new MutationObserver(function () {
+        document.querySelectorAll('.pt-pay-month:not([data-animated])').forEach(function (d) {
+            animateDetails(d, '.pt-pay-rows');
+        });
+    });
+    var box = document.getElementById('ptPayRundown');
+    if (box) observer.observe(box, { childList: true, subtree: true });
+})();
+</script>
 
 <script src="{{ url_for('static', filename='js/dentech-credit.js') }}?v=1" defer></script>
 

@@ -2730,7 +2730,7 @@
        dark text in dark mode, so the label is legible against its own fill
        either way.
 
-       Layout note: .sidebar is fixed at 260px and .main-content is offset by the
+       Layout note: .sidebar is fixed at 300px and .main-content is offset by the
        same amount (admin.css:137), so the width is left alone - changing it would
        push the whole page sideways. */
 
@@ -2872,6 +2872,41 @@
         gap: 4px;
         overflow-y: auto;
         overflow-x: hidden;
+        /* Keep the scrollbar from hugging the nav rows. */
+        padding-right: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(13, 71, 161, 0.55) transparent;
+    }
+    .sidebar-nav::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 10px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--navy), var(--gold));
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--gold), var(--navy));
+    }
+
+    body.dark-mode .sidebar-nav {
+        scrollbar-color: #64b5f6 transparent;
+    }
+
+    body.dark-mode .sidebar-nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body.dark-mode .sidebar-nav::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #64b5f6, #90caf9);
+        border: 2px solid rgba(255, 255, 255, 0.1);
     }
 
     .sidebar .nav-item {

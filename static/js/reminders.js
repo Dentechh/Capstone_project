@@ -309,6 +309,10 @@
                 rows = d.rows || [];
                 loadedOnce = true;
                 fillProcedures();
+                if (window.admEnhanceSelects) {
+                    var fg = section.querySelector('.filter-group');
+                    if (fg) window.admEnhanceSelects(fg, null, false);
+                }
                 render();
                 refreshBadge();
             })
@@ -433,6 +437,12 @@
     }
 
     /* ---------- wiring ---------- */
+    // Use the shared custom dropdown component so the filter options are styled
+    // (adm-select) instead of the native OS popup.
+    if (window.admEnhanceSelects) {
+        var fg = section.querySelector('.filter-group');
+        if (fg) window.admEnhanceSelects(fg, null, false);
+    }
     tabsEl.addEventListener('click', function (e) {
         var b = e.target.closest('.rem-tab'); if (!b) return;
         tab = b.getAttribute('data-tab'); shown = PAGE;

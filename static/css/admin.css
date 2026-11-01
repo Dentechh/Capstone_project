@@ -75,7 +75,7 @@ body.dark-mode::before {
     -webkit-filter: blur(10px);
 }
 .sidebar {
-    width: 260px;
+    width: 280px;
     height: 100vh;
     background: var(--grad-navy);
     
@@ -89,6 +89,7 @@ body.dark-mode::before {
     padding: 40px 20px;
     z-index: 1000;
     box-shadow: 2px 5px 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
 .sidebar-brand { text-align: center; margin-bottom: 50px; }
@@ -156,8 +157,8 @@ body.dark-mode .sidebar-brand span{
 }
 
 /* MAIN CONTENT & BLUR FIX */
-.main-content { 
-    margin-left: 260px; /* ✅ prevent overlap with fixed sidebar */
+.main-content {
+    margin-left: 280px; /* ✅ prevent overlap with fixed sidebar */
     min-height: 100vh;      /* ✅ full screen minimum */
     overflow-y: auto;   /* ✅ allow natural scroll */
     padding: 40px;
@@ -168,7 +169,7 @@ body.dark-mode .sidebar-brand span{
 .main-content::before {
     content: "";
     position: fixed;
-    top: 0; left: 260px; right: 0; bottom: 0;
+    top: 0; left: 280px; right: 0; bottom: 0;
     background: rgba(10, 25, 47, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -4878,17 +4879,17 @@ body.dark-mode .page-title-badge .material-symbols-rounded {
 /* Tablet Landscape */
 @media (max-width: 1024px) {
     .sidebar {
-        width: 220px;
+        width: 240px;
         padding: 30px 15px;
     }
     
     .main-content {
-        margin-left: 220px;
+        margin-left: 240px;
         padding: 30px 20px;
     }
     
     .main-content::before {
-        left: 220px;
+        left: 240px;
     }
     
     .metric-cards {

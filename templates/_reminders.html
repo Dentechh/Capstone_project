@@ -1,3 +1,18 @@
+<style>
+body.dark-mode #section-reminders .rem-select{background-color:#131a26 !important;border-color:#33415a !important;color:#e2e8f0 !important;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;box-shadow:inset 0 1px 2px rgba(0,0,0,.3) !important;}
+#section-reminders .rem-select{appearance:none !important;-webkit-appearance:none !important;-moz-appearance:none !important;padding:10px 36px 10px 14px !important;border:1px solid #cbd5e1 !important;border-radius:10px !important;background:#fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center/16px 16px !important;color:#1a1a1a !important;font-size:13.5px !important;font-weight:600 !important;box-shadow:0 1px 2px rgba(15,23,42,.06) !important;}
+#section-reminders .rem-select option{background:#fff;color:#1a1a1a;}
+#section-reminders .rem-select option:checked{background:#dbeafe;color:#0d47a1;font-weight:700;}
+#section-reminders .appointment-table-wrap{overflow-x:auto;overflow-y:hidden;border-radius:12px;padding-right:0;box-shadow:0 4px 8px -2px rgba(15,23,42,.1);background:transparent;-webkit-overflow-scrolling:touch;box-sizing:border-box;}
+#section-reminders .appointment-table tbody tr:hover,#remTable tbody tr:hover,#remBody tr:hover{background:transparent !important;}
+body.dark-mode #section-reminders .rem-select{background-color:#131a26;border-color:#33415a;color:#e2e8f0;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");}
+body.dark-mode #section-reminders .rem-select option{background:#131a26;color:#e2e8f0;}
+body.dark-mode #section-reminders .rem-select option:checked{background:#1e3a8a;color:#7dd3fc;}
+body.dark-mode #section-reminders .appointment-table-wrap{box-shadow:0 4px 8px -2px rgba(0,0,0,.3);background:transparent;box-sizing:border-box;}
+body.dark-mode #section-reminders .appointment-table tbody tr:hover,body.dark-mode #remTable tbody tr:hover,body.dark-mode #remBody tr:hover{background:transparent !important;}
+#remProcedure,#remAccount,#remRange{appearance:none !important;-webkit-appearance:none !important;-moz-appearance:none !important;padding:10px 36px 10px 14px !important;border:1px solid #cbd5e1 !important;border-radius:10px !important;background:#fff url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center/16px 16px !important;color:#1a1a1a !important;font-size:13.5px !important;font-weight:600 !important;box-shadow:0 1px 2px rgba(15,23,42,.06) !important;}
+body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange{background-color:#131a26 !important;border-color:#33415a !important;color:#e2e8f0 !important;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;box-shadow:inset 0 1px 2px rgba(0,0,0,.3) !important;}
+</style>
 <div id="section-reminders" class="content-section">
     <section class="content-panel">
         <div class="filter-bar rem-filter-bar">
@@ -7,15 +22,15 @@
                     class="search-input filter-search" aria-label="Search reminders" autocomplete="off">
             </div>
             <div class="filter-group">
-                <select id="remProcedure" class="rem-select" aria-label="Filter by procedure">
+                <select id="remProcedure" class="rem-select" aria-label="Filter by procedure" style="appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:10px 36px 10px 14px;border:1px solid #cbd5e1;border-radius:10px;background:#fff url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M7 10l5 5 5-5%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E') no-repeat right 12px center/16px 16px;color:#1a1a1a;font-size:13.5px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.06);">
                     <option value="">All procedures</option>
                 </select>
-                <select id="remAccount" class="rem-select" aria-label="Filter by account">
+                <select id="remAccount" class="rem-select" aria-label="Filter by account" style="appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:10px 36px 10px 14px;border:1px solid #cbd5e1;border-radius:10px;background:#fff url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M7 10l5 5 5-5%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E') no-repeat right 12px center/16px 16px;color:#1a1a1a;font-size:13.5px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.06);">
                     <option value="">With and without account</option>
                     <option value="yes">With account</option>
                     <option value="no">No account</option>
                 </select>
-                <select id="remRange" class="rem-select" aria-label="Filter by due date">
+                <select id="remRange" class="rem-select" aria-label="Filter by due date" style="appearance:none;-webkit-appearance:none;-moz-appearance:none;padding:10px 36px 10px 14px;border:1px solid #cbd5e1;border-radius:10px;background:#fff url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27%3E%3Cpath d=%27M7 10l5 5 5-5%27 fill=%27none%27 stroke=%27%2364748b%27 stroke-width=%272.2%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E') no-repeat right 12px center/16px 16px;color:#1a1a1a;font-size:13.5px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.06);">
                     <option value="">Any due date</option>
                     <option value="7">Due in 7 days</option>
                     <option value="30">Due in 30 days</option>
