@@ -909,12 +909,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="modal-content auth-card" style="max-width:420px; text-align:center;">
         <h2>Use Your Previous Details?</h2>
         <p style="margin:16px 0;">
-            We found the information you entered for your last appointment.
+            We found the information from your last appointment, including your
+            personal details, service, urgency level and medical history.
             Would you like us to fill it in automatically?
         </p>
         <p style="font-size:13px; color:#777; margin-bottom:20px;">
-            You'll still choose the service, urgency level, date and time,
-            and answer the medical history questions yourself.
+            You'll still choose the date and time, and sign before confirming.
         </p>
         <div style="display:flex; gap:10px; justify-content:center;">
             <button type="button" id="prefillYesBtn" class="sign-up-btn">Yes, fill it in</button>
@@ -1938,10 +1938,9 @@ resetPasswordBtn.addEventListener("click", async () => {
             };
         }
 
-        /* Carries the patient's last booking details into the form.
-           Service, urgency level, the appointment date & time and
-           the medical history answers are intentionally NOT filled
-           -- those must be chosen fresh for every visit. */
+        /* Carries the patient's last booking into the form: personal
+           details, service, urgency level and medical history. Only the
+           appointment date and time are left to choose. */
         function prefillAppointmentForm(info) {
             if (!info) return;
 
@@ -1987,6 +1986,53 @@ resetPasswordBtn.addEventListener("click", async () => {
             setSelect('admReligion', info.Religion);
             setSelect('admOccupation', info.Occupation);
             setSelect('admCivilStatus', info.CivilStatus);
+
+            prefillVisitDetails(info, syncMedHistory);
+        }
+
+        /* Carries the rest of the last booking over: service, urgency level and
+           the medical history answers. The date and time are still picked for
+           every visit, and the patient still signs before confirming. */
+        function prefillVisitDetails(info, syncFn) {
+            if (!info) return;
+            var form = document.getElementById('appointmentForm');
+            if (!form) return;
+
+            function setNamedSelect(name, value) {
+                var el = form.querySelector('[name="' + name + '"]');
+                if (!el || !value) return;
+                var has = Array.prototype.some.call(el.options, function (o) { return o.value === value; });
+                if (has) {
+                    el.value = value;
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+            setNamedSelect('Service', info.Service);
+            setNamedSelect('Urgency_Level', info.UrgencyLevel);
+
+            var history = info.MedicalHistory || {};
+            var keys = Object.keys(history).filter(function (k) { return history[k]; });
+            if (!keys.length) return;
+
+            // Switch the medical history block on, then answer it.
+            var toggle = document.getElementById('admMedHistoryToggle');
+            if (toggle && !toggle.checked) {
+                toggle.checked = true;
+                if (typeof syncFn === 'function') syncFn();
+            }
+            keys.forEach(function (key) {
+                var value = String(history[key]);
+                var radios = form.querySelectorAll('input[type="radio"][name="' + key + '"]');
+                if (radios.length) {
+                    radios.forEach(function (r) {
+                        // click() also runs the page's own "enable the details box" handler
+                        if (r.value === value && !r.checked) r.click();
+                    });
+                    return;
+                }
+                var field = form.querySelector('[name="' + key + '"]');
+                if (field) field.value = value;
+            });
         }
 
         document.getElementById("openAppointment").onclick = openAppointmentModal;

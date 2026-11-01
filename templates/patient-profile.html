@@ -186,7 +186,7 @@
             <div class="profile-card">
 
             <div class="profile-left">
-                <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User">
+                <img src="{% if user.get('profile_pic') %}{{ user.get('profile_pic') }}{% else %}https://ui-avatars.com/api/?name={{ name }}&background=eeb455&color=fff&size=200{% endif %}" class="main-avatar" id="profileAvatar" alt="User" referrerpolicy="no-referrer">
                 <label for="profilePicInput" class="btn-edit-trigger" style="margin-top: 10px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem; cursor: pointer;">UPDATE AVATAR</label>
                 <input type="file" id="profilePicInput" accept="image/png, image/jpeg, image/gif" style="display: none;">
                 <button onclick="openUpdateModal()" class="btn-edit-trigger" style="margin-top: 8px; display: block; margin-left: auto; margin-right: auto; width: 140px; padding: 8px 0; font-size: 0.75rem;">UPDATE PROFILE</button>
@@ -202,8 +202,18 @@
                         </div>
 
                         <div class="info-item">
+                            <label>Middle Name</label>
+                            <p>{{ user.get('middlename') or 'Not set' }}</p>
+                        </div>
+
+                        <div class="info-item">
                             <label>Last Name</label>
                             <p>{{ user.get('lastname', 'Not set') }}</p>
+                        </div>
+
+                        <div class="info-item">
+                            <label>Sex</label>
+                            <p>{{ user.get('sex') or 'Not set' }}</p>
                         </div>
 
                         <div class="info-item">
@@ -224,6 +234,11 @@
                         <div class="info-item">
                             <label>Birthday</label>
                             <p>{% if user.get('birthday') %}{{ user.get('birthday') }}{% else %}Not set{% endif %}</p>
+                        </div>
+
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>Civil Status</label>
+                            <p>{{ user.get('civil_status') or 'Not set' }}</p>
                         </div>
                     </div>
 
@@ -1415,10 +1430,11 @@
         modal.style.display = "none";
     }
 
-    /* Carries the patient's last booking details into the form.
-       Service, urgency level, the appointment date & time and the
-       medical history answers are intentionally NOT filled -- those
-       must be chosen fresh for every visit. */
+    /* Carries the patient's last booking into the form: personal
+       details, service, urgency level and medical history. When the
+       form is opened from a dentist's suggestion, the suggestion's own
+       service, urgency, dentist and date/time are applied afterwards
+       and win over these. */
     function prefillAppointmentForm(info) {
         if (!info) return;
 
@@ -1464,6 +1480,53 @@
         setSelect("admReligion", info.Religion);
         setSelect("admOccupation", info.Occupation);
         setSelect("admCivilStatus", info.CivilStatus);
+
+        prefillVisitDetails(info, pdSyncMedHistory);
+    }
+
+    /* Carries the rest of the last booking over: service, urgency level and
+       the medical history answers. The date and time are still picked for
+       every visit, and the patient still signs before confirming. */
+    function prefillVisitDetails(info, syncFn) {
+        if (!info) return;
+        var form = document.getElementById('appointmentForm');
+        if (!form) return;
+
+        function setNamedSelect(name, value) {
+            var el = form.querySelector('[name="' + name + '"]');
+            if (!el || !value) return;
+            var has = Array.prototype.some.call(el.options, function (o) { return o.value === value; });
+            if (has) {
+                el.value = value;
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        setNamedSelect('Service', info.Service);
+        setNamedSelect('Urgency_Level', info.UrgencyLevel);
+
+        var history = info.MedicalHistory || {};
+        var keys = Object.keys(history).filter(function (k) { return history[k]; });
+        if (!keys.length) return;
+
+        // Switch the medical history block on, then answer it.
+        var toggle = document.getElementById('admMedHistoryToggle');
+        if (toggle && !toggle.checked) {
+            toggle.checked = true;
+            if (typeof syncFn === 'function') syncFn();
+        }
+        keys.forEach(function (key) {
+            var value = String(history[key]);
+            var radios = form.querySelectorAll('input[type="radio"][name="' + key + '"]');
+            if (radios.length) {
+                radios.forEach(function (r) {
+                    // click() also runs the page's own "enable the details box" handler
+                    if (r.value === value && !r.checked) r.click();
+                });
+                return;
+            }
+            var field = form.querySelector('[name="' + key + '"]');
+            if (field) field.value = value;
+        });
     }
 
     /* ---- Open the booking form for a suggestion ----
@@ -1490,26 +1553,39 @@
            so a first-ever booking would still start with
            the questions on. */
         pdSetMedHistoryInitial(true);
-        fetch("/previous_booking_info")
-            .then(function (res) { return res.json(); })
-            .then(function (data) {
-                pdSetMedHistoryInitial(!!(data && data.has_previous));
-            })
-            .catch(function () { /* keep the switched-off default */ });
 
         if (payload.fillPrevious) {
+            // One ordered chain: set the medical history switch first, then
+            // fill everything (which may switch it on and answer it), then
+            // apply the suggestion's own details on top.
             fetch("/previous_booking_info")
                 .then(function (res) { return res.json(); })
                 .then(function (data) {
+                    pdSetMedHistoryInitial(!!(data && data.has_previous));
                     if (data && data.has_previous && data.info) {
                         prefillAppointmentForm(data.info);
+                        // Apply once more after the modal has opened, so a late
+                        // reset cannot wipe the carried-over details.
+                        window.setTimeout(function () {
+                            prefillAppointmentForm(data.info);
+                            pdApplySuggestionDetails(item, mode);
+                        }, 0);
+                    } else {
+                        showToast("We could not find your previous details. Please fill in the form.", "warning");
                     }
                     pdApplySuggestionDetails(item, mode);
                 })
                 .catch(function () {
+                    showToast("Could not load your previous details. Please fill in the form.", "warning");
                     pdApplySuggestionDetails(item, mode);
                 });
         } else {
+            fetch("/previous_booking_info")
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    pdSetMedHistoryInitial(!!(data && data.has_previous));
+                })
+                .catch(function () { /* keep the switched-off default */ });
             pdApplySuggestionDetails(item, mode);
         }
 
@@ -1758,6 +1834,13 @@
         ['religion', 'ptDetReligion', 60],
         ['occupation', 'ptDetOccupation', 80]
     ];
+    /* Same choices as the Religion / Occupation dropdowns on the appointment form (index.html) */
+    var PT_DET_OPTIONS = {
+        religion: ['Roman Catholic', 'Christian', 'Islam', 'Iglesia ni Cristo', 'Baptist',
+                   'Methodist', 'Born Again Christian', 'Other'],
+        occupation: ['Student', 'Employee', 'Self-Employed', 'Teacher', 'Nurse', 'Doctor',
+                     'Business Owner', 'Housewife', 'Retired', 'Other']
+    };
     var ptDetOriginal = {};
     var ptDetEditing = false;
 
@@ -1778,12 +1861,40 @@
             var shown = el.textContent.trim();
             var value = shown === '-' ? '' : shown;
             ptDetOriginal[f[0]] = value;
-            var input = document.createElement('input');
-            input.type = 'text';
+            var input;
+            var choices = PT_DET_OPTIONS[f[0]];
+            if (choices) {
+                /* Dropdown - same choices as the appointment form */
+                input = document.createElement('select');
+                var blank = document.createElement('option');
+                blank.value = '';
+                blank.textContent = 'Select ' + f[0];
+                input.appendChild(blank);
+                var matched = '';
+                choices.forEach(function (c) {
+                    var opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    input.appendChild(opt);
+                    if (value && c.toLowerCase() === value.toLowerCase()) matched = c;
+                });
+                if (value && !matched) {
+                    /* keep an older free-typed value so it is not lost */
+                    var extra = document.createElement('option');
+                    extra.value = value;
+                    extra.textContent = value;
+                    input.appendChild(extra);
+                    matched = value;
+                }
+                input.value = matched;
+            } else {
+                input = document.createElement('input');
+                input.type = 'text';
+                input.maxLength = f[2];
+                input.value = value;
+            }
             input.className = 'pt-det-input';
             input.id = f[1] + 'Input';
-            input.maxLength = f[2];
-            input.value = value;
             input.setAttribute('aria-label', f[0]);
             el.textContent = '';
             el.appendChild(input);
@@ -2428,6 +2539,10 @@ function closeChartView() {
         .pt-det-btn .material-symbols-rounded { font-size: 16px; }
         .pt-det-input { width: 100%; box-sizing: border-box; padding: 8px 10px; margin-top: 4px; border-radius: 8px; border: 1px solid rgba(128,128,128,.5); background: transparent; color: inherit; font: inherit; font-weight: 600; }
         .pt-det-input:focus { outline: 2px solid rgba(13,71,161,.4); border-color: #0d47a1; }
+        select.pt-det-input { cursor: pointer; }
+        #updateModal .info-item select { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(128,128,128,.4); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+        #updateModal .info-item select option { color: #111; background: #fff; }
+        select.pt-det-input option { color: #111; background: #fff; }
         .pt-det-hint { margin: 8px 0 0; font-size: 12px; color: var(--text-secondary); }
         body.dark-mode .pt-det-btn { color: #64b5f6; border-color: rgba(100,181,246,.45); }
         body.dark-mode .pt-det-btn--primary { background: #1565c0; color: #fff; }
@@ -2886,11 +3001,30 @@ async function payGCash(amount, procedure) {
     </div>
 
     <div class="info-item">
+        <label>Middle Name</label>
+        <input type="text"
+                name="new_middlename"
+                maxlength="60"
+                value="{{ user.get('middlename', '') }}"
+                placeholder="Enter your middle name">
+    </div>
+
+    <div class="info-item">
         <label>Last Name</label>
         <input type="text"
                 name="new_lastname"
                 value="{% if user.get('provider') == 'google' %}{% set name_parts = user.get('name', '').split() %}{% if name_parts|length > 1 %}{{ name_parts[1:]|join(' ') }}{% endif %}{% else %}{{ user.get('lastname', '') }}{% endif %}"
                 placeholder="Enter your last name">
+    </div>
+
+    <div class="info-item">
+        <label>Sex</label>
+        {% set _sex = (user.get('sex') or '')|lower %}
+        <select name="new_sex">
+            <option value="">Select sex</option>
+            <option value="Male" {% if _sex == 'male' %}selected{% endif %}>Male</option>
+            <option value="Female" {% if _sex == 'female' %}selected{% endif %}>Female</option>
+        </select>
     </div>
 
     <div class="info-item">
@@ -2916,6 +3050,17 @@ async function payGCash(amount, procedure) {
                 value="{% if user.get('age') is not none %}{{ user.get('age') }}{% endif %}"
                 placeholder="Set from birthday"
                 readonly>
+    </div>
+
+    <div class="info-item">
+        <label>Civil Status</label>
+        {% set _civil = (user.get('civil_status') or '')|lower %}
+        <select name="new_civil_status">
+            <option value="">Select civil status</option>
+            {% for cs in ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'] %}
+            <option value="{{ cs }}" {% if _civil == cs|lower %}selected{% endif %}>{{ cs }}</option>
+            {% endfor %}
+        </select>
     </div>
 
     <div class="modal-actions">

@@ -1216,11 +1216,12 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         for the "fill in my previous info" prompt on the patient
         side's Book Appointment button.
 
-        Only identity / contact fields are returned. Service,
-        urgency level, the appointment date & time and the medical
-        history answers are deliberately left out: they change from
-        visit to visit, so the patient must choose them fresh every
-        time they book.
+        Identity / contact fields plus the service and urgency level
+        of that booking are returned, so "use my previous details"
+        can fill the form completely. The medical history answers
+        are added by previous_booking_info(). The appointment date
+        and time are never carried over: the patient picks those
+        for every visit.
         """
         if not uid:
             return None
@@ -1254,11 +1255,37 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             except Exception as e:
                 print("PREVIOUS BOOKING LOOKUP ERROR:", e)
 
+        # Saving a treatment record deletes the accepted booking it came
+        # from, so a patient who has been treated may have no booking
+        # documents left at all. Their saved account details then stand
+        # in for the "last booking" (only for patients with history: a
+        # first-time patient still gets no prompt).
+        account = {}
+        try:
+            account_snap = account_ref.get()
+            if account_snap.exists:
+                account = account_snap.to_dict() or {}
+        except Exception as e:
+            print("PREVIOUS BOOKING ACCOUNT ERROR:", e)
+
         if not candidates:
-            return None
+            # Treated patients count as having history even when the
+            # has_history flag was never set on the account.
+            has_history = bool(account.get("has_history"))
+            if not has_history:
+                try:
+                    has_history = any(
+                        True for _ in account_ref.collection("Done_procedure").limit(1).stream()
+                    )
+                except Exception as e:
+                    print("PREVIOUS BOOKING HISTORY CHECK ERROR:", e)
+            print("PREVIOUS BOOKING: no booking documents for", uid,
+                  "- using the saved account details" if has_history else "- nothing to fill in")
+            if not has_history:
+                return None
 
         candidates.sort(key=lambda item: item[0], reverse=True)
-        data = candidates[0][1]
+        data = candidates[0][1] if candidates else {}
 
         def clean(key):
             return str(data.get(key) or "").strip()
@@ -1296,16 +1323,69 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             "Religion": clean("Religion"),
             "Occupation": clean("Occupation"),
             "CivilStatus": clean("CivilStatus"),
+            "Service": clean("Service"),
+            "UrgencyLevel": clean("UrgencyLevel"),
             # Only accepted appointments carry the dentist the admin
             # assigned; pending requests have none yet.
             "DentistName": clean("DentistName"),
         }
+
+        self._fill_booking_info_from_account(uid, account, info)
 
         # A record without any name is not usable as "previous info".
         if not (info["FirstName"] or info["LastName"]):
             return None
 
         return info
+
+    def _fill_booking_info_from_account(self, uid, account, info):
+        """
+        Complete the "previous booking" details from what is saved about
+        the patient: the account, the linked Patients record and the
+        profile details (which include anything the patient edited on
+        their profile, and win over old bookings).
+        """
+        details = self._patient_details_for(uid)
+        for key, saved in (
+            ("Address", details.get("address")),
+            ("Nationality", details.get("nationality")),
+            ("Religion", details.get("religion")),
+            ("Occupation", details.get("occupation")),
+        ):
+            if saved:
+                info[key] = saved
+
+        patient = {}
+        if not (info.get("FirstName") and info.get("LastName") and info.get("MiddleName") and info.get("Birthday")):
+            try:
+                linked = self.db.collection(self.Doc_Patients).where(
+                    filter=FieldFilter("account_uid", "==", uid)
+                ).limit(1).get()
+                if linked:
+                    patient = linked[0].to_dict() or {}
+            except Exception as e:
+                print("PREVIOUS BOOKING PATIENT LOOKUP ERROR:", e)
+
+        def fill(key, *values):
+            if info.get(key):
+                return
+            for value in values:
+                value = str(value or "").strip()
+                if value:
+                    info[key] = value
+                    return
+
+        fill("FirstName", account.get("firstname"), patient.get("first_name"))
+        fill("MiddleName", patient.get("middle_name"))
+        fill("LastName", account.get("lastname"), patient.get("last_name"))
+        fill("Birthday", account.get("birthday"), patient.get("birthday"))
+        fill("ContactNumber", account.get("contact_number"))
+        fill("Sex", account.get("last_sex"))
+        fill("CivilStatus", account.get("CivilStatus"))
+        if not info.get("Age") and info.get("Birthday"):
+            age, _birth_year = self.compute_age_and_birth_year(info["Birthday"])
+            if age is not None:
+                info["Age"] = str(age)
 
     def is_slot_blocked(self, appointment_date, for_patient=False):
         """
@@ -4055,6 +4135,20 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 )
             )
 
+            # Default avatar = the picture on their Google account. A picture
+            # the patient uploaded themselves (a /static path) is never
+            # replaced; a Google one is refreshed on login because Google
+            # can change its URL. Patients can still change it any time with
+            # UPDATE AVATAR on their profile.
+            google_picture = str(google_account.get("picture") or "").strip()
+            current_pic = str(existing_data.get("profile_pic") or "").strip()
+            if google_picture.startswith("https://") and (
+                not current_pic or "googleusercontent.com" in current_pic
+            ):
+                update_data["profile_pic"] = re.sub(
+                    r"=s\d+-c$", "=s256-c", google_picture
+                )
+
             # Only set created_at on the very first login for this account
             if not existing_doc.exists or not existing_data.get("created_at"):
                 update_data["created_at"] = datetime.now(UTC).isoformat()
@@ -4250,6 +4344,20 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         try:
             info = self.get_previous_booking_info(uid)
+            if info is not None:
+                # The latest medical history answers (non-empty ones only),
+                # so the form can fill those in too.
+                try:
+                    summary = self._latest_appointment_summary(uid) or {}
+                    history = summary.get("medical_history") or {}
+                    info["MedicalHistory"] = {
+                        key: str(history.get(key))
+                        for key in self.MEDICAL_HISTORY_KEYS
+                        if history.get(key)
+                    }
+                except Exception as e:
+                    print("PREVIOUS BOOKING MEDICAL HISTORY ERROR:", e)
+                    info["MedicalHistory"] = {}
             return jsonify({
                 "success": True,
                 "has_previous": info is not None,
@@ -5969,6 +6077,41 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             }), 500
 
 
+    def _profile_middle_name(self, account_uid, account_data):
+        """Middle name for the patient profile: the account's own value
+        first, then the linked Patients record, then the newest appointment
+        that carries one."""
+        mid = str((account_data or {}).get("middlename") or "").strip()
+        if mid or not account_uid:
+            return mid
+
+        try:
+            linked = self.db.collection(self.Doc_Patients).where(
+                filter=FieldFilter("account_uid", "==", account_uid)
+            ).limit(1).get()
+            if linked:
+                mid = str((linked[0].to_dict() or {}).get("middle_name") or "").strip()
+        except Exception as e:
+            print("PROFILE MIDDLE NAME PATIENT LOOKUP ERROR:", e)
+        if mid:
+            return mid
+
+        docs = []
+        account_ref = self.db.collection(self.Customer_Account).document(account_uid)
+        for sub in (self.Appointment_cliets, "Approve"):
+            try:
+                for doc in account_ref.collection(sub).limit(10).stream():
+                    d = doc.to_dict() or {}
+                    docs.append((str(d.get("appointment_date") or ""), d))
+            except Exception as e:
+                print("PROFILE MIDDLE NAME APPOINTMENT LOOKUP ERROR:", e)
+        docs.sort(key=lambda item: item[0], reverse=True)
+        for _date, d in docs:
+            found = str(d.get("MiddleName") or "").strip()
+            if found:
+                return found
+        return ""
+
     def p_profile(self):
         if not session.get('uid'):
             return redirect(url_for("index"))
@@ -6008,6 +6151,22 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                         print("PROFILE BIRTHDAY LOOKUP ERROR:", e)
                 user_data["birthday"] = birthday
                 user_data["age"], _by = self.compute_age_and_birth_year(birthday)
+
+                # Middle name / sex / civil status for the profile card. They
+                # come from the account when the patient or admin has set
+                # them, otherwise from the patient's own appointments.
+                try:
+                    _contact, _sex, _civil = self._resolve_account_identity(
+                        user_data.get("id", ""), user_data
+                    )
+                except Exception as e:
+                    print("PROFILE IDENTITY LOOKUP ERROR:", e)
+                    _sex, _civil = "", ""
+                user_data["sex"] = _sex
+                user_data["civil_status"] = _civil
+                user_data["middlename"] = self._profile_middle_name(
+                    user_data.get("id", ""), user_data
+                )
         
         return render_template("patient-profile.html", name=name, user=user_data)
     
@@ -8427,6 +8586,25 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             new_phone = request.form.get("new_phone", "").strip()
             new_birthday = request.form.get("new_birthday", "").strip()
 
+            # Optional middle name / sex / civil status. Only touched when the
+            # form actually sent them, so an older page can never wipe them.
+            middle_sent = "new_middlename" in request.form
+            new_middlename = " ".join(bleach.clean(
+                request.form.get("new_middlename", "")
+            ).split())[:60]
+            sex_sent = "new_sex" in request.form
+            new_sex = bleach.clean(request.form.get("new_sex", "").strip())
+            civil_sent = "new_civil_status" in request.form
+            new_civil_status = bleach.clean(
+                request.form.get("new_civil_status", "").strip()
+            )
+
+            if new_sex not in ("", "Male", "Female") or new_civil_status not in (
+                "", "Single", "Married", "Widowed", "Separated", "Divorced"
+            ):
+                flash("Please choose a valid sex and civil status.", "error")
+                return redirect(request.referrer)
+
             if not uid:
                 flash("Unable to identify your account.", "error")
                 return redirect(url_for("index"))
@@ -8494,6 +8672,33 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                     account_update["birthday"] = new_birthday
                 account_doc.reference.update(account_update)
                 session["name"] = f"{new_firstname} {new_lastname}".strip()
+
+            # Same field names the admin's Edit Patient writes, so My Patients
+            # and the appointment forms read the patient's edits.
+            identity_update = {}
+            if middle_sent:
+                identity_update["middlename"] = new_middlename
+            if sex_sent:
+                identity_update["last_sex"] = new_sex
+            if civil_sent:
+                identity_update["CivilStatus"] = new_civil_status
+            if identity_update:
+                account_doc.reference.update(identity_update)
+                if middle_sent:
+                    try:
+                        linked = self.db.collection(self.Doc_Patients).where(
+                            filter=FieldFilter("account_uid", "==", account_doc.id)
+                        ).limit(1).get()
+                        if linked:
+                            linked[0].reference.update({
+                                "middle_name": new_middlename,
+                                "middle_name_normalized":
+                                    self.normalize_patient_name(new_middlename),
+                            })
+                            self._invalidate_patients_cache()
+                    except Exception as e:
+                        print("UPDATE PROFILE MIDDLE NAME SYNC ERROR:", e)
+                self._invalidate_accounts_cache()
 
             # Keep the clinic's Patients record in step with the new birthday
             # so name + birthday matching never sees two different dates.

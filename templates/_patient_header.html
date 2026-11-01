@@ -106,7 +106,7 @@
                 </div>
 
                 <div class="profile-img-container" id="profileDropdownTrigger">
-                    <img src="{% if user is defined and user.get('profile_pic') %}{{ user.get('profile_pic') }}{% elif profile_pic %}{{ profile_pic }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img" id="navProfilePic">
+                    <img src="{% if user is defined and user.get('profile_pic') %}{{ user.get('profile_pic') }}{% elif profile_pic %}{{ profile_pic }}{% else %}https://ui-avatars.com/api/?name={{ name }}{% endif %}" alt="Profile" class="profile-img" id="navProfilePic" referrerpolicy="no-referrer">
                     
                     <div class="dropdown-menu" id="profileDropdown">
                         <div class="dropdown-menu__head">

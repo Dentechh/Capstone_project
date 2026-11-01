@@ -242,6 +242,10 @@ body.dark-mode,body.dark,[data-theme="dark"]{
   box-shadow:0 4px 10px rgba(13,71,161,.25);transition:transform .2s;
 }
 .cm-conv:hover .cm-av{transform:scale(1.06)}
+/* Patient profile picture inside the round avatar (initials stay as the fallback) */
+.cm-av{position:relative;overflow:hidden}
+.cm-av img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.cm-av.has-pic .cm-av-ini{visibility:hidden}
 .cm-conv .cm-meta{min-width:0;flex:1}
 .cm-conv .cm-top{display:flex;justify-content:space-between;gap:6px;align-items:center}
 .cm-conv .cm-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cm-text)}

@@ -28,6 +28,39 @@
 
   function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
   function initials(n) { return (n || '?').split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase(); }
+
+  // ---- Patient profile pictures (falls back to initials when there is none) ----
+  var pics = {}, picAsked = {};
+  function avInner(uid, name) {
+    var url = pics[uid];
+    return url ? '<img src="' + esc(url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove(\'has-pic\');this.remove()">' + '<span class="cm-av-ini">' + esc(initials(name)) + '</span>'
+               : esc(initials(name));
+  }
+  function avHtml(uid, name) {
+    return '<div class="cm-av' + (pics[uid] ? ' has-pic' : '') + '" data-av="' + esc(uid) + '">' + avInner(uid, name) + '</div>';
+  }
+  function paintAvatars(uid) {
+    var name = (convs[uid] && convs[uid].name) || '';
+    root.querySelectorAll('.cm-av[data-av]').forEach(function (el) {
+      if (el.getAttribute('data-av') !== uid) return;
+      if (!name) name = el.textContent.trim();
+      el.classList.toggle('has-pic', !!pics[uid]);
+      el.innerHTML = avInner(uid, name);
+    });
+  }
+  function fetchPics(uids) {
+    uids.forEach(function (uid) {
+      if (!uid || picAsked[uid]) return;
+      picAsked[uid] = true;
+      fetch('/admin/patient_avatar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken()},
+        body: JSON.stringify({uid: uid})
+      }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+        if (d && d.profile_pic) { pics[uid] = d.profile_pic; paintAvatars(uid); }
+      }).catch(function () { picAsked[uid] = false; });
+    });
+  }
   function short(iso) {
     if (!iso) return ''; var d = new Date(iso), n = new Date();
     return d.toDateString() === n.toDateString() ? d.toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})
@@ -83,11 +116,12 @@
       .sort(function (a, b) { return a.last_message_at < b.last_message_at ? 1 : -1; });
     listEl.innerHTML = items.length ? items.map(function (c) {
       return '<div class="cm-conv' + (c.uid === active ? ' active' : '') + (c.unread ? ' unread' : '') + '" data-uid="' + esc(c.uid) + '">' +
-        '<div class="cm-av">' + esc(initials(c.name)) + '</div><div class="cm-meta"><div class="cm-top"><span class="cm-name">' + esc(c.name) +
+        avHtml(c.uid, c.name) + '<div class="cm-meta"><div class="cm-top"><span class="cm-name">' + esc(c.name) +
         '</span><span class="cm-when">' + short(c.last_message_at) + '</span></div><div class="cm-prev">' +
         (c.last_sender === 'admin' ? 'You: ' : '') + esc(c.last_message) + '</div></div>' +
         (c.unread ? '<div class="cm-dot" title="Mark as read">' + (c.unread > 99 ? '99+' : c.unread) + '</div>' : '') + '</div>';
     }).join('') : '<div class="cm-empty">No conversations yet</div>';
+    fetchPics(items.map(function (c) { return c.uid; }));
   }
 
   function loadList() {
@@ -96,6 +130,7 @@
       d.conversations.forEach(function (c) {
         if (c.uid === active) c.unread = 0;       // thread is open, so it's being read
         convs[c.uid] = c;
+        if (c.profile_pic) pics[c.uid] = c.profile_pic;
         if (c.last_message_at > listSince) listSince = c.last_message_at;
       });
       renderList();
@@ -136,7 +171,7 @@
     var c = convs[uid] || {name: (extra && extra.name) || 'Patient'}; c.unread = 0;
     wrap.classList.add('chat-open'); renderList();
     pane.innerHTML =
-      '<div class="cm-head"><button class="cm-back" aria-label="Back"><span class="material-symbols-rounded" aria-hidden="true">arrow_back</span></button><div class="cm-av">' + esc(initials(c.name)) + '</div><div><b>' + esc(c.name) + '</b><small class="cm-sub">Patient</small></div>' +
+      '<div class="cm-head"><button class="cm-back" aria-label="Back"><span class="material-symbols-rounded" aria-hidden="true">arrow_back</span></button>' + avHtml(uid, c.name) + '<div><b>' + esc(c.name) + '</b><small class="cm-sub">Patient</small></div>' +
       '<div class="cm-tools">' +
       '<button class="cm-del cm-unread" type="button" title="Mark as unread" aria-label="Mark as unread"><span class="material-symbols-rounded" aria-hidden="true">mark_email_unread</span></button>' +
       '<button class="cm-del cm-blk" type="button" title="Block account" aria-label="Block account" hidden><span class="material-symbols-rounded" aria-hidden="true">block</span></button>' +
@@ -313,9 +348,10 @@
       if (!d || !d.patients) { pickRes.innerHTML = '<div class="cm-empty">Could not load patients</div>'; return; }
       pickRes.innerHTML = d.patients.length ? d.patients.map(function (p) {
         return '<div class="cm-conv" data-uid="' + esc(p.uid) + '" data-name="' + esc(p.name) + '">' +
-          '<div class="cm-av">' + esc(initials(p.name)) + '</div><div class="cm-meta"><div class="cm-name">' + esc(p.name) +
+          avHtml(p.uid, p.name) + '<div class="cm-meta"><div class="cm-name">' + esc(p.name) +
           '</div><div class="cm-prev">' + esc(p.email) + '</div></div></div>';
       }).join('') : '<div class="cm-empty">No matching patients</div>';
+      fetchPics(d.patients.map(function (p) { return p.uid; }));
     });
   }
   root.querySelector('.cm-new').addEventListener('click', function () {
