@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var HEARTBEAT_INTERVAL_MS = 15000; // 15 seconds
+    var HEARTBEAT_INTERVAL_MS = 10000; // 10 seconds
     var heartbeatTimer = null;
 
     // True once the server has accepted a heartbeat on this page, i.e. the
@@ -13,6 +13,7 @@
         fetch('/api/heartbeat', {
             method: 'POST',
             credentials: 'same-origin',
+            keepalive: true,
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
@@ -21,10 +22,7 @@
             if (res.ok) {
                 wasSignedIn = true;
             } else if (res.status === 401) {
-                // Signed out or login removed: stop pinging.
                 stopHeartbeat();
-                // Was signed in a moment ago, so the clinic removed the login
-                // (or the session ended). Send them home right away.
                 if (wasSignedIn) {
                     window.location.replace('/');
                 }
@@ -47,20 +45,29 @@
         }
     }
 
-    // Start heartbeat when the page loads if user is logged in
-    // We detect this by checking for a session cookie or a data attribute
-    document.addEventListener('DOMContentLoaded', function () {
-        // Check if there's a user session by looking for common indicators
-        // The session cookie is HttpOnly so we can't read it directly, but we can
-        // check for elements that only exist when logged in, or try the heartbeat
-        // and it will fail with 401 if not logged in (which is fine).
-        startHeartbeat();
+    // Tell the server right away when the tab/page is closed, so the admin
+    // sees Offline immediately instead of waiting for the window to expire.
+    // If the person is just navigating to another page, the next page's
+    // heartbeat flips them straight back to Online.
+    function sayGoodbye() {
+        if (!wasSignedIn || !navigator.sendBeacon) return;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (!meta || !meta.content) return;
+        var fd = new FormData();
+        fd.append('csrf_token', meta.content);
+        navigator.sendBeacon('/api/offline', fd);
+    }
+
+    document.addEventListener('DOMContentLoaded', startHeartbeat);
+
+    // Browsers slow timers in background tabs. Ping the moment the tab is
+    // visible again so the status is correct immediately.
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && heartbeatTimer) sendHeartbeat();
     });
 
-    // Stop heartbeat on page unload
-    window.addEventListener('beforeunload', stopHeartbeat);
+    window.addEventListener('pagehide', sayGoodbye);
 
-    // Expose for manual control if needed
     window.Heartbeat = {
         start: startHeartbeat,
         stop: stopHeartbeat

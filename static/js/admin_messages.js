@@ -54,7 +54,7 @@
       picAsked[uid] = true;
       fetch('/admin/patient_avatar', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken()},
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrfToken(), 'X-Background': '1'},
         body: JSON.stringify({uid: uid})
       }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
         if (d && d.profile_pic) { pics[uid] = d.profile_pic; paintAvatars(uid); }

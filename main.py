@@ -329,6 +329,10 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         # then dentist, then admin.
         self.DEVELOPER_EMAILS = {e.strip().lower() for e in os.getenv("DEVELOPER_EMAILS", "").split(",") if e.strip()}
         self.DENTIST_EMAILS = {e.strip().lower() for e in os.getenv("DENTIST_EMAILS", "").split(",") if e.strip()}
+        print(
+            f"Staff sign-in emails loaded: admin={len(self.ADMIN_EMAILS)}, "
+            f"developer={len(self.DEVELOPER_EMAILS)}, dentist={len(self.DENTIST_EMAILS)}"
+        )
 
         # In-memory cache to cut Firestore reads on hot admin endpoints.
         # See cache_store.py for how it works and its single-process caveat.
@@ -679,7 +683,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             if updates:
                 account_ref.update(updates)
                 print(f"[WRITES] account {getattr(account_ref, 'id', '?')}: filled blank "
-                      f"{', '.join(sorted(updates))}")
+                        f"{', '.join(sorted(updates))}")
             return updates
         except Exception as e:
             print("IDENTITY FILL FAILED:", e)
@@ -884,7 +888,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             return raw
 
         months = ["January", "February", "March", "April", "May", "June",
-                  "July", "August", "September", "October", "November", "December"]
+                    "July", "August", "September", "October", "November", "December"]
         month_index = int(match.group(2)) - 1
         if month_index < 0 or month_index >= len(months):
             return raw
@@ -926,7 +930,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             return raw
 
         months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
         month_index = int(match.group(2)) - 1
         if month_index < 0 or month_index >= len(months):
             return raw
@@ -960,10 +964,10 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         normalized = " ".join(raw.lower().split())
 
         if normalized in ("dr. capizonda", "dr capizonda", "capizonda",
-                          "dr. julix dionne capizonda",
-                          "dr julix dionne capizonda",
-                          "julix dionne capizonda"):
-            return "Dr. Julix Dionne Capizonda"
+                        "dr. julix dionne capizonda",
+                        "dr julix dionne capizonda",
+                        "julix dionne capizonda"):
+                return "Dr. Julix Dionne Capizonda"
 
         return raw
 
@@ -991,9 +995,9 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         # Known spellings of the same practitioner -> one key.
         if normalized in ("dr. capizonda", "dr capizonda", "capizonda",
-                          "dr. julix dionne capizonda",
-                          "dr julix dionne capizonda",
-                          "julix dionne capizonda"):
+                        "dr. julix dionne capizonda",
+                        "dr julix dionne capizonda",
+                        "julix dionne capizonda"):
             return "capizonda"
 
         # Anything else: drop the honorific so "Dr. Smith" and "Smith" agree.
@@ -2585,35 +2589,142 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
         self.pay_mongo_public_key = os.getenv("PAYMONGO_PUBLIC_KEY", "")
         self.PAYMONGO_WEBHOOK_SECRET = os.getenv("PAYMONGO_WEBHOOK_SECRET", "")
 
+    # Staff (admin / developer / dentist) sessions end after this much real
+    # inactivity. Background polling (message badge, counters) does not count.
+    ADMIN_IDLE_LIMIT = timedelta(hours=1)
+
+    # Small script added to every signed-in admin page. It tells the server when
+    # the person is actually using the page (mouse, keyboard, touch, scroll) and
+    # signs them out after an hour with none, even if the page is left open.
+    ADMIN_IDLE_JS = r"""(function(){
+var LIMIT=3600000,PING=60000,KEY='adminLastInput',last=Date.now(),lastPing=0,lastMark=0;
+function csrf(){var m=document.querySelector('meta[name="csrf-token"]');return m?m.content:'';}
+function shared(){try{return Number(localStorage.getItem(KEY))||0;}catch(e){return 0;}}
+function out(){location.replace('/logoutadmin?reason=idle');}
+function ping(){
+lastPing=Date.now();
+fetch('/admin/keepalive',{method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':csrf(),'X-Admin-Activity':'1','X-Requested-With':'fetch'}})
+.then(function(r){if(r.status===401)out();}).catch(function(){});
+}
+function mark(){
+var now=Date.now();
+if(now-lastMark<1000)return;
+lastMark=now;last=now;
+try{localStorage.setItem(KEY,String(now));}catch(e){}
+if(now-lastPing>PING)ping();
+}
+function check(){if(Date.now()-Math.max(last,shared())>=LIMIT)out();}
+['mousemove','mousedown','keydown','wheel','touchstart','scroll'].forEach(function(t){window.addEventListener(t,mark,{passive:true,capture:true});});
+setInterval(check,15000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});
+})();"""
+
+    # Shown for a moment on sign-out. It tells Google not to silently sign the
+    # same account straight back in, so the next visit needs a real login.
+    ADMIN_LOGOUT_PAGE = """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing out</title>
+<style>html,body{height:100%;margin:0}body{display:grid;place-items:center;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#eef4ff;color:#0d47a1;font-weight:600}</style>
+<noscript><meta http-equiv="refresh" content="0;url={{ login_url }}"></noscript>
+</head><body><p>Signing you out...</p>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script>
+(function(){var u={{ login_url|tojson }},d=false;
+function go(){if(d)return;d=true;location.replace(u);}
+window.addEventListener('load',function(){try{google.accounts.id.disableAutoSelect();}catch(e){}setTimeout(go,150);});
+setTimeout(go,3000);})();
+</script></body></html>"""
+
+    def _revoke_admin_sid(self, sid):
+        """Remember a signed-out staff session so its cookie cannot be reused."""
+        if not sid:
+            return
+        now = datetime.now(UTC)
+        self._revoked_admin_sids[sid] = now
+        cutoff = now - timedelta(hours=3)
+        for k in [k for k, t in self._revoked_admin_sids.items() if t < cutoff]:
+            self._revoked_admin_sids.pop(k, None)
+
+    def _is_admin_activity(self):
+        """True when this request means the person is really using the panel."""
+        h = request.headers
+        if h.get("X-Background"):
+            return False
+        if h.get("X-Admin-Activity"):
+            return True
+        if request.method != "GET":
+            return True
+        if h.get("X-Requested-With"):
+            return False
+        return "text/html" in h.get("Accept", "")
+
     def _setup_session(self):
+        self._revoked_admin_sids = {}
+
         @self.app.before_request
         def refresh_session():
-            # Skip static files (css, js, images) — no need to touch session
+            # Skip static files (css, js, images) - no need to touch session
             if request.endpoint == 'static':
                 return
 
             session.permanent = True
 
-            # Admin timeout check
-            if session.get('admin_logged_in'):
+            if not session.get('admin_logged_in') or request.path == "/logoutadmin":
+                return
+
+            reason = ""
+            sid = session.get('admin_sid')
+            if sid and sid in self._revoked_admin_sids:
+                reason = "revoked"
+            else:
                 last_activity = session.get('admin_last_activity')
                 if last_activity:
                     try:
                         last_active = datetime.fromisoformat(last_activity)
-                        if datetime.now(UTC) - last_active > timedelta(hours=1):
-                            session.clear()
-                            flash("Admin session expired. Please log in again.", "error")
-                            return redirect(url_for("adminLogin"))
+                        if datetime.now(UTC) - last_active > self.ADMIN_IDLE_LIMIT:
+                            reason = "idle"
                     except (ValueError, TypeError):
-                        session.clear()
-                        return redirect(url_for("adminLogin"))
+                        reason = "revoked"
 
+            if reason:
+                session.clear()
+                if request.path == "/admin_login":
+                    return
+                if request.method == "GET" and "text/html" in request.headers.get("Accept", ""):
+                    return redirect(url_for("logoutadmin", reason=reason))
+                return jsonify({
+                    "success": False,
+                    "expired": True,
+                    "message": "Admin session ended. Please log in again."
+                }), 401
+
+            # Only real use of the panel pushes the timeout back. Background
+            # polling must not, or an idle page would stay signed in forever.
+            if self._is_admin_activity():
                 session['admin_last_activity'] = datetime.now(UTC).isoformat()
-                # No session.modified needed — assigning a value already marks it dirty
 
+        @self.app.after_request
+        def add_admin_idle_script(response):
+            try:
+                if (
+                    request.method == "GET"
+                    and response.status_code == 200
+                    and response.mimetype == "text/html"
+                    and not response.direct_passthrough
+                    and session.get('admin_logged_in')
+                    and request.path.startswith("/admin")
+                    and request.path != "/admin_login"
+                ):
+                    body = response.get_data(as_text=True)
+                    i = body.rfind("</body>")
+                    if i != -1 and "data-admin-idle" not in body:
+                        tag = "<script data-admin-idle>" + self.ADMIN_IDLE_JS + "</script>"
+                        response.set_data(body[:i] + tag + body[i:])
+            except Exception as e:
+                print("ADMIN IDLE SCRIPT skipped:", e)
+            return response
 
-
-    
     def _setup_error_handlers(self):
         @self.app.errorhandler(404)
         def handle_404(e):
@@ -4283,10 +4394,66 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             print("HEARTBEAT ERROR:", e)
             return jsonify({"success": False, "message": "Failed to update presence"}), 500
     
+        ONLINE_THRESHOLD_SECONDS = 30
+
+
+    def go_offline(self):
+        """Called by navigator.sendBeacon when a patient closes the tab."""
+        uid = session.get('uid')
+        if uid:
+            try:
+                self.db.collection(self.Customer_Account).document(uid).update({
+                    "last_logout": datetime.now(UTC).isoformat()
+                })
+            except Exception as e:
+                print("GO OFFLINE ERROR:", e)
+        return "", 204
+
+    def admin_presence(self):
+        """Live list of online account UIDs. Deliberately NOT cached."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            cutoff = (
+                datetime.now(UTC) - timedelta(seconds=self.ONLINE_THRESHOLD_SECONDS)
+            ).isoformat()
+            query = self.db.collection(self.Customer_Account).where(
+                filter=FieldFilter("last_active", ">=", cutoff)
+            )
+            online = []
+            for doc in query.stream():
+                d = doc.to_dict() or {}
+                last_active = str(d.get("last_active") or "")
+                last_logout = str(d.get("last_logout") or "")
+                # Logged out after the last ping -> offline
+                if last_logout and last_logout >= last_active:
+                    continue
+                online.append(doc.id)
+            return jsonify({"success": True, "online": online})
+        except Exception as e:
+            print("ADMIN PRESENCE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong."}), 500
+    
     
     def logoutadmin(self):
+        self._revoke_admin_sid(session.get("admin_sid"))
         session.clear()
-        return redirect(url_for("adminLogin"))
+        reason = request.args.get("reason", "")
+        if reason == "idle":
+            flash("You were signed out after 1 hour of inactivity. Please log in again.", "error")
+        elif reason == "revoked":
+            flash("Your session ended. Please log in again.", "error")
+        else:
+            flash("You have been logged out. Please log in again.", "success")
+        return render_template_string(
+            self.ADMIN_LOGOUT_PAGE, login_url=url_for("adminLogin")
+        )
+
+    def admin_keepalive(self):
+        """Called by the admin pages while the person is actually using them."""
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "expired": True}), 401
+        return jsonify({"success": True})
     
     def link_patient_account(self):
         if not session.get('uid'):
@@ -7099,12 +7266,14 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 return True
             if not dt_str:
                 return False
+            s = str(dt_str).strip()
             try:
-                d = datetime.fromisoformat(str(dt_str).strip().replace("Z", "+00:00")).date()
+                dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+                d = (dt.astimezone(PH_TZ) if dt.tzinfo else dt).date()
             except Exception:
                 # appointment_date stored as "YYYY-MM-DD HH:MM"
                 try:
-                    d = datetime.fromisoformat(str(dt_str).strip()[:10]).date()
+                    d = datetime.fromisoformat(s[:10]).date()
                 except Exception:
                     return False
             return start_date <= d <= end_date
@@ -7125,6 +7294,8 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
 
         try:
             for doc in self.db.collection_group("Approve").stream():
+                if doc.id == "next_visit":
+                    continue  # a suggestion, not an accepted appointment
                 data = doc.to_dict() or {}
                 if period != "overall" and not in_range(data.get("accepted_at") or data.get("appointment_date")):
                     continue
@@ -7174,10 +7345,11 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
             for uid, d in self._get_history_accounts_cached():
                 if not d.get("has_history"):
                     continue
-                if period != "overall" and not in_range(d.get("last_approved_at") or d.get("created_at")):
+                account_uid = str(uid).strip()
+                if period != "overall" and account_uid not in approved_uids \
+                        and account_uid not in procs_by_uid:
                     continue
                 total_patients += 1
-                account_uid = str(uid).strip()
                 fallback = " ".join(
                     str(d.get(k) or "").strip() for k in ("firstname", "middlename", "lastname")
                 ).strip() or "Unnamed Patient"
@@ -8500,6 +8672,12 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 
                 allowed = self.ADMIN_EMAILS | self.DEVELOPER_EMAILS | self.DENTIST_EMAILS
                 if not google_account.get("email_verified") or email.lower() not in allowed:
+                    print(
+                        f"ADMIN LOGIN DENIED: email={email!r} "
+                        f"verified={google_account.get('email_verified')} "
+                        f"in_list={email.lower() in allowed} "
+                        f"staff_emails_loaded={len(allowed)}"
+                    )
                     flash("This account is not authorized.", "error")
                     return redirect(url_for("adminLogin"))
                 
@@ -8520,6 +8698,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
                 session['admin_name'] = name
                 session['admin_uid'] = uid
                 session['admin_role'] = role
+                session['admin_sid'] = uuid.uuid4().hex
                 session['admin_last_activity'] = datetime.now(UTC).isoformat()
                 
                 greeting = {"developer": "Developer", "dentist": "Dr."}.get(role, "Admin")
@@ -13201,6 +13380,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/sign-up", methods=["POST"])(self.sign_up)
         self.app.route("/logout")(self.logout)
         self.app.route("/logoutadmin")(self.logoutadmin)
+        self.app.route("/admin/keepalive", methods=["POST"])(self.admin_keepalive)
         self.app.route("/patient_forms")(self.p_forms)
         self.app.route("/about")(self.about_customer)
         self.app.route("/google_booked_customer", methods=["POST"])(self.google_bookedCustomer)
@@ -13218,6 +13398,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/manageable_accounts_page")(self.admin_manageable_accounts_page)
         self.app.route("/admin/user_management_page")(self.admin_user_management_page)
         self.app.route("/api/heartbeat", methods=["POST"])(self.heartbeat)
+        self.app.route("/api/offline", methods=["POST"])(self.go_offline)
+        self.app.route("/admin/presence")(self.admin_presence)
         self.app.route("/get_patient/<uid>")(self.get_patient)
         self.app.route("/admin_login", methods=["GET", "POST"])(self.adminLogin)
         self.app.route("/services/<service_id>")(self.service_detail)

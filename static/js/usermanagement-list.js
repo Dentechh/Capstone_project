@@ -9,10 +9,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!tbody) return;
 
     const state = { page: 1, pageSize: 30, total: 0, totalPages: 1 };
+    const PRESENCE_INTERVAL_MS = 5000; // check who is online every 5 seconds
 
     function cleanPart(v) {
         const s = (v === null || v === undefined) ? '' : String(v).trim();
         return (s === 'None' || s === 'null' || s === 'undefined') ? '' : s;
+    }
+
+    function statusBadge(isOnline) {
+        return isOnline
+            ? '<span class="status-badge online">Online</span>'
+            : '<span class="status-badge offline">Offline</span>';
     }
 
     function buildRow(a) {
@@ -27,9 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <td data-cell="name">${fullName}${isDisabled ? ' <span class="status-badge blocked">Blocked</span>' : ''}</td>
             <td data-cell="mobile">${a.contact_number || '-'}</td>
             <td>${a.email || '-'}</td>
-            <td data-cell="status">
-                ${isOnline ? '<span class="status-badge online">Online</span>' : '<span class="status-badge offline">Offline</span>'}
-            </td>
+            <td data-cell="status">${statusBadge(isOnline)}</td>
             <td>
                 <div class="mp-actions">
                     <button type="button" class="btn-action block-user-btn" title="${isDisabled ? 'Unblock account' : 'Block account'}" aria-label="${isDisabled ? 'Unblock account' : 'Block account'}"
@@ -46,6 +51,46 @@ document.addEventListener('DOMContentLoaded', function () {
         return tr;
     }
 
+    // ---- Live online/offline status -------------------------------------
+    // The table data comes from a cached list, so Online/Offline is refreshed
+    // separately from a small uncached endpoint.
+    let presenceBusy = false;
+
+    function applyPresence() {
+        if (presenceBusy) return;
+        presenceBusy = true;
+        fetch('/admin/presence', {
+            credentials: 'same-origin',
+            headers: { 'X-Background': '1' } // polling must not keep an idle admin session alive
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res || !res.success) return;
+                const online = new Set(res.online || []);
+                tbody.querySelectorAll('tr').forEach(function (tr) {
+                    const btn = tr.querySelector('.block-user-btn');
+                    const cell = tr.querySelector('td[data-cell="status"]');
+                    if (!btn || !cell) return;
+                    const isOn = online.has(btn.getAttribute('data-uid'));
+                    const already = !!cell.querySelector('.status-badge.online');
+                    if (isOn !== already) cell.innerHTML = statusBadge(isOn);
+                });
+            })
+            .catch(function () { /* ignore; next tick retries */ })
+            .then(function () { presenceBusy = false; });
+    }
+
+    setInterval(function () {
+        const section = document.getElementById('section-usermanagement');
+        const visible = section && section.offsetParent !== null;
+        if (!document.hidden && visible) applyPresence();
+    }, PRESENCE_INTERVAL_MS);
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) applyPresence();
+    });
+
+    // ---- Pagination ------------------------------------------------------
     function renderPagination() {
         if (prevBtn) {
             prevBtn.disabled = state.page <= 1;
@@ -109,9 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (state.page > state.totalPages) state.page = state.totalPages;
                 tbody.style.counterReset = 'um-row ' + ((state.page - 1) * state.pageSize);
                 renderPagination();
-                if (state.page === 1 && typeof sortUserManagement === 'function') {
-                    // keep sort state
-                }
+                applyPresence(); // correct the badges right away, don't wait for the next tick
             })
             .catch(function (err) {
                 console.error('Load accounts error:', err);
