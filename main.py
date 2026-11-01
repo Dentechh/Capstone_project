@@ -2593,6 +2593,9 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
     # inactivity. Background polling (message badge, counters) does not count.
     ADMIN_IDLE_LIMIT = timedelta(hours=1)
 
+    # A patient counts as "online" if their last heartbeat is this recent.
+    ONLINE_THRESHOLD_SECONDS = 30
+
     # Small script added to every signed-in admin page. It tells the server when
     # the person is actually using the page (mouse, keyboard, touch, scroll) and
     # signs them out after an hour with none, even if the page is left open.
@@ -4393,9 +4396,6 @@ setTimeout(go,3000);})();
         except Exception as e:
             print("HEARTBEAT ERROR:", e)
             return jsonify({"success": False, "message": "Failed to update presence"}), 500
-    
-        ONLINE_THRESHOLD_SECONDS = 30
-
 
     def go_offline(self):
         """Called by navigator.sendBeacon when a patient closes the tab."""
