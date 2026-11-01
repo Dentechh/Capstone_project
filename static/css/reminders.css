@@ -1,0 +1,108 @@
+/* Reminders section */
+#section-reminders .rem-filter-bar{flex-wrap:wrap;gap:10px;}
+#section-reminders .rem-select{padding:8px 10px;border:1px solid var(--border-color,#cfd8e6);border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;max-width:220px;}
+.rem-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 14px;}
+.rem-tab{border:1px solid var(--border-color,#cfd8e6);background:transparent;color:inherit;font:inherit;font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;}
+.rem-tab:hover{background:rgba(13,71,161,.07);}
+.rem-tab.is-active{background:#0d47a1;border-color:#0d47a1;color:#fff;}
+.rem-tab__n{font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(13,71,161,.12);color:#0d47a1;}
+.rem-tab.is-active .rem-tab__n{background:rgba(255,255,255,.25);color:#fff;}
+#section-reminders [hidden]{display:none !important;}
+/* Fit the table in the panel: no sideways scrolling on desktop. */
+#section-reminders .appointment-table-wrap{overflow-x:visible;}
+#remTable{width:100%;min-width:0 !important;table-layout:auto;}
+#remTable th,#remTable td{padding:12px 10px;vertical-align:middle;}
+#remTable th:nth-child(1),#remTable td:nth-child(1),
+#remTable th:nth-child(2),#remTable td:nth-child(2){text-align:left;}
+#remTable th:nth-child(1),#remTable td:nth-child(1){width:16%;}
+#remTable th:nth-child(2),#remTable td:nth-child(2){width:15%;padding-left:4px;}
+#remTable th:nth-child(3),#remTable td:nth-child(3){width:10%;white-space:nowrap;}
+#remTable th:nth-child(4),#remTable td:nth-child(4){width:19%;}
+#remTable th:nth-child(5),#remTable td:nth-child(5){width:22%;}
+#remTable th:nth-child(6),#remTable td:nth-child(6){width:18%;text-align:left;padding-left:32px;}
+.rem-name{display:block;font-weight:700;overflow-wrap:anywhere;}
+.rem-proc{display:block;font-weight:600;overflow-wrap:anywhere;}
+#remTable td .rem-acct{margin:4px 0 0;}
+#remTable tr.is-unseen td:first-child{box-shadow:inset 3px 0 0 #0d47a1;}
+.rem-acct{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;}
+.rem-acct--yes{background:rgba(22,163,74,.14);color:#15803d;}
+.rem-acct--no{background:rgba(245,158,11,.16);color:#b45309;}
+.rem-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;}
+.rem-pill--wait{background:rgba(245,158,11,.16);color:#b45309;}
+.rem-pill--info{background:rgba(13,71,161,.12);color:#0d47a1;}
+.rem-pill--ok{background:rgba(22,163,74,.14);color:#15803d;}
+.rem-pill--bad{background:rgba(229,57,53,.12);color:#c62828;}
+.rem-detail{display:block;margin-top:3px;font-size:12px;color:#64748b;overflow-wrap:anywhere;}
+.rem-due--overdue{color:#c62828;font-weight:700;}
+.rem-contact{display:flex;flex-direction:column;gap:6px;align-items:center;}
+.rem-contact__num{font-weight:600;overflow-wrap:anywhere;}
+.rem-contact__row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.rem-contact .rem-link{padding:4px 8px;}
+.rem-link{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;border:1px solid var(--border-color,#cfd8e6);color:#0d47a1;background:transparent;cursor:pointer;font-family:inherit;}
+.rem-link:hover{background:rgba(13,71,161,.08);}
+.rem-link .material-symbols-rounded{font-size:16px;}
+/* Icon-only copy buttons: match the outlined Call / Text look (the site's global button style would fill them). */
+#remTable .rem-link.rem-link--icon{width:30px;height:28px;padding:0;justify-content:center;background:transparent;color:#0d47a1;border:1px solid var(--border-color,#cfd8e6);box-shadow:none;border-radius:8px;}
+#remTable .rem-link.rem-link--icon:hover{background:rgba(13,71,161,.08);}
+#remTable .rem-link.rem-link--icon .material-symbols-rounded{font-size:17px;color:inherit;}
+.rem-contact__row{flex-wrap:nowrap;gap:5px;}
+@media (max-width:1400px){.rem-contact__row{flex-wrap:wrap;}}
+.rem-muted{font-size:12px;color:#64748b;}
+.rem-actions{display:flex;flex-direction:row;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-start;}
+.rem-actions .btn-action{width:auto;flex:0 0 auto;white-space:nowrap;justify-content:center;padding:7px 12px;font-size:12.5px;}
+.rem-empty{text-align:center;color:#64748b;padding:28px 12px;}
+/* Dialogs: centred on screen (the site's CSS reset removes the browser's own centring). */
+.rem-dialog{position:fixed;inset:0;margin:auto;border:0;padding:0;width:min(440px,92vw);max-height:90vh;overflow:visible;border-radius:20px;background:var(--card-bg,#fff);color:var(--text-color,#1f2937);box-shadow:0 30px 80px rgba(15,23,42,.45),0 0 0 1px rgba(13,71,161,.08);}
+.rem-dialog[open]{animation:remPop .22s cubic-bezier(.2,.9,.3,1.2);}
+.rem-dialog::backdrop{background:rgba(15,23,42,.55);backdrop-filter:blur(3px);}
+@keyframes remPop{from{opacity:0;transform:translateY(14px) scale(.96);}to{opacity:1;transform:none;}}
+.rem-dialog__card{position:relative;padding:26px 26px 22px;display:flex;flex-direction:column;gap:16px;border-radius:20px;}
+.rem-dialog__card::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;border-radius:20px 20px 0 0;background:linear-gradient(90deg,#0d47a1,#1e88e5);}
+.rem-dialog__head{display:flex;gap:14px;align-items:center;}
+.rem-dialog__icon{flex:0 0 auto;width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0d47a1,#1e88e5);color:#fff;box-shadow:0 6px 16px rgba(13,71,161,.35);}
+.rem-dialog__icon .material-symbols-rounded{font-size:26px;}
+.rem-dialog__card h3{margin:0;font-size:19px;font-weight:700;line-height:1.25;}
+.rem-dialog__sub{margin:3px 0 0;font-size:13px;color:#64748b;line-height:1.4;}
+.rem-field{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#475467;}
+.rem-field input,.rem-field select{padding:12px 14px;border:1.5px solid var(--border-color,#d5dde9);border-radius:12px;font:inherit;font-size:15px;font-weight:500;letter-spacing:0;text-transform:none;background:var(--card-bg,#fff);color:var(--text-color,#1f2937);transition:border-color .15s,box-shadow .15s;}
+.rem-field input:focus,.rem-field select:focus{outline:none;border-color:#1e88e5;box-shadow:0 0 0 4px rgba(30,136,229,.18);}
+.rem-dialog__note{margin:0;font-size:12px;color:#64748b;display:flex;gap:6px;align-items:flex-start;}
+.rem-dialog__err{margin:0;padding:9px 12px;border-radius:10px;background:rgba(229,57,53,.1);font-size:13px;color:#c62828;font-weight:600;}
+.rem-dialog__err[hidden]{display:none;}
+.rem-dialog__actions{display:flex;justify-content:flex-end;gap:10px;margin-top:2px;}
+.rem-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 20px;border-radius:12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:transform .12s,box-shadow .15s,background .15s;}
+.rem-btn .material-symbols-rounded{font-size:18px;}
+.rem-btn--ghost{background:transparent;border-color:var(--border-color,#d5dde9);color:#475467;}
+.rem-btn--ghost:hover{background:rgba(15,23,42,.06);}
+.rem-btn--primary{background:linear-gradient(135deg,#0d47a1,#1e88e5);color:#fff;box-shadow:0 6px 16px rgba(13,71,161,.3);}
+.rem-btn--primary:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(13,71,161,.38);}
+.rem-btn--primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+@media (max-width:480px){.rem-dialog__card{padding:22px 18px 18px;}.rem-dialog__actions{flex-direction:column-reverse;}.rem-btn{width:100%;}}
+@media (max-width:768px){#section-reminders .rem-select{max-width:none;flex:1 1 140px;}}
+
+/* Narrow screens: cards instead of a wide table. */
+@media (max-width:1100px){
+    #section-reminders .appointment-table-wrap{overflow-x:auto;}
+    #remTable{min-width:900px !important;}
+}
+
+.rem-dialog__icon--danger{background:linear-gradient(135deg,#c62828,#ef5350);box-shadow:0 6px 16px rgba(198,40,40,.35);}
+#remConfirmDialog .rem-dialog__card::before{background:linear-gradient(90deg,#c62828,#ef5350);}
+.rem-btn--danger{background:linear-gradient(135deg,#c62828,#ef5350);color:#fff;box-shadow:0 6px 16px rgba(198,40,40,.3);}
+.rem-btn--danger:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(198,40,40,.38);}
+
+.rem-field .flatpickr-wrapper{display:block;width:100%;}
+.rem-field .flatpickr-wrapper input{width:100%;box-sizing:border-box;cursor:pointer;}
+.rem-dialog .flatpickr-calendar{z-index:10;}
+
+/* Row numbers + left-aligned patient names */
+#remBody{counter-reset:remrow;}
+#remBody tr{counter-increment:remrow;}
+#remTable th:nth-child(1),#remTable td:nth-child(1){width:18%;text-align:left !important;position:relative;padding-left:40px;}
+#remTable th:nth-child(1)::before{content:"#";position:absolute;left:10px;width:22px;text-align:center;}
+#remBody td:first-child::before{content:counter(remrow);position:absolute;left:10px;top:50%;transform:translateY(-50%);width:22px;text-align:center;font-size:13px;font-weight:700;color:#64748b;}
+#remTable th:nth-child(4),#remTable td:nth-child(4){width:17%;}
+
+/* Email link under the number (accounts only) */
+.rem-link--mail{max-width:100%;}
+.rem-mail__txt{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:150px;}

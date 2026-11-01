@@ -12,6 +12,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from email.message import EmailMessage
 from messaging import MessagingMixin
 from patient_backup import BackupMixin
+from reminders import RemindersMixin
 
 import bleach
 import firebase_admin
@@ -184,7 +185,7 @@ class BaseFlaskApp:
         return self._app.render_template(template, **kwargs)
 
 
-class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin):
+class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin):
     """
     4 Pillars of OOP:
     1. Encapsulation - State and behavior in one class
@@ -2798,6 +2799,10 @@ setTimeout(go,3000);})();
         "/approve": ("appointments", "Responded to an appointment"),
         "/admin/create_appointment": ("appointments", "Created an appointment"),
         "/admin/reschedule_appointment": ("appointments", "Rescheduled an appointment"),
+        "/admin/reminders/contacted": ("appointments", "Marked a follow-up reminder as contacted"),
+        "/admin/reminders/book": ("appointments", "Booked a follow-up from Reminders"),
+        "/admin/reminders/cancel": ("appointments", "Cancelled a follow-up reminder"),
+        "/admin/reminders/contact_number": ("patients", "Added a patient contact number"),
         "/admin/update_treatment_record": ("billing", "Edited a treatment record"),
         "/admin/delete_treatment_record": ("billing", "Deleted a treatment record"),
         "/admin/record_payment": ("billing", "Recorded a payment"),
@@ -8184,6 +8189,7 @@ setTimeout(go,3000);})();
                 next_visit_ref, patient_id, account_uid,
                 next_appt_date, next_appt_service, next_appt_dentist
             )
+            self._reminders_sync(account_uid, patient_id, done_doc_id, procedures)
 
             self._invalidate_financial_cache()
 
@@ -8314,6 +8320,7 @@ setTimeout(go,3000);})();
                 next_visit_ref, patient_id, account_uid,
                 next_appt_date, next_appt_service, next_appt_dentist
             )
+            self._reminders_sync(account_uid, patient_id, done_doc_id, procedures)
 
             self._invalidate_financial_cache()
 
@@ -9877,7 +9884,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 "Done_procedure"
             )
 
-            done_ref.add({
+            _done_added = done_ref.add({
 
                 "uid": uid,
 
@@ -9985,6 +9992,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 next_visit_ref, patient_unq_id, uid,
                 next_appt_date, next_appt_service, next_appt_dentist
             )
+            self._reminders_sync(uid, patient_unq_id, _done_added[1].id, done_procedures)
             print("NEXT VISIT SUGGESTION HANDLED:", next_appt_date or "(cleared)")
 
             # =====================================================
@@ -11902,6 +11910,12 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 result = "failed"
             counts[result] = counts.get(result, 0) + 1
 
+        try:
+            for _k, _v in self._reminders_auto_book().items():
+                counts["reminder_" + _k] = _v
+        except Exception as e:
+            print("REMINDERS AUTO BOOK ERROR:", e)
+
         print("BRACES AUTO CONFIRM:", counts)
         return jsonify({"success": True, "results": counts})
 
@@ -13470,6 +13484,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/admin/braces_proposals/seen", methods=["POST"])(self.admin_braces_proposals_seen)
         self._register_message_routes()
         self._register_backup_routes()
+        self._register_reminder_routes()
 
 
 

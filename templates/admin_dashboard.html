@@ -32,6 +32,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}?v=8">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-responsive.css') }}?v=85">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reminders.css') }}?v=4">
 </head>
 
 
@@ -73,6 +74,7 @@
 {% include '_weeklyclients.html' %}
 {% include '_doctorscalendar.html' %}
 {% include '_appointments.html' %}
+{% include '_reminders.html' %}
 {% include '_patientdashboard.html' %}
 {% include '_records.html' %}
     </main>
@@ -120,6 +122,8 @@
     <script src="{{ url_for('static', filename='js/activity-log.js') }}?v=2"></script>
 
     <script src="{{ url_for('static', filename='js/admin_messages.js') }}?v=8"></script>
+
+    <script src="{{ url_for('static', filename='js/reminders.js') }}?v=4"></script>
 
 </body>
 

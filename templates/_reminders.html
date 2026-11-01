@@ -1,0 +1,117 @@
+<div id="section-reminders" class="content-section">
+    <section class="content-panel">
+        <div class="filter-bar rem-filter-bar">
+            <div class="filter-search-wrap">
+                <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
+                <input type="text" id="remSearch" placeholder="Search patient or procedure..."
+                    class="search-input filter-search" aria-label="Search reminders" autocomplete="off">
+            </div>
+            <div class="filter-group">
+                <select id="remProcedure" class="rem-select" aria-label="Filter by procedure">
+                    <option value="">All procedures</option>
+                </select>
+                <select id="remAccount" class="rem-select" aria-label="Filter by account">
+                    <option value="">With and without account</option>
+                    <option value="yes">With account</option>
+                    <option value="no">No account</option>
+                </select>
+                <select id="remRange" class="rem-select" aria-label="Filter by due date">
+                    <option value="">Any due date</option>
+                    <option value="7">Due in 7 days</option>
+                    <option value="30">Due in 30 days</option>
+                    <option value="90">Due in 90 days</option>
+                </select>
+                <button type="button" id="remMarkAll" class="btn-action filter-btn" hidden>Mark all as read</button>
+            </div>
+        </div>
+
+        <div class="rem-tabs" id="remTabs" role="tablist" aria-label="Reminder status">
+            <button type="button" class="rem-tab is-active" data-tab="all" role="tab">All <span class="rem-tab__n" data-n="all">0</span></button>
+            <button type="button" class="rem-tab" data-tab="call" role="tab">Needs call <span class="rem-tab__n" data-n="call">0</span></button>
+            <button type="button" class="rem-tab" data-tab="wait" role="tab">Awaiting reply <span class="rem-tab__n" data-n="wait">0</span></button>
+            <button type="button" class="rem-tab" data-tab="overdue" role="tab">Overdue <span class="rem-tab__n" data-n="overdue">0</span></button>
+            <button type="button" class="rem-tab" data-tab="booked" role="tab">Booked <span class="rem-tab__n" data-n="booked">0</span></button>
+            <button type="button" class="rem-tab" data-tab="closed" role="tab">Closed <span class="rem-tab__n" data-n="closed">0</span></button>
+        </div>
+
+        <div class="appointment-table-wrap">
+            <table class="appointment-table" id="remTable">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Procedure</th>
+                        <th>Due date</th>
+                        <th>Status</th>
+                        <th>Contact</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="remBody"></tbody>
+            </table>
+            <p class="rem-empty" id="remEmpty" hidden>No reminders match these filters.</p>
+        </div>
+        <div style="text-align:center; margin-top:16px;">
+            <button type="button" id="remMore" class="btn-action filter-btn" hidden>Show more</button>
+        </div>
+    </section>
+</div>
+
+<dialog id="remBookDialog" class="rem-dialog" aria-labelledby="remBookTitle">
+    <form method="dialog" id="remBookForm" class="rem-dialog__card" onsubmit="return false;">
+        <div class="rem-dialog__head">
+            <span class="rem-dialog__icon"><span class="material-symbols-rounded" aria-hidden="true">event_available</span></span>
+            <div>
+                <h3 id="remBookTitle">Book follow-up</h3>
+                <p class="rem-dialog__sub" id="remBookSub"></p>
+            </div>
+        </div>
+        <label class="rem-field">Date
+            <input type="date" id="remBookDate" required>
+        </label>
+        <label class="rem-field">Time
+            <select id="remBookTime" required></select>
+        </label>
+        <p class="rem-dialog__note" id="remBookNote">The visit is added to the Doctors Calendar as accepted.</p>
+        <p class="rem-dialog__err" id="remBookErr" role="alert" hidden></p>
+        <div class="rem-dialog__actions">
+            <button type="button" class="rem-btn rem-btn--ghost" id="remBookCancel">Close</button>
+            <button type="button" class="rem-btn rem-btn--primary" id="remBookSave"><span class="material-symbols-rounded" aria-hidden="true">check</span>Confirm booking</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="remNumberDialog" class="rem-dialog" aria-labelledby="remNumberTitle">
+    <form method="dialog" id="remNumberForm" class="rem-dialog__card" onsubmit="return false;">
+        <div class="rem-dialog__head">
+            <span class="rem-dialog__icon"><span class="material-symbols-rounded" aria-hidden="true">add_call</span></span>
+            <div>
+                <h3 id="remNumberTitle">Add contact number</h3>
+                <p class="rem-dialog__sub" id="remNumberSub"></p>
+            </div>
+        </div>
+        <label class="rem-field">Mobile number
+            <input type="tel" id="remNumberInput" inputmode="tel" placeholder="09XX XXX XXXX" maxlength="25" required>
+        </label>
+        <p class="rem-dialog__err" id="remNumberErr" role="alert" hidden></p>
+        <div class="rem-dialog__actions">
+            <button type="button" class="rem-btn rem-btn--ghost" id="remNumberCancel">Close</button>
+            <button type="button" class="rem-btn rem-btn--primary" id="remNumberSave"><span class="material-symbols-rounded" aria-hidden="true">save</span>Save number</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="remConfirmDialog" class="rem-dialog" aria-labelledby="remConfirmTitle">
+    <form method="dialog" class="rem-dialog__card" onsubmit="return false;">
+        <div class="rem-dialog__head">
+            <span class="rem-dialog__icon rem-dialog__icon--danger"><span class="material-symbols-rounded" aria-hidden="true">event_busy</span></span>
+            <div>
+                <h3 id="remConfirmTitle">Cancel this reminder?</h3>
+                <p class="rem-dialog__sub" id="remConfirmMsg"></p>
+            </div>
+        </div>
+        <div class="rem-dialog__actions">
+            <button type="button" class="rem-btn rem-btn--ghost" id="remConfirmNo">Keep it</button>
+            <button type="button" class="rem-btn rem-btn--danger" id="remConfirmYes"><span class="material-symbols-rounded" aria-hidden="true">close</span>Yes, cancel it</button>
+        </div>
+    </form>
+</dialog>
