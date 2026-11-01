@@ -3428,3 +3428,40 @@
     .medicine-qty-btn--cancel { background: #eee; }
     .medicine-qty-btn--confirm { background: #0d47a1; color: #fff; }
 
+    /* ---------- Dashboard stat cards: number + title on one line, hint below ---------- */
+    #section-dashboard .metric-card .metric-data {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        column-gap: 12px;
+        row-gap: 3px;
+        align-items: baseline;
+    }
+
+    #section-dashboard .metric-card .metric-data h3 {
+        grid-column: 1;
+        grid-row: 1;
+        margin: 0;
+        line-height: 1;
+    }
+
+    #section-dashboard .metric-card .metric-data p {
+        grid-column: 2;
+        grid-row: 1;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    #section-dashboard .metric-card .metric-data .metric-data__hint {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        margin-top: 0;
+    }
+
+    /* Very narrow phones: let the title wrap instead of cutting it off */
+    @media (max-width: 400px) {
+        #section-dashboard .metric-card .metric-data p {
+            white-space: normal;
+        }
+    }
