@@ -344,17 +344,25 @@
     function renderRequests(list) {
         if (!reqBox) return;
         reqList.textContent = '';
-        reqBox.hidden = !list.length;
         reqN.textContent = String(list.length);
-        list.forEach(function (q) {
-            var card = el('div', 'rem-req');
-            var main = el('div', 'rem-req__main');
-            main.appendChild(el('strong', '', q.patient_name || 'Patient'));
-            main.appendChild(el('span', 'rem-detail', (q.service || 'Appointment') + ' \u00b7 ' + (fmt(q.appointment_date) || '-') +
-                (q.dentist ? ' \u00b7 ' + q.dentist : '')));
-            main.appendChild(el('span', 'rem-req__ask rem-req__ask--' + (q.kind === 'cancel' ? 'cancel' : 'change'), askText(q)));
-            if (q.note) main.appendChild(el('span', 'rem-detail', 'Note: ' + q.note));
-            card.appendChild(main);
+        var vn = $('remViewN'), empty = $('remReqEmpty'), table = $('remReqTable');
+        if (vn) { vn.textContent = String(list.length); vn.hidden = !list.length; }
+        if (empty) empty.hidden = list.length > 0;
+        if (table) table.hidden = list.length === 0;
+
+        list.forEach(function (q, i) {
+            var tr = el('tr');
+            function cell(cls) { var c = el('td', cls || ''); tr.appendChild(c); return c; }
+
+            cell('rem-req__n').textContent = String(i + 1);
+            cell().appendChild(el('strong', '', q.patient_name || 'Patient'));
+
+            var appt = cell();
+            appt.appendChild(el('span', '', q.service || 'Appointment'));
+            appt.appendChild(el('span', 'rem-detail', (fmt(q.appointment_date) || '-') + (q.dentist ? ' \u00b7 ' + q.dentist : '')));
+
+            cell().appendChild(el('span', 'rem-req__ask rem-req__ask--' + (q.kind === 'cancel' ? 'cancel' : 'change'), askText(q)));
+            cell('rem-req__note').textContent = q.note || '\u2014';
 
             var actions = el('div', 'rem-req__actions');
             function mk(label, cls, fn) {
@@ -378,8 +386,23 @@
                     else { toast((d && d.message) || 'Something went wrong.', 'error'); done.disabled = false; }
                 });
             });
-            card.appendChild(actions);
-            reqList.appendChild(card);
+            cell().appendChild(actions);
+            reqList.appendChild(tr);
+        });
+    }
+
+    /* Switch between the follow-up reminders and the patient change requests. */
+    var viewsEl = $('remViews');
+    if (viewsEl) {
+        viewsEl.addEventListener('click', function (e) {
+            var b = e.target.closest('.rem-view');
+            if (!b) return;
+            var v = b.getAttribute('data-view');
+            Array.prototype.forEach.call(viewsEl.querySelectorAll('.rem-view'), function (x) {
+                x.classList.toggle('is-active', x === b);
+            });
+            $('remViewReminders').hidden = v !== 'reminders';
+            $('remViewRequests').hidden = v !== 'requests';
         });
     }
 

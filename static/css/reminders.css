@@ -226,3 +226,25 @@ body.dark-mode .rem-req__ask--cancel{color:#f87171;}
 @media (max-width:600px){.rem-req{flex-direction:column;align-items:flex-start;}}
 .rem-req__actions{display:flex;flex-wrap:wrap;gap:8px;flex:0 0 auto;}
 @media (max-width:600px){.rem-req__actions{width:100%;}}
+
+/* View switch: follow-up reminders | patient change requests */
+.rem-views{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;}
+.rem-view{border:1px solid #cbd5e1;background:#fff;color:#334155;font:inherit;font-size:13.5px;font-weight:700;padding:9px 16px;border-radius:999px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;box-shadow:0 1px 2px rgba(15,23,42,.06);transition:background-color .18s ease,color .18s ease,border-color .18s ease,box-shadow .18s ease;}
+.rem-view .material-symbols-rounded{font-size:19px;}
+.rem-view:hover{background:#eaf2fc;border-color:#0d47a1;color:#0a3b7d;}
+.rem-view.is-active{background:linear-gradient(135deg,#0d47a1,#1565c0);border-color:#0a3b7d;color:#fff;box-shadow:0 4px 12px rgba(13,71,161,.28);}
+.rem-view__n{min-width:20px;padding:1px 7px;border-radius:999px;background:#e53935;color:#fff;font-size:11px;font-weight:700;text-align:center;}
+body.dark-mode .rem-view{background:#131a26;color:#cbd5e1;border-color:#33415a;box-shadow:none;}
+body.dark-mode .rem-view:hover{background:#1e3a8a;border-color:#64b5f6;color:#dbeafe;}
+body.dark-mode .rem-view.is-active{background:linear-gradient(135deg,#64b5f6,#38bdf8);border-color:#bae6fd;color:#0b1220;}
+
+/* Change requests table (same teal card, now a real table) */
+.rem-req-wrap{background:#fff;border:1px solid #cdeee8;}
+.rem-req-table{width:100%;table-layout:auto;}
+.rem-req-table th,.rem-req-table td{padding:12px 12px;text-align:left;vertical-align:middle;}
+.rem-req-table th:first-child,.rem-req-table td:first-child{width:36px;text-align:center;}
+.rem-req-table .rem-detail{display:block;}
+.rem-req-table .rem-req__note{max-width:240px;overflow-wrap:anywhere;font-size:13px;}
+.rem-req-table .rem-req__actions{display:flex;flex-wrap:wrap;gap:8px;}
+.rem-req-wrap .rem-empty{margin:0;padding:22px 12px;text-align:center;}
+body.dark-mode .rem-req-wrap{background:#0b1220;border-color:#1f3b38;}

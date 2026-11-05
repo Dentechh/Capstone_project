@@ -15,15 +15,17 @@ body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange
 </style>
 <div id="section-reminders" class="content-section">
     <section class="content-panel">
-        <div class="rem-requests" id="remRequests" hidden>
-            <div class="rem-requests__head">
-                <span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>
-                <strong>Patient change requests</strong>
-                <span class="rem-requests__n" id="remRequestsN">0</span>
-            </div>
-            <p class="rem-requests__hint">These patients asked to change or cancel an appointment they booked themselves. <strong>Apply change</strong> updates the appointment in Appointments and notifies the patient. <strong>Dismiss</strong> closes the request without changing anything. For a cancellation, decline the appointment in Appointments, then mark it handled.</p>
-            <div id="remRequestsList"></div>
+        <div class="rem-views" id="remViews" role="tablist" aria-label="Reminders view">
+            <button type="button" class="rem-view is-active" data-view="reminders" role="tab">
+                <span class="material-symbols-rounded" aria-hidden="true">notifications_active</span>Follow-up reminders
+            </button>
+            <button type="button" class="rem-view" data-view="requests" role="tab">
+                <span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>Patient change requests
+                <span class="rem-view__n" id="remViewN" hidden>0</span>
+            </button>
         </div>
+
+        <div id="remViewReminders">
         <div class="filter-bar rem-filter-bar">
             <div class="filter-search-wrap">
                 <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
@@ -76,6 +78,34 @@ body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange
         </div>
         <div style="text-align:center; margin-top:16px;">
             <button type="button" id="remMore" class="btn-action filter-btn" hidden>Show more</button>
+        </div>
+        </div>
+
+        <div id="remViewRequests" hidden>
+            <div class="rem-requests" id="remRequests">
+                <div class="rem-requests__head">
+                    <span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>
+                    <strong>Patient change requests</strong>
+                    <span class="rem-requests__n" id="remRequestsN">0</span>
+                </div>
+                <p class="rem-requests__hint">These patients asked to change or cancel an appointment they booked themselves. <strong>Apply change</strong> updates the appointment in Appointments and notifies the patient. <strong>Dismiss</strong> closes the request without changing anything. For a cancellation, decline the appointment in Appointments, then mark it handled.</p>
+                <div class="appointment-table-wrap rem-req-wrap">
+                    <table class="appointment-table rem-req-table" id="remReqTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Patient</th>
+                                <th>Appointment</th>
+                                <th>Request</th>
+                                <th>Note</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="remRequestsList"></tbody>
+                    </table>
+                    <p class="rem-empty" id="remReqEmpty">No change requests right now.</p>
+                </div>
+            </div>
         </div>
     </section>
 </div>
