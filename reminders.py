@@ -206,6 +206,76 @@ class RemindersMixin:
         except Exception as e:
             print("REMINDERS SYNC ERROR:", e)
 
+    # ------------------------------------------------------------ done visits
+    def _reminders_complete(self, uid, new_done_doc_id, approve_ids, rows):
+        """
+        A treatment record was just saved: remove the reminders it completes, so
+        Reminders only ever lists what is still to do. Never raises.
+
+        - a booked reminder whose appointment was just used for this record
+          (its approve_id is one of the appointments consumed by the save);
+        - an unanswered reminder (needs call / awaiting / overdue) for a
+          procedure this record covers: the patient came, so there is nothing
+          left to remind them about (also covers visits days before or after
+          the date that was planned).
+        The reminders this very record creates (its own next appointment) stay.
+        """
+        try:
+            uid = str(uid or "").strip()
+            if not uid:
+                return
+            approve_ids = {str(a) for a in (approve_ids or []) if a}
+            procs = {
+                str((r or {}).get("procedure") or "").strip().lower()
+                for r in (rows or []) if (r or {}).get("procedure")
+            }
+            batch = self.db.batch()
+            ops = 0
+            for snap in self.db.collection(self.REMINDERS).where(
+                filter=FieldFilter("uid", "==", uid)
+            ).stream():
+                d = snap.to_dict() or {}
+                if str(d.get("source_doc") or "") == str(new_done_doc_id or ""):
+                    continue
+                status = d.get("status")
+                visit_used = (
+                    status in ("booked", "auto_booked")
+                    and str(d.get("approve_id") or "") in approve_ids
+                )
+                answered = (
+                    status in self.REMINDER_ACTIVE
+                    and str(d.get("procedure") or "").strip().lower() in procs
+                )
+                if visit_used or answered:
+                    batch.delete(snap.reference)
+                    ops += 1
+            if ops:
+                batch.commit()
+        except Exception as e:
+            print("REMINDERS COMPLETE ERROR:", e)
+
+    def _reminders_prune_completed(self, found):
+        """
+        Safety net for reminders booked before this cleanup existed: a booked
+        reminder whose appointment already has a saved treatment record is done.
+        Deletes it and drops it from `found` (the dict the list is built from).
+        """
+        try:
+            for rid, d in list(found.items()):
+                if d.get("status") not in ("booked", "auto_booked"):
+                    continue
+                aid, uid = str(d.get("approve_id") or ""), str(d.get("uid") or "")
+                if not aid or not uid:
+                    continue
+                hit = self.db.collection(self.Customer_Account).document(uid) \
+                    .collection("Done_procedure") \
+                    .where(filter=FieldFilter("Patient_unq_id", "==", aid)).limit(1).get()
+                if hit:
+                    self.db.collection(self.REMINDERS).document(rid).delete()
+                    found.pop(rid, None)
+        except Exception as e:
+            print("REMINDERS PRUNE ERROR:", e)
+
     # --------------------------------------------------------------- the list
     def admin_reminders(self):
         """Every active reminder, anything unread, and the last 60 days."""
@@ -223,6 +293,9 @@ class RemindersMixin:
             for q in queries:
                 for snap in q.limit(500).stream():
                     found[snap.id] = snap.to_dict() or {}
+
+            # Visits that were already treated are done: they leave the list.
+            self._reminders_prune_completed(found)
 
             # Braces + login: status lives in Braces_Proposals (patient answers there).
             brace_uids = {

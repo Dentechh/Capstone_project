@@ -974,6 +974,69 @@ function showSection(sectionId) {
                 rows.forEach(function (r) { appendRow(r); });
             }
             refreshTreatmentControls(tableBody);
+
+            // Nothing saved for this patient yet: fill the Date and Procedure
+            // from their accepted appointment (everything stays editable).
+            if (rows.length === 0) tdPrefillFromAccepted(uid);
+        }
+
+        // True while a Treatment Records row is still the untouched blank one.
+        function tdRowIsUntouched(tr) {
+            function v(sel) { var el = tr.querySelector(sel); return el ? String(el.value || '').trim() : ''; }
+            return !v('.td-date') && !v('.td-tooth') && !v('.td-procedure') && !v('.td-notes') &&
+                !(parseFloat(v('.td-value')) > 0) && !(parseFloat(v('.td-paid')) > 0) && !v('.td-next-appt');
+        }
+
+        // Pre-fills the Date (the appointment's day) and the Procedure (the service
+        // that was booked) from the patient's accepted appointment(s), one row each,
+        // earliest first. The appointment is fetched fresh, so a date the clinic just
+        // changed is already correct. If the dentist has started typing, or another
+        // patient was opened meanwhile, nothing is touched.
+        var tdPrefillSeq = 0;
+        function tdPrefillFromAccepted(pid) {
+            var accountUid = window.currentPatientUid;
+            if (!pid || !accountUid) return;
+            var seq = ++tdPrefillSeq;
+            fetch('/get_approve/' + encodeURIComponent(accountUid))
+                .then(function (res) { return res.json(); })
+                .then(function (list) {
+                    if (seq !== tdPrefillSeq || window.currentPatientId !== pid) return;
+                    if (!Array.isArray(list)) return;
+                    var tbody = document.querySelector('#td-treatment-table tbody');
+                    if (!tbody) return;
+                    var trs = tbody.querySelectorAll('tr');
+                    if (trs.length !== 1 || !tdRowIsUntouched(trs[0])) return;
+
+                    var appts = list.filter(function (a) {
+                        return a && a.id !== 'next_visit' &&
+                            ['accept', 'accepted'].indexOf(String(a.status || '').toLowerCase()) > -1 &&
+                            (!a.Patient_unq_id || a.Patient_unq_id === pid) &&
+                            a.Service && /^\d{4}-\d{2}-\d{2}/.test(String(a.appointment_date || ''));
+                    });
+                    if (!appts.length) return;
+                    appts.sort(function (a, b) {
+                        return String(a.appointment_date) < String(b.appointment_date) ? -1 : 1;
+                    });
+
+                    if (typeof window.admDestroySelects === 'function') window.admDestroySelects(tbody);
+                    tbody.innerHTML = '';
+                    appts.forEach(function (a) {
+                        appendRow({
+                            date: String(a.appointment_date).slice(0, 10),
+                            tooth: '', procedure: a.Service, dentist: '',
+                            valueOfWork: '', amountPaid: '', balance: '', nextAppt: ''
+                        });
+                    });
+                    refreshTreatmentControls(tbody);
+                    refreshAllPlanCells();
+                    // Picking a procedure by hand fires a change event, which is what
+                    // proposes the Next Appointment (braces: visit date + 1 month).
+                    // Pre-filling sets the value silently, so run the same step here.
+                    tbody.querySelectorAll('tr').forEach(function (tr) {
+                        tdApplyNextApptMode(tr, { procedureChanged: true });
+                    });
+                })
+                .catch(function () { /* pre-fill is a convenience: the blank row stays */ });
         }
 
         /**
@@ -1298,8 +1361,7 @@ function showSection(sectionId) {
             if (!matches.length) {
                 html = '<option value="__new__">New charge</option>';
             } else {
-                    html = '<option value="">Choose: new charge or follow-up</option>' +
-                        '<option value="__new__">New charge</option>';
+                    html = '<option value="__new__">New charge</option>';
                 matches.forEach(function (p) {
                     html += '<option value="' + escHtml(p.plan_ref) + '">Follow-up \u00b7 ' +
                         (p.tooth ? 'tooth ' + escHtml(String(p.tooth)) + ' \u00b7 ' : '') +
@@ -1309,13 +1371,33 @@ function showSection(sectionId) {
             sel.innerHTML = html;
 
             var valid = Array.prototype.some.call(sel.options, function (o) { return o.value === current; });
-            if (!valid) current = matches.length ? '' : '__new__';
+            // With an unfinished plan for this procedure, start on that follow-up;
+            // "New charge" is one click away. There is no blank "choose" entry.
+            if (!valid) current = matches.length ? matches[0].plan_ref : '__new__';
             sel.value = current;
             if (valid && current && current !== '__new__') delete tr.dataset.wantedPlan;
 
             sel.disabled = matches.length === 0;
             sel.style.outline = (matches.length && sel.value === '') ? '2px solid #c9a227' : '';
+
+            // A follow-up continues a plan that is tied to a tooth (or Upper/Lower/Both
+            // for braces): fill an empty Tooth# from it. Never overwrite what is typed.
+            var chosen = matches.filter(function (p) { return p.plan_ref === sel.value; })[0];
+            if (chosen && chosen.tooth) tdAdoptPlanTooth(tr, chosen.tooth);
+
             applyPlanMode(tr);
+        }
+
+        function tdAdoptPlanTooth(tr, tooth) {
+            var input = tr.querySelector('.td-tooth');
+            var area = tr.querySelector('.td-area');
+            if (!input || input.value.trim()) return;
+            tooth = String(tooth);
+            input.value = tooth;
+            if (area && ['Upper', 'Lower', 'Both'].indexOf(tooth) !== -1) {
+                area.value = tooth;
+                area.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         }
 
         // Lock Value and track the plan's remaining balance for a follow-up.
@@ -1347,6 +1429,7 @@ function showSection(sectionId) {
                 var proc = ((tr.querySelector('.td-procedure') || {}).value || '').trim();
                 var tooth = ((tr.querySelector('.td-tooth') || {}).value || '').trim();
                 if (!proc && !tooth) continue;                 // empty rows are skipped by the server
+                var label = 'row ' + (i + 1) + (proc ? ' (' + proc + ')' : '');
                 if (tdIsArchProc(proc) && !tooth) {
                     return 'Choose Upper, Lower or Both for ' + label + '.';
                 }

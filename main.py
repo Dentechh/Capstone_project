@@ -9894,6 +9894,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 "unpaid_procedures": firestore.Increment(delta_unpaid)
             }, merge=True)
             
+            _deleted_approve_ids = []     # appointments consumed by this save
+
             done_ref = user_ref.collection(
                 "Done_procedure"
             )
@@ -9967,6 +9969,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
                     )
 
                     doc.reference.delete()
+                    _deleted_approve_ids.append(doc.id)
 
                     deleted = True
 
@@ -10007,6 +10010,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 next_appt_date, next_appt_service, next_appt_dentist
             )
             self._reminders_sync(uid, patient_unq_id, _done_added[1].id, done_procedures)
+            # The visit is done: its reminder leaves the Reminders list.
+            self._reminders_complete(uid, _done_added[1].id, _deleted_approve_ids, done_procedures)
             print("NEXT VISIT SUGGESTION HANDLED:", next_appt_date or "(cleared)")
 
             # =====================================================
