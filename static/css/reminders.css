@@ -205,3 +205,24 @@ body.dark-mode #section-reminders .rem-actions .btn-action.delete:hover{backgrou
     #section-reminders #remMarkAll{flex:1 1 100%;}
     .rem-tab{padding:6px 11px;font-size:12.5px;}
 }
+
+/* Patient change requests (appointments the patient booked themselves) */
+.rem-requests{margin:0 0 20px;padding:16px 18px;border:1px solid #99e0d4;border-left:5px solid #0f9d8a;border-radius:14px;background:#effcf9;}
+.rem-requests__head{display:flex;align-items:center;gap:8px;color:#0b6b5c;}
+.rem-requests__n{min-width:22px;padding:1px 7px;border-radius:999px;background:#0f9d8a;color:#fff;font-size:12px;font-weight:700;text-align:center;}
+.rem-requests__hint{margin:6px 0 12px;font-size:12.5px;color:#475569;}
+.rem-req{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-top:1px solid #cdeee8;}
+.rem-req__main{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.rem-req__ask{margin-top:3px;font-size:13px;font-weight:700;}
+.rem-req__ask--change{color:#0d47a1;}
+.rem-req__ask--cancel{color:#c62828;}
+body.dark-mode .rem-requests{background:#0f1f1d;border-color:#1f5f56;border-left-color:#2dd4bf;}
+body.dark-mode .rem-requests__head{color:#5eead4;}
+body.dark-mode .rem-requests__n{background:#2dd4bf;color:#0b1220;}
+body.dark-mode .rem-requests__hint{color:#94a3b8;}
+body.dark-mode .rem-req{border-top-color:#1f3b38;}
+body.dark-mode .rem-req__ask--change{color:#90caf9;}
+body.dark-mode .rem-req__ask--cancel{color:#f87171;}
+@media (max-width:600px){.rem-req{flex-direction:column;align-items:flex-start;}}
+.rem-req__actions{display:flex;flex-wrap:wrap;gap:8px;flex:0 0 auto;}
+@media (max-width:600px){.rem-req__actions{width:100%;}}

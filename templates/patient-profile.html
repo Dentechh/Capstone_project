@@ -325,12 +325,28 @@
             </div>
         </div><!-- /.pt-top -->
 
-        <!-- Schedule: shown in the page body (used to be a button + modal). -->
-        <section class="pt-section pt-schedule" id="ptSchedule" aria-label="Schedule">
+        <!-- Upcoming Schedule: appointments the patient booked themselves. -->
+        <section class="pt-section pt-schedule pt-schedule--mine" id="ptUpcoming" aria-label="Upcoming schedule">
             <details class="pt-disclosure">
                 <summary class="pt-records-title pt-disclosure__summary">
-                    <span class="material-symbols-rounded" aria-hidden="true">calendar_month</span>
-                    Schedule
+                    <span class="material-symbols-rounded" aria-hidden="true">event_available</span>
+                    Upcoming Schedule
+                    <span class="pt-sched-note pt-sched-note--mine">(Your Appointments)</span>
+                    <span class="material-symbols-rounded pt-disclosure__chevron" aria-hidden="true">expand_more</span>
+                </summary>
+                <div class="pt-disclosure__body">
+                    <div id="upcomingList"><p class="pt-empty">Loading...</p></div>
+                </div>
+            </details>
+        </section>
+
+        <!-- Next Schedule: what the dentist scheduled / suggested for the patient. -->
+        <section class="pt-section pt-schedule pt-schedule--dentist" id="ptSchedule" aria-label="Next schedule">
+            <details class="pt-disclosure">
+                <summary class="pt-records-title pt-disclosure__summary">
+                    <span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>
+                    Next Schedule
+                    <span class="pt-sched-note pt-sched-note--dentist">(Dentist's Appointments)</span>
                     <span class="material-symbols-rounded pt-disclosure__chevron" aria-hidden="true">expand_more</span>
                 </summary>
                 <div class="pt-disclosure__body">
@@ -338,6 +354,41 @@
                 </div>
             </details>
         </section>
+
+        <!-- Request a change to an appointment the patient booked (the dentist decides). -->
+        <dialog id="ptChangeDialog" class="pt-cr-dialog" aria-labelledby="ptCrTitle">
+            <form class="pt-cr-card" onsubmit="return false;">
+                <div class="pt-cr-head">
+                    <span class="pt-cr-icon"><span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span></span>
+                    <div>
+                        <h3 id="ptCrTitle">Request a change</h3>
+                        <p class="pt-cr-sub" id="ptCrSub"></p>
+                    </div>
+                </div>
+                <div class="pt-cr-opts">
+                    <label class="pt-cr-opt"><input type="radio" name="ptCrKind" value="reschedule" checked> I want a different date or time</label>
+                    <label class="pt-cr-opt pt-cr-opt--cancel"><input type="radio" name="ptCrKind" value="cancel"> I want to cancel this appointment</label>
+                </div>
+                <div class="pt-cr-row" id="ptCrDateWrap">
+                    <label class="pt-cr-field">New date (optional)
+                        <input type="date" id="ptCrDate">
+                    </label>
+                    <label class="pt-cr-field">New time (optional)
+                        <input type="time" id="ptCrTime">
+                    </label>
+                    <p class="pt-cr-hint">Only need a different time? Leave the date empty. Only need a different day? Leave the time empty.</p>
+                </div>
+                <label class="pt-cr-field">Note for the clinic (optional)
+                    <textarea id="ptCrNote" maxlength="300" rows="3" placeholder="e.g. I can only come in the afternoon"></textarea>
+                </label>
+                <p class="pt-cr-info">Your appointment stays as booked until the clinic confirms the change with you.</p>
+                <p class="pt-cr-err" id="ptCrErr" role="alert" hidden></p>
+                <div class="pt-cr-actions">
+                    <button type="button" class="pt-cr-btn pt-cr-btn--ghost" id="ptCrClose">Close</button>
+                    <button type="button" class="pt-cr-btn pt-cr-btn--primary" id="ptCrSend">Send request</button>
+                </div>
+            </form>
+        </dialog>
 
         <!-- Dental Records: same layout as the admin treatment record, read-only, 5 per page. -->
         <section class="pt-section pt-records" id="ptRecords" aria-label="Dental records">
@@ -1765,6 +1816,9 @@
             const list = document.getElementById("scheduleList");
             if (!list) return;
 
+            // Every refresh of this section also refreshes the patient's own bookings.
+            loadUpcoming(uid);
+
             list.innerHTML = '<p class="pt-empty">Loading...</p>';
 
             fetch(`/get_approve/${uid}`)
@@ -1776,8 +1830,13 @@
                         return;
                     }
 
+                    // Bookings the patient made themselves live in "Upcoming Schedule".
+                    if (Array.isArray(data)) {
+                        data = data.filter(function (i) { return !i.booked_by_patient; });
+                    }
+
                     if (!Array.isArray(data) || data.length === 0) {
-                        list.innerHTML = '<p class="pt-empty">No schedule found.</p>';
+                        list.innerHTML = '<p class="pt-empty">Nothing scheduled by your dentist yet.</p>';
                         return;
                     }
 
@@ -1816,11 +1875,15 @@
                                 </button>
                             </div>` : '<span class="pt-v">-</span>';
 
-                        return '<article class="pt-card pt-sched-card" data-idx="' + index + '">' +
+                        const source = '<span class="pt-src pt-src--dentist">' +
+                            '<span class="material-symbols-rounded" aria-hidden="true">stethoscope</span>' +
+                            'Set by your dentist</span>';
+
+                        return '<article class="pt-card pt-sched-card pt-sched--dentist" data-idx="' + index + '">' +
                             schedField('Date &amp; Time', schedEsc(formatScheduleDateTime(item.appointment_date || item.Date) || '-')) +
                             schedField('Dentist', schedEsc(item.DentistName || '-')) +
                             schedField('Service', schedEsc(item.Service || '-')) +
-                            schedField('Status', status) +
+                            schedField('Status', '<span class="pt-src-stack">' + source + status + '</span>') +
                             '<div class="pt-f"><span class="pt-k">Action</span>' + action + '</div>' +
                             '</article>';
                     }).join('');
@@ -1830,6 +1893,153 @@
                     console.error(error);
                     list.innerHTML = '<p class="pt-empty pt-empty--err">Failed to load schedule.</p>';
                 });
+        }
+
+        /* Upcoming Schedule: appointments the patient booked themselves
+           (waiting for the clinic, or already accepted). Read-only. */
+        function loadUpcoming(uid) {
+
+            const list = document.getElementById("upcomingList");
+            if (!list) return;
+
+            list.innerHTML = '<p class="pt-empty">Loading...</p>';
+
+            fetch(`/get_my_bookings/${uid}`)
+                .then(response => response.json())
+                .then(data => {
+
+                    if (data && data.error) {
+                        list.innerHTML = '<p class="pt-empty pt-empty--err">' + schedEsc(data.error) + '</p>';
+                        return;
+                    }
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        list.innerHTML = '<p class="pt-empty">You have no upcoming appointments booked yet.</p>';
+                        return;
+                    }
+
+                    // Kept so "Request change" can read the appointment it belongs to.
+                    window.__upcomingItems = data;
+
+                    list.innerHTML = data.map((item, index) => {
+
+                        const pending = item.status === 'pending';
+                        const status = pending
+                            ? '<span class="pt-badge pt-badge--pending">Waiting for clinic approval</span>'
+                            : '<span class="pt-badge pt-badge--paid">Confirmed</span>';
+                        const action = item.change_request
+                            ? '<span class="pt-badge pt-badge--pending">' +
+                                (item.change_request === 'cancel' ? 'Cancellation requested' : 'Change requested') +
+                                '</span>'
+                            : '<button type="button" class="pt-cr-open" onclick="openChangeRequest(' + index + ')">' +
+                                '<span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>' +
+                                'Request change</button>';
+                        const source = '<span class="pt-src pt-src--mine">' +
+                            '<span class="material-symbols-rounded" aria-hidden="true">person</span>' +
+                            'Booked by you</span>';
+
+                        return '<article class="pt-card pt-sched-card pt-sched--mine">' +
+                            schedField('Date &amp; Time', schedEsc(formatScheduleDateTime(item.appointment_date) || '-')) +
+                            schedField('Dentist', schedEsc(item.DentistName || 'To be assigned')) +
+                            schedField('Service', schedEsc(item.Service || '-')) +
+                            schedField('Status', '<span class="pt-src-stack">' + source + status + '</span>') +
+                            '<div class="pt-f"><span class="pt-k">Action</span>' + action + '</div>' +
+                            '</article>';
+                    }).join('');
+                })
+                .catch(error => {
+                    console.error(error);
+                    list.innerHTML = '<p class="pt-empty pt-empty--err">Failed to load your bookings.</p>';
+                });
+        }
+
+        /* "Request change": the patient asks, the dentist decides. Nothing about
+           the appointment changes until the clinic confirms it with the patient. */
+        var ptCrReady = false;
+        function ptCrKind() {
+            var r = document.querySelector('input[name="ptCrKind"]:checked');
+            return r ? r.value : 'reschedule';
+        }
+        function ptCrError(msg) {
+            var e = document.getElementById('ptCrErr');
+            e.textContent = msg || '';
+            e.hidden = !msg;
+        }
+        function ptCrInit() {
+            if (ptCrReady) return;
+            ptCrReady = true;
+            var dlg = document.getElementById('ptChangeDialog');
+            var send = document.getElementById('ptCrSend');
+            document.getElementById('ptCrClose').addEventListener('click', function () { dlg.close(); });
+            Array.prototype.forEach.call(document.querySelectorAll('input[name="ptCrKind"]'), function (r) {
+                r.addEventListener('change', function () {
+                    document.getElementById('ptCrDateWrap').hidden = ptCrKind() === 'cancel';
+                });
+            });
+            send.addEventListener('click', function () {
+                var item = window.__crItem;
+                if (!item) return;
+                if (ptCrKind() === 'reschedule' &&
+                    !document.getElementById('ptCrDate').value &&
+                    !document.getElementById('ptCrTime').value &&
+                    !document.getElementById('ptCrNote').value.trim()) {
+                    ptCrError('Choose a new date or time, or tell the clinic what you need in the note.');
+                    return;
+                }
+                send.disabled = true;
+                ptCrError('');
+                var body = new URLSearchParams();
+                body.append('appointment_id', item.id);
+                body.append('source', item.status);
+                body.append('kind', ptCrKind());
+                body.append('preferred_date', ptCrKind() === 'cancel' ? '' : document.getElementById('ptCrDate').value);
+                body.append('preferred_time', ptCrKind() === 'cancel' ? '' : document.getElementById('ptCrTime').value);
+                body.append('note', document.getElementById('ptCrNote').value);
+                fetch('/patient/appointment_change_request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: body.toString()
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.success) {
+                        dlg.close();
+                        showToast(data.message || 'Request sent.', 'success');
+                        var uid = "{{ user.get('uid', '') }}";
+                        if (uid) loadUpcoming(uid);
+                    } else {
+                        ptCrError((data && data.message) || 'Could not send the request.');
+                        send.disabled = false;
+                    }
+                })
+                .catch(function () {
+                    ptCrError('Could not send the request. Please try again.');
+                    send.disabled = false;
+                });
+            });
+        }
+        function openChangeRequest(index) {
+            var item = (window.__upcomingItems || [])[index];
+            if (!item) return;
+            ptCrInit();
+            window.__crItem = item;
+            var d = new Date();
+            var today = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+            document.getElementById('ptCrSub').textContent =
+                (item.Service || 'Appointment') + ' \u00b7 ' + (formatScheduleDateTime(item.appointment_date) || '');
+            document.querySelector('input[name="ptCrKind"][value="reschedule"]').checked = true;
+            document.getElementById('ptCrDateWrap').hidden = false;
+            var date = document.getElementById('ptCrDate');
+            date.min = today;
+            date.value = '';
+            document.getElementById('ptCrTime').value = '';
+            document.getElementById('ptCrNote').value = '';
+            document.getElementById('ptCrSend').disabled = false;
+            ptCrError('');
+            document.getElementById('ptChangeDialog').showModal();
         }
         </script>
 
@@ -2578,6 +2788,97 @@ function closeChartView() {
         .braces-card .braces-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
         .braces-card .braces-btn { box-sizing: border-box; height: 40px !important; min-height: 40px; padding: 0 18px !important; width: auto !important; font-size: 13px !important; white-space: nowrap; justify-content: center; }
         .braces-card .braces-note { display: block; max-width: 62ch; }
+
+        /* Schedule sections: two clearly different sources.
+           Upcoming Schedule = booked by the patient (teal),
+           Next Schedule = set by the dentist (blue). */
+        .pt-schedule--dentist .pt-disclosure__summary > .material-symbols-rounded:first-child { color: #1565c0; }
+        .pt-schedule--mine .pt-disclosure__summary > .material-symbols-rounded:first-child { color: #0f9d8a; }
+        .pt-card.pt-sched--dentist { border-left: 4px solid #1565c0; }
+        .pt-card.pt-sched--mine { border-left: 4px solid #0f9d8a; }
+        .pt-sched-note { font-size: 13px; font-weight: 600; margin-left: 2px; white-space: nowrap; }
+        .pt-sched-note--mine { color: #0f9d8a; }
+        .pt-sched-note--dentist { color: #1565c0; }
+        body.dark-mode .pt-sched-note--mine { color: #2dd4bf; }
+        body.dark-mode .pt-sched-note--dentist { color: #64b5f6; }
+        .pt-cr-open { align-self: flex-start; width: fit-content; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1px solid #0f9d8a; background: #fff; color: #0b6b5c; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .pt-cr-open:hover { background: #d9f6ef; }
+        .pt-cr-open .material-symbols-rounded { font-size: 18px; }
+        body.dark-mode .pt-cr-open { background: transparent; border-color: #2dd4bf; color: #5eead4; }
+        body.dark-mode .pt-cr-open:hover { background: rgba(45,212,191,.14); }
+        /* Request change dialog: centred in the viewport. The page resets dialog
+           margins, which is what pushed it to the top-left, so it is positioned
+           explicitly here instead of relying on the browser default. */
+        .pt-cr-dialog { position: fixed; inset: 0; margin: auto; border: 0; padding: 0; background: transparent; width: min(480px, calc(100vw - 32px)); max-width: none; max-height: calc(100vh - 32px); height: fit-content; overflow: visible; }
+        .pt-cr-dialog[open] { display: block; animation: ptCrIn .18s ease-out; }
+        @keyframes ptCrIn { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+        .pt-cr-dialog::backdrop { background: rgba(15, 23, 42, .55); backdrop-filter: blur(3px); }
+        .pt-cr-card { box-sizing: border-box; display: flex; flex-direction: column; gap: 18px; padding: 26px; border-radius: 20px; background: #fff; color: #1a1a1a; box-shadow: 0 24px 60px rgba(15, 23, 42, .35); max-height: calc(100vh - 32px); overflow-y: auto; text-align: left; }
+        .pt-cr-head { display: flex; align-items: center; gap: 14px; }
+        .pt-cr-icon { flex: 0 0 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: #d9f6ef; color: #0b6b5c; }
+        .pt-cr-icon .material-symbols-rounded { font-size: 26px; }
+        .pt-cr-card h3 { margin: 0; font-size: 19px; font-weight: 800; line-height: 1.25; color: #0d47a1; text-transform: none; letter-spacing: 0; }
+        .pt-cr-sub { margin: 3px 0 0; font-size: 13px; line-height: 1.4; color: #64748b; }
+        .pt-cr-opts { display: grid; gap: 10px; }
+        .pt-cr-opt { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border: 1.5px solid #dbe3ee; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s; }
+        .pt-cr-opt:hover { border-color: #90caf9; background: #f5f9ff; }
+        .pt-cr-opt input { width: 18px; height: 18px; margin: 0; accent-color: #0d47a1; flex: 0 0 auto; }
+        .pt-cr-opt:has(input:checked) { border-color: #0d47a1; background: #eaf2ff; }
+        .pt-cr-opt--cancel input { accent-color: #c62828; }
+        .pt-cr-opt--cancel:hover { border-color: #f5a3a3; background: #fff6f6; }
+        .pt-cr-opt--cancel:has(input:checked) { border-color: #c62828; background: #fdecec; }
+        .pt-cr-field { display: flex; flex-direction: column; gap: 7px; font-size: 13px; font-weight: 700; color: #334155; }
+        .pt-cr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pt-cr-row[hidden] { display: none; }
+        .pt-cr-hint { grid-column: 1 / -1; margin: 0; font-size: 12.5px; line-height: 1.45; color: #64748b; }
+        body.dark-mode .pt-cr-hint { color: #94a3b8; }
+        @media (max-width: 480px) { .pt-cr-row { grid-template-columns: 1fr; } }
+        .pt-cr-field[hidden] { display: none; }
+        .pt-cr-field input, .pt-cr-field textarea { box-sizing: border-box; width: 100%; padding: 11px 13px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 400; background: #fff; color: #1a1a1a; resize: vertical; }
+        .pt-cr-field textarea { min-height: 84px; }
+        .pt-cr-field input:focus, .pt-cr-field textarea:focus { outline: none; border-color: #0d47a1; box-shadow: 0 0 0 3px rgba(13, 71, 161, .15); }
+        .pt-cr-info { margin: 0; padding: 10px 12px; border-radius: 10px; background: #f1f5f9; font-size: 12.5px; line-height: 1.45; color: #475569; }
+        .pt-cr-err { margin: 0; font-size: 13px; font-weight: 700; color: #c62828; }
+        .pt-cr-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 2px; }
+        .pt-cr-btn { padding: 11px 22px; border-radius: 10px; border: 1px solid transparent; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: filter .15s, background .15s; }
+        .pt-cr-btn--ghost { background: #fff; border-color: #cbd5e1; color: #334155; }
+        .pt-cr-btn--ghost:hover { background: #f1f5f9; }
+        .pt-cr-btn--primary { background: #0d47a1; color: #fff; box-shadow: 0 4px 12px rgba(13, 71, 161, .3); }
+        .pt-cr-btn--primary:hover { filter: brightness(1.1); }
+        .pt-cr-btn:disabled { opacity: .6; cursor: default; box-shadow: none; }
+        @media (max-width: 480px) {
+            .pt-cr-card { padding: 20px; }
+            .pt-cr-actions { flex-direction: column-reverse; }
+            .pt-cr-btn { width: 100%; }
+        }
+        body.dark-mode .pt-cr-dialog::backdrop { background: rgba(2, 6, 14, .7); }
+        body.dark-mode .pt-cr-card { background: #131a26; color: #e2e8f0; box-shadow: 0 24px 60px rgba(0, 0, 0, .6); }
+        body.dark-mode .pt-cr-icon { background: rgba(45, 212, 191, .16); color: #5eead4; }
+        body.dark-mode .pt-cr-card h3 { color: #90caf9; }
+        body.dark-mode .pt-cr-sub { color: #94a3b8; }
+        body.dark-mode .pt-cr-opt { border-color: #33415a; }
+        body.dark-mode .pt-cr-opt:hover { border-color: #64b5f6; background: rgba(100, 181, 246, .08); }
+        body.dark-mode .pt-cr-opt:has(input:checked) { border-color: #64b5f6; background: rgba(100, 181, 246, .14); }
+        body.dark-mode .pt-cr-opt--cancel:hover { border-color: #f87171; background: rgba(248, 113, 113, .08); }
+        body.dark-mode .pt-cr-opt--cancel:has(input:checked) { border-color: #f87171; background: rgba(248, 113, 113, .14); }
+        body.dark-mode .pt-cr-field { color: #cbd5e1; }
+        body.dark-mode .pt-cr-field input, body.dark-mode .pt-cr-field textarea { background: #0b1220; border-color: #33415a; color: #e2e8f0; color-scheme: dark; }
+        body.dark-mode .pt-cr-field input:focus, body.dark-mode .pt-cr-field textarea:focus { border-color: #64b5f6; box-shadow: 0 0 0 3px rgba(100, 181, 246, .2); }
+        body.dark-mode .pt-cr-info { background: rgba(255, 255, 255, .06); color: #94a3b8; }
+        body.dark-mode .pt-cr-btn--ghost { background: transparent; border-color: #33415a; color: #cbd5e1; }
+        body.dark-mode .pt-cr-btn--ghost:hover { background: rgba(255, 255, 255, .06); }
+        body.dark-mode .pt-cr-btn--primary { background: #64b5f6; color: #0b1220; box-shadow: none; }
+        .pt-src-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .pt-src { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; line-height: 1.3; white-space: nowrap; }
+        .pt-src .material-symbols-rounded { font-size: 14px; }
+        .pt-src--dentist { background: #e3f0ff; color: #0d47a1; }
+        .pt-src--mine { background: #d9f6ef; color: #0b6b5c; }
+        body.dark-mode .pt-schedule--dentist .pt-disclosure__summary > .material-symbols-rounded:first-child { color: #64b5f6; }
+        body.dark-mode .pt-schedule--mine .pt-disclosure__summary > .material-symbols-rounded:first-child { color: #2dd4bf; }
+        body.dark-mode .pt-card.pt-sched--dentist { border-left-color: #64b5f6; }
+        body.dark-mode .pt-card.pt-sched--mine { border-left-color: #2dd4bf; }
+        body.dark-mode .pt-src--dentist { background: rgba(100,181,246,.16); color: #90caf9; }
+        body.dark-mode .pt-src--mine { background: rgba(45,212,191,.16); color: #5eead4; }
 
         /* Patient Summary: payments rundown by month */
         .pt-pay-total { font-size: 12.5px; font-weight: 700; color: var(--text-secondary); }

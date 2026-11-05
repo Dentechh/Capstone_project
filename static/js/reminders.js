@@ -125,13 +125,18 @@
             return true;
         });
     }
-    function rank(r) { return isActive(r) ? 0 : (BOOKED[r.status] ? 1 : 2); }
+    // Soonest date first (overdue ones, being the oldest, come first). Finished
+    // rows (booked / closed) whose date has already passed are history: they sit
+    // at the bottom, newest first, so they never bury what still needs action.
+    function sortKey(r) { return (r.appointment_date || '') + ' ' + (r.appointment_time || '00:00'); }
+    function isOldHistory(r) { return !isActive(r) && (r.appointment_date || '') < todayStr(); }
     function sortRows(list) {
         return list.slice().sort(function (a, b) {
-            var ra = rank(a), rb = rank(b);
-            if (ra !== rb) return ra - rb;
-            if (ra === 0) return a.appointment_date < b.appointment_date ? -1 : a.appointment_date > b.appointment_date ? 1 : 0;
-            return a.appointment_date < b.appointment_date ? 1 : a.appointment_date > b.appointment_date ? -1 : 0;
+            var oa = isOldHistory(a), ob = isOldHistory(b);
+            if (oa !== ob) return oa ? 1 : -1;
+            var ka = sortKey(a), kb = sortKey(b);
+            if (ka === kb) return 0;
+            return oa ? (ka < kb ? 1 : -1) : (ka < kb ? -1 : 1);
         });
     }
 
@@ -229,6 +234,7 @@
         if (isActive(r) && !r.managed_by_patient) {
             if (r.status === 'awaiting') btn('Mark contacted', '', function () { act('/admin/reminders/contacted', { id: r.id }, 'Marked as contacted.'); });
             btn('Book', 'accept', function () { openBook(r); });
+            btn('Reschedule', '', function () { openReschedule(r); });
             btn('Cancel', 'delete', function () {
                 askConfirm('The ' + r.procedure + ' follow-up for ' + r.patient_name + ' (due ' + fmt(r.appointment_date) +
                     ') will be removed from the list.').then(function (yes) {
@@ -271,6 +277,7 @@
             var dueTxt = fmt(r.appointment_date + (r.appointment_time ? ' ' + r.appointment_time : ''));
             due.appendChild(el('span', isOverdue(r) ? 'rem-due--overdue' : '', dueTxt));
             if (isOverdue(r)) due.appendChild(el('span', 'rem-detail', 'Overdue'));
+            if (r.rescheduled_from) due.appendChild(el('span', 'rem-detail', 'Rescheduled from ' + fmt(r.rescheduled_from)));
             tr.appendChild(due);
 
             var d = describe(r);
@@ -315,8 +322,154 @@
                 }
                 render();
                 refreshBadge();
+                loadRequests();
             })
             .catch(function (e) { console.error('Reminders failed to load:', e); });
+    }
+    /* ---------- patient change requests (appointments they booked) ---------- */
+    var reqBox = $('remRequests'), reqList = $('remRequestsList'), reqN = $('remRequestsN');
+    function fmtTime(t) {
+        var m = /^(\d{1,2}):(\d{2})$/.exec(String(t || ''));
+        if (!m) return String(t || '');
+        var h = +m[1];
+        return ((h % 12) || 12) + ':' + m[2] + ' ' + (h >= 12 ? 'PM' : 'AM');
+    }
+    function askText(q) {
+        if (q.kind === 'cancel') return 'Wants to cancel this appointment';
+        if (q.preferred_date && q.preferred_time) return 'Wants a different date and time: ' + fmt(q.preferred_date) + ' at ' + fmtTime(q.preferred_time);
+        if (q.preferred_date) return 'Wants a different date: ' + fmt(q.preferred_date);
+        if (q.preferred_time) return 'Wants a different time, same date: ' + fmtTime(q.preferred_time);
+        return 'Wants a different date or time (see note)';
+    }
+    function renderRequests(list) {
+        if (!reqBox) return;
+        reqList.textContent = '';
+        reqBox.hidden = !list.length;
+        reqN.textContent = String(list.length);
+        list.forEach(function (q) {
+            var card = el('div', 'rem-req');
+            var main = el('div', 'rem-req__main');
+            main.appendChild(el('strong', '', q.patient_name || 'Patient'));
+            main.appendChild(el('span', 'rem-detail', (q.service || 'Appointment') + ' \u00b7 ' + (fmt(q.appointment_date) || '-') +
+                (q.dentist ? ' \u00b7 ' + q.dentist : '')));
+            main.appendChild(el('span', 'rem-req__ask rem-req__ask--' + (q.kind === 'cancel' ? 'cancel' : 'change'), askText(q)));
+            if (q.note) main.appendChild(el('span', 'rem-detail', 'Note: ' + q.note));
+            card.appendChild(main);
+
+            var actions = el('div', 'rem-req__actions');
+            function mk(label, cls, fn) {
+                var b = el('button', cls, label);
+                b.type = 'button';
+                b.addEventListener('click', fn);
+                actions.appendChild(b);
+                return b;
+            }
+            if (q.kind === 'cancel') {
+                mk('Open Appointments', 'btn-action accept', function () {
+                    if (typeof window.showSection === 'function') window.showSection('appointments');
+                });
+            } else {
+                mk('Apply change', 'btn-action accept', function () { openApply(q); });
+            }
+            var done = mk(q.kind === 'cancel' ? 'Mark handled' : 'Dismiss', 'btn-action filter-btn', function () {
+                done.disabled = true;
+                post('/admin/change_requests/handle', { id: q.id }).then(function (d) {
+                    if (d && d.success) { toast('Request closed.'); loadRequests(); refreshBadge(); }
+                    else { toast((d && d.message) || 'Something went wrong.', 'error'); done.disabled = false; }
+                });
+            });
+            card.appendChild(actions);
+            reqList.appendChild(card);
+        });
+    }
+
+    /* Apply change: update the appointment itself (same rules as the Appointments
+       reschedule), then update that row in the Appointments table in place. */
+    var SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    var apDlg = $('remApplyDialog'), apDate = $('remApDate'), apTime = $('remApTime'), apErr = $('remApErr');
+    var apSave = $('remApSave'), apNote = $('remApNote'), apReq = null, apFp = null;
+    if (apTime) SLOTS.forEach(function (s) { var o = el('option', '', fmtTime(s)); o.value = s; apTime.appendChild(o); });
+    function apError(msg) { apErr.textContent = msg || ''; apErr.hidden = !msg; }
+    function nearestSlot(t) {
+        var m = /^(\d{2}):(\d{2})$/.exec(String(t || ''));
+        if (!m) return '';
+        var mins = +m[1] * 60 + +m[2], best = SLOTS[0], diff = 1e9;
+        SLOTS.forEach(function (s) {
+            var dd = Math.abs(+s.slice(0, 2) * 60 - mins);
+            if (dd < diff) { diff = dd; best = s; }
+        });
+        return best;
+    }
+    function openApply(q) {
+        apReq = q; apError(''); apSave.disabled = false;
+        $('remApSub').textContent = (q.patient_name || 'Patient') + ' \u00b7 ' + (q.service || 'Appointment') + ' \u00b7 now ' + fmt(q.appointment_date);
+        $('remApAsk').textContent = askText(q) + (q.note ? ' \u2014 "' + q.note + '"' : '');
+        var curDate = String(q.appointment_date || '').slice(0, 10), curTime = String(q.appointment_date || '').slice(11, 16);
+        var date = q.preferred_date || curDate;
+        var time = nearestSlot(q.preferred_time) || (SLOTS.indexOf(curTime) > -1 ? curTime : SLOTS[0]);
+        if (!apFp && window.flatpickr) {
+            apFp = window.flatpickr(apDate, {
+                dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', altInputClass: '',
+                minDate: 'today', disableMobile: true, static: true, allowInput: false
+            });
+        }
+        if (apFp) apFp.setDate(date, false); else { apDate.min = todayStr(); apDate.value = date; }
+        apTime.value = time;
+        if (q.preferred_time && q.preferred_time !== time) {
+            apNote.textContent = 'The patient asked for ' + fmtTime(q.preferred_time) + '. The clinic books hourly slots, so the closest one is selected.';
+            apNote.hidden = false;
+        } else { apNote.hidden = true; }
+        apDlg.showModal();
+    }
+    function fullFmt(raw) {
+        var FM = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/.exec(String(raw || ''));
+        if (!m) return String(raw || '');
+        var h = +m[4];
+        return FM[+m[2] - 1] + ' ' + (+m[3]) + ', ' + m[1] + ' \u2013 ' + ('0' + ((h % 12) || 12)).slice(-2) + ':' + m[5] + (h >= 12 ? 'PM' : 'AM');
+    }
+    function syncAppointmentsRow(uid, apptId, newDt) {
+        var hit = false;
+        document.querySelectorAll('#appointmentsTable tbody tr[data-appointment]').forEach(function (tr) {
+            var a;
+            try { a = JSON.parse(tr.getAttribute('data-appointment')); } catch (e) { return; }
+            if (!a || String(a.id) !== String(apptId) || String(a.uid) !== String(uid)) return;
+            a.appointment_date = newDt;
+            tr.setAttribute('data-appointment', JSON.stringify(a));
+            var cell = tr.querySelector('.appt-date-cell');
+            if (cell) {
+                cell.setAttribute('data-raw', newDt);
+                cell.textContent = (typeof window.formatApptDateTime === 'function') ? window.formatApptDateTime(newDt) : fullFmt(newDt);
+            }
+            hit = true;
+        });
+        return hit;
+    }
+    if (apDlg) {
+        $('remApCancel').addEventListener('click', function () { apDlg.close(); });
+        apSave.addEventListener('click', function () {
+            if (!apReq || !apDate.value || !apTime.value) { apError('Choose a date and a time.'); return; }
+            apSave.disabled = true; apError('');
+            post('/admin/change_requests/apply', { id: apReq.id, date: apDate.value, time: apTime.value }).then(function (d) {
+                if (d && d.success) {
+                    apDlg.close();
+                    syncAppointmentsRow(d.uid, d.appointment_id, d.appointment_date);
+                    toast('Appointment moved to ' + fmt(d.appointment_date) + '. The patient was notified' +
+                        (d.email_on_file === false ? ' (no email on file).' : '.'));
+                    loadRequests(); refreshBadge();
+                } else {
+                    apError((d && d.message) || 'Could not apply the change.');
+                    apSave.disabled = false;
+                }
+            });
+        });
+    }
+    function loadRequests() {
+        if (!reqBox) return Promise.resolve();
+        return fetch('/admin/change_requests', { credentials: 'same-origin' })
+            .then(function (res) { return res.json(); })
+            .then(function (d) { if (d && d.success) renderRequests(d.rows || []); })
+            .catch(function () { /* the panel is best-effort */ });
     }
     function act(url, data, okMsg) {
         return post(url, data).then(function (d) {
@@ -403,6 +556,41 @@
             } else {
                 bookError((d && d.message) || 'Could not book this visit.');
                 bookSave.disabled = false;
+            }
+        });
+    });
+
+    /* ---------- reschedule dialog (moves the due date only) ---------- */
+    var rsDlg = $('remRescheduleDialog'), rsDate = $('remRsDate'), rsErr = $('remRsErr');
+    var rsSave = $('remRsSave'), rsRow = null, rsFp = null;
+    function rsError(msg) { rsErr.textContent = msg || ''; rsErr.hidden = !msg; }
+    function openReschedule(r) {
+        rsRow = r; rsError(''); rsSave.disabled = false;
+        $('remRsSub').textContent = r.patient_name + ' \u00b7 ' + r.procedure + ' \u00b7 due ' + fmt(r.appointment_date);
+        var t = todayStr();
+        var start = r.appointment_date >= t ? r.appointment_date : t;
+        if (!rsFp && window.flatpickr) {
+            rsFp = window.flatpickr(rsDate, {
+                dateFormat: 'Y-m-d', altInput: true, altFormat: 'F j, Y', altInputClass: '',
+                minDate: 'today', disableMobile: true, static: true, allowInput: false
+            });
+        }
+        if (rsFp) rsFp.setDate(start, false);
+        else { rsDate.min = t; rsDate.value = start; }
+        rsDlg.showModal();
+    }
+    $('remRsCancel').addEventListener('click', function () { rsDlg.close(); });
+    rsSave.addEventListener('click', function () {
+        if (!rsRow || !rsDate.value) { rsError('Choose a new date.'); return; }
+        rsSave.disabled = true;
+        post('/admin/reminders/reschedule', { id: rsRow.id, date: rsDate.value }).then(function (d) {
+            if (d && d.success) {
+                rsDlg.close();
+                toast('Follow-up moved to ' + fmt(d.date) + '.');
+                load();
+            } else {
+                rsError((d && d.message) || 'Could not reschedule.');
+                rsSave.disabled = false;
             }
         });
     });

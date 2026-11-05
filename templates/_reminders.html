@@ -15,6 +15,15 @@ body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange
 </style>
 <div id="section-reminders" class="content-section">
     <section class="content-panel">
+        <div class="rem-requests" id="remRequests" hidden>
+            <div class="rem-requests__head">
+                <span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span>
+                <strong>Patient change requests</strong>
+                <span class="rem-requests__n" id="remRequestsN">0</span>
+            </div>
+            <p class="rem-requests__hint">These patients asked to change or cancel an appointment they booked themselves. <strong>Apply change</strong> updates the appointment in Appointments and notifies the patient. <strong>Dismiss</strong> closes the request without changing anything. For a cancellation, decline the appointment in Appointments, then mark it handled.</p>
+            <div id="remRequestsList"></div>
+        </div>
         <div class="filter-bar rem-filter-bar">
             <div class="filter-search-wrap">
                 <span class="material-symbols-rounded filter-search-icon" aria-hidden="true">search</span>
@@ -91,6 +100,53 @@ body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange
         <div class="rem-dialog__actions">
             <button type="button" class="rem-btn rem-btn--ghost" id="remBookCancel">Close</button>
             <button type="button" class="rem-btn rem-btn--primary" id="remBookSave"><span class="material-symbols-rounded" aria-hidden="true">check</span>Confirm booking</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="remRescheduleDialog" class="rem-dialog" aria-labelledby="remRsTitle">
+    <form method="dialog" id="remRsForm" class="rem-dialog__card" onsubmit="return false;">
+        <div class="rem-dialog__head">
+            <span class="rem-dialog__icon"><span class="material-symbols-rounded" aria-hidden="true">event_repeat</span></span>
+            <div>
+                <h3 id="remRsTitle">Reschedule follow-up</h3>
+                <p class="rem-dialog__sub" id="remRsSub"></p>
+            </div>
+        </div>
+        <label class="rem-field">New due date
+            <input type="date" id="remRsDate" required>
+        </label>
+        <p class="rem-dialog__note">Use this when the patient asks for a different date. The reminder stays on the list with the new date; use Book to confirm an exact time slot.</p>
+        <p class="rem-dialog__err" id="remRsErr" role="alert" hidden></p>
+        <div class="rem-dialog__actions">
+            <button type="button" class="rem-btn rem-btn--ghost" id="remRsCancel">Close</button>
+            <button type="button" class="rem-btn rem-btn--primary" id="remRsSave"><span class="material-symbols-rounded" aria-hidden="true">check</span>Save new date</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="remApplyDialog" class="rem-dialog" aria-labelledby="remApTitle">
+    <form method="dialog" id="remApForm" class="rem-dialog__card" onsubmit="return false;">
+        <div class="rem-dialog__head">
+            <span class="rem-dialog__icon"><span class="material-symbols-rounded" aria-hidden="true">edit_calendar</span></span>
+            <div>
+                <h3 id="remApTitle">Apply patient's change</h3>
+                <p class="rem-dialog__sub" id="remApSub"></p>
+            </div>
+        </div>
+        <p class="rem-dialog__note" id="remApAsk"></p>
+        <label class="rem-field">New date
+            <input type="date" id="remApDate" required>
+        </label>
+        <label class="rem-field">New time
+            <select id="remApTime" required></select>
+        </label>
+        <p class="rem-dialog__note" id="remApNote" hidden></p>
+        <p class="rem-dialog__note">The appointment is updated in Appointments (still waiting for your approval), and the patient is notified.</p>
+        <p class="rem-dialog__err" id="remApErr" role="alert" hidden></p>
+        <div class="rem-dialog__actions">
+            <button type="button" class="rem-btn rem-btn--ghost" id="remApCancel">Close</button>
+            <button type="button" class="rem-btn rem-btn--primary" id="remApSave"><span class="material-symbols-rounded" aria-hidden="true">check</span>Apply change</button>
         </div>
     </form>
 </dialog>

@@ -29,6 +29,7 @@ PH_TZ = timezone(timedelta(hours=8))
 
 class RemindersMixin:
     REMINDERS = "Reminders"
+    APPT_CHANGE_REQUESTS = "Appointment_Change_Requests"
     REMINDER_ACTIVE = ("awaiting", "contacted", "needs_review")
     REMINDER_HISTORY_DAYS = 60
     _TIME_RE = re.compile(r"^\d{2}:\d{2}$")
@@ -144,18 +145,27 @@ class RemindersMixin:
             batch = self.db.batch()
             ops = 0
             for rid, d in existing.items():
+                resched = bool(d.get("rescheduled_from"))
                 if rid in desired:
+                    # A rescheduled reminder keeps its own time: the record still
+                    # holds the original visit's time.
                     if d.get("status") in self.REMINDER_ACTIVE and (
                         d.get("DentistName") != desired[rid]["dentist"]
-                        or d.get("appointment_time", "") != desired[rid]["time"]
+                        or (not resched and d.get("appointment_time", "") != desired[rid]["time"])
                     ):
-                        batch.update(coll.document(rid), {
+                        upd = {
                             "DentistName": desired[rid]["dentist"],
-                            "appointment_time": desired[rid]["time"],
                             "updated_at": datetime.now(UTC).isoformat(),
-                        })
+                        }
+                        if not resched:
+                            upd["appointment_time"] = desired[rid]["time"]
+                        batch.update(coll.document(rid), upd)
                         ops += 1
                 elif d.get("status") in ("awaiting", "contacted"):
+                    # Moved off an original date that has since passed: the record
+                    # no longer lists it (it only lists future dates), so keep it.
+                    if resched and str(d.get("rescheduled_from")) < today.strftime("%Y-%m-%d"):
+                        continue
                     batch.delete(coll.document(rid))
                     ops += 1
 
@@ -291,6 +301,8 @@ class RemindersMixin:
                     "days_left": days_left,
                     "unseen": bool(unseen),
                     "managed_by_patient": managed,
+                    "rescheduled_from": d.get("rescheduled_from", ""),
+                    "reschedule_count": int(d.get("reschedule_count") or 0),
                     "contact_number": number,
                     "email": email,
                 })
@@ -314,6 +326,14 @@ class RemindersMixin:
             for snap in coll.where(filter=FieldFilter("admin_seen", "==", False)).limit(500).stream():
                 ids.add(snap.id)
             n = len(ids)
+            # Patients asking to change / cancel an appointment they booked.
+            try:
+                oq = self.db.collection(self.APPT_CHANGE_REQUESTS).where(
+                    filter=FieldFilter("status", "==", "open")
+                )
+                n += sum(1 for _ in oq.limit(200).stream())
+            except Exception as e:
+                print("CHANGE REQUEST COUNT ERROR:", e)
             q = self.db.collection(self.BRACES_PROPOSALS).where(
                 filter=FieldFilter("admin_seen", "==", False)
             )
@@ -445,6 +465,264 @@ class RemindersMixin:
             return jsonify({"success": True, "number": number})
         except Exception as e:
             print("ADMIN REMINDERS CONTACT NUMBER ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    # ------------------------------------------------------------- reschedule
+    def admin_reminders_reschedule(self):
+        """
+        Move a follow-up to the date the patient asked for (patients often come
+        days before or after the original date). Only the due date moves; the
+        reminder stays on the list and the clinic can still Book a slot later.
+        The 10-day window is restarted from the new date.
+        """
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            ref, d, err = self._reminder_load_active(request.form.get("id"))
+            if err:
+                return err
+            day_str = bleach.clean(request.form.get("date", "")).strip()
+            day = self._braces_parse_day(day_str)
+            if day is None or len(day_str) != 10 or day < self._braces_today():
+                return jsonify({"success": False, "message": "Choose a date that is today or later."}), 400
+            old_date = str(d.get("appointment_date", ""))
+            if day_str == old_date:
+                return jsonify({"success": False, "message": "That is already the due date."}), 400
+
+            now_iso = datetime.now(UTC).isoformat()
+            deadline = self._reminder_deadline(day)
+            upd = {
+                "appointment_date": day_str,
+                "status": "awaiting" if d.get("status") == "needs_review" else d.get("status"),
+                "deadline_at": deadline,
+                "rescheduled_at": now_iso,
+                "rescheduled_by": session.get("admin_uid", ""),
+                "reschedule_count": int(d.get("reschedule_count") or 0) + 1,
+                "updated_at": now_iso,
+                "admin_seen": True,
+            }
+            if not d.get("rescheduled_from"):
+                upd["rescheduled_from"] = old_date      # keep the ORIGINAL date
+            if not d.get("has_account"):
+                upd["auto_confirm_at"] = deadline       # walk-ins: auto-book clock restarts
+            ref.update(upd)
+
+            # Keep the date the patient sees in their own schedule in step.
+            try:
+                uid = str(d.get("uid", ""))
+                if uid:
+                    nv_ref = self.db.collection(self.Customer_Account).document(uid) \
+                        .collection("Approve").document("next_visit")
+                    nv = nv_ref.get()
+                    if nv.exists:
+                        nvd = nv.to_dict() or {}
+                        raw = str(nvd.get("appointment_date", ""))
+                        if raw[:10] == old_date[:10] and nvd.get("Service") == d.get("procedure"):
+                            nv_ref.update({"appointment_date": day_str + raw[10:]})
+            except Exception as e:
+                print("REMINDER RESCHEDULE NEXT VISIT ERROR:", e)
+
+            return jsonify({"success": True, "date": day_str})
+        except Exception as e:
+            print("ADMIN REMINDERS RESCHEDULE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    # ------------------------------------------------- patient change requests
+    def patient_request_appointment_change(self):
+        """
+        A patient asks the clinic to change or cancel an appointment THEY booked.
+        Nothing is changed here: the request is stored on the appointment and in
+        Appointment_Change_Requests, the dentist sees it in Reminders and makes
+        the final change. The uid always comes from the session.
+        """
+        uid = session.get("uid")
+        if not uid:
+            return jsonify({"success": False, "message": "Not logged in"}), 401
+
+        appointment_id = bleach.clean(request.form.get("appointment_id", "")).strip()
+        source = request.form.get("source", "").strip()
+        kind = request.form.get("kind", "").strip()
+        if not appointment_id or "/" in appointment_id or source not in ("pending", "accepted") \
+                or kind not in ("reschedule", "cancel"):
+            return jsonify({"success": False, "message": "Invalid request."}), 400
+
+        note = bleach.clean(request.form.get("note", "")).strip()[:300]
+        preferred = ""
+        if kind == "reschedule":
+            raw = bleach.clean(request.form.get("preferred_date", "")).strip()
+            if raw:
+                day = self._braces_parse_day(raw)
+                if day is None or len(raw) != 10 or day < self._braces_today():
+                    return jsonify({"success": False, "message": "Choose a date that is today or later."}), 400
+                preferred = raw
+
+        # Optional new time of day (patients often only need a different time).
+        preferred_time = ""
+        if kind == "reschedule":
+            rt = bleach.clean(request.form.get("preferred_time", "")).strip()
+            if rt:
+                if not self._TIME_RE.match(rt) or int(rt[:2]) > 23 or int(rt[3:]) > 59:
+                    return jsonify({"success": False, "message": "Choose a valid time."}), 400
+                preferred_time = rt
+            if not preferred and not preferred_time and not note:
+                return jsonify({"success": False,
+                                "message": "Choose a new date or time, or add a note for the clinic."}), 400
+
+        try:
+            account_ref = self.db.collection(self.Customer_Account).document(str(uid))
+            coll = account_ref.collection(self.Appointment_cliets if source == "pending" else "Approve")
+            ref = coll.document(appointment_id)
+            snap = ref.get()
+            if not snap.exists:
+                return jsonify({"success": False, "message": "Appointment not found."}), 404
+            data = snap.to_dict() or {}
+            if source == "accepted" and (appointment_id == "next_visit" or data.get("booked_by") != "patient"):
+                return jsonify({"success": False,
+                                "message": "You can only request changes to appointments you booked yourself."}), 403
+            if (data.get("change_request") or {}).get("status") == "open":
+                return jsonify({"success": False, "message": "You already sent a request for this appointment."}), 409
+
+            now_iso = datetime.now(UTC).isoformat()
+            cr = {"kind": kind, "preferred_date": preferred, "preferred_time": preferred_time, "note": note,
+                  "status": "open", "requested_at": now_iso}
+            name = f"{data.get('FirstName', '')} {data.get('LastName', '')}".strip()
+            batch = self.db.batch()
+            batch.update(ref, {"change_request": cr})
+            batch.set(self.db.collection(self.APPT_CHANGE_REQUESTS).document(f"{uid}_{appointment_id}"), {
+                "uid": str(uid),
+                "appointment_id": appointment_id,
+                "source": source,
+                "patient_name": name,
+                "appointment_date": data.get("appointment_date", ""),
+                "service": data.get("Service", ""),
+                "dentist": data.get("DentistName", ""),
+                "kind": kind,
+                "preferred_date": preferred,
+                "preferred_time": preferred_time,
+                "note": note,
+                "status": "open",
+                "requested_at": now_iso,
+                "admin_seen": False,
+            })
+            batch.commit()
+            return jsonify({"success": True,
+                            "message": "Your request was sent. The clinic will contact you to confirm."})
+        except Exception as e:
+            print("PATIENT CHANGE REQUEST ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+
+    def admin_change_requests(self):
+        """Open patient change / cancel requests, oldest first."""
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            q = self.db.collection(self.APPT_CHANGE_REQUESTS).where(
+                filter=FieldFilter("status", "==", "open")
+            )
+            rows = []
+            for snap in q.limit(200).stream():
+                d = snap.to_dict() or {}
+                rows.append({
+                    "id": snap.id,
+                    "uid": d.get("uid", ""),
+                    "appointment_id": d.get("appointment_id", ""),
+                    "source": d.get("source", ""),
+                    "patient_name": d.get("patient_name", ""),
+                    "appointment_date": d.get("appointment_date", ""),
+                    "service": d.get("service", ""),
+                    "dentist": d.get("dentist", ""),
+                    "kind": d.get("kind", ""),
+                    "preferred_date": d.get("preferred_date", ""),
+                    "preferred_time": d.get("preferred_time", ""),
+                    "note": d.get("note", ""),
+                    "requested_at": d.get("requested_at", ""),
+                })
+            rows.sort(key=lambda r: r["requested_at"])
+            return jsonify({"success": True, "rows": rows})
+        except Exception as e:
+            print("ADMIN CHANGE REQUESTS ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong."}), 500
+
+    def _close_change_request(self, rid, d, applied=False):
+        """Close a request and clear the "change requested" flag on the patient's appointment."""
+        self.db.collection(self.APPT_CHANGE_REQUESTS).document(rid).update({
+            "status": "handled",
+            "applied": bool(applied),
+            "handled_at": datetime.now(UTC).isoformat(),
+            "handled_by": session.get("admin_uid", ""),
+            "admin_seen": True,
+        })
+        try:
+            acct = self.db.collection(self.Customer_Account).document(str(d.get("uid", "")))
+            for cname in (self.Appointment_cliets, "Approve"):
+                aref = acct.collection(cname).document(str(d.get("appointment_id", "")))
+                s = aref.get()
+                if s.exists and (s.to_dict() or {}).get("change_request"):
+                    aref.update({"change_request": firestore.DELETE_FIELD})
+        except Exception as e:
+            print("CHANGE REQUEST CLEAR FLAG ERROR:", e)
+
+    def admin_change_requests_handle(self):
+        """Dismiss: close the request without changing the appointment."""
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            rid = bleach.clean(request.form.get("id", "")).strip()
+            if not rid or "/" in rid:
+                return jsonify({"success": False, "message": "No request specified."}), 400
+            snap = self.db.collection(self.APPT_CHANGE_REQUESTS).document(rid).get()
+            if not snap.exists:
+                return jsonify({"success": False, "message": "Request not found."}), 404
+            self._close_change_request(rid, snap.to_dict() or {})
+            return jsonify({"success": True})
+        except Exception as e:
+            print("ADMIN CHANGE REQUEST HANDLE ERROR:", e)
+            return jsonify({"success": False, "message": "Something went wrong."}), 500
+
+    def admin_change_requests_apply(self):
+        """
+        Apply a patient's date/time request to their appointment, using the same
+        rules, patient notification and email as the Appointments reschedule
+        (blocked days, taken slots, past dates). On success the request is closed.
+        The appointment stays pending (or accepted) exactly as it was.
+        """
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        try:
+            rid = bleach.clean(request.form.get("id", "")).strip()
+            if not rid or "/" in rid:
+                return jsonify({"success": False, "message": "No request specified."}), 400
+            snap = self.db.collection(self.APPT_CHANGE_REQUESTS).document(rid).get()
+            if not snap.exists:
+                return jsonify({"success": False, "message": "Request not found."}), 404
+            d = snap.to_dict() or {}
+            if d.get("status") != "open":
+                return jsonify({"success": False, "message": "This request was already handled."}), 409
+            if d.get("kind") != "reschedule":
+                return jsonify({"success": False,
+                                "message": "Cancellations are declined in Appointments, not applied here."}), 400
+
+            res = self._reschedule_appointment_core(
+                uid=str(d.get("uid", "")),
+                appointment_id=str(d.get("appointment_id", "")),
+                new_date=bleach.clean(request.form.get("date", "")).strip(),
+                new_time=bleach.clean(request.form.get("time", "")).strip(),
+                dentist_name="",
+                source=d.get("source") if d.get("source") in ("pending", "accepted") else "pending",
+            )
+            payload, status = res if isinstance(res, tuple) else (res, 200)
+            if status != 200 or not payload.get("success"):
+                return jsonify(payload), status
+
+            self._close_change_request(rid, d, applied=True)
+            payload.update({
+                "uid": d.get("uid", ""),
+                "appointment_id": d.get("appointment_id", ""),
+                "source": d.get("source", "pending"),
+            })
+            return jsonify(payload)
+        except Exception as e:
+            print("ADMIN CHANGE REQUEST APPLY ERROR:", e)
             return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     # ---------------------------------------------------------------- booking
@@ -610,3 +888,8 @@ class RemindersMixin:
         r("/admin/reminders/book", methods=["POST"])(self.admin_reminders_book)
         r("/admin/reminders/cancel", methods=["POST"])(self.admin_reminders_cancel)
         r("/admin/reminders/contact_number", methods=["POST"])(self.admin_reminders_contact_number)
+        r("/admin/reminders/reschedule", methods=["POST"])(self.admin_reminders_reschedule)
+        r("/patient/appointment_change_request", methods=["POST"])(self.patient_request_appointment_change)
+        r("/admin/change_requests")(self.admin_change_requests)
+        r("/admin/change_requests/handle", methods=["POST"])(self.admin_change_requests_handle)
+        r("/admin/change_requests/apply", methods=["POST"])(self.admin_change_requests_apply)

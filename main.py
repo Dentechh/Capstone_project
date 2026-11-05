@@ -2242,6 +2242,21 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
     )
 
     def admin_reschedule_appointment(self):
+        """Admin: move an appointment to a new date/time (see _reschedule_appointment_core)."""
+        if not self._is_admin():
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        res = self._reschedule_appointment_core(
+            uid=request.form.get("user_id", "").strip(),
+            appointment_id=request.form.get("appointment_id", "").strip(),
+            new_date=bleach.clean(request.form.get("new_date", "").strip()),
+            new_time=bleach.clean(request.form.get("new_time", "").strip()),
+            dentist_name=bleach.clean(request.form.get("dentist_name", "")).strip(),
+            source=request.form.get("source", "pending").strip().lower(),
+        )
+        payload, status = res if isinstance(res, tuple) else (res, 200)
+        return jsonify(payload), status
+
+    def _reschedule_appointment_core(self, uid, appointment_id, new_date, new_time, dentist_name, source):
         """
         Move an appointment to a new date/time. `source` says where it lives:
         "pending" (the appointments subcollection, default) or "accepted"
@@ -2256,40 +2271,33 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
         future, not blocked, and (when a dentist is known) not already taken by
         an accepted appointment for that dentist -- the same rules /approve
         enforces on accept, so the request can be accepted afterwards.
+
+        Returns (payload_dict, http_status). Shared by the admin reschedule route
+        and by "Apply change" on a patient change request.
         """
-        if not self._is_admin():
-            return jsonify({"success": False, "message": "Unauthorized"}), 403
-
-        uid = request.form.get("user_id", "").strip()
-        appointment_id = request.form.get("appointment_id", "").strip()
-        new_date = bleach.clean(request.form.get("new_date", "").strip())
-        new_time = bleach.clean(request.form.get("new_time", "").strip())
-        dentist_name = bleach.clean(request.form.get("dentist_name", "")).strip()
-        source = request.form.get("source", "pending").strip().lower()
-
         if source not in ("pending", "accepted"):
-            return jsonify({"success": False, "message": "Invalid appointment type."}), 400
+            return ({"success": False, "message": "Invalid appointment type."}), 400
 
         if not uid or not appointment_id:
-            return jsonify({"success": False, "message": "Missing appointment details"}), 400
+            return ({"success": False, "message": "Missing appointment details"}), 400
 
         try:
             datetime.strptime(new_date, "%Y-%m-%d")
         except ValueError:
-            return jsonify({"success": False, "message": "Please pick a valid date."}), 400
+            return ({"success": False, "message": "Please pick a valid date."}), 400
 
         if new_time not in self.RESCHEDULE_TIME_SLOTS:
-            return jsonify({"success": False, "message": "Please pick a valid time slot."}), 400
+            return ({"success": False, "message": "Please pick a valid time slot."}), 400
 
         today_ph = datetime.now(PH_TZ).strftime("%Y-%m-%d")
         if new_date < today_ph:
-            return jsonify({"success": False, "message": "The new date cannot be in the past."}), 400
+            return ({"success": False, "message": "The new date cannot be in the past."}), 400
 
         new_dt = f"{new_date} {new_time}"
 
         blocked, block_reason = self.is_slot_blocked(new_dt)
         if blocked:
-            return jsonify({
+            return ({
                 "success": False,
                 "message": f"That slot is blocked by the dentist ({block_reason}). Please pick another."
             }), 409
@@ -2302,7 +2310,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
                 main_collection = self.Customer_Account
 
             if not main_collection:
-                return jsonify({"success": False, "message": "Patient account not found."}), 404
+                return ({"success": False, "message": "Patient account not found."}), 404
 
             user_ref = self.db.collection(main_collection).document(uid)
             sub_name = "Approve" if source == "accepted" else self.Appointment_cliets
@@ -2310,7 +2318,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
             appt_doc = appt_ref.get()
 
             if not appt_doc.exists:
-                return jsonify({
+                return ({
                     "success": False,
                     "message": "This appointment could not be found. It may have been moved, declined or removed. Refresh the page."
                 }), 404
@@ -2319,7 +2327,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
             old_dt = str(appt_data.get("appointment_date", "")).strip()
 
             if old_dt == new_dt:
-                return jsonify({"success": False, "message": "That is already the current schedule."}), 400
+                return ({"success": False, "message": "That is already the current schedule."}), 400
 
             check_dentist = dentist_name or appt_data.get("DentistName", "")
             if check_dentist:
@@ -2329,7 +2337,7 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
                     exclude_doc_id=appointment_id if source == "accepted" else None
                 )
                 if conflict:
-                    return jsonify({
+                    return ({
                         "success": False,
                         "message": (
                             f"{conflict['dentist_name'] or 'This dentist'} already has an "
@@ -2368,14 +2376,14 @@ class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin)
                 daemon=True
             ).start()
 
-            return jsonify({
+            return ({
                 "success": True,
                 "appointment_date": new_dt,
                 "email_on_file": bool(patient_email)
             })
         except Exception as e:
             print("ADMIN RESCHEDULE APPOINTMENT ERROR:", e)
-            return jsonify({"success": False, "message": "Something went wrong. Please try again."}), 500
+            return ({"success": False, "message": "Something went wrong. Please try again."}), 500
 
     def create_patient(
         self,
@@ -5070,7 +5078,11 @@ setTimeout(go,3000);})();
 
                 "w_preg": w_preg,
                 "w_nurse": w_nurse,
-                "w_pill": w_pill
+                "w_pill": w_pill,
+
+                # Who made this booking. The patient profile uses it to keep
+                # the patient's own bookings apart from the dentist's.
+                "booked_by": "patient"
             })
 
             # The patient may be booking straight from the
@@ -5934,6 +5946,8 @@ setTimeout(go,3000);})();
             "Patient_unq_id": appointment_id,
 
             "status": "accept",
+
+            "booked_by": "clinic",
 
             # -----------------------------------------------------
             # PATIENT INFORMATION
@@ -11221,6 +11235,10 @@ backup. Groups marked "check" may be separate treatments that just share a price
                 print(data)
 
                 data["id"] = doc.id
+                # The patient's own bookings are shown in "Upcoming Schedule".
+                data["booked_by_patient"] = (
+                    doc.id != "next_visit" and data.get("booked_by") == "patient"
+                )
                 approve_list.append(data)
 
             print("Returned:", approve_list)
@@ -11229,6 +11247,55 @@ backup. Groups marked "check" may be separate treatments that just share a price
 
         except Exception as e:
             print(e)
+            return jsonify({"error": "Something went wrong. Please try again."}), 500
+
+    def get_my_bookings(self, uid):
+        """
+        Appointments the patient booked THEMSELVES, for the "Upcoming Schedule"
+        section of their profile: still waiting for the clinic (appointments)
+        and already accepted (Approve, booked_by == "patient"). The dentist's
+        own suggestions stay in get_approve ("Next Schedule").
+        """
+        if not self._is_owner_or_admin(uid):
+            return jsonify({"error": "Unauthorized"}), 403
+        try:
+            account_ref = self.db.collection(self.Customer_Account).document(uid)
+            items = []
+
+            def pick(doc, status):
+                data = doc.to_dict() or {}
+                return {
+                    "id": doc.id,
+                    "appointment_date": data.get("appointment_date", ""),
+                    "DentistName": data.get("DentistName", ""),
+                    "Service": data.get("Service", ""),
+                    "UrgencyLevel": data.get("UrgencyLevel", ""),
+                    "status": status,
+                    # "reschedule" / "cancel" while a request is open, else "".
+                    "change_request": (
+                        (data.get("change_request") or {}).get("kind", "")
+                        if (data.get("change_request") or {}).get("status") == "open" else ""
+                    ),
+                }
+
+            for doc in account_ref.collection(self.Appointment_cliets).stream():
+                st = str((doc.to_dict() or {}).get("status", "")).strip().lower()
+                if st in ("decline", "declined", "rejected", "cancelled", "canceled"):
+                    continue
+                items.append(pick(doc, "pending"))
+
+            for doc in account_ref.collection("Approve").stream():
+                data = doc.to_dict() or {}
+                if doc.id == "next_visit" or data.get("booked_by") != "patient":
+                    continue
+                if str(data.get("status", "")).strip().lower() not in ("accept", "accepted"):
+                    continue
+                items.append(pick(doc, "accepted"))
+
+            items.sort(key=lambda i: str(i.get("appointment_date", "")))
+            return jsonify(items)
+        except Exception as e:
+            print("GET MY BOOKINGS ERROR:", e)
             return jsonify({"error": "Something went wrong. Please try again."}), 500
 
     # =====================================================================
@@ -13423,6 +13490,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/save_dental_record", methods=["POST"])(self.save_dental_record)
         self.app.route("/get_treatment_info/<patient_id>")(self.get_treatment_info)
         self.app.route("/get_approve/<uid>")(self.get_approve)
+        self.app.route("/get_my_bookings/<uid>")(self.get_my_bookings)
         self.app.route("/patient/decline_appointment", methods=["POST"])(self.patient_decline_appointment)
         self.app.route("/admin/create_appointment", methods=["POST"])(self.admin_create_appointment)
         self.app.route("/get_blocked_slots")(self.get_blocked_slots)
