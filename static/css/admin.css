@@ -9797,6 +9797,74 @@ body.dark-mode #section-WeeklyClients .weekly-empty {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     padding: 18px 24px 4px;
+    touch-action: pan-y;
+}
+
+.ep-body * {
+    touch-action: pan-y;
+}
+
+/* Scrollbar design for Edit Patient modal (consistent with other modals) */
+.ep-body,
+.ep-card {
+    scrollbar-width: thin;
+    scrollbar-color: #b6c2d2 transparent;
+    overscroll-behavior: contain;
+}
+
+.ep-body::-webkit-scrollbar,
+.ep-card::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.ep-body::-webkit-scrollbar-track,
+.ep-card::-webkit-scrollbar-track {
+    background: rgba(13, 71, 161, 0.05);
+    border-radius: 10px;
+}
+
+.ep-body::-webkit-scrollbar-thumb,
+.ep-card::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #0d47a1, #1565c0);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.ep-body::-webkit-scrollbar-thumb:hover,
+.ep-card::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #1565c0, #0d47a1);
+}
+
+.ep-body::-webkit-scrollbar-button,
+.ep-card::-webkit-scrollbar-button {
+    display: none;
+}
+
+.ep-body::-webkit-scrollbar-corner,
+.ep-card::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+body.dark-mode .ep-body,
+body.dark-mode .ep-card {
+    scrollbar-color: #3b4a61 transparent;
+}
+
+body.dark-mode .ep-body::-webkit-scrollbar-track,
+body.dark-mode .ep-card::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark-mode .ep-body::-webkit-scrollbar-thumb,
+body.dark-mode .ep-card::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #64b5f6, #90caf9);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+body.dark-mode .ep-body::-webkit-scrollbar-thumb:hover,
+body.dark-mode .ep-card::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #90caf9, #64b5f6);
 }
 
 .ep-group + .ep-group {
@@ -9939,10 +10007,11 @@ body.dark-mode #section-WeeklyClients .weekly-empty {
                 border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.ep-cancel {
+#editPatientModal .ep-cancel {
     background: #ffffff;
     border-color: #cbd5e1;
     color: #475569;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
 }
 
 /* id-scoped: the shared .btn-action.accept rule is two classes and would
@@ -10028,10 +10097,11 @@ body.dark-mode .ep-actions {
     border-top-color: rgba(255, 255, 255, 0.1);
 }
 
-body.dark-mode .ep-cancel {
+body.dark-mode #editPatientModal .ep-cancel {
     background: #1f2937;
     border-color: #475569;
     color: #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-mode .ep-cancel:hover:not(:disabled) {

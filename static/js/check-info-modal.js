@@ -57,9 +57,12 @@ let currentCheckInfoPatientId = "";
             }
 
             (function ciInjectStyles() {
-                if (document.getElementById("ciPlanStyles")) return;
-                const st = document.createElement("style");
-                st.id = "ciPlanStyles";
+                const existing = document.getElementById("ciPlanStyles");
+                const st = existing || document.createElement("style");
+                if (!existing) {
+                    st.id = "ciPlanStyles";
+                    document.head.appendChild(st);
+                }
                 st.textContent = [
                     ".ci-muted{color:#6b7c93;font-size:12px;}",
                     ".ci-badge--follow{background:#e8f0fe;color:#0d47a1;}",
@@ -80,12 +83,14 @@ let currentCheckInfoPatientId = "";
                     "#checkInfoModal .ci-pay-field .adm-select{position:relative;width:160px;margin:0;}",
                     "#checkInfoModal .ci-pay-field .adm-select>select{width:100%;min-width:0;}",
                     ".ci-pay-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;white-space:nowrap;}",
-                    ".ci-hist-panel{display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#f8fafc;border:1px solid #dbe4ef;border-radius:10px;}",
-                    ".ci-hist-title{font-size:13px;font-weight:700;color:#1f2937;}",
-                    ".ci-hist{width:100%;max-width:520px;border-collapse:separate;border-spacing:0;font-size:13px;border:1px solid #e3eaf3;border-radius:8px;overflow:hidden;}",
-                    ".ci-hist th{padding:8px 10px;text-align:left;background:#eef3fa;color:#475569;font-weight:700;border-bottom:1px solid #e3eaf3;}",
-                    ".ci-hist td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#1f2937;}",
-                    ".ci-hist tbody tr:last-child td{border-bottom:none;}"
+".ci-hist-panel{display:flex;flex-direction:column;gap:8px;padding:12px 16px;background:#f8fafc;border:1px solid #dbe4ef;border-radius:10px;box-shadow:0 1px 3px rgba(15,23,42,0.06);align-items:center;}",
+".ci-hist-title{font-size:13px;font-weight:700;color:#1f2937;align-self:flex-start;}",
+".ci-hist{width:100%;max-width:480px;margin:0 auto;border-collapse:separate;border-spacing:0;font-size:13px;border:1px solid #e3eaf3;border-radius:8px;overflow:hidden;background:#fff;}",
+".ci-hist th{padding:8px 10px;text-align:left;background:#eef3fa;color:#475569;font-weight:700;border-bottom:1px solid #e3eaf3;}",
+".ci-hist td{padding:8px 10px;border-bottom:1px solid #f1f5f9;color:#1f2937;}",
+".ci-hist th:nth-child(2),.ci-hist td:nth-child(2){text-align:right;}",
+".ci-hist tbody tr:last-child td{border-bottom:none;}",
+".ci-appt-empty{color:#6b7c93;font-size:13px;padding:4px 0;font-style:italic;}"
                 ].join("");
                 document.head.appendChild(st);
             })();
@@ -105,7 +110,7 @@ let currentCheckInfoPatientId = "";
                 const sub = document.createElement("tr");
                 sub.id = id;
                 sub.className = "ci-sub";
-                sub.innerHTML = '<td colspan="13">' + html + "</td>";
+                sub.innerHTML = '<td colspan="14">' + html + "</td>";
                 // Keep payment panel above the history panel.
                 const hist = document.getElementById("ci-hist-" + index);
                 if (id.indexOf("ci-pay-") === 0 && hist) hist.before(sub); else row.after(sub);
@@ -439,9 +444,28 @@ let currentCheckInfoPatientId = "";
                 if (!block) return;
 
                 if (!appt) {
-                    setCiApptVisible(false);
+                    const items = block.querySelector(".ci-appt-items");
+                    if (items) items.hidden = true;
+                    const med = document.getElementById("ciApptMedical");
+                    if (med) med.hidden = true;
+                    let empty = block.querySelector(".ci-appt-empty");
+                    if (!empty) {
+                        empty = document.createElement("div");
+                        empty.className = "ci-appt-empty";
+                        empty.textContent = "No appointment information recorded.";
+                        block.appendChild(empty);
+                    }
+                    empty.hidden = false;
+                    const divider = document.getElementById("ciApptDivider");
+                    if (divider) divider.hidden = false;
+                    block.hidden = false;
                     return;
                 }
+
+                const items = block.querySelector(".ci-appt-items");
+                if (items) items.hidden = false;
+                const empty = block.querySelector(".ci-appt-empty");
+                if (empty) empty.hidden = true;
 
                 setCiApptText("ciApptService", appt.service);
                 setCiApptText("ciApptDate",
@@ -456,7 +480,9 @@ let currentCheckInfoPatientId = "";
                 renderCiPatientDetails(appt.patient_details);
                 renderCiMedicalHistory(appt.medical_history);
 
-                setCiApptVisible(true);
+                const divider = document.getElementById("ciApptDivider");
+                if (divider) divider.hidden = false;
+                block.hidden = false;
             }
 
             async function openCheckInfoModal(patientId, patientName) {

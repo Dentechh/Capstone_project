@@ -509,3 +509,16 @@ const CONFIRM_ICON_QUESTION = '<circle cx="12" cy="12" r="10"></circle><path d="
                     warningBox.style.display = 'none';
                 });
             })();
+
+(function () {
+    var modal = document.getElementById('editPatientModal');
+    if (!modal) return;
+
+    [modal.querySelector('.ep-body'), modal.querySelector('.ep-card')].forEach(function (container) {
+        if (!container) return;
+        container.addEventListener('wheel', function (e) {
+            e.preventDefault();
+            container.scrollTop += e.deltaY;
+        }, { passive: false });
+    });
+})();
