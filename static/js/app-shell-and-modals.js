@@ -30,7 +30,66 @@ function updateDateTime() {
 
         let isDentalRecordSaving = false;
 
-        async function saveDentalRecord(uid) {
+        /* ------------------------------------------------------------------
+   Refresh only what a save changed, instead of reloading the whole page.
+   ------------------------------------------------------------------ */
+
+// These lists load once per page visit. Flag them stale so they re-read the
+// server the next time they are opened (or right now if one is showing).
+function adminMarkListsStale(names) {
+    window._lazyLoaded = window._lazyLoaded || {};
+    names.forEach(function (n) { window._lazyLoaded[n] = false; });
+    var active = document.querySelector('.content-section.active-section');
+    var id = active ? active.id.replace(/^section-/, '') : '';
+    if (names.indexOf(id) !== -1 && typeof loadSectionOnce === 'function') loadSectionOnce(id);
+}
+
+// Dashboard Overview: pull the new numbers from the server and update the cards
+// and charts in place. Nothing else on the page is touched.
+function adminRefreshOverview() {
+    return fetch('/admin_dashboard', { credentials: 'same-origin', headers: { 'X-Requested-With': 'fetch' } })
+        .then(function (res) { return res.ok ? res.text() : null; })
+        .then(function (html) {
+            if (!html) return;
+            var doc = new DOMParser().parseFromString(html, 'text/html');
+            var fresh = doc.querySelectorAll('#section-dashboard [data-target]');
+            var current = document.querySelectorAll('#section-dashboard [data-target]');
+            if (fresh.length && fresh.length === current.length) {
+                fresh.forEach(function (el, i) { current[i].setAttribute('data-target', el.getAttribute('data-target')); });
+            }
+            var freshData = doc.getElementById('dashboard-data');
+            var currentData = document.getElementById('dashboard-data');
+            if (freshData && currentData) currentData.textContent = freshData.textContent;
+            if (typeof animateCounters === 'function') animateCounters();
+            if (typeof rebuildDashboardCharts === 'function') rebuildDashboardCharts();
+        })
+        .catch(function () { /* the numbers catch up the next time the page loads */ });
+}
+
+// A treatment record was saved: clear the form, send the dentist back to the
+// list they were working from, and refresh only the parts that changed.
+function adminAfterRecordSaved(result) {
+    var uid = String((result && result.uid) || '');
+    var fromAccepted = Array.prototype.some.call(
+        document.querySelectorAll('#weeklyClientsGrid .check-profile-btn'),
+        function (b) { return b.getAttribute('data-uid') === uid; }
+    );
+
+    adminMarkListsStale(['WeeklyClients', 'mypatients']);
+    if (typeof resetPatientDashboardToEmpty === 'function') resetPatientDashboardToEmpty();
+    showSection(fromAccepted ? 'WeeklyClients' : 'mypatients');
+
+    adminRefreshOverview();
+    if (window.RemindersLive && window.RemindersLive.reload) window.RemindersLive.reload();
+}
+
+// An appointment was created from the admin panel.
+function adminAfterAppointmentCreated() {
+    adminMarkListsStale(['appointments', 'WeeklyClients', 'mypatients']);
+    adminRefreshOverview();
+}
+
+async function saveDentalRecord(uid) {
 
             // ---- RE-ENTRY GUARD: block duplicate submissions ----
             if (isDentalRecordSaving) {
@@ -468,7 +527,7 @@ function updateDateTime() {
                         "Dental record saved successfully!"
                     );
 
-                    location.reload();
+                    adminAfterRecordSaved(result);
 
                 }
 
@@ -508,8 +567,8 @@ function updateDateTime() {
 
                 isDentalRecordSaving = false;
 
-                // Keep the button locked on success (page is reloading).
-                if (submitBtn && !saveSucceeded) {
+                // The page no longer reloads, so the button is restored either way.
+                if (submitBtn) {
                     submitBtn.disabled = false;
                     submitBtn.textContent = submitBtnText;
                 }
@@ -1800,12 +1859,15 @@ function updateDateTime() {
                         const res = await fetch('/admin/create_appointment', { method: 'POST', body: formData });
                         const result = await res.json();
                         if (result.success) {
-                            /* The dashboard re-fetches its lists on load, so a
-                               reload is what refreshes the Appointments table.
-                               Route the confirmation through the toast-after-reload
-                               helper instead of showToast(): a toast raised just
-                               before location.reload() is destroyed unread. */
-                            showToastAfterReload(result.message || 'Appointment created successfully.', 'success');
+                            showToast(result.message || 'Appointment created successfully.', 'success');
+
+                            // Close and clear the form, then refresh only the lists that changed.
+                            const apptModal = document.getElementById('newApptModal');
+                            if (apptModal) apptModal.style.display = 'none';
+                            e.target.reset();
+                            admClearSignature();
+                            if (typeof window.admResetWizard === 'function') window.admResetWizard();
+                            adminAfterAppointmentCreated();
                         } else {
                             showToast(result.message || 'Failed to create appointment.');
                         }

@@ -681,6 +681,12 @@
 
     // Sidebar badge: once now, then every 2 minutes while the tab is visible.
     refreshBadge();
+    // Lets live-updates.js refresh the change-request view when a patient sends one.
+    window.RemindersLive = {
+        refresh: function () { loadRequests(); refreshBadge(); },
+        reload: function () { return load(); }     // the whole Reminders list + requests + badge
+    };
+
     setInterval(function () { if (document.visibilityState === 'visible') refreshBadge(); }, 120000);
     window.loadReminders = load;
 })();

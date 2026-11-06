@@ -1,4 +1,17 @@
+// The section the page was opened on (captured before any other script runs).
+var __adminInitialHash = window.location.hash.substring(1);
+var __adminSectionRestored = false;
+
 function showSection(sectionId) {
+            // Remember the open section in the address bar, so a reload (or a
+            // restored tab) comes back to the same place instead of the Dashboard.
+            if (__adminSectionRestored) {
+                try {
+                    if (window.location.hash.substring(1) !== sectionId) {
+                        history.replaceState(null, '', '#' + sectionId);
+                    }
+                } catch (e) { /* history unavailable: nothing to remember */ }
+            }
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
             const activeNav = document.getElementById('nav-' + sectionId);
             if (activeNav) activeNav.classList.add('active');
@@ -1864,10 +1877,13 @@ function showSection(sectionId) {
 
         // Show section based on hash on page load
         window.onload = function () {
-            var hash = window.location.hash.substring(1); // removes '#'
-            if (hash) {
+            var hash = __adminInitialHash;   // '#appointments' -> 'appointments'
+            // The Patient Dashboard needs a patient to be opened first, so it is
+            // not a place a reload can return to.
+            if (hash && hash !== 'patientdashboard' && document.getElementById('section-' + hash)) {
                 showSection(hash);
             }
+            __adminSectionRestored = true;
         };
 
         function initUnifiedGrid(id, cols, topType, bottomType) {

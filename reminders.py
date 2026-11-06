@@ -206,6 +206,40 @@ class RemindersMixin:
         except Exception as e:
             print("REMINDERS SYNC ERROR:", e)
 
+    # --------------------------------------------------------------- live state
+    def admin_live_state(self):
+        """
+        Two cheap counts the admin page polls to notice new patient activity
+        without a reload: pending appointments and open change requests. Both are
+        server-side aggregations (about one read each), and the answer is cached
+        for a few seconds so several open admin tabs do not multiply the reads.
+        """
+        if not session.get("admin_logged_in"):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        now = datetime.now(UTC).timestamp()
+        cached = getattr(self, "_live_state_cache", None)
+        if cached and now - cached[0] < 8:
+            return jsonify(cached[1])
+        try:
+            try:
+                pending = self.db.collection_group("appointments").count().get()[0][0].value
+            except Exception as e:
+                print("LIVE STATE PENDING COUNT ERROR:", e)
+                pending = None
+            try:
+                requests_open = self.db.collection(self.APPT_CHANGE_REQUESTS).where(
+                    filter=FieldFilter("status", "==", "open")
+                ).count().get()[0][0].value
+            except Exception as e:
+                print("LIVE STATE REQUEST COUNT ERROR:", e)
+                requests_open = None
+            payload = {"success": True, "appointments": pending, "change_requests": requests_open}
+            self._live_state_cache = (now, payload)
+            return jsonify(payload)
+        except Exception as e:
+            print("ADMIN LIVE STATE ERROR:", e)
+            return jsonify({"success": False}), 500
+
     # ------------------------------------------------------------ done visits
     def _reminders_complete(self, uid, new_done_doc_id, approve_ids, rows):
         """
@@ -964,5 +998,6 @@ class RemindersMixin:
         r("/admin/reminders/reschedule", methods=["POST"])(self.admin_reminders_reschedule)
         r("/patient/appointment_change_request", methods=["POST"])(self.patient_request_appointment_change)
         r("/admin/change_requests")(self.admin_change_requests)
+        r("/admin/live_state")(self.admin_live_state)
         r("/admin/change_requests/handle", methods=["POST"])(self.admin_change_requests_handle)
         r("/admin/change_requests/apply", methods=["POST"])(self.admin_change_requests_apply)

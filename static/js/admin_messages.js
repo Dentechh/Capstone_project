@@ -91,7 +91,16 @@
   }
   function get(url) { return fetch(url, {headers: {'X-Requested-With': 'fetch'}}).then(function (r) { return r.ok ? r.json() : null; }); }
   function pollBadge() { return get('/admin/messages/conversations?badge=1').then(function (d) { if (d) setBadge(d.unread_total); }); }
-  function setBadge(n) { if (!badge || n == null) return; badge.textContent = n > 99 ? '99+' : n; badge.hidden = !n; }
+  var lastBadge = null;
+  function setBadge(n) {
+    if (!badge || n == null) return;
+    badge.textContent = n > 99 ? '99+' : n; badge.hidden = !n;
+    // Tell the rest of the admin page when the unread count goes up (live-updates.js shows a toast).
+    if (lastBadge !== null && n > lastBadge) {
+      try { document.dispatchEvent(new CustomEvent('admin:message', {detail: {unread: n}})); } catch (e) {}
+    }
+    lastBadge = n;
+  }
 
   function post(url, fields) {
     var fd = new FormData(); Object.keys(fields).forEach(function (k) { fd.append(k, fields[k]); });
@@ -385,6 +394,6 @@
     refreshBadge: pollBadge
   };
   // keep the sidebar badge fresh even while the Messages tab is closed (slow poll)
-  setInterval(function () { if (!running && !document.hidden) pollBadge(); }, 60000);
+  setInterval(function () { if (!running && !document.hidden) pollBadge(); }, 30000);
   pollBadge();
 })();
