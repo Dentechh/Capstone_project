@@ -394,6 +394,6 @@
     refreshBadge: pollBadge
   };
   // keep the sidebar badge fresh even while the Messages tab is closed (slow poll)
-  setInterval(function () { if (!running && !document.hidden) pollBadge(); }, 30000);
+  setInterval(function () { if (!running && !document.hidden) pollBadge(); }, 60000);
   pollBadge();
 })();

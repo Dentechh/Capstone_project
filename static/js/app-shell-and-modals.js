@@ -79,14 +79,16 @@ function adminAfterRecordSaved(result) {
     if (typeof resetPatientDashboardToEmpty === 'function') resetPatientDashboardToEmpty();
     showSection(fromAccepted ? 'WeeklyClients' : 'mypatients');
 
-    adminRefreshOverview();
-    if (window.RemindersLive && window.RemindersLive.reload) window.RemindersLive.reload();
+    // Nothing heavy in the background while the list loads: the Overview refreshes
+    // when its tab is opened, and the Reminders list reloads when Reminders is opened.
+    window._overviewStale = true;
+    if (window.RemindersLive) window.RemindersLive.refresh();
 }
 
 // An appointment was created from the admin panel.
 function adminAfterAppointmentCreated() {
     adminMarkListsStale(['appointments', 'WeeklyClients', 'mypatients']);
-    adminRefreshOverview();
+    window._overviewStale = true;       // refreshed when the Overview tab is opened
 }
 
 async function saveDentalRecord(uid) {

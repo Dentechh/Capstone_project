@@ -218,7 +218,7 @@ class RemindersMixin:
             return jsonify({"success": False, "message": "Unauthorized"}), 403
         now = datetime.now(UTC).timestamp()
         cached = getattr(self, "_live_state_cache", None)
-        if cached and now - cached[0] < 8:
+        if cached and now - cached[0] < 20:
             return jsonify(cached[1])
         try:
             try:
@@ -295,12 +295,16 @@ class RemindersMixin:
         Deletes it and drops it from `found` (the dict the list is built from).
         """
         try:
+            checked = 0
             for rid, d in list(found.items()):
                 if d.get("status") not in ("booked", "auto_booked"):
                     continue
                 aid, uid = str(d.get("approve_id") or ""), str(d.get("uid") or "")
                 if not aid or not uid:
                     continue
+                checked += 1
+                if checked > 25:       # keep the list fast; the rest are checked on later loads
+                    break
                 hit = self.db.collection(self.Customer_Account).document(uid) \
                     .collection("Done_procedure") \
                     .where(filter=FieldFilter("Patient_unq_id", "==", aid)).limit(1).get()

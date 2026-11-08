@@ -78,6 +78,14 @@ function showSection(sectionId) {
                 activityLogOpened();
             }
 
+            // Dashboard Overview: a save elsewhere flagged its numbers as old.
+            // Refresh them now that the tab is actually being looked at, instead
+            // of fetching in the background while the lists are loading.
+            if (sectionId === 'dashboard' && window._overviewStale && typeof adminRefreshOverview === 'function') {
+                window._overviewStale = false;
+                adminRefreshOverview();
+            }
+
             // Patient Dashboard tab clicked directly (not via opening a patient):
             // reset the contents to an empty state so no stale patient data shows.
             // window._patientDashboardOpening is set true only by openPatientDashboard
@@ -114,11 +122,43 @@ function showSection(sectionId) {
             const container = document.querySelector(cfg[2]);
             if (!btn || !cursor || !container) return;
 
+            window._lazyEverLoaded = window._lazyEverLoaded || {};
+            var isReload = !!window._lazyEverLoaded[sectionId];
+            window._lazyEverLoaded[sectionId] = true;
+
             window._lazyLoaded[sectionId] = true;
             container.innerHTML = '';            // drop anything inserted locally before the first load
             cursor.setAttribute('data-cursor', '');   // empty cursor = first page
             btn.style.display = '';
+
+            // After an earlier load the button can be left disabled and still reading
+            // "Loading..." (its last page had nothing more to fetch). A disabled
+            // button ignores click(), which left the list empty with "Loading..."
+            // for good. Put it back to a clickable state first.
+            btn.disabled = false;
+            btn.removeAttribute('disabled');
+            if (/loading/i.test(btn.textContent || '')) btn.textContent = 'Load More';
+
             btn.click();                         // reuses the existing Load More handler
+            if (isReload) lazyReloadWatchdog(sectionId, container, btn);
+        }
+
+        // Safety net for a RE-load only: if the list is still empty and the button
+        // still says "Loading..." after 15 seconds, fall back to one full page
+        // reload (the address bar remembers the section, so you return to the same
+        // place). Never repeats within 2 minutes, so it can not loop.
+        function lazyReloadWatchdog(sectionId, container, btn) {
+            setTimeout(function () {
+                var stuck = container.children.length === 0 && /loading/i.test(btn.textContent || '');
+                var active = document.querySelector('.content-section.active-section');
+                if (!stuck || !active || active.id !== 'section-' + sectionId) return;
+                try {
+                    var last = Number(sessionStorage.getItem('lazyReloadAt') || 0);
+                    if (Date.now() - last < 120000) return;
+                    sessionStorage.setItem('lazyReloadAt', String(Date.now()));
+                } catch (e) { return; }
+                window.location.reload();
+            }, 15000);
         }
 
         function openPatientDashboard(

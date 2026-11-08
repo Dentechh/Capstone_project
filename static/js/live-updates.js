@@ -1,21 +1,37 @@
 /* Live updates for the admin panel.
  *
  * Patients submit appointments, reschedules and change requests on their own
- * device; the admin page used to learn about them only after a full reload.
- * This asks the server a tiny question every 30 seconds ("how many pending
- * appointments / open change requests are there?") and, only when an answer
- * changes, refreshes just the part that is affected:
- *   - pending appointments  -> the Appointments list (this section only)
- *   - change requests       -> the Reminders change-request view and badge
- * It pauses while the browser tab is hidden and never touches the rest of the
- * page, so nothing you are working on is reloaded.
+ * device. This asks the server one tiny question ("how many pending
+ * appointments / open change requests are there?") and, only when the answer
+ * changes, refreshes just the affected part: the Appointments list, or the
+ * Reminders change-request view and badge.
+ *
+ * It is deliberately gentle on the server and on Firestore reads:
+ *   - checks once a minute (not every few seconds);
+ *   - pauses while the browser tab is hidden;
+ *   - pauses after 10 minutes without any mouse or keyboard activity, so a tab
+ *     left open overnight costs nothing, and resumes the moment you are back;
+ *   - slows itself down (up to 5 minutes) whenever the server is slow or fails.
+ *
+ * To switch it off for testing, run this in the browser console and reload:
+ *     localStorage.setItem('adminLive', 'off')
+ * and to switch it back on:  localStorage.removeItem('adminLive')
  */
 (function () {
     'use strict';
 
-    var INTERVAL_MS = 30000;
+    try { if (localStorage.getItem('adminLive') === 'off') return; } catch (e) { /* storage blocked: carry on */ }
+
+    var BASE_MS = 60000;           // normal gap between checks
+    var MAX_MS = 300000;           // longest gap when the server is struggling
+    var SLOW_MS = 4000;            // an answer slower than this counts as "struggling"
+    var IDLE_MS = 10 * 60 * 1000;  // stop checking after this long without activity
+
+    var delay = BASE_MS;
     var last = null;
     var inFlight = false;
+    var timer = null;
+    var lastActivity = Date.now();
 
     function activeSection() {
         var s = document.querySelector('.content-section.active-section');
@@ -72,19 +88,37 @@
         }
     }
 
+    function isIdle() { return Date.now() - lastActivity > IDLE_MS; }
+
+    function schedule(ms) {
+        clearTimeout(timer);
+        timer = setTimeout(poll, ms);
+    }
+
     function poll() {
-        if (inFlight || document.visibilityState !== 'visible') return;
+        // Paused while hidden or idle; activity / returning to the tab restarts it.
+        if (document.visibilityState !== 'visible' || isIdle()) return;
+        if (inFlight) { schedule(delay); return; }
+
         inFlight = true;
+        var started = Date.now();
         fetch('/admin/live_state', { credentials: 'same-origin', cache: 'no-store' })
             .then(function (res) { if (!res.ok) throw new Error(String(res.status)); return res.json(); })
             .then(function (d) {
+                var slow = Date.now() - started > SLOW_MS;
+                delay = slow ? Math.min(delay * 2, MAX_MS) : BASE_MS;
                 if (!d || !d.success) return;
                 var now = { appointments: d.appointments, change_requests: d.change_requests };
                 if (last) onChange(last, now);   // the first answer is only the baseline
                 last = now;
             })
-            .catch(function () { /* offline or session ended: try again next time */ })
-            .then(function () { inFlight = false; });
+            .catch(function () {
+                delay = Math.min(delay * 2, MAX_MS);   // offline, session ended or server busy: back off
+            })
+            .then(function () {
+                inFlight = false;
+                schedule(delay);
+            });
     }
 
     // A new patient message: the Messages script raises this when its unread count grows.
@@ -93,9 +127,17 @@
         announce('messages', null);
     });
 
-    setInterval(poll, INTERVAL_MS);
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') poll();   // catch up when you come back to the tab
+    function onActivity() {
+        var wasIdle = isIdle();
+        lastActivity = Date.now();
+        if (wasIdle) schedule(1000);                  // welcome back: catch up quickly
+    }
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(function (ev) {
+        window.addEventListener(ev, onActivity, { passive: true });
     });
-    setTimeout(poll, 2000);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') schedule(500);
+    });
+
+    schedule(5000);
 })();
