@@ -76,8 +76,11 @@ body.dark-mode #remProcedure,body.dark-mode #remAccount,body.dark-mode #remRange
             </table>
             <p class="rem-empty" id="remEmpty" hidden>No reminders match these filters.</p>
         </div>
-        <div style="text-align:center; margin-top:16px;">
-            <button type="button" id="remMore" class="btn-action filter-btn" hidden>Show more</button>
+        <div class="mypatients-pagination" id="remPagination" style="display:flex; gap:8px; align-items:center; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+            <button type="button" id="remPrevBtn" class="btn-action filter-btn">Prev</button>
+            <span id="remPageNumbers" style="display:flex; gap:4px; flex-wrap:wrap;"></span>
+            <button type="button" id="remNextBtn" class="btn-action filter-btn">Next</button>
+            <span id="remPageInfo" style="margin-left:8px;"></span>
         </div>
         </div>
 

@@ -1328,7 +1328,7 @@
        id-scoped because appointment-modal.css sets a global
        "body.dark-mode .adm-select>select" that would otherwise outrank a plain
        .fin-nav-select class rule and repaint this row's chrome. */
-    #dashboardNav .fin-nav-select {
+    #dashboardNav select.fin-nav-select {
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
@@ -1355,7 +1355,37 @@
             background-color 0.25s ease;
     }
 
-    #dashboardNav .fin-nav-select:hover {
+    /* flatpickr alt input in dashboard nav - matches admin date picker style */
+    #dashboardNav .adm-date-alt {
+        min-width: 160px;
+        height: 38px;
+        padding: 0 42px 0 14px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f1f8ff;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23dbeafe'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%230d47a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#f1f8ff, #f1f8ff);
+        background-repeat: no-repeat, no-repeat;
+        background-position: right 8px center, 0 0;
+        background-size: 24px 24px, 100% 100%;
+        color: #0d47a1;
+        box-shadow: inset 0 1px 2px rgba(13, 71, 161, 0.06);
+        font-family: inherit;
+        font-size: 13.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease,
+            background-color 0.25s ease;
+    }
+
+    #dashboardNav .adm-date-alt::placeholder {
+        color: #94a3b8;
+        opacity: 1;
+    }
+
+    #dashboardNav select.fin-nav-select:hover,
+    #dashboardNav .adm-date-alt:hover {
         border-color: #0d47a1;
         background-color: #e8f2ff;
         background-image:
@@ -1363,7 +1393,8 @@
             linear-gradient(#e8f2ff, #e8f2ff);
     }
 
-    #dashboardNav .fin-nav-select:focus-visible {
+    #dashboardNav select.fin-nav-select:focus-visible,
+    #dashboardNav .adm-date-alt:focus {
         outline: none;
         border-color: #0d47a1;
         background-color: #e8f2ff;
@@ -1374,7 +1405,7 @@
     }
 
     /* The open listbox state, which the enhancement drives off the wrapper. */
-    #dashboardNav .adm-select.is-open>.fin-nav-select {
+    #dashboardNav .adm-select.is-open>select.fin-nav-select {
         border-color: #0d47a1;
         background-color: #e8f2ff;
         box-shadow: 0 0 0 3px rgba(13, 71, 161, 0.16);
@@ -1383,7 +1414,7 @@
             linear-gradient(#e8f2ff, #e8f2ff);
     }
 
-    body.dark-mode #dashboardNav .fin-nav-select {
+    body.dark-mode #dashboardNav select.fin-nav-select {
         border-color: #555;
         background-color: #1e1e1e;
         background-image:
@@ -1394,8 +1425,25 @@
         color-scheme: dark;
     }
 
-    body.dark-mode #dashboardNav .fin-nav-select:hover,
-    body.dark-mode #dashboardNav .fin-nav-select:focus-visible {
+    body.dark-mode #dashboardNav .adm-date-alt {
+        border-color: #555;
+        background-color: #1e1e1e;
+        background-image:
+            url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect x='1' y='1' width='22' height='22' rx='7' fill='%23334155'/%3E%3Cpath d='M7.5 10.5l4.5 4.5 4.5-4.5' fill='none' stroke='%2364b5f6' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+            linear-gradient(#1e1e1e, #1e1e1e);
+        color: #e0e0e0;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+        color-scheme: dark;
+    }
+
+    body.dark-mode #dashboardNav .adm-date-alt::placeholder {
+        color: #64748b;
+    }
+
+    body.dark-mode #dashboardNav select.fin-nav-select:hover,
+    body.dark-mode #dashboardNav select.fin-nav-select:focus-visible,
+    body.dark-mode #dashboardNav .adm-date-alt:hover,
+    body.dark-mode #dashboardNav .adm-date-alt:focus {
         border-color: #64b5f6;
         background-color: #262626;
         background-image:
@@ -1403,7 +1451,7 @@
             linear-gradient(#262626, #262626);
     }
 
-    body.dark-mode #dashboardNav .adm-select.is-open>.fin-nav-select {
+    body.dark-mode #dashboardNav .adm-select.is-open>select.fin-nav-select {
         border-color: #64b5f6;
         background-color: #262626;
         box-shadow: 0 0 0 3px rgba(100, 181, 246, 0.2);
