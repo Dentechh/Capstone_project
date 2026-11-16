@@ -7267,7 +7267,8 @@ setTimeout(go,3000);})();
         elif period == "weekly":
             max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
             week = min(max(0, int_arg("week", 0)), max_week)
-            end_date = today - timedelta(days=7 * week)
+            # Week 0 = most recent completed week (ending yesterday), not current week
+            end_date = today - timedelta(days=1 + 7 * week)
             start_date = end_date - timedelta(days=6)
             range_label = (f"{start_date:%b} {start_date.day} to {end_date:%b} {end_date.day}, {end_date.year}"
                            if start_date.year == end_date.year else
@@ -11002,7 +11003,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
             period = "weekly"
             max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
             week = min(max(0, int_arg("week", 0)), max_week)
-            end_date = today - timedelta(days=7 * week)
+            # Week 0 = most recent completed week (ending yesterday), not current week
+            end_date = today - timedelta(days=1 + 7 * week)
             start_date = end_date - timedelta(days=6)
             num_days = 7
             if start_date.year == end_date.year:
@@ -12217,8 +12219,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
             start_date = today
             end_date = today
         elif period == "weekly":
-            # week=0 is the current 7-day window ending today; week=N steps back.
-            end_date = today - timedelta(days=7 * week)
+            # week=0 is the most recent completed week (ending yesterday); week=N steps back.
+            end_date = today - timedelta(days=1 + 7 * week)
             start_date = end_date - timedelta(days=6)
         elif period == "monthly":
             if month:
@@ -13074,7 +13076,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
             period = "weekly"
             max_week = (today - today.replace(year=first_year, month=1, day=1)).days // 7
             week = min(max(0, int_arg("week", 0)), max_week)
-            end_date = today - timedelta(days=7 * week)
+            # Week 0 = most recent completed week (ending yesterday), not current week
+            end_date = today - timedelta(days=1 + 7 * week)
             start_date = end_date - timedelta(days=6)
             num_days = 7
             if start_date.year == end_date.year:
@@ -13313,7 +13316,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
             start_date = today
             end_date = today
         elif period == "weekly":
-            end_date = today - timedelta(days=7 * week)
+            # week=0 is the most recent completed week (ending yesterday); week=N steps back.
+            end_date = today - timedelta(days=1 + 7 * week)
             start_date = end_date - timedelta(days=6)
         elif period == "monthly":
             if month:

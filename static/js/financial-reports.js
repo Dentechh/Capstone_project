@@ -1059,13 +1059,55 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-        // Initialize charts on load
+// Initialize charts on load
         document.addEventListener('DOMContentLoaded', () => {
-loadFinancialChart('today'); // Default for income
-loadBracesFinancialChart('today'); // Default for braces income
+    loadFinancialChart('today'); // Default for income
+    loadBracesFinancialChart('today'); // Default for braces income
             loadDashboardStats('today'); // Default for dashboard stats
             loadProcedureCharts('overall'); // Default for procedures (shows all time)
+            initDashboardDatePicker();
         });
+
+        // Dashboard date picker (flatpickr, matches admin design)
+        let dashboardDatePicker = null;
+        function initDashboardDatePicker() {
+            const input = document.getElementById('dashboardDaySel');
+            if (!input || typeof flatpickr !== 'function') return;
+
+            // Determine min/max from dashboardNav if available
+            const minDate = dashboardNav.minDate || null;
+            const maxDate = dashboardNav.maxDate || null;
+
+            dashboardDatePicker = flatpickr('#dashboardDaySel', {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'F j, Y',
+                altInputClass: 'adm-date-alt',
+                className: 'adm-datepicker',
+                allowInput: false,
+                monthSelectorType: 'static',
+                minDate: minDate,
+                maxDate: maxDate,
+                onReady: function (selectedDates, dateStr, instance) {
+                    const alt = instance.altInput;
+                    if (!alt) return;
+                    alt.setAttribute('placeholder', 'Select date');
+                    alt.setAttribute('aria-label', 'Choose day');
+                },
+                onChange: function (selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        dashboardNav.day = dateStr;
+                        dashboardPatientsState.page = 1;
+                        loadDashboardStats(dashboardNav.period);
+                    }
+                }
+            });
+
+            // Set initial value if dashboardNav.day exists
+            if (dashboardNav.day) {
+                dashboardDatePicker.setDate(dashboardNav.day, false);
+            }
+        }
 
         // --- Downloadable Financial Report (PDF) ---
         const FINANCIAL_PERIOD_LABELS = {
@@ -2126,10 +2168,22 @@ function renderDashboardNav(period, rangeLabel) {
     label.style.display = (showYear || showMonth || showDay) ? 'none' : '';
     if (daySel) {
         daySel.style.display = showDay ? '' : 'none';
+        // Also hide/show flatpickr's alt input (created separately from the original input)
+        if (dashboardDatePicker && dashboardDatePicker.altInput) {
+            dashboardDatePicker.altInput.style.display = showDay ? '' : 'none';
+        }
         if (showDay) {
-            if (dashboardNav.minDate) daySel.min = dashboardNav.minDate;
-            if (dashboardNav.maxDate) daySel.max = dashboardNav.maxDate;
-            if (dashboardNav.day) daySel.value = dashboardNav.day;
+            // Update flatpickr instance with new min/max dates
+            if (dashboardDatePicker) {
+                dashboardDatePicker.set('minDate', dashboardNav.minDate);
+                dashboardDatePicker.set('maxDate', dashboardNav.maxDate);
+                if (dashboardNav.day) {
+                    dashboardDatePicker.setDate(dashboardNav.day, false);
+                }
+            } else {
+                // Initialize if not already done (shouldn't happen normally)
+                initDashboardDatePicker();
+            }
         }
     }
     setFinNavVisible(monthSel, showMonth);
@@ -2176,9 +2230,16 @@ function dashboardNavPick() {
         if (y === n.maxYear && m > n.maxMonth) m = n.maxMonth;
         n.month = y + '-' + String(m).padStart(2, '0');
     } else if (n.period === 'today') {
-        const daySel = document.getElementById('dashboardDaySel');
-        if (!daySel || !daySel.value) return;   // cleared field: keep the current day
-        n.day = daySel.value;                   // server clamps out-of-range dates
+        // Get date from flatpickr instance
+        if (dashboardDatePicker && dashboardDatePicker.selectedDates.length > 0) {
+            const selectedDate = dashboardDatePicker.selectedDates[0];
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            n.day = `${year}-${month}-${day}`;
+        } else {
+            return; // no date selected, keep current
+        }
     } else {
         return;
     }
@@ -2202,6 +2263,10 @@ function dashboardNavStep(dir) {
         const parts = n.day.split('-');
         const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]) + dir);
         n.day = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        // Update flatpickr if it exists
+        if (dashboardDatePicker) {
+            dashboardDatePicker.setDate(n.day, false);
+        }
     } else {
         return;
     }

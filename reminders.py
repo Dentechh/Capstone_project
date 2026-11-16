@@ -379,7 +379,7 @@ class RemindersMixin:
                 if status in ("awaiting", "contacted") and deadline:
                     try:
                         secs = (datetime.fromisoformat(deadline) - now).total_seconds()
-                        days_left = max(0, int(-(-secs // 86400)))
+                        days_left = max(0, min(21, int(-(-secs // 86400))))
                     except ValueError:
                         days_left = None
 

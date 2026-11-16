@@ -5,18 +5,23 @@
     var section = document.getElementById('section-reminders');
     if (!section) return;
 
-    var PAGE = 25;
+    var PAGE_SIZE = 25;
     var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var ACTIVE = { awaiting: 1, contacted: 1, needs_review: 1 };
     var BOOKED = { booked: 1, auto_booked: 1, accepted: 1, rescheduled: 1 };
     var CLOSED = { rejected: 1, expired: 1, cancelled: 1 };
 
     var $ = function (id) { return document.getElementById(id); };
-    var body = $('remBody'), emptyEl = $('remEmpty'), moreBtn = $('remMore');
+    var body = $('remBody'), emptyEl = $('remEmpty');
     var searchEl = $('remSearch'), procEl = $('remProcedure'), acctEl = $('remAccount'), rangeEl = $('remRange');
     var markAll = $('remMarkAll'), tabsEl = $('remTabs'), badge = $('adminRemindersBadge');
+    // Pagination elements
+    var prevBtn = $('remPrevBtn'), nextBtn = $('remNextBtn');
+    var pageNumbers = $('remPageNumbers'), pageInfo = $('remPageInfo');
 
-    var rows = [], tab = 'all', shown = PAGE, loadedOnce = false;
+    var rows = [], tab = 'all', loadedOnce = false;
+    // Pagination state
+    var remState = { page: 1, pageSize: PAGE_SIZE, total: 0, totalPages: 1 };
 
     /* ---------- helpers ---------- */
     function csrf() {
@@ -227,15 +232,19 @@
     function actionCell(r) {
         var td = el('td'); td.setAttribute('data-cell', 'action');
         var box = el('div', 'rem-actions');
-        function btn(label, cls, fn) {
-            var b = el('button', 'btn-action ' + (cls || ''), label); b.type = 'button';
+        function btn(label, cls, iconFn, fn) {
+            var b = el('button', 'btn-action ' + (cls || ''));
+            b.type = 'button';
+            b.title = label;
+            b.setAttribute('aria-label', label);
+            if (iconFn) b.appendChild(iconFn());
             b.addEventListener('click', fn); box.appendChild(b);
         }
         if (isActive(r) && !r.managed_by_patient) {
-            if (r.status === 'awaiting') btn('Mark contacted', '', function () { act('/admin/reminders/contacted', { id: r.id }, 'Marked as contacted.'); });
-            btn('Book', 'accept', function () { openBook(r); });
-            btn('Reschedule', '', function () { openReschedule(r); });
-            btn('Cancel', 'delete', function () {
+            if (r.status === 'awaiting') btn('Mark contacted', '', function () { return icon('phone'); }, function () { act('/admin/reminders/contacted', { id: r.id }, 'Marked as contacted.'); });
+            btn('Book', 'accept', function () { return icon('event_available'); }, function () { openBook(r); });
+            btn('Reschedule', '', function () { return icon('event_repeat'); }, function () { openReschedule(r); });
+            btn('Cancel', 'delete', function () { return icon('close'); }, function () {
                 askConfirm('The ' + r.procedure + ' follow-up for ' + r.patient_name + ' (due ' + fmt(r.appointment_date) +
                     ') will be removed from the list.').then(function (yes) {
                     if (yes) act('/admin/reminders/cancel', { id: r.id }, 'Reminder cancelled.');
@@ -243,7 +252,7 @@
             });
         }
         if (r.unseen) {
-            btn('Mark as read', '', function () {
+            btn('Mark as read', '', function () { return icon('visibility'); }, function () {
                 if (r.managed_by_patient) act('/admin/braces_proposals/seen', { uid: r.uid }, null);
                 else act('/admin/reminders/seen', { id: r.id }, null);
             });
@@ -252,7 +261,7 @@
         return td;
     }
 
-    function render() {
+function render() {
         var base = baseFiltered();
         ['all', 'call', 'wait', 'overdue', 'booked', 'closed'].forEach(function (t) {
             var n = base.filter(function (r) { return category(r, t); }).length;
@@ -260,8 +269,15 @@
             if (s) s.textContent = String(n);
         });
         var list = sortRows(base.filter(function (r) { return category(r, tab); }));
+        
+        // Paginate the filtered list
+        var state = remState;
+        var start = (state.page - 1) * state.pageSize;
+        var end = start + state.pageSize;
+        var pageList = list.slice(start, end);
+        
         body.innerHTML = '';
-        list.slice(0, shown).forEach(function (r) {
+        pageList.forEach(function (r) {
             var tr = el('tr', r.unseen ? 'is-unseen' : '');
             var name = el('td'); name.setAttribute('data-cell', 'patient');
             name.appendChild(el('span', 'rem-name', r.patient_name));
@@ -291,24 +307,62 @@
             body.appendChild(tr);
         });
         emptyEl.hidden = list.length !== 0;
-        moreBtn.hidden = list.length <= shown;
+        renderRemPagination(list);
         var unseenCount = rows.filter(function (r) { return r.unseen; }).length;
         markAll.hidden = unseenCount === 0;
     }
 
-    /* ---------- data ---------- */
-    function setBadge(n) {
-        if (!badge) return;
-        badge.hidden = !n;
-        badge.textContent = n > 9 ? '9+' : String(n || '');
+    /* ---------- pagination (client-side on filtered results) ---------- */
+    function renderRemPagination(filteredList) {
+        var state = remState;
+        state.total = filteredList.length;
+        state.totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+        if (state.page > state.totalPages) state.page = state.totalPages;
+
+        if (prevBtn) {
+            prevBtn.disabled = state.page <= 1;
+            prevBtn.style.display = state.page <= 1 ? 'none' : '';
+        }
+        if (nextBtn) {
+            nextBtn.disabled = state.page >= state.totalPages;
+            nextBtn.style.display = state.page >= state.totalPages ? 'none' : '';
+        }
+        if (pageInfo) pageInfo.textContent = 'Page ' + state.page + ' of ' + state.totalPages + ' (' + state.total + ' reminders)';
+        if (!pageNumbers) return;
+        pageNumbers.innerHTML = '';
+        var total = state.totalPages;
+        var current = state.page;
+        var pages = [];
+        if (total <= 7) {
+            for (var i = 1; i <= total; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (current > 3) pages.push('...');
+            for (var i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+            if (current < total - 2) pages.push('...');
+            pages.push(total);
+        }
+        pages.forEach(function (p) {
+            if (p === '...') {
+                var span = document.createElement('span');
+                span.textContent = '\u2026';
+                pageNumbers.appendChild(span);
+                return;
+            }
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-action filter-btn';
+            btn.textContent = p;
+            if (p === current) btn.disabled = true;
+            btn.addEventListener('click', function () { 
+                state.page = p; 
+                render(); 
+            });
+            pageNumbers.appendChild(btn);
+        });
     }
-    function refreshBadge() {
-        return fetch('/admin/reminders/count', { credentials: 'same-origin' })
-            .then(function (res) { return res.json(); })
-            .then(function (d) { if (d && d.success) setBadge(d.count || 0); })
-            .catch(function () { /* badge is best-effort */ });
-    }
-    function load() {
+
+function load() {
         return fetch('/admin/reminders', { credentials: 'same-origin' })
             .then(function (res) { return res.json(); })
             .then(function (d) {
@@ -320,11 +374,23 @@
                     var fg = section.querySelector('.filter-group');
                     if (fg) window.admEnhanceSelects(fg, null, false);
                 }
+                remState.page = 1;
                 render();
                 refreshBadge();
                 loadRequests();
             })
             .catch(function (e) { console.error('Reminders failed to load:', e); });
+    }
+    function setBadge(n) {
+        if (!badge) return;
+        badge.hidden = !n;
+        badge.textContent = n > 9 ? '9+' : String(n || '');
+    }
+    function refreshBadge() {
+        return fetch('/admin/reminders/count', { credentials: 'same-origin' })
+            .then(function (res) { return res.json(); })
+            .then(function (d) { if (d && d.success) setBadge(d.count || 0); })
+            .catch(function () { /* badge is best-effort */ });
     }
     /* ---------- patient change requests (appointments they booked) ---------- */
     var reqBox = $('remRequests'), reqList = $('remRequestsList'), reqN = $('remRequestsN');
@@ -365,21 +431,24 @@
             cell('rem-req__note').textContent = q.note || '\u2014';
 
             var actions = el('div', 'rem-req__actions');
-            function mk(label, cls, fn) {
-                var b = el('button', cls, label);
+            function mk(label, cls, iconFn, fn) {
+                var b = el('button', cls);
                 b.type = 'button';
+                b.title = label;
+                b.setAttribute('aria-label', label);
+                if (iconFn) b.appendChild(iconFn());
                 b.addEventListener('click', fn);
                 actions.appendChild(b);
                 return b;
             }
             if (q.kind === 'cancel') {
-                mk('Open Appointments', 'btn-action accept', function () {
+                mk('Open Appointments', 'btn-action accept', function () { return icon('launch'); }, function () {
                     if (typeof window.showSection === 'function') window.showSection('appointments');
                 });
             } else {
-                mk('Apply change', 'btn-action accept', function () { openApply(q); });
+                mk('Apply change', 'btn-action accept', function () { return icon('check'); }, function () { openApply(q); });
             }
-            var done = mk(q.kind === 'cancel' ? 'Mark handled' : 'Dismiss', 'btn-action filter-btn', function () {
+            var done = mk(q.kind === 'cancel' ? 'Mark handled' : 'Dismiss', 'btn-action filter-btn', function () { return icon('close'); }, function () {
                 done.disabled = true;
                 post('/admin/change_requests/handle', { id: q.id }).then(function (d) {
                     if (d && d.success) { toast('Request closed.'); loadRequests(); refreshBadge(); }
@@ -656,14 +725,16 @@
     }
     tabsEl.addEventListener('click', function (e) {
         var b = e.target.closest('.rem-tab'); if (!b) return;
-        tab = b.getAttribute('data-tab'); shown = PAGE;
+        tab = b.getAttribute('data-tab');
         Array.prototype.forEach.call(tabsEl.querySelectorAll('.rem-tab'), function (x) { x.classList.toggle('is-active', x === b); });
+        remState.page = 1;
         render();
     });
-    [procEl, acctEl, rangeEl].forEach(function (c) { c.addEventListener('change', function () { shown = PAGE; render(); }); });
+    [procEl, acctEl, rangeEl].forEach(function (c) { c.addEventListener('change', function () { remState.page = 1; render(); }); });
     var t = null;
-    searchEl.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { shown = PAGE; render(); }, 150); });
-    moreBtn.addEventListener('click', function () { shown += PAGE; render(); });
+    searchEl.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { remState.page = 1; render(); }, 150); });
+    if (prevBtn) prevBtn.addEventListener('click', function () { if (remState.page > 1) { remState.page--; render(); } });
+    if (nextBtn) nextBtn.addEventListener('click', function () { if (remState.page < remState.totalPages) { remState.page++; render(); } });
     markAll.addEventListener('click', function () {
         Promise.all([post('/admin/reminders/seen', { id: 'all' }), post('/admin/braces_proposals/seen', { uid: 'all' })]).then(load);
     });
