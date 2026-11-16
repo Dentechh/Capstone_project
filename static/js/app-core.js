@@ -24,6 +24,7 @@ function showSection(sectionId) {
             if (target) target.classList.add('active-section');
 
             const titles = {
+                'settings': 'Settings',
                 'dashboard': 'Dashboard Overview',
                 'financialreports': 'Financial Reports',
                 'doctorscalendar': 'Doctors Calendar',
@@ -37,6 +38,7 @@ function showSection(sectionId) {
                 'messages': 'Messages',
             };
             const titleIcons = {
+                'settings': 'settings',
                 'dashboard': 'dashboard',
                 'financialreports': 'payments',
                 'doctorscalendar': 'calendar_month',
@@ -1103,6 +1105,30 @@ function showSection(sectionId) {
          */
         var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
 
+        /**
+         * The Medicine dropdown is built from TD_MEDICINE_OPTIONS: "None" plus the
+         * list kept in Settings -> Medicines. settings.js calls
+         * tdSetMedicineOptions() when that list loads or changes, and every
+         * Medicine menu on the page is rebuilt to match.
+         */
+        function tdMedicineMenuHtml() {
+            return TD_MEDICINE_OPTIONS.map(function (m) {
+                var v = escHtml(m);
+                return '<button type="button" class="dentist-menu__option medicine-option" data-medicine="' + v + '">' +
+                    '<span class="dentist-menu__name">' + v + '</span></button>';
+            }).join('');
+        }
+        function tdRebuildMedicineMenus() {
+            var html = tdMedicineMenuHtml();
+            document.querySelectorAll('.medicine-menu').forEach(function (menu) { menu.innerHTML = html; });
+        }
+        window.tdSetMedicineOptions = function (list) {
+            TD_MEDICINE_OPTIONS.length = 0;
+            TD_MEDICINE_OPTIONS.push('None');
+            (list || []).forEach(function (m) { TD_MEDICINE_OPTIONS.push(m); });
+            tdRebuildMedicineMenus();
+        };
+
         function refreshTreatmentControls(tbody) {
             if (!tbody) return;
 
@@ -1565,11 +1591,7 @@ function showSection(sectionId) {
                 '<button type="button" class="medicine-field__toggle" tabindex="-1" aria-hidden="true" title="Show medicines">' +
                 '<span class="material-symbols-rounded" aria-hidden="true">arrow_drop_down</span></button>' +
                 '<div class="dentist-menu medicine-menu" style="display:none;">' +
-                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="None"><span class="dentist-menu__name">None</span></button>' +
-                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Mefenamic Acid"><span class="dentist-menu__name">Mefenamic Acid</span></button>' +
-                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Tranexamic Acid"><span class="dentist-menu__name">Tranexamic Acid</span></button>' +
-                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Amoxicillin"><span class="dentist-menu__name">Amoxicillin</span></button>' +
-                '<button type="button" class="dentist-menu__option medicine-option" data-medicine="Co- amoxiclav"><span class="dentist-menu__name">Co- amoxiclav</span></button>' +
+                tdMedicineMenuHtml() +
                 '</div></div></td>' +
 
                 /* Status is now worked out by the server from value and payments,
@@ -1617,8 +1639,27 @@ function showSection(sectionId) {
         }
 
         // Dentists offered in every dentist dropdown. The first one is the default.
-        // To add a dentist, add a name here (and to the <select> in the three templates).
+        // Extra dentists come from Settings -> Dentists via window.tdSetDentistOptions().
         var DENTIST_OPTIONS = ['Dr. Julix Dionne Capizonda'];
+
+        // settings.js calls this when the Settings -> Dentists list loads or changes.
+        // The default dentist stays first; saved dentists follow. Selects already
+        // on screen are rebuilt and keep their current choice.
+        window.tdSetDentistOptions = function (list) {
+            if (typeof window.clinicDentistsSet === 'function') window.clinicDentistsSet(list);
+            var def = 'Dr. Julix Dionne Capizonda';
+            DENTIST_OPTIONS.length = 0;
+            DENTIST_OPTIONS.push(def);
+            (list || []).forEach(function (n) { if (DENTIST_OPTIONS.indexOf(n) === -1) DENTIST_OPTIONS.push(n); });
+            document.querySelectorAll('select.td-dentist').forEach(function (sel) {
+                var cur = sel.value;
+                var names = DENTIST_OPTIONS.slice();
+                if (cur && names.indexOf(cur) === -1) names.push(cur);
+                sel.innerHTML = names.map(function (n) {
+                    return '<option value="' + escHtml(n) + '"' + (n === cur ? ' selected' : '') + '>' + escHtml(n) + '</option>';
+                }).join('');
+            });
+        };
 
         function tdDentistSelectHtml(saved) {
             var current = '';

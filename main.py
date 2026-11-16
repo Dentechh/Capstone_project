@@ -10,9 +10,11 @@ import threading
 import uuid
 from datetime import UTC, datetime, timedelta, timezone
 from email.message import EmailMessage
+from dentists import DentistsMixin
 from messaging import MessagingMixin
 from patient_backup import BackupMixin
 from reminders import RemindersMixin
+from settings import SettingsMixin
 
 import bleach
 import firebase_admin
@@ -185,7 +187,7 @@ class BaseFlaskApp:
         return self._app.render_template(template, **kwargs)
 
 
-class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin):
+class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin, SettingsMixin, DentistsMixin):
     """
     4 Pillars of OOP:
     1. Encapsulation - State and behavior in one class
@@ -2816,6 +2818,8 @@ setTimeout(go,3000);})();
         "/admin/record_payment": ("billing", "Recorded a payment"),
         "/admin/mark_plan_paid": ("billing", "Marked a plan as paid"),
         "/admin/payment_settings": ("billing", "Updated payment settings"),
+        "/admin/settings/dentists/add": ("appointments", "Added a dentist"),
+        "/admin/settings/dentists/remove": ("appointments", "Removed a dentist"),
         "/admin/billing_cleanup/apply": ("billing", "Applied billing cleanup"),
         "/admin/block_slot": ("calendar", "Blocked time slots"),
         "/admin/unblock_slot": ("calendar", "Unblocked a day"),
@@ -13558,6 +13562,8 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self._register_message_routes()
         self._register_backup_routes()
         self._register_reminder_routes()
+        self._register_settings_routes()
+        self._register_dentist_routes()
 
 
 

@@ -1,0 +1,45 @@
+<div id="section-settings" class="content-section">
+    <section class="content-panel">
+        <div class="set-card" id="setMedicines">
+            <div class="set-card__head">
+                <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">medication</span></span>
+                <div class="set-card__text">
+                    <h3>Medicines</h3>
+                    <p>The list offered in the <strong>Medicine</strong> field of the treatment records. Adding or removing a medicine here never changes a record you already saved.</p>
+                </div>
+                <span class="set-count" id="setMedCount" title="Medicines in the list">0</span>
+            </div>
+
+            <form class="set-add" id="setMedForm" autocomplete="off">
+                <input type="text" id="setMedInput" maxlength="60" placeholder="Add a medicine, e.g. Ibuprofen" aria-label="New medicine name">
+                <button type="submit" class="btn-action accept" id="setMedAdd">
+                    <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
+                </button>
+            </form>
+            <p class="set-err" id="setMedErr" role="alert" hidden></p>
+
+            <ul class="set-list" id="setMedList"></ul>
+        </div>
+
+        <div class="set-card" id="setDentists">
+            <div class="set-card__head">
+                <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">stethoscope</span></span>
+                <div class="set-card__text">
+                    <h3>Dentists</h3>
+                    <p>The dentists you can pick in the <strong>Dentist</strong> dropdowns. Adding or removing a dentist here never changes a record or appointment you already saved.</p>
+                </div>
+                <span class="set-count" id="setDenCount" title="Dentists in the list">0</span>
+            </div>
+
+            <form class="set-add" id="setDenForm" autocomplete="off">
+                <input type="text" id="setDenInput" maxlength="60" placeholder="Add a dentist, e.g. Maria Santos" aria-label="New dentist name">
+                <button type="submit" class="btn-action accept" id="setDenAdd">
+                    <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
+                </button>
+            </form>
+            <p class="set-err" id="setDenErr" role="alert" hidden></p>
+
+            <ul class="set-list" id="setDenList"></ul>
+        </div>
+    </section>
+</div>

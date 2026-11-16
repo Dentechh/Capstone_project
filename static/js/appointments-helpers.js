@@ -1,4 +1,4 @@
-            /* ---- Appointment request tab: shared helpers ---- */
+/* ---- Appointment request tab: shared helpers ---- */
 
             /* Display-only. Firestore stores "YYYY-MM-DD HH:MM" because that string is
             what order_by, the cursor pagination and the blocked-slot lookups compare
@@ -36,6 +36,17 @@
             /* One entry for now. Add more names here and every Consulting Dentist box in
                the table (server-rendered and loaded on demand) picks them up. */
             const APPOINTMENT_DENTIST_OPTIONS = ['Dr. Julix Dionne Capizonda'];
+
+            /* The list is kept in Settings -> Dentists. dentist-options.js loads it and
+               announces it with the "clinic-dentists" event; the array is updated in
+               place so every menu opened afterwards offers the saved dentists. */
+            function applyClinicDentists(list) {
+                if (!Array.isArray(list) || !list.length) return;
+                APPOINTMENT_DENTIST_OPTIONS.length = 0;
+                list.forEach(function (n) { APPOINTMENT_DENTIST_OPTIONS.push(n); });
+            }
+            document.addEventListener('clinic-dentists', function (e) { applyClinicDentists(e.detail); });
+            applyClinicDentists(window.CLINIC_DENTISTS);
 
                 /* The one name we display for this practitioner. Records saved before
                 the rename carry the short form, so every read of a stored dentist

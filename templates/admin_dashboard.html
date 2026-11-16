@@ -33,6 +33,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}?v=8">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-responsive.css') }}?v=85">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/reminders.css') }}?v=21">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}?v=1">
 </head>
 
 
@@ -77,6 +78,7 @@
 {% include '_reminders.html' %}
 {% include '_patientdashboard.html' %}
 {% include '_records.html' %}
+{% include '_settings.html' %}
     </main>
 
     <script id="dashboard-data" type="application/json">
@@ -101,7 +103,7 @@
 
 
 
-    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=35"></script>
+    <script src="{{ url_for('static', filename='js/app-core.js') }}?v=37"></script>
 
     <script src="{{ url_for('static', filename='js/app-shell-and-modals.js') }}?v=11"></script>
 
@@ -126,6 +128,10 @@
     <script src="{{ url_for('static', filename='js/reminders.js') }}?v=13"></script>
 
     <script src="{{ url_for('static', filename='js/live-updates.js') }}?v=3"></script>
+
+    <script src="{{ url_for('static', filename='js/dentist-options.js') }}?v=1"></script>
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}?v=1"></script>
 
 </body>
 
