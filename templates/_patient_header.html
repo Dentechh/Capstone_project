@@ -19,19 +19,9 @@
             <li class="dropdown">
                 <a href="javascript:void(0)" class="dropbtn" id="servicesDropdownBtn"><span class="material-symbols-rounded nav-item__icon" aria-hidden="true">medical_services</span><span class="nav-label">SERVICES</span></a>
                 <div class="dropdown-content" id="servicesDropdownMenu">
-                    <a href="/services/consultation">Dental Consultation</a>
-                    <a href="/services/cleaning">Oral Prophylaxis (Cleaning)</a>
-                    <a href="/services/pasta">Tooth Restoration (Pasta)</a>
-                    <a href="/services/extraction">Tooth Extraction (Gabot)</a>
-                    <a href="/services/dentures">Dentures (Pustiso)</a>
-                    <a href="/services/crowns-bridges">Crowns and Bridges</a>
-                    <a href="/services/whitening">Teeth Whitening</a>
-                    <a href="/services/fluoride">Fluoride Treatment</a>
-                    <a href="/services/sealant">Pit and Fissure Sealant</a>
-                    <a href="/services/wisdom-tooth">Wisdom Teeth Removal</a>
-                    <a href="/services/root-canal">Root Canal Treatment</a>
-                    <a href="/services/xray">Periapical Xray</a>
-                    <a href="/services/orthodontic-braces">Orthodontic Braces</a>
+                    {% for s in clinic_services %}
+                    <a href="/services/{{ s.slug }}">{{ s.name }}</a>
+                    {% endfor %}
                 </div>
             </li>
             <li><a href="/location" {% if active_page == 'location' %}class="active"{% endif %}><span class="material-symbols-rounded nav-item__icon" aria-hidden="true">location_on</span>LOCATION</a></li>

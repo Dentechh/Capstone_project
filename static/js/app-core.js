@@ -26,6 +26,7 @@ function showSection(sectionId) {
             const titles = {
                 'settings': 'Settings',
                 'dashboard': 'Dashboard Overview',
+                'clinicoverview': 'Clinic Overview',
                 'financialreports': 'Financial Reports',
                 'doctorscalendar': 'Doctors Calendar',
                 'appointments': 'Appointment Requests',
@@ -40,6 +41,7 @@ function showSection(sectionId) {
             const titleIcons = {
                 'settings': 'settings',
                 'dashboard': 'dashboard',
+                'clinicoverview': 'stethoscope',
                 'financialreports': 'payments',
                 'doctorscalendar': 'calendar_month',
                 'appointments': 'event_available',
@@ -78,6 +80,11 @@ function showSection(sectionId) {
             // (only if it has been a minute; the function decides).
             if (sectionId === 'activitylog' && typeof activityLogOpened === 'function') {
                 activityLogOpened();
+            }
+
+            // Clinic Overview: greeting + today's schedule (refetches at most once a minute).
+            if (sectionId === 'clinicoverview' && typeof clinicOverviewOpened === 'function') {
+                clinicOverviewOpened();
             }
 
             // Dashboard Overview: a save elsewhere flagged its numbers as old.
@@ -780,6 +787,41 @@ function showSection(sectionId) {
                 }
             });
         })();
+
+        // Treatments offered in every Procedure dropdown. These are the defaults;
+        // Settings -> Treatments replaces them through window.tdSetTreatmentOptions().
+        // "Other" is always the last choice.
+        var TD_TREATMENT_OPTIONS = [
+            'Dental Consultation', 'Oral Prophylaxis (Cleaning)', 'Tooth Restoration (Pasta)',
+            'Tooth Extraction (Gabot)', 'Dentures (Pustiso)', 'Crowns and Bridges',
+            'Teeth Whitening', 'Fluoride Treatment', 'Pit and Fissure Sealant',
+            'Wisdom Teeth Removal', 'Root Canal Treatment', 'Periapical Xray', 'Orthodontic Braces'
+        ];
+
+        // <option> list for one Procedure select. A saved procedure that is no longer
+        // in the list still shows, so an old record never loses its value.
+        function tdProcedureOptionsHtml(selected) {
+            var cur = String(selected || '').trim();
+            var names = TD_TREATMENT_OPTIONS.slice();
+            if (cur && cur !== 'Other' && names.indexOf(cur) === -1) names.push(cur);
+            var html = '<option value="" disabled' + (!cur ? ' selected' : '') + '>Select Procedure</option>';
+            names.forEach(function (n) {
+                html += '<option value="' + escHtml(n) + '"' + (n === cur ? ' selected' : '') + '>' + escHtml(n) + '</option>';
+            });
+            html += '<option value="Other"' + (cur === 'Other' ? ' selected' : '') + '>Other</option>';
+            return html;
+        }
+
+        // settings.js calls this when the Settings -> Treatments list loads or changes.
+        // Procedure selects already on screen are rebuilt and keep their current choice.
+        window.tdSetTreatmentOptions = function (list) {
+            if (!list || !list.length) return;       // keep the defaults if the list could not load
+            TD_TREATMENT_OPTIONS.length = 0;
+            list.forEach(function (n) { if (TD_TREATMENT_OPTIONS.indexOf(n) === -1) TD_TREATMENT_OPTIONS.push(n); });
+            document.querySelectorAll('select.td-procedure').forEach(function (sel) {
+                sel.innerHTML = tdProcedureOptionsHtml(sel.value);
+            });
+        };
 
         var TD_MEDICINE_OPTIONS = ['None', 'Mefenamic Acid', 'Tranexamic Acid', 'Amoxicillin', 'Co- amoxiclav'];
 
@@ -1547,21 +1589,7 @@ function showSection(sectionId) {
 
                 '<td>' +
                 '<select class="td-procedure">' +
-                '<option value="" disabled' + (!data.procedure ? ' selected' : '') + '>Select Procedure</option>' +
-                '<option value="Dental Consultation"' + (data.procedure === "Dental Consultation" ? " selected" : "") + '>Dental Consultation</option>' +
-                '<option value="Oral Prophylaxis (Cleaning)"' + (data.procedure === "Oral Prophylaxis (Cleaning)" ? " selected" : "") + '>Oral Prophylaxis (Cleaning)</option>' +
-                '<option value="Tooth Restoration (Pasta)"' + (data.procedure === "Tooth Restoration (Pasta)" ? " selected" : "") + '>Tooth Restoration (Pasta)</option>' +
-                '<option value="Tooth Extraction (Gabot)"' + (data.procedure === "Tooth Extraction (Gabot)" ? " selected" : "") + '>Tooth Extraction (Gabot)</option>' +
-                '<option value="Dentures (Pustiso)"' + (data.procedure === "Dentures (Pustiso)" ? " selected" : "") + '>Dentures (Pustiso)</option>' +
-                '<option value="Crowns and Bridges"' + (data.procedure === "Crowns and Bridges" ? " selected" : "") + '>Crowns and Bridges</option>' +
-                '<option value="Teeth Whitening"' + (data.procedure === "Teeth Whitening" ? " selected" : "") + '>Teeth Whitening</option>' +
-                '<option value="Fluoride Treatment"' + (data.procedure === "Fluoride Treatment" ? " selected" : "") + '>Fluoride Treatment</option>' +
-                '<option value="Pit and Fissure Sealant"' + (data.procedure === "Pit and Fissure Sealant" ? " selected" : "") + '>Pit and Fissure Sealant</option>' +
-                '<option value="Wisdom Teeth Removal"' + (data.procedure === "Wisdom Teeth Removal" ? " selected" : "") + '>Wisdom Teeth Removal</option>' +
-                '<option value="Root Canal Treatment"' + (data.procedure === "Root Canal Treatment" ? " selected" : "") + '>Root Canal Treatment</option>' +
-                '<option value="Periapical Xray"' + (data.procedure === "Periapical Xray" ? " selected" : "") + '>Periapical Xray</option>' +
-                '<option value="Orthodontic Braces"' + (data.procedure === "Orthodontic Braces" ? " selected" : "") + '>Orthodontic Braces</option>' +
-                '<option value="Other"' + (data.procedure === "Other" ? " selected" : "") + '>Other</option>' +
+                tdProcedureOptionsHtml(data.procedure) +
                 '</select>' +
                 '</td>' +
 
@@ -1963,6 +1991,9 @@ function showSection(sectionId) {
             // not a place a reload can return to.
             if (hash && hash !== 'patientdashboard' && document.getElementById('section-' + hash)) {
                 showSection(hash);
+            } else {
+                // Default landing page: Clinic Overview (page title and nav state included).
+                showSection('clinicoverview');
             }
             __adminSectionRestored = true;
         };

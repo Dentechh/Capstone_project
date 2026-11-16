@@ -42,7 +42,12 @@
             {#  Icons are Material Symbols (the font is already loaded on this page).
                 Every id="nav-*" and every showSection() call is unchanged - showSection
                 uses the ids for its active-state highlight. #}
-            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item active"
+            <a href="javascript:void(0)" id="nav-clinicoverview" class="nav-item active"
+                onclick="showSection('clinicoverview')">
+                <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">stethoscope</span>
+                <span class="nav-item__label">Clinic Overview</span>
+            </a>
+            <a href="javascript:void(0)" id="nav-dashboard" class="nav-item"
                 onclick="showSection('dashboard')">
                 <span class="material-symbols-rounded nav-item__icon" aria-hidden="true">space_dashboard</span>
                 <span class="nav-item__label">Dashboard</span>

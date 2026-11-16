@@ -1,5 +1,7 @@
-/* Settings page: Medicines card (same teal accent as the reminders cards) */
-#section-settings .set-card{padding:20px 22px;border:1px solid #cdeee8;border-left:5px solid #0f9d8a;border-radius:14px;background:#effcf9;max-width:760px;}
+/* Settings page: Medicines + Dentists cards, side by side (same teal accent as the reminders cards) */
+.set-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start;}
+#section-settings .set-card{padding:20px 22px;border:1px solid #cdeee8;border-left:5px solid #0f9d8a;border-radius:14px;background:#effcf9;min-width:0;}
+#section-settings .set-card + .set-card{margin-top:0;}
 .set-card__head{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;}
 .set-card__icon{flex:0 0 44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#d9f6ef;color:#0b6b5c;}
 .set-card__icon .material-symbols-rounded{font-size:26px;}
@@ -8,7 +10,6 @@
 .set-card__text p{margin:0;font-size:13px;line-height:1.5;color:#475569;}
 .set-count{min-width:26px;padding:2px 9px;border-radius:999px;background:#0f9d8a;color:#fff;font-size:12px;font-weight:700;text-align:center;}
 
-#section-settings .set-card + .set-card{margin-top:20px;}
 .set-add{display:flex;gap:10px;margin:0 0 6px;}
 .set-add input{flex:1;min-width:0;padding:11px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;font-size:14px;background:#fff;color:#1a1a1a;}
 .set-add input:focus{outline:none;border-color:#0f9d8a;box-shadow:0 0 0 3px rgba(15,157,138,.18);}
@@ -32,6 +33,23 @@
 .set-btn:disabled{opacity:.6;cursor:default;}
 .set-empty{padding:14px;text-align:center;font-size:13px;color:#64748b;}
 
+/* Treatments: the long list spans the full width and runs in 2 columns */
+#section-settings #setTreatments{grid-column:1 / -1;}
+.set-list--cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}
+.set-list--cols .set-empty{grid-column:1 / -1;}
+
+/* Clinic information: a small form instead of a list */
+#section-settings #setClinic,#section-settings #setAbout{grid-column:1 / -1;}
+.set-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px;}
+.set-field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#334155;}
+.set-field--wide{grid-column:1 / -1;}
+.set-field input{padding:11px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;font-size:14px;font-weight:400;background:#fff;color:#1a1a1a;}
+.set-field textarea{padding:11px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;font-size:14px;font-weight:400;line-height:1.5;background:#fff;color:#1a1a1a;resize:vertical;}
+.set-field input:focus,.set-field textarea:focus{outline:none;border-color:#0f9d8a;box-shadow:0 0 0 3px rgba(15,157,138,.18);}
+.set-form__actions{grid-column:1 / -1;display:flex;justify-content:flex-end;}
+.set-form__actions .btn-action{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+
+/* Dark mode */
 body.dark-mode #section-settings .set-card{background:#0f1f1d;border-color:#1f5f56;border-left-color:#2dd4bf;}
 body.dark-mode .set-card__icon{background:rgba(45,212,191,.16);color:#5eead4;}
 body.dark-mode .set-card__text h3{color:#5eead4;}
@@ -48,4 +66,11 @@ body.dark-mode .set-btn{background:transparent;border-color:#33415a;color:#cbd5e
 body.dark-mode .set-btn:hover{background:rgba(255,255,255,.06);}
 body.dark-mode .set-btn--danger{color:#f87171;border-color:#7f3535;}
 body.dark-mode .set-btn--danger:hover{background:rgba(248,113,113,.1);}
+body.dark-mode .set-field{color:#cbd5e1;}
+body.dark-mode .set-field input,body.dark-mode .set-field textarea{background:#0b1220;border-color:#33415a;color:#e2e8f0;}
+body.dark-mode .set-field input:focus,body.dark-mode .set-field textarea:focus{border-color:#2dd4bf;box-shadow:0 0 0 3px rgba(45,212,191,.2);}
+
+/* Responsive: stack the cards on narrower screens */
+@media (max-width:1100px){.set-grid{grid-template-columns:1fr;}}
+@media (max-width:760px){.set-list--cols{grid-template-columns:1fr;}.set-form{grid-template-columns:1fr;}}
 @media (max-width:560px){.set-add{flex-direction:column;}.set-item{flex-wrap:wrap;}}

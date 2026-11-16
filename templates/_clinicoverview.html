@@ -1,0 +1,15 @@
+<div id="section-clinicoverview" class="content-section active-section">
+    {# One greeting banner + schedule per dentist, filled in by clinic-overview.js.
+       Dr. Capizonda (the clinic owner) is always first. #}
+    <div id="coDentists" aria-live="polite"
+         data-logo="{{ url_for('static', filename='img/logo_lightMode.png') }}">
+        <div class="recent-activity">
+            <div class="recent-list">
+                <div class="recent-empty">
+                    <span class="material-symbols-rounded recent-empty__icon" aria-hidden="true">hourglass_top</span>
+                    <p>Loading dentists...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

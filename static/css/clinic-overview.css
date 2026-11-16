@@ -1,0 +1,149 @@
+/* Clinic Overview: greeting banner + today's schedule.
+   The schedule list reuses the existing .recent-* classes; only the banner is new. */
+
+.co-dentist { margin-bottom: 32px; }
+
+.co-owner {
+    display: inline-block;
+    margin-left: 12px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    vertical-align: middle;
+    background: rgba(255, 255, 255, .22);
+    border: 1px solid rgba(255, 255, 255, .4);
+}
+
+.co-banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+    color: #fff;
+    background: linear-gradient(135deg, #0d3f9e 0%, #1f63d8 55%, #4a90f2 100%);
+    box-shadow: 0 10px 30px rgba(13, 63, 158, .28);
+    border: 1px solid rgba(255, 255, 255, .25);
+}
+
+/* Clinic logo as a large faded watermark on the right (no stock artwork). */
+.co-banner__mark {
+    position: absolute;
+    right: -20px;
+    bottom: -40px;
+    height: 120%;
+    max-height: 340px;
+    opacity: .16;
+    pointer-events: none;
+    filter: brightness(0) invert(1);
+}
+
+.co-banner::after {
+    content: "";
+    position: absolute;
+    top: -90px;
+    right: 18%;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+    pointer-events: none;
+}
+
+.co-banner__text { position: relative; z-index: 1; }
+
+.co-greeting { margin: 0; font-size: 1rem; font-weight: 600; opacity: .9; }
+.co-name { margin: 4px 0 6px; font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 700; line-height: 1.2; color: #fff; }
+.co-sub { margin: 0; font-size: .95rem; opacity: .85; }
+
+.co-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 24px; }
+
+.co-stat {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 22px 10px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    text-decoration: none;
+    transition: background .15s ease, transform .15s ease;
+}
+.co-stat:hover { background: rgba(255, 255, 255, .24); transform: translateY(-1px); }
+
+.co-stat__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    color: #0d3f9e;
+}
+.co-stat__icon .material-symbols-rounded { font-size: 26px; }
+
+.co-stat__data { display: flex; flex-direction: column; line-height: 1.15; }
+.co-stat__data strong { font-size: 1.6rem; font-weight: 700; }
+.co-stat__data span { font-size: .85rem; opacity: .9; }
+
+.co-time {
+    font-weight: 600;
+    min-width: 76px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .co-banner { padding: 24px 20px; }
+    .co-stat { width: 100%; }
+}
+
+/* Activity summary (today + next 7 days) */
+.co-summary { margin-top: 24px; }
+.co-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; padding: 4px 24px 24px; }
+.co-panel { padding: 18px 20px; border-radius: 16px; background: #fff; border: 1px solid #dbe6fb; min-width: 0; }
+.co-panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.co-panel__head h4 { margin: 0; font-size: 1.05rem; font-weight: 800; color: #0d3f9e; }
+.co-muted { font-size: .8rem; color: #64748b; }
+.co-minis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.co-mini { display: flex; flex-direction: column; align-items: center; padding: 10px 6px; border-radius: 12px; background: #eef4ff; }
+.co-mini strong { font-size: 1.5rem; line-height: 1.1; color: #0d3f9e; }
+.co-mini span { font-size: .78rem; color: #475569; font-weight: 600; }
+.co-line { margin: 12px 0 0; font-size: .85rem; color: #334155; }
+.co-label { margin: 14px 0 6px; font-size: .75rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: #64748b; }
+.co-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.co-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #e3edff; color: #0d3f9e; font-size: .8rem; font-weight: 600; }
+.co-chip b { padding: 0 6px; border-radius: 999px; background: #0d3f9e; color: #fff; font-size: .72rem; }
+.co-days { margin-top: 6px; }
+.co-day { border-top: 1px solid #e5ecfa; }
+.co-day:first-of-type { border-top: 0; }
+.co-day__head { display: grid; grid-template-columns: 82px 1fr auto; align-items: center; gap: 10px; padding: 8px 0; font-size: .85rem; cursor: default; list-style: none; }
+details.co-day > .co-day__head { cursor: pointer; }
+.co-day__head::-webkit-details-marker { display: none; }
+.co-day__label { font-weight: 700; color: #1f2937; }
+.co-day__bar { height: 8px; border-radius: 999px; background: #e3edff; overflow: hidden; }
+.co-day__bar i { display: block; height: 100%; border-radius: 999px; background: #1f63d8; }
+.co-day__count { color: #475569; font-size: .8rem; white-space: nowrap; }
+.co-day__list { margin: 0 0 8px; padding-left: 18px; font-size: .82rem; color: #334155; }
+
+body.dark-mode .co-panel { background: #131a26; border-color: #25324a; }
+body.dark-mode .co-panel__head h4, body.dark-mode .co-mini strong { color: #8ab4ff; }
+body.dark-mode .co-mini { background: #1b2740; }
+body.dark-mode .co-mini span, body.dark-mode .co-line, body.dark-mode .co-day__count, body.dark-mode .co-day__list { color: #cbd5e1; }
+body.dark-mode .co-chip { background: #1b2740; color: #8ab4ff; }
+body.dark-mode .co-chip b { background: #8ab4ff; color: #0b1220; }
+body.dark-mode .co-day { border-color: #25324a; }
+body.dark-mode .co-day__label { color: #e2e8f0; }
+body.dark-mode .co-day__bar { background: #1b2740; }
+
+@media (max-width: 1000px) { .co-panels { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .co-panels { padding: 4px 14px 18px; } .co-day__head { grid-template-columns: 70px 1fr; } .co-day__count { grid-column: 1 / -1; } }
+
+/* Collaborating dentist badge (same pill as the owner badge, softer tint) */
+.co-owner--collab { background: rgba(255, 255, 255, .12); border-style: dashed; }

@@ -145,83 +145,13 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
 
             <div class="home-grid home-grid--services">
-                <a href="/services/consultation" class="home-card scroll-animate zoom-in delay-1">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">medical_services</span>
-                    <h3>Dental Consultation</h3>
-                    <p>Start your journey to a healthier smile with a professional check-up.</p>
+                {% for s in clinic_services %}
+                <a href="/services/{{ s.slug }}" class="home-card scroll-animate zoom-in delay-{{ (loop.index0 % 8) + 1 }}">
+                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">{{ s.icon }}</span>
+                    <h3>{{ s.card_title }}</h3>
+                    <p>{{ s.short_desc }}</p>
                 </a>
-
-                <a href="/services/cleaning" class="home-card scroll-animate zoom-in delay-2">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">cleaning_services</span>
-                    <h3>Oral Prophylaxis</h3>
-                    <p>Keep your gums healthy and your smile bright.</p>
-                </a>
-
-                <a href="/services/pasta" class="home-card scroll-animate zoom-in delay-3">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">build</span>
-                    <h3>Tooth Restoration</h3>
-                    <p>Restore the strength and beauty of your teeth.</p>
-                </a>
-
-                <a href="/services/extraction" class="home-card scroll-animate zoom-in delay-4">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">remove_circle</span>
-                    <h3>Tooth Extraction</h3>
-                    <p>Safe and gentle removal of problematic teeth.</p>
-                </a>
-
-                <a href="/services/dentures" class="home-card scroll-animate zoom-in delay-5">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">sentiment_very_satisfied</span>
-                    <h3>Dentures</h3>
-                    <p>Regain your smile and confidence with custom-fit dentures.</p>
-                </a>
-
-                <a href="/services/crowns-bridges" class="home-card scroll-animate zoom-in delay-6">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">diamond</span>
-                    <h3>Crowns and Bridges</h3>
-                    <p>Permanent solutions for broken or missing teeth.</p>
-                </a>
-
-                <a href="/services/whitening" class="home-card scroll-animate zoom-in delay-7">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">auto_awesome</span>
-                    <h3>Teeth Whitening</h3>
-                    <p>Brighten your smile by several shades in one visit.</p>
-                </a>
-
-                <a href="/services/fluoride" class="home-card scroll-animate zoom-in delay-8">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">water_drop</span>
-                    <h3>Fluoride Treatment</h3>
-                    <p>Strengthen your tooth enamel against decay.</p>
-                </a>
-
-                <a href="/services/sealant" class="home-card scroll-animate zoom-in delay-1">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">shield</span>
-                    <h3>Pit and Fissure Sealant</h3>
-                    <p>An invisible shield for your molars.</p>
-                </a>
-
-                <a href="/services/wisdom-tooth" class="home-card scroll-animate zoom-in delay-2">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">health_and_safety</span>
-                    <h3>Wisdom Teeth Removal</h3>
-                    <p>Prevent pain and crowding caused by impacted wisdom teeth.</p>
-                </a>
-
-                <a href="/services/root-canal" class="home-card scroll-animate zoom-in delay-3">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">biotech</span>
-                    <h3>Root Canal Treatment</h3>
-                    <p>Save your natural tooth and relieve severe pain.</p>
-                </a>
-
-                <a href="/services/xray" class="home-card scroll-animate zoom-in delay-4">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">radiology</span>
-                    <h3>Periapical X-ray</h3>
-                    <p>Detailed imaging to see what's happening beneath the surface.</p>
-                </a>
-
-                <a href="/services/orthodontic-braces" class="home-card scroll-animate zoom-in delay-5">
-                    <span class="material-symbols-rounded home-card-icon" aria-hidden="true">grid_3x3</span>
-                    <h3>Orthodontic Braces</h3>
-                    <p>Straighten your teeth and correct your bite.</p>
-                </a>
+                {% endfor %}
 
                 <a href="#" class="home-card home-card--cta scroll-animate zoom-in delay-6" id="openAppointment3">
                     <span class="material-symbols-rounded home-card-icon" aria-hidden="true">calendar_month</span>
@@ -287,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="home-visit-item scroll-animate fade-in-left delay-1">
                         <span class="material-symbols-rounded" aria-hidden="true">location_on</span>
                         <h3>Address</h3>
-                        <p>231 Lopez Jaena St, Molo, Iloilo City</p>
+                        <p>{{ clinic_info.address }}</p>
                     </div>
 
                     <div class="home-visit-item scroll-animate fade-in-up delay-2">
@@ -299,13 +229,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="home-visit-item scroll-animate fade-in-up delay-3">
                         <span class="material-symbols-rounded" aria-hidden="true">phone</span>
                         <h3>Call Us</h3>
-                        <p>0962 687 6076</p>
+                        <p>{{ clinic_info.phone }}</p>
                     </div>
 
                     <div class="home-visit-item scroll-animate fade-in-right delay-4">
                         <span class="material-symbols-rounded" aria-hidden="true">email</span>
                         <h3>Email Us</h3>
-                        <p>capizondadental@gmail.com</p>
+                        <p>{{ clinic_info.email }}</p>
                     </div>
                 </div>
 
@@ -339,15 +269,15 @@ document.addEventListener('DOMContentLoaded', function() {
             <ul>
                 <li>
                     <span class="material-symbols-rounded footer-icon">location_on</span>
-                    231 Lopez Jaena St, Molo, Iloilo City
+                    {{ clinic_info.address }}
                 </li>
                 <li>
                     <span class="material-symbols-rounded footer-icon">phone</span>
-                    0962 687 6076
+                    {{ clinic_info.phone }}
                 </li>
                 <li>
                     <span class="material-symbols-rounded footer-icon">email</span>
-                    capizondadental@gmail.com
+                    {{ clinic_info.email }}
                 </li>
             </ul>
         </div>
@@ -355,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="footer-socials">
             <h4>FOLLOW US</h4>
             <div class="social-links">
-                <a href="https://www.facebook.com/profile.php?id=61564525660056" target="_blank" rel="noopener">
+                <a href="{{ clinic_info.facebook }}" target="_blank" rel="noopener">
                     <svg class="footer-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                     Facebook Page
                 </a>
@@ -594,19 +524,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             <label for="admService">Service</label>
                             <select id="admService" name="Service" class="form-control" required>
                                 <option value="" disabled selected>Choose a service</option>
-                                <option value="Dental Consultation">Dental Consultation</option>
-                                <option value="Oral Prophylaxis (Cleaning)">Oral Prophylaxis (Cleaning)</option>
-                                <option value="Tooth Restoration (Pasta)">Tooth Restoration (Pasta)</option>
-                                <option value="Tooth Extraction (Gabot)">Tooth Extraction (Gabot)</option>
-                                <option value="Dentures (Pustiso)">Dentures (Pustiso)</option>
-                                <option value="Crowns and Bridges">Crowns and Bridges</option>
-                                <option value="Teeth Whitening">Teeth Whitening</option>
-                                <option value="Fluoride Treatment">Fluoride Treatment</option>
-                                <option value="Pit and Fissure Sealant">Pit and Fissure Sealant</option>
-                                <option value="Wisdom Teeth Removal">Wisdom Teeth Removal</option>
-                                <option value="Root Canal Treatment">Root Canal Treatment</option>
-                                <option value="Periapical Xray">Periapical Xray</option>
-                                <option value="Orthodontic Braces">Orthodontic Braces</option>
+                                {% for s in clinic_services %}
+                                <option value="{{ s.name }}">{{ s.name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
 

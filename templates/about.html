@@ -75,33 +75,33 @@
         <div class="spotlight-container">
             
             <div class="dr-image-box about-reveal">
-                <img src="{{ url_for('static', filename='img/dr-capizonda.png') }}" alt="Dr. Capizonda, dentist at Capizonda Dental Clinic">
-                <h3 class="dr-name">Dr. Julix Dionne Capizonda</h3>
-                <span class="dr-badge">Dentist</span>
+                <img src="{{ url_for('static', filename='img/dr-capizonda.png') }}" alt="{{ about_info.dr_name }}, {{ about_info.dr_title | lower }} at Capizonda Dental Clinic">
+                <h3 class="dr-name">{{ about_info.dr_name }}</h3>
+                <span class="dr-badge">{{ about_info.dr_title }}</span>
             </div>
 
             <div class="dr-details-box">
-                <h2 class="section-title about-reveal">Meet Dr. Julix Dionne Capizonda</h2>
+                <h2 class="section-title about-reveal">Meet {{ about_info.dr_name }}</h2>
 
-                <p class="dr-intro about-reveal delay-1">A licensed dentist trained at Iloilo Doctor's College, Dr. Julix Dionne Capizonda pairs gentle, patient-first care with modern technology — from intraoral cameras to UV sterilization — so every visit is comfortable, transparent, and thorough.</p>
+                <p class="dr-intro about-reveal delay-1">{{ about_info.intro }}</p>
                 
                 <div class="dr-tiles about-reveal delay-2">
                     <div class="dr-tile">
                         <span class="material-symbols-rounded dr-tile-icon" aria-hidden="true">school</span>
                         <span class="dr-tile-label">Dental School</span>
-                        <span class="dr-tile-value">Iloilo Doctor's College, Batch 2020</span>
+                        <span class="dr-tile-value">{{ about_info.school }}</span>
                     </div>
 
                     <div class="dr-tile">
                         <span class="material-symbols-rounded dr-tile-icon" aria-hidden="true">workspace_premium</span>
                         <span class="dr-tile-label">Licensed</span>
-                        <span class="dr-tile-value">Since January 2024 (passed the board exams)</span>
+                        <span class="dr-tile-value">{{ about_info.licensed }}</span>
                     </div>
 
                     <div class="dr-tile">
                         <span class="material-symbols-rounded dr-tile-icon" aria-hidden="true">groups</span>
                         <span class="dr-tile-label">Association</span>
-                        <span class="dr-tile-value">PDA Iloilo Chapter</span>
+                        <span class="dr-tile-value">{{ about_info.association }}</span>
                     </div>
                 </div>
 
@@ -112,7 +112,7 @@
                             <h3 class="dr-highlight-title">Our Technology</h3>
                         </div>
                         <div class="dr-highlight-text">
-                            <p>We invest in modern technology including <strong>Intraoral Cameras</strong>, <strong>Autoclave</strong>, and <strong>UV Sterilization</strong> for efficient care.</p>
+                            <p>{{ about_info.technology | about_rich }}</p>
                         </div>
                     </div>
 
@@ -122,7 +122,7 @@
                             <h3 class="dr-highlight-title">Vision</h3>
                         </div>
                         <div class="dr-highlight-text">
-                            <p>To reduce early extractions of permanent teeth caused by poor oral hygiene in the Philippines.</p>
+                            <p>{{ about_info.vision }}</p>
                         </div>
                     </div>
 
@@ -132,7 +132,7 @@
                             <h3 class="dr-highlight-title">Community Work</h3>
                         </div>
                         <div class="dr-highlight-text">
-                            <p>Participated in <strong>INCGiving</strong> dental missions, providing hygiene education to students in Jaro II Elementary School.</p>
+                            <p>{{ about_info.community | about_rich }}</p>
                         </div>
                     </div>
                 </div>

@@ -1,45 +1,145 @@
 <div id="section-settings" class="content-section">
     <section class="content-panel">
-        <div class="set-card" id="setMedicines">
-            <div class="set-card__head">
-                <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">medication</span></span>
-                <div class="set-card__text">
-                    <h3>Medicines</h3>
-                    <p>The list offered in the <strong>Medicine</strong> field of the treatment records. Adding or removing a medicine here never changes a record you already saved.</p>
+        <div class="set-grid">
+            <div class="set-card" id="setClinic">
+                <div class="set-card__head">
+                    <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">storefront</span></span>
+                    <div class="set-card__text">
+                        <h3>Clinic information</h3>
+                        <p>The address, contact number, email and Facebook page shown in the footer, the home page and other pages of the website. Saving here updates all of them.</p>
+                    </div>
                 </div>
-                <span class="set-count" id="setMedCount" title="Medicines in the list">0</span>
+
+                <form class="set-form" id="setClinicForm" autocomplete="off">
+                    <label class="set-field set-field--wide" for="setClinicAddress">Address
+                        <input type="text" id="setClinicAddress" maxlength="120" placeholder="e.g. 231 Lopez Jaena St, Molo, Iloilo City">
+                    </label>
+                    <label class="set-field" for="setClinicPhone">Contact number
+                        <input type="text" id="setClinicPhone" maxlength="30" placeholder="e.g. 0962 687 6076">
+                    </label>
+                    <label class="set-field" for="setClinicEmail">Email
+                        <input type="email" id="setClinicEmail" maxlength="80" placeholder="e.g. clinic@gmail.com">
+                    </label>
+                    <label class="set-field set-field--wide" for="setClinicFacebook">Facebook page link
+                        <input type="url" id="setClinicFacebook" maxlength="200" placeholder="https://www.facebook.com/...">
+                    </label>
+                    <div class="set-form__actions">
+                        <button type="submit" class="btn-action accept" id="setClinicSave">
+                            <span class="material-symbols-rounded" aria-hidden="true">save</span>Save changes
+                        </button>
+                    </div>
+                </form>
+                <p class="set-err" id="setClinicErr" role="alert" hidden></p>
             </div>
 
-            <form class="set-add" id="setMedForm" autocomplete="off">
-                <input type="text" id="setMedInput" maxlength="60" placeholder="Add a medicine, e.g. Ibuprofen" aria-label="New medicine name">
-                <button type="submit" class="btn-action accept" id="setMedAdd">
-                    <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
-                </button>
-            </form>
-            <p class="set-err" id="setMedErr" role="alert" hidden></p>
-
-            <ul class="set-list" id="setMedList"></ul>
-        </div>
-
-        <div class="set-card" id="setDentists">
-            <div class="set-card__head">
-                <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">stethoscope</span></span>
-                <div class="set-card__text">
-                    <h3>Dentists</h3>
-                    <p>The dentists you can pick in the <strong>Dentist</strong> dropdowns. Adding or removing a dentist here never changes a record or appointment you already saved.</p>
+            <div class="set-card" id="setAbout">
+                <div class="set-card__head">
+                    <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">badge</span></span>
+                    <div class="set-card__text">
+                        <h3>About page</h3>
+                        <p>The dentist section of the public <strong>About</strong> page: name, introduction, credentials, technology, vision and community work. To make a word bold, put two asterisks around it, like <strong>**Autoclave**</strong>.</p>
+                    </div>
                 </div>
-                <span class="set-count" id="setDenCount" title="Dentists in the list">0</span>
+
+                <form class="set-form" id="setAboutForm" autocomplete="off">
+                    <label class="set-field" for="setAboutName">Dentist name
+                        <input type="text" id="setAboutName" maxlength="80" placeholder="e.g. Dr. Julix Dionne Capizonda">
+                    </label>
+                    <label class="set-field" for="setAboutTitle">Title under the photo
+                        <input type="text" id="setAboutTitle" maxlength="40" placeholder="e.g. Dentist">
+                    </label>
+                    <label class="set-field set-field--wide" for="setAboutIntro">Introduction
+                        <textarea id="setAboutIntro" rows="4" maxlength="600"></textarea>
+                    </label>
+                    <label class="set-field" for="setAboutSchool">Dental school
+                        <input type="text" id="setAboutSchool" maxlength="120" placeholder="e.g. Iloilo Doctor's College, Batch 2020">
+                    </label>
+                    <label class="set-field" for="setAboutLicensed">Licensed
+                        <input type="text" id="setAboutLicensed" maxlength="120" placeholder="e.g. Since January 2024">
+                    </label>
+                    <label class="set-field set-field--wide" for="setAboutAssoc">Association
+                        <input type="text" id="setAboutAssoc" maxlength="120" placeholder="e.g. PDA Iloilo Chapter">
+                    </label>
+                    <label class="set-field set-field--wide" for="setAboutTech">Our Technology
+                        <textarea id="setAboutTech" rows="3" maxlength="400"></textarea>
+                    </label>
+                    <label class="set-field set-field--wide" for="setAboutVision">Vision
+                        <textarea id="setAboutVision" rows="3" maxlength="400"></textarea>
+                    </label>
+                    <label class="set-field set-field--wide" for="setAboutCommunity">Community Work
+                        <textarea id="setAboutCommunity" rows="3" maxlength="400"></textarea>
+                    </label>
+                    <div class="set-form__actions">
+                        <button type="submit" class="btn-action accept" id="setAboutSave">
+                            <span class="material-symbols-rounded" aria-hidden="true">save</span>Save changes
+                        </button>
+                    </div>
+                </form>
+                <p class="set-err" id="setAboutErr" role="alert" hidden></p>
             </div>
 
-            <form class="set-add" id="setDenForm" autocomplete="off">
-                <input type="text" id="setDenInput" maxlength="60" placeholder="Add a dentist, e.g. Maria Santos" aria-label="New dentist name">
-                <button type="submit" class="btn-action accept" id="setDenAdd">
-                    <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
-                </button>
-            </form>
-            <p class="set-err" id="setDenErr" role="alert" hidden></p>
+            <div class="set-card" id="setMedicines">
+                <div class="set-card__head">
+                    <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">medication</span></span>
+                    <div class="set-card__text">
+                        <h3>Medicines</h3>
+                        <p>The list offered in the <strong>Medicine</strong> field of the treatment records. Adding or removing a medicine here never changes a record you already saved.</p>
+                    </div>
+                    <span class="set-count" id="setMedCount" title="Medicines in the list">0</span>
+                </div>
 
-            <ul class="set-list" id="setDenList"></ul>
+                <form class="set-add" id="setMedForm" autocomplete="off">
+                    <input type="text" id="setMedInput" maxlength="60" placeholder="Add a medicine, e.g. Ibuprofen" aria-label="New medicine name">
+                    <button type="submit" class="btn-action accept" id="setMedAdd">
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
+                    </button>
+                </form>
+                <p class="set-err" id="setMedErr" role="alert" hidden></p>
+
+                <ul class="set-list" id="setMedList"></ul>
+            </div>
+
+            <div class="set-card" id="setDentists">
+                <div class="set-card__head">
+                    <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">stethoscope</span></span>
+                    <div class="set-card__text">
+                        <h3>Dentists</h3>
+                        <p>The dentists you can pick in the <strong>Dentist</strong> dropdowns. Adding or removing a dentist here never changes a record or appointment you already saved.</p>
+                    </div>
+                    <span class="set-count" id="setDenCount" title="Dentists in the list">0</span>
+                </div>
+
+                <form class="set-add" id="setDenForm" autocomplete="off">
+                    <input type="text" id="setDenInput" maxlength="60" placeholder="Add a dentist, e.g. Maria Santos" aria-label="New dentist name">
+                    <button type="submit" class="btn-action accept" id="setDenAdd">
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
+                    </button>
+                </form>
+                <p class="set-err" id="setDenErr" role="alert" hidden></p>
+
+                <ul class="set-list" id="setDenList"></ul>
+            </div>
+
+            <div class="set-card" id="setTreatments">
+                <div class="set-card__head">
+                    <span class="set-card__icon"><span class="material-symbols-rounded" aria-hidden="true">medical_services</span></span>
+                    <div class="set-card__text">
+                        <h3>Treatments</h3>
+                        <p>The services the clinic offers, shown in the <strong>Treatment</strong> dropdowns. Adding or removing a treatment here never changes a record or appointment you already saved.</p>
+                    </div>
+                    <span class="set-count" id="setTrtCount" title="Treatments in the list">0</span>
+                </div>
+
+                <form class="set-add" id="setTrtForm" autocomplete="off">
+                    <input type="text" id="setTrtInput" maxlength="60" placeholder="Add a treatment, e.g. Teeth Cleaning" aria-label="New treatment name">
+                    <button type="submit" class="btn-action accept" id="setTrtAdd">
+                        <span class="material-symbols-rounded" aria-hidden="true">add</span>Add
+                    </button>
+                </form>
+                <p class="set-err" id="setTrtErr" role="alert" hidden></p>
+
+                <ul class="set-list set-list--cols" id="setTrtList"></ul>
+            </div>
         </div>
     </section>
 </div>

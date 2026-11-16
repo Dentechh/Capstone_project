@@ -15,6 +15,9 @@ from messaging import MessagingMixin
 from patient_backup import BackupMixin
 from reminders import RemindersMixin
 from settings import SettingsMixin
+from services_list import ServicesMixin
+from clinic_info import ClinicInfoMixin
+from about_info import AboutInfoMixin
 
 import bleach
 import firebase_admin
@@ -187,7 +190,7 @@ class BaseFlaskApp:
         return self._app.render_template(template, **kwargs)
 
 
-class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin, SettingsMixin, DentistsMixin):
+class DentalClinicApp(BaseFlaskApp, MessagingMixin, BackupMixin, RemindersMixin, SettingsMixin, DentistsMixin, ServicesMixin, ClinicInfoMixin, AboutInfoMixin):
     """
     4 Pillars of OOP:
     1. Encapsulation - State and behavior in one class
@@ -7446,6 +7449,235 @@ setTimeout(go,3000);})();
             "max_date": today.isoformat(),
         })
         return jsonify(payload)
+    OWNER_DENTIST = "Dr. Julix Dionne Capizonda"
+
+    def _clinic_overview_settings_dentists(self):
+        """Names listed in Settings > Dentists (Settings/dentists). Never raises."""
+        names = []
+        try:
+            snap = self.db.collection("Settings").document("dentists").get()
+            data = (snap.to_dict() or {}) if snap.exists else {}
+            raw = data.get("dentists")
+            if not isinstance(raw, list):
+                raw = next((v for v in data.values() if isinstance(v, list)), [])
+            for item in raw:
+                if isinstance(item, dict):
+                    item = item.get("name")
+                nm = " ".join(str(item or "").split())
+                if nm:
+                    names.append(nm)
+        except Exception as e:
+            print("CLINIC OVERVIEW SETTINGS DENTISTS ERROR:", e)
+        return names
+
+    def admin_clinic_overview(self):
+        """Clinic Overview: one block per DENTIST listed in Settings, owner first.
+
+        Whoever is signed in, every listed dentist is shown (the viewer's own
+        name is never used). Each dentist gets today's schedule plus an activity
+        summary for today and for the next 7 days (tomorrow .. today+7).
+        Dr. Capizonda (the clinic owner) is always listed and always first.
+        """
+        if not session.get('admin_logged_in'):
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+
+        now = datetime.now(PH_TZ)
+        today = now.date()
+        week_days = [today + timedelta(days=i) for i in range(1, 8)]
+        week_end = week_days[-1]
+        greeting = ("Good Morning" if now.hour < 12
+                    else "Good Afternoon" if now.hour < 18 else "Good Evening")
+
+        def day_label(d):
+            return f"{d:%a, %b} {d.day}"
+
+        owner_key = self.normalize_dentist_name(self.OWNER_DENTIST)
+        roster = {owner_key: {"name": self.OWNER_DENTIST, "owner": True}}
+        for nm in self._clinic_overview_settings_dentists():
+            key = self.normalize_dentist_name(nm)
+            if not key or key in roster:
+                continue
+            bare = re.sub(r"^dr\.?\s+", "", nm, flags=re.I)
+            roster[key] = {"name": "Dr. " + bare, "owner": False}
+
+        def key_for(dentist_value):
+            got = self.normalize_dentist_name(dentist_value)
+            if not got:
+                return None
+            if got in roster:
+                return got
+            if len(got) >= 5:
+                for k in roster:
+                    if len(k) >= 5 and (got in k or k in got):
+                        return k
+            return None
+
+        # per dentist: accepted rows by date, pending requests (all / by date)
+        accepted = {k: {} for k in roster}
+        pending_total = {k: 0 for k in roster}
+        pending_by_day = {k: {} for k in roster}
+        # Total patients per dentist = distinct patient accounts (the same set My
+        # Patients lists) that have an accepted appointment OR a treatment record
+        # under that dentist. Records with no dentist written belong to the owner.
+        patient_sets = {k: set() for k in roster}
+        try:
+            history_uids = {uid for uid, _ in self._get_history_accounts_cached()}
+        except Exception as e:
+            print("CLINIC OVERVIEW HISTORY ACCOUNTS ERROR:", e)
+            history_uids = set()
+
+        def add_patient(k, uid, name=""):
+            uid = str(uid or "").strip()
+            if uid:
+                if history_uids and uid not in history_uids:
+                    return
+                patient_sets[k].add(uid)
+            elif name:
+                patient_sets[k].add("name:" + name.lower())
+
+        def appt_day_time(raw):
+            txt = str(raw or "").strip()
+            try:
+                d = datetime.fromisoformat(txt[:10]).date()
+            except Exception:
+                return None, ""
+            m = re.search(r"(\d{1,2}):(\d{2})", txt[10:])
+            label = f"{int(m.group(1)) % 12 or 12}:{m.group(2)} {'AM' if int(m.group(1)) < 12 else 'PM'}" if m else ""
+            return d, label
+
+        try:
+            for doc in self.db.collection_group("Approve").stream():
+                if doc.id == "next_visit":
+                    continue
+                data = doc.to_dict() or {}
+                d, label = appt_day_time(data.get("appointment_date"))
+                k = key_for(data.get("DentistName"))
+                full = " ".join(str(data.get(f) or "").strip()
+                                for f in ("FirstName", "MiddleName", "LastName")).split()
+                try:
+                    owner_uid = doc.reference.parent.parent.id
+                except Exception:
+                    owner_uid = ""
+                if str(data.get("DentistName") or "").strip():
+                    if k is not None:
+                        add_patient(k, owner_uid, " ".join(full))
+                else:
+                    add_patient(owner_key, owner_uid, " ".join(full))
+                if d is None or k is None or d < today or d > week_end:
+                    continue
+                svc = data.get("Service")
+                if isinstance(svc, (list, tuple)):
+                    svc_list = [str(x).strip() for x in svc if str(x or "").strip()]
+                else:
+                    svc_list = [s.strip() for s in str(svc or "").split(",") if s.strip()]
+                accepted[k].setdefault(d, []).append({
+                    "name": " ".join(full) or "Unnamed patient",
+                    "service": ", ".join(svc_list),
+                    "services": svc_list,
+                    "time": label,
+                    "_sort": str(data.get("appointment_date") or ""),
+                })
+        except Exception as e:
+            print("CLINIC OVERVIEW ACCEPTED ERROR:", e)
+
+        try:
+            for data in self._get_done_procedures_cached():
+                procs = data.get("procedures", [])
+                if not isinstance(procs, list):
+                    continue
+                uid = str(data.get("_account_uid") or data.get("uid") or "").strip()
+                for p in procs:
+                    if not isinstance(p, dict):
+                        continue
+                    dn = str(p.get("dentist") or "").strip()
+                    k = key_for(dn) if dn else owner_key
+                    if k is not None:
+                        add_patient(k, uid)
+        except Exception as e:
+            print("CLINIC OVERVIEW TREATMENT RECORDS ERROR:", e)
+
+        try:
+            for doc in self.db.collection_group("appointments").stream():
+                data = doc.to_dict() or {}
+                k = key_for(data.get("DentistName"))
+                if k is None:
+                    continue
+                pending_total[k] += 1
+                d, _ = appt_day_time(data.get("appointment_date"))
+                if d is not None and today <= d <= week_end:
+                    pending_by_day[k][d] = pending_by_day[k].get(d, 0) + 1
+        except Exception as e:
+            print("CLINIC OVERVIEW PENDING ERROR:", e)
+
+        def summarize(rows, pending):
+            """rows: accepted rows for a period; pending: pending requests dated in it."""
+            rows = sorted(rows, key=lambda r: r["_sort"])
+            counts = {}
+            for r in rows:
+                for s in (r["services"] or ["Service not specified"]):
+                    counts[s] = counts.get(s, 0) + 1
+            services = [{"name": n, "count": c}
+                        for n, c in sorted(counts.items(), key=lambda x: (-x[1], x[0].lower()))][:6]
+            timed = [r["time"] for r in rows if r["time"]]
+            return {
+                "accepted": len(rows),
+                "pending": pending,
+                "patients": len({r["name"].lower() for r in rows}),
+                "services": services,
+                "first_time": timed[0] if timed else "",
+                "last_time": timed[-1] if timed else "",
+            }
+
+        def public(rows):
+            out = []
+            for r in sorted(rows, key=lambda r: r["_sort"]):
+                out.append({"name": r["name"], "service": r["service"], "time": r["time"]})
+            return out
+
+        order = [owner_key] + sorted((k for k in roster if k != owner_key),
+                                     key=lambda k: roster[k]["name"].lower())
+        dentists = []
+        for k in order:
+            today_rows = accepted[k].get(today, [])
+            today_sum = summarize(today_rows, pending_by_day[k].get(today, 0))
+
+            days, week_rows, busiest = [], [], None
+            for d in week_days:
+                rows = accepted[k].get(d, [])
+                week_rows.extend(rows)
+                entry = {
+                    "label": day_label(d),
+                    "accepted": len(rows),
+                    "pending": pending_by_day[k].get(d, 0),
+                    "schedule": public(rows)[:12],
+                }
+                days.append(entry)
+                if rows and (busiest is None or len(rows) > busiest["accepted"]):
+                    busiest = entry
+            week_sum = summarize(week_rows, sum(pending_by_day[k].get(d, 0) for d in week_days))
+            week_sum["range_label"] = f"{day_label(week_days[0])} - {day_label(week_end)}"
+            week_sum["busiest_day"] = busiest["label"] if busiest else ""
+            week_sum["busiest_count"] = busiest["accepted"] if busiest else 0
+            week_sum["days"] = days
+
+            dentists.append({
+                "name": roster[k]["name"],
+                "owner": roster[k]["owner"],
+                "accepted_today": today_sum["accepted"],
+                "pending_requests": pending_total[k],
+                "total_patients": len(patient_sets[k]),
+                "schedule": public(today_rows)[:12],
+                "today": today_sum,
+                "week": week_sum,
+            })
+
+        return jsonify({
+            "success": True,
+            "greeting": greeting,
+            "date_label": f"{now:%A, %B} {now.day}, {now.year}",
+            "dentists": dentists,
+        })
+
     def search_patients(self):
         if not session.get('admin_logged_in'):
             return jsonify([]), 403
@@ -8992,7 +9224,7 @@ setTimeout(go,3000);})();
         uid = session.get('uid', '')
         profile_pic = ''
 
-        service = self.SERVICES_DATA.get(service_id)
+        service = self.get_service_page(service_id)
         
         if not service:
             abort(404)
@@ -13483,6 +13715,7 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self.app.route("/patient-profile")(self.p_profile)
         self.app.route("/admin_dashboard")(self.adminDashboard)
         self.app.route("/admin/dashboard_stats")(self.admin_dashboard_stats)
+        self.app.route("/admin/clinic_overview")(self.admin_clinic_overview)
         self.app.route("/admin/overview_counts")(self.admin_overview_counts)
         self.app.route("/admin/my_patients_page")(self.admin_my_patients_page)
         self.app.route("/admin/appointments_page")(self.admin_appointments_page)
@@ -13567,7 +13800,10 @@ backup. Groups marked "check" may be separate treatments that just share a price
         self._register_backup_routes()
         self._register_reminder_routes()
         self._register_settings_routes()
+        self._register_services_routes()
         self._register_dentist_routes()
+        self._register_clinic_info_routes()
+        self._register_about_info_routes()
 
 
 
