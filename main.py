@@ -7520,6 +7520,9 @@ setTimeout(go,3000);})();
         # Patients lists) that have an accepted appointment OR a treatment record
         # under that dentist. Records with no dentist written belong to the owner.
         patient_sets = {k: set() for k in roster}
+        clinic_accepted_today = 0   # clinic-wide totals: every doctor, assigned or not
+        clinic_pending = 0
+        now_mins = now.hour * 60 + now.minute
         try:
             history_uids = {uid for uid, _ in self._get_history_accounts_cached()}
         except Exception as e:
@@ -7551,6 +7554,10 @@ setTimeout(go,3000);})();
                     continue
                 data = doc.to_dict() or {}
                 d, label = appt_day_time(data.get("appointment_date"))
+                if d == today:
+                    clinic_accepted_today += 1
+                mm = re.search(r"(\d{1,2}):(\d{2})", str(data.get("appointment_date") or "")[10:])
+                mins = int(mm.group(1)) * 60 + int(mm.group(2)) if mm else None
                 k = key_for(data.get("DentistName"))
                 full = " ".join(str(data.get(f) or "").strip()
                                 for f in ("FirstName", "MiddleName", "LastName")).split()
@@ -7575,10 +7582,23 @@ setTimeout(go,3000);})();
                     "service": ", ".join(svc_list),
                     "services": svc_list,
                     "time": label,
+                    "_mins": mins,
                     "_sort": str(data.get("appointment_date") or ""),
                 })
         except Exception as e:
             print("CLINIC OVERVIEW ACCEPTED ERROR:", e)
+
+        # Treatment-record stats per dentist: treatments done this month, top
+        # services this month, and money collected today / this week.
+        today_str = today.isoformat()
+        month_prefix = today.strftime("%Y-%m")
+        week_start_str = (today - timedelta(days=today.weekday())).isoformat()
+        month_stats = {k: {"count": 0, "services": {}} for k in roster}
+        income = {k: {"today": 0.0, "week": 0.0} for k in roster}
+        # Income is private to the clinic owner: set OWNER_EMAILS (comma separated)
+        # in the environment. If it is not set, nobody sees income here.
+        owner_emails = {e.strip().lower() for e in os.getenv("OWNER_EMAILS", "").split(",") if e.strip()}
+        show_income = str(session.get("admin_email") or "").strip().lower() in owner_emails
 
         try:
             for data in self._get_done_procedures_cached():
@@ -7593,12 +7613,24 @@ setTimeout(go,3000);})();
                     k = key_for(dn) if dn else owner_key
                     if k is not None:
                         add_patient(k, uid)
+                        date_str = str(p.get("date") or "").strip()[:10]
+                        if date_str.startswith(month_prefix):
+                            ms = month_stats[k]
+                            ms["count"] += 1
+                            pn = str(p.get("procedure") or "").strip() or "Not specified"
+                            ms["services"][pn] = ms["services"].get(pn, 0) + 1
+                        if week_start_str <= date_str <= today_str:
+                            paid = self.safe_float(p.get("paid", 0))
+                            income[k]["week"] += paid
+                            if date_str == today_str:
+                                income[k]["today"] += paid
         except Exception as e:
             print("CLINIC OVERVIEW TREATMENT RECORDS ERROR:", e)
 
         try:
             for doc in self.db.collection_group("appointments").stream():
                 data = doc.to_dict() or {}
+                clinic_pending += 1
                 k = key_for(data.get("DentistName"))
                 if k is None:
                     continue
@@ -7608,6 +7640,47 @@ setTimeout(go,3000);})();
                     pending_by_day[k][d] = pending_by_day[k].get(d, 0) + 1
         except Exception as e:
             print("CLINIC OVERVIEW PENDING ERROR:", e)
+
+        # Follow-ups (Reminders) still waiting that fall within the next 7 days.
+        followups = {k: 0 for k in roster}
+        try:
+            rq = self.db.collection(self.REMINDERS).where(
+                filter=FieldFilter("status", "in", list(self.REMINDER_ACTIVE)))
+            for snap in rq.limit(500).stream():
+                r = snap.to_dict() or {}
+                d, _ = appt_day_time(r.get("appointment_date"))
+                k = key_for(r.get("DentistName"))
+                if d is None or k is None or d < today or d > week_end:
+                    continue
+                followups[k] += 1
+        except Exception as e:
+            print("CLINIC OVERVIEW FOLLOW-UPS ERROR:", e)
+
+        # Unread patient messages (one clinic-wide inbox, not per dentist).
+        unread_messages = 0
+        try:
+            unread_messages = int(
+                self.db.collection(self.Conversations)
+                .where(filter=FieldFilter("unread_admin", ">", 0))
+                .count().get()[0][0].value)
+        except Exception as e:
+            print("CLINIC OVERVIEW UNREAD ERROR:", e)
+
+        # Closed / partly blocked days from today through the coming week.
+        closed_days = []
+        try:
+            blocked = {b["date"]: b for b in self._load_blocked_slots()}
+            for d in [today] + week_days:
+                b = blocked.get(d.isoformat())
+                if b and (b.get("full_day") or b.get("blocked_times")):
+                    closed_days.append({
+                        "label": "Today" if d == today else day_label(d),
+                        "full_day": bool(b.get("full_day")),
+                        "partial": len(b.get("blocked_times") or []),
+                        "reason": str(b.get("reason") or "").strip()[:80],
+                    })
+        except Exception as e:
+            print("CLINIC OVERVIEW BLOCKED DAYS ERROR:", e)
 
         def summarize(rows, pending):
             """rows: accepted rows for a period; pending: pending requests dated in it."""
@@ -7660,12 +7733,47 @@ setTimeout(go,3000);})();
             week_sum["busiest_count"] = busiest["accepted"] if busiest else 0
             week_sum["days"] = days
 
+            # Up next: the next accepted appointment still ahead today, else the
+            # first one in the coming 7 days.
+            left_today = [r for r in sorted(today_rows, key=lambda r: r["_sort"])
+                          if r["_mins"] is None or r["_mins"] >= now_mins]
+            up_next = None
+            if left_today:
+                r = left_today[0]
+                up_next = {"name": r["name"], "service": r["service"], "time": r["time"],
+                           "day_label": "Today", "is_today": True}
+            else:
+                for d in week_days:
+                    rows = sorted(accepted[k].get(d, []), key=lambda r: r["_sort"])
+                    if rows:
+                        r = rows[0]
+                        up_next = {"name": r["name"], "service": r["service"], "time": r["time"],
+                                   "day_label": day_label(d), "is_today": False}
+                        break
+
+            try:
+                open_today = len(self._braces_open_times(today_str, roster[k]["name"]))
+            except Exception as e:
+                print("CLINIC OVERVIEW OPEN SLOTS ERROR:", e)
+                open_today = None
+            top_services = [
+                {"name": n, "count": c}
+                for n, c in sorted(month_stats[k]["services"].items(),
+                                   key=lambda x: (-x[1], x[0].lower()))][:5]
+
             dentists.append({
                 "name": roster[k]["name"],
                 "owner": roster[k]["owner"],
                 "accepted_today": today_sum["accepted"],
                 "pending_requests": pending_total[k],
                 "total_patients": len(patient_sets[k]),
+                "up_next": up_next,
+                "left_today": len(left_today),
+                "followups_due": followups[k],
+                "open_today": open_today,
+                "month": {"treatments": month_stats[k]["count"], "services": top_services},
+                "income": ({"today": round(income[k]["today"], 2), "week": round(income[k]["week"], 2)}
+                           if show_income else None),
                 "schedule": public(today_rows)[:12],
                 "today": today_sum,
                 "week": week_sum,
@@ -7675,6 +7783,14 @@ setTimeout(go,3000);})();
             "success": True,
             "greeting": greeting,
             "date_label": f"{now:%A, %B} {now.day}, {now.year}",
+            "month_label": f"{now:%B %Y}",
+            "notices": {"unread_messages": unread_messages, "closed_days": closed_days},
+            "clinic": {
+                "accepted_today": clinic_accepted_today,
+                "pending_requests": clinic_pending,
+                "total_patients": len(history_uids) if history_uids
+                                  else len(set().union(*patient_sets.values())),
+            },
             "dentists": dentists,
         })
 

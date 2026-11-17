@@ -146,7 +146,38 @@
         return wrap;
     }
 
-    function summaryCard(d, dateLabel) {
+    function openSlotsLine(d) {
+        if (d.open_today === null || d.open_today === undefined) return null;
+        var n = d.open_today;
+        return el('p', 'co-line', n === 0 ? 'No open slots left today.'
+            : n + (n === 1 ? ' open slot' : ' open slots') + ' left today.');
+    }
+
+    function peso(n) {
+        return '\u20B1' + Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function monthPanel(d, monthLabel) {
+        var m = d.month || { treatments: 0, services: [] };
+        var p = el('div', 'co-panel co-panel--wide');
+        var h = el('div', 'co-panel__head');
+        h.appendChild(el('h4', '', 'This Month'));
+        h.appendChild(el('span', 'co-muted', monthLabel || ''));
+        p.appendChild(h);
+
+        var grid = el('div', 'co-minis co-minis--auto');
+        grid.appendChild(miniStat(m.treatments, 'Treatments done'));
+        if (d.income) {
+            grid.appendChild(miniStat(peso(d.income.today), 'Income today'));
+            grid.appendChild(miniStat(peso(d.income.week), 'Income this week'));
+        }
+        p.appendChild(grid);
+        p.appendChild(el('p', 'co-label', 'Top services this month'));
+        p.appendChild(serviceChips(m.services));
+        return p;
+    }
+
+    function summaryCard(d, dateLabel, monthLabel) {
         var card = el('div', 'recent-activity co-summary');
         var head = el('div', 'recent-header');
         var text = el('div', 'recent-header__text');
@@ -158,13 +189,63 @@
         var grid = el('div', 'co-panels');
         var today = d.today || { accepted: 0, pending: 0, patients: 0, services: [] };
         var week = d.week || { accepted: 0, pending: 0, patients: 0, services: [], days: [] };
-        grid.appendChild(summaryPanel('Today', dateLabel, today));
+        grid.appendChild(summaryPanel('Today', dateLabel, today, openSlotsLine(d)));
         grid.appendChild(summaryPanel('Next 7 Days', week.range_label || '', week, weekDays(week)));
+        grid.appendChild(monthPanel(d, monthLabel));
         card.appendChild(grid);
         return card;
     }
 
-    function dentistBlock(d, greeting, dateLabel) {
+    function upNext(d) {
+        var box = el('div', 'co-next');
+        box.appendChild(icon('schedule', 'co-next__icon'));
+        var txt = el('div', 'co-next__text');
+        txt.appendChild(el('span', 'co-next__label', 'Up next'));
+        var n = d.up_next;
+        if (n) {
+            var line = n.name + (n.service ? ' - ' + n.service : '');
+            txt.appendChild(el('strong', '', line));
+            var when = (n.is_today ? 'Today' : n.day_label) + (n.time ? ', ' + n.time : '');
+            if (n.is_today && d.left_today) when += ' (' + d.left_today + ' left today)';
+            txt.appendChild(el('span', 'co-next__when', when));
+        } else {
+            txt.appendChild(el('strong', '', 'Nothing coming up in the next 7 days'));
+        }
+        box.appendChild(txt);
+        return box;
+    }
+
+    // Clinic-wide items that are not per dentist; the bar is left out when empty.
+    function notices(n) {
+        if (!n) return null;
+        var items = [];
+        if (n.unread_messages > 0) {
+            var a = el('a', 'co-notice');
+            a.href = '#section-messages';
+            a.addEventListener('click', function (e) { e.preventDefault(); showSection('messages'); });
+            a.appendChild(icon('mark_email_unread'));
+            a.appendChild(el('span', '', n.unread_messages + (n.unread_messages === 1 ? ' unread message' : ' unread messages')));
+            items.push(a);
+        }
+        if (n.closed_days && n.closed_days.length) {
+            var c = el('a', 'co-notice co-notice--warn');
+            c.href = '#section-doctorscalendar';
+            c.addEventListener('click', function (e) { e.preventDefault(); showSection('doctorscalendar'); });
+            c.appendChild(icon('event_busy'));
+            var parts = n.closed_days.map(function (x) {
+                var what = x.full_day ? 'closed' : x.partial + ' slot' + (x.partial === 1 ? '' : 's') + ' blocked';
+                return x.label + ' (' + what + (x.reason ? ': ' + x.reason : '') + ')';
+            });
+            c.appendChild(el('span', '', 'Coming up: ' + parts.join(', ')));
+            items.push(c);
+        }
+        if (!items.length) return null;
+        var bar = el('div', 'co-notices');
+        items.forEach(function (i) { bar.appendChild(i); });
+        return bar;
+    }
+
+    function dentistBlock(d, greeting, dateLabel, monthLabel) {
         var block = el('section', 'co-dentist');
 
         var banner = el('div', 'co-banner');
@@ -186,20 +267,24 @@
         stats.appendChild(stat('#section-WeeklyClients', 'WeeklyClients', 'event_available', d.accepted_today, 'Accepted Today'));
         stats.appendChild(stat('#section-appointments', 'appointments', 'hourglass_top', d.pending_requests, 'Pending Requests'));
         stats.appendChild(stat('#section-mypatients', 'mypatients', 'groups', d.total_patients || 0, 'Total Patients'));
+        stats.appendChild(stat('#section-reminders', 'reminders', 'notifications_active', d.followups_due || 0, 'Follow-ups This Week'));
         body.appendChild(stats);
+        body.appendChild(upNext(d));
         banner.appendChild(body);
 
         block.appendChild(banner);
         block.appendChild(scheduleCard(d));
-        block.appendChild(summaryCard(d, dateLabel));
+        block.appendChild(summaryCard(d, dateLabel, monthLabel));
         return block;
     }
 
     function render(data) {
         var root = document.getElementById('coDentists');
         root.textContent = '';
+        var bar = notices(data.notices);
+        if (bar) root.appendChild(bar);
         data.dentists.forEach(function (d) {
-            root.appendChild(dentistBlock(d, data.greeting, data.date_label));
+            root.appendChild(dentistBlock(d, data.greeting, data.date_label, data.month_label));
         });
     }
 

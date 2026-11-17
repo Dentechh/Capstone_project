@@ -147,3 +147,28 @@ body.dark-mode .co-day__bar { background: #1b2740; }
 
 /* Collaborating dentist badge (same pill as the owner badge, softer tint) */
 .co-owner--collab { background: rgba(255, 255, 255, .12); border-style: dashed; }
+
+/* Up next (inside each dentist banner) */
+.co-next { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 12px 16px; border-radius: 14px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .28); }
+.co-next__icon { font-size: 26px; flex: 0 0 auto; }
+.co-next__text { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+.co-next__label { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .8; }
+.co-next__text strong { font-size: 1rem; overflow-wrap: anywhere; }
+.co-next__when { font-size: .85rem; opacity: .9; }
+
+
+/* Clinic-wide notices (unread messages, closed days): only shown when there is something */
+.co-notices { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.co-notice { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 12px; background: #fff; border: 1px solid #dbe6fb; color: #0d3f9e; font-size: .9rem; font-weight: 700; text-decoration: none; }
+.co-notice:hover { background: #eef4ff; }
+.co-notice .material-symbols-rounded { font-size: 22px; }
+.co-notice--warn { color: #92400e; background: #fff7e6; border-color: #f7d9a4; }
+.co-notice--warn:hover { background: #ffefcf; }
+
+/* This Month panel spans both columns */
+.co-panel--wide { grid-column: 1 / -1; }
+.co-minis--auto { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+body.dark-mode .co-notice { background: #131a26; border-color: #25324a; color: #8ab4ff; }
+body.dark-mode .co-notice:hover { background: #1b2740; }
+body.dark-mode .co-notice--warn { background: #2a2113; border-color: #5c4519; color: #fbbf6a; }
